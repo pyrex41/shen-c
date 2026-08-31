@@ -1,0 +1,7 @@
+(tc +)
+
+(trap-error (do (load "interpreter.shen") (pr (cn "normal-form = " (cn (str (normal-form (cons (cons (cons y-combinator (cons (cons /. (cons ADD (cons (cons /. (cons X (cons (cons /. (cons Y (cons (cons if (cons (cons = (cons X (cons 0 ()))) (cons Y (cons (cons (cons ADD (cons (cons -- (cons X ())) ())) (cons (cons ++ (cons Y ())) ())) ())))) ()))) ()))) ()))) ())) (cons 3 ())) (cons 4 ())))) "
+")) (stoutput))) (lambda E (pr (error-to-string E) (stoutput))))
+
+(pr (cn "inferences = " (cn (str (inferences)) "
+")) (stoutput))

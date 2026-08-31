@@ -11,6 +11,7 @@ extern Environment* get_parent_environment (Environment* environment);
 extern void set_parent_environment (Environment* environment,
                                     Environment* parent_environment);
 extern Environment* create_environment (void);
+extern void initialize_global_environments (void);
 extern Environment* get_global_function_environment (void);
 extern Environment* get_global_variable_environment (void);
 extern void extend_environment (KLObject* symbol_object, KLObject* object,

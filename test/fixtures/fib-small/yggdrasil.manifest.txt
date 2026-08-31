@@ -1,0 +1,12 @@
+manifest-version=3
+kernel-version=42-s42.20260825
+kernel=kernel.kl
+user=user.kl
+fn=id 1
+fn=add 2
+fn=countdown 1
+fn=even? 1
+fn=odd? 1
+fn=fib 1
+fn=fib-small 1
+needs-eval=false

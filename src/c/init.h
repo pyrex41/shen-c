@@ -40,32 +40,39 @@ inline void initialize (void)
   initialize_std_stream_objects();
   #endif
 
+  initialize_global_environments();
   register_global_variables();
 }
 
-inline void initialize_and_run_shen_repl (const char* home_path)
+inline void initialize_runtime (const char* home_path)
 {
-  GC_init();
-
   char* slashed_home_path = concatenate_string((char*)home_path, "/");
 
   initialize_shen_c_home_path(slashed_home_path);
-
-  #ifdef SHEN_C_MOBILE
-  start_repl_server("127.0.0.1", "34957", 1);
-  #endif
-
   initialize();
+}
+
+inline void initialize_shen_kernel (void)
+{
   load_shen_kl_files();
   call_shen_initialise();
 
   #ifdef SHEN_C_MOBILE
   load_kl_file("/src/kl/mobile/init.kl");
   #endif
+}
 
+inline void initialize_and_run_shen_repl (const char* home_path)
+{
+  shen_context_init(&shen_root_context);
+
+  #ifdef SHEN_C_MOBILE
+  start_repl_server("127.0.0.1", "34957", 1);
+  #endif
+
+  initialize_runtime(home_path);
+  initialize_shen_kernel();
   run_shen_repl();
-  //load_development_kl_file();
-  //run_kl_repl();
 }
 
 #endif

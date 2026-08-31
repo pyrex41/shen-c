@@ -1,0 +1,2 @@
+(defun sum (V3665) (cond ((= () V3665) 0) ((cons? V3665) (+ (hd V3665) (sum (tl V3665)))) (true (simple-error "attempt to sum a non-list
+"))))

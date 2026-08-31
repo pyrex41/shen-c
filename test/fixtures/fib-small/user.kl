@@ -1,0 +1,29 @@
+(defun add (X Y) (+ X Y))
+
+(defun countdown (N)
+  (if (= N 0)
+      0
+      (countdown (- N 1))))
+
+(defun even? (N)
+  (if (= N 0)
+      true
+      (odd? (- N 1))))
+
+(defun odd? (N)
+  (if (= N 0)
+      false
+      (even? (- N 1))))
+
+(defun fib (N)
+  (if (= N 0)
+      0
+      (if (= N 1)
+          1
+          (+ (fib (- N 1)) (fib (- N 2))))))
+
+(defun fib-small (N) (fib N))
+
+(do (countdown 100000)
+    (do (even? 100000)
+        (pr (str (add (fib-small 20) 0)) (value *stoutput*))))

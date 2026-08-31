@@ -254,6 +254,16 @@ void printlnln_kl_object (KLObject* object)
   printf("%s\n\n", kl_object_to_string(object));
 }
 
+void println_kl_object_display (KLObject* object)
+{
+  /* CLI eval print matches Go shen.a / Forth kl-print: strings unquoted.
+     KLambda `str` still uses kl_object_to_string (quoted). */
+  if (is_kl_string(object))
+    printf("%s\n", get_string(object));
+  else
+    printf("%s\n", kl_object_to_string(object));
+}
+
 bool is_kl_list_equal (KLObject* left_object, KLObject* right_object)
 {
   KLObject* lo = left_object;

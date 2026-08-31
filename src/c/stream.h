@@ -3,6 +3,7 @@
 
 #include <stdbool.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <inttypes.h>
 
@@ -224,16 +225,19 @@ inline bool is_kl_stream_equal (KLObject* left_object, KLObject* right_object)
 
 inline char read_byte (FILE* file)
 {
-  char c = (char)getc(file);
+  int c = getc(file);
 
   if (c == EOF) {
     if (ferror(file) != 0)
       throw_kl_exception("Failed to read a byte from stream");
 
-    return  -1;
+    if (file == stdin)
+      exit(0);
+
+    return -1;
   }
 
-  return c;
+  return (char)c;
 }
 
 inline KLObject* read_kl_stream_byte (KLObject* stream_object)
@@ -272,8 +276,17 @@ inline void initialize_read_buffer (void)
 
 inline int read_byte_with_buffer (FILE* file)
 {
-  return ((read_buffer_position > 0) ?
-          read_buffer[--read_buffer_position] : getc(file));
+  int c;
+
+  if (read_buffer_position > 0)
+    return read_buffer[--read_buffer_position];
+
+  c = getc(file);
+
+  if (c == EOF && file == stdin && ferror(file) == 0)
+    exit(0);
+
+  return c;
 }
 
 inline void unread_byte_with_buffer (char c)

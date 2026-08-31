@@ -1,0 +1,7 @@
+manifest-version=3
+kernel-version=42-s42.20260825
+kernel=kernel.kl
+user=user.kl
+fn=id 1
+fn=sum3 3
+needs-eval=false

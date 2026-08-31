@@ -177,18 +177,16 @@ typedef khint_t khiter_t;
 #endif
 
 #ifndef kcalloc
-//#define kcalloc(N,Z) calloc(N,Z)
-#define kcalloc(N,Z) GC_malloc((N) * (Z))
+#include "context.h"
+#define kcalloc(N,Z) shen_gc_malloc(&shen_root_context, (N) * (Z))
 
 #endif
 #ifndef kmalloc
-//#define kmalloc(Z) malloc(Z)
-#define kmalloc(Z) GC_malloc(Z)
+#define kmalloc(Z) shen_gc_malloc(&shen_root_context, (Z))
 
 #endif
 #ifndef krealloc
-//#define krealloc(P,Z) realloc(P,Z)
-#define krealloc(P,Z) GC_realloc(P,Z)
+#define krealloc(P,Z) shen_gc_realloc(&shen_root_context, (P), (Z))
 
 #endif
 #ifndef kfree

@@ -6,12 +6,12 @@
 #include <stdio.h>
 #include <setjmp.h>
 
-#include "gc.h"
+#include "context.h"
 #include "khash.h"
 
-#define malloc(n) GC_malloc(n)
-#define realloc(n) GC_realloc(n)
-#define calloc(m,n) GC_malloc((m)*(n))
+#define malloc(n) shen_gc_malloc(&shen_root_context, (n))
+#define realloc(p, n) shen_gc_realloc(&shen_root_context, (p), (n))
+#define calloc(m, n) shen_gc_malloc(&shen_root_context, (size_t)(m) * (size_t)(n))
 #define free(m) GC_free(m)
 
 typedef enum KLType {
@@ -108,6 +108,8 @@ struct Number {
 typedef struct PrimitiveFunction {
   long parameter_size;
   NativeFunction* native_function;
+  Vector* captures;
+  int may_trampoline;
 } PrimitiveFunction;
 
 typedef struct UserFunction {
@@ -195,7 +197,7 @@ inline void set_kl_object_type (KLObject* object, KLType type)
 
 inline KLObject* create_kl_object (KLType type)
 {
-  KLObject* object = malloc(sizeof(KLObject));
+  KLObject* object = shen_gc_malloc(&shen_root_context, sizeof(KLObject));
 
   set_kl_object_type(object, type);
 

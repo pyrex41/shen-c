@@ -28,6 +28,7 @@ KLObject* get_variable_value (KLObject* symbol_object,
 KLObject* set_variable_value (KLObject* symbol_object, KLObject* object,
                               Environment* variable_environment);
 void register_global_variables (void);
+void set_command_line_arguments (int argc, char** argv);
 
 inline KLObject* get_earmuff_language_symbol_object (void)
 {

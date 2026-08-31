@@ -1,0 +1,30 @@
+(defun force (V7182) (cond ((and (cons? V7182) (and (cons? (tl V7182)) (and (cons? (tl (tl V7182))) (= () (tl (tl (tl V7182))))))) (hd V7182)) (true (simple-error "partial function force"))))
+
+(defun delay (V7183) (cond ((and (cons? V7183) (and (cons? (tl V7183)) (and (cons? (tl (tl V7183))) (= () (tl (tl (tl V7183))))))) (cons ((hd (tl V7183)) (hd V7183)) (tl V7183))) (true (simple-error "partial function delay"))))
+
+(defun end? (V7184) (cond ((and (cons? V7184) (and (cons? (tl V7184)) (and (cons? (tl (tl V7184))) (= () (tl (tl (tl V7184))))))) ((hd (tl (tl V7184))) (hd V7184))) (true (simple-error "partial function end?"))))
+
+(defun push (V7185 V7186) (cond ((and (cons? V7186) (and (cons? (tl V7186)) (and (cons? (tl (tl V7186))) (= () (tl (tl (tl V7186))))))) (cons V7185 (cons (lambda Z7187 (if (= Z7187 V7185) (hd V7186) ((hd (tl V7186)) Z7187))) (tl (tl V7186))))) (true (simple-error "partial function push"))))
+
+(defun forall (V7188 V7189) (cond ((and (cons? V7188) (and (cons? (tl V7188)) (and (cons? (tl (tl V7188))) (= () (tl (tl (tl V7188))))))) (if ((hd (tl (tl V7188))) (hd V7188)) true (and (V7189 (hd V7188)) (forall (cons ((hd (tl V7188)) (hd V7188)) (tl V7188)) V7189)))) (true (simple-error "partial function forall"))))
+
+(defun exists (V7190 V7191) (cond ((and (cons? V7190) (and (cons? (tl V7190)) (and (cons? (tl (tl V7190))) (= () (tl (tl (tl V7190))))))) (if ((hd (tl (tl V7190))) (hd V7190)) false (or (V7191 (hd V7190)) (exists (cons ((hd (tl V7190)) (hd V7190)) (tl V7190)) V7191)))) (true (simple-error "partial function exists"))))
+
+(defun super (V7192 V7193 V7194 V7195) (cond ((and (cons? V7192) (and (cons? (tl V7192)) (and (cons? (tl (tl V7192))) (= () (tl (tl (tl V7192))))))) (if ((hd (tl (tl V7192))) (hd V7192)) V7195 ((V7194 (V7193 (hd V7192))) (super (cons ((hd (tl V7192)) (hd V7192)) (tl V7192)) V7193 V7194 V7195)))) (true (simple-error "partial function super"))))
+
+(defun forall (V7196 V7197) (super V7196 V7197 (lambda Z7198 (lambda Z7199 (and Z7198 Z7199))) true))
+
+(defun exists (V7200 V7201) (super V7200 V7201 (lambda Z7202 (lambda Z7203 (or Z7202 Z7203))) false))
+
+(defun for* (V7204 V7205) (super V7204 V7205 (lambda Z7206 (lambda Z7207 (progn Z7206 Z7207))) 0))
+
+(defun progn (V7208 V7209) V7209)
+
+(defun filter* (V7210 V7211) (super V7210 (lambda Z7212 (if (V7211 Z7212) (cons Z7212 ()) ())) (lambda Z7213 (lambda Z7214 (append Z7213 Z7214))) ()))
+
+(defun next-prime (V7215) (if (prime*? (+ V7215 1)) (+ V7215 1) (next-prime (+ V7215 1))))
+
+(defun prime*? (V7216) (prime-help V7216 (/ V7216 2) 2))
+
+(defun prime-help (V7217 V7218 V7219) (cond ((integer? (/ V7217 V7219)) false) ((> V7219 V7218) true) (true (prime-help V7217 V7218 (+ 1 V7219)))))
+

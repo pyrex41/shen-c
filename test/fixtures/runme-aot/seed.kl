@@ -1,0 +1,33 @@
+(maxinferences 10000000)
+
+(shen.store-arity exists 2)
+
+(shen.store-arity forall 2)
+
+(shen.store-arity super 4)
+
+(shen.store-arity force 1)
+
+(shen.store-arity delay 1)
+
+(shen.store-arity end? 1)
+
+(shen.store-arity push 2)
+
+(shen.store-arity for* 2)
+
+(shen.store-arity progn 2)
+
+(shen.store-arity filter* 2)
+
+(shen.store-arity next-prime 1)
+
+(shen.store-arity prime*? 1)
+
+(shen.store-arity prime-help 3)
+
+(shen.store-arity depth 4)
+
+(shen.store-arity depth-help 5)
+
+(shen.store-arity sum 1)

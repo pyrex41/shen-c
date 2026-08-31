@@ -34,12 +34,38 @@ inline void set_primitive_function_native_function
   primitive_function->native_function = native_function;
 }
 
+inline Vector* get_primitive_function_captures
+(PrimitiveFunction* primitive_function)
+{
+  return primitive_function->captures;
+}
+
+inline void set_primitive_function_captures
+(PrimitiveFunction* primitive_function, Vector* captures)
+{
+  primitive_function->captures = captures;
+}
+
+inline int get_primitive_function_may_trampoline
+(PrimitiveFunction* primitive_function)
+{
+  return primitive_function->may_trampoline;
+}
+
+inline void set_primitive_function_may_trampoline
+(PrimitiveFunction* primitive_function, int may_trampoline)
+{
+  primitive_function->may_trampoline = may_trampoline;
+}
+
 inline PrimitiveFunction* create_primitive_function (void)
 {
   PrimitiveFunction* primitive_function = malloc(sizeof(PrimitiveFunction));
 
   set_primitive_function_parameter_size(primitive_function, 0);
   set_primitive_function_native_function(primitive_function, NULL);
+  set_primitive_function_captures(primitive_function, NULL);
+  set_primitive_function_may_trampoline(primitive_function, 0);
 
   return primitive_function;
 }

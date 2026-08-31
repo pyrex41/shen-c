@@ -1,0 +1,63 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  nix:
+    name: nix-${{ matrix.os }}-${{ matrix.cc }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        cc: [clang]
+        include:
+          - os: ubuntu-latest
+            cc: gcc
+    steps:
+      - uses: actions/checkout@v4
+      - uses: cachix/install-nix-action@v31
+        with:
+          github_access_token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Toolchain
+        run: |
+          nix develop -c sh -c 'pkg-config --modversion bdw-gc && pkg-config --cflags --libs bdw-gc && $CC --version | head -n1'
+          flags=$(nix develop -c pkg-config --cflags --libs bdw-gc)
+          echo "$flags" | grep -Ei 'Homebrew|/opt/homebrew' && exit 1 || true
+        env:
+          CC: ${{ matrix.cc }}
+      - name: Make
+        run: nix develop -c make CC=${{ matrix.cc }}
+      - name: Unit tests
+        run: nix develop -c make CC=${{ matrix.cc }} test
+      - name: CLI --version
+        run: nix develop -c ./bin/shen-c --version
+      - name: Certify S42 (runme.shen)
+        run: nix develop -c make CC=${{ matrix.cc }} certify
+      - name: Upload certify log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: certify-${{ matrix.os }}-${{ matrix.cc }}
+          path: evidence/certify.log
+          if-no-files-found: error
+      - name: CMake/Ninja
+        run: |
+          nix develop -c cmake -G Ninja -B build-ci \
+            -D CMAKE_C_COMPILER=${{ matrix.cc }} \
+            -D CMAKE_BUILD_TYPE=Release
+          nix develop -c cmake --build build-ci
+          nix develop -c ./bin/test_foundation
+
+  sanitize:
+    name: asan-ubsan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: cachix/install-nix-action@v31
+        with:
+          github_access_token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Sanitizer tests
+        run: nix develop -c make CC=clang SANITIZE=1 test

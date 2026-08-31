@@ -45,6 +45,12 @@ inline Environment* create_environment (void)
   return environment;
 }
 
+inline void initialize_global_environments (void)
+{
+  global_function_environment = create_environment();
+  global_variable_environment = create_environment();
+}
+
 inline Environment* get_global_function_environment (void)
 {
   return global_function_environment;

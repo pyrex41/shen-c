@@ -1,0 +1,217 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include "emit.h"
+
+static int failures = 0;
+
+static void expect (int condition, const char* message)
+{
+  if (!condition) {
+    fprintf(stderr, "FAIL: %s\n", message);
+    failures++;
+  }
+}
+
+int main (void)
+{
+  shen_context* ctx;
+  KLObject* form;
+  KLObject* params;
+  KLObject* body;
+  KLObject* plus;
+  FILE* out;
+  char* generated = NULL;
+  long size;
+  ShenEmitReport report = {0};
+
+  shen_boot(&shen_root_context, ".");
+  ctx = &shen_root_context;
+
+  plus = shen_intern(ctx, "+");
+  params = shen_cons(ctx, shen_intern(ctx, "X"),
+                     shen_cons(ctx, shen_intern(ctx, "Y"),
+                               shen_empty_list(ctx)));
+  body = shen_cons(ctx, plus,
+                   shen_cons(ctx, shen_intern(ctx, "X"),
+                             shen_cons(ctx, shen_intern(ctx, "Y"),
+                                       shen_empty_list(ctx))));
+  form = shen_cons(ctx, shen_intern(ctx, "defun"),
+                   shen_cons(ctx, shen_intern(ctx, "add2"),
+                             shen_cons(ctx, params,
+                                       shen_cons(ctx, body,
+                                                 shen_empty_list(ctx)))));
+
+  {
+    KLObject* n;
+    KLObject* zero;
+    KLObject* pred;
+    KLObject* test;
+    KLObject* recur;
+    KLObject* if_form;
+    KLObject* cd_params;
+    KLObject* cd_form;
+    KLObject* forms[2];
+
+    n = shen_intern(ctx, "N");
+    zero = shen_number_l(ctx, 0);
+    pred = shen_cons(ctx, shen_intern(ctx, "-"),
+                     shen_cons(ctx, n,
+                               shen_cons(ctx, shen_number_l(ctx, 1),
+                                         shen_empty_list(ctx))));
+    test = shen_cons(ctx, shen_intern(ctx, "="),
+                     shen_cons(ctx, n,
+                               shen_cons(ctx, zero, shen_empty_list(ctx))));
+    recur = shen_cons(ctx, shen_intern(ctx, "countdown"),
+                      shen_cons(ctx, pred, shen_empty_list(ctx)));
+    if_form = shen_cons(ctx, shen_intern(ctx, "if"),
+                        shen_cons(ctx, test,
+                                  shen_cons(ctx, zero,
+                                            shen_cons(ctx, recur,
+                                                      shen_empty_list(ctx)))));
+    cd_params = shen_cons(ctx, n, shen_empty_list(ctx));
+    cd_form = shen_cons(ctx, shen_intern(ctx, "defun"),
+                        shen_cons(ctx, shen_intern(ctx, "countdown"),
+                                  shen_cons(ctx, cd_params,
+                                            shen_cons(ctx, if_form,
+                                                      shen_empty_list(ctx)))));
+    forms[0] = form;
+    forms[1] = cd_form;
+
+    out = tmpfile();
+    expect(out != NULL, "tmpfile");
+
+    if (out == NULL)
+      return 1;
+
+    expect(shen_emit_program(out, NULL, 0, forms, 2, NULL, "test_emit",
+                             &report) == 0,
+           "emit add2+countdown");
+    expect(report.defuns == 2, "two defuns emitted");
+  }
+
+  fseek(out, 0, SEEK_END);
+  size = ftell(out);
+  fseek(out, 0, SEEK_SET);
+  generated = malloc((size_t)size + 1);
+
+  if (generated == NULL)
+    return 1;
+
+  if (size > 0)
+    fread(generated, 1, (size_t)size, out);
+
+  generated[size] = '\0';
+  fclose(out);
+
+  expect(strstr(generated, "shen_register_defun") != NULL,
+         "generated C registers NativeFunction defun");
+  expect(strstr(generated, "native_") != NULL, "generated C has native_*");
+  expect(strstr(generated, "shen_apply") != NULL, "generated C applies primitives");
+  expect(strstr(generated, "shen_apply_port_overwrites") != NULL,
+         "generated main re-applies C port overwrites after defuns");
+  expect(strstr(generated, "shen_intern") != NULL, "generated C uses intern");
+  expect(strstr(generated, "goto tail_start_") != NULL,
+         "self-tail countdown lowers to goto");
+  expect(strstr(generated, "shen_eval_kl") == NULL,
+         "add2 does not go through eval-kl");
+  expect(strstr(generated, "(defun add2") == NULL,
+         "generated C does not wrap the original defun source");
+
+  free(generated);
+
+  {
+    KLObject* v;
+    KLObject* w;
+    KLObject* z;
+    KLObject* e;
+    KLObject* demod_call;
+    KLObject* walk_call;
+    KLObject* lambda;
+    KLObject* let_form;
+    KLObject* if_form;
+    KLObject* trap;
+    KLObject* handler;
+    KLObject* params;
+    KLObject* demodulate;
+    KLObject* forms[1];
+    ShenEmitReport demod_report = {0};
+
+    v = shen_intern(ctx, "V");
+    w = shen_intern(ctx, "W");
+    z = shen_intern(ctx, "Z");
+    e = shen_intern(ctx, "E");
+    demod_call = shen_cons(ctx, shen_intern(ctx, "shen.demod"),
+                           shen_cons(ctx, z, shen_empty_list(ctx)));
+    lambda = shen_cons(ctx, shen_intern(ctx, "lambda"),
+                       shen_cons(ctx, z,
+                                 shen_cons(ctx, demod_call,
+                                           shen_empty_list(ctx))));
+    walk_call = shen_cons(ctx, shen_intern(ctx, "shen.walk"),
+                          shen_cons(ctx, lambda,
+                                    shen_cons(ctx, v, shen_empty_list(ctx))));
+    if_form = shen_cons(ctx, shen_intern(ctx, "if"),
+                        shen_cons(ctx,
+                                  shen_cons(ctx, shen_intern(ctx, "="),
+                                            shen_cons(ctx, w,
+                                                      shen_cons(ctx, v,
+                                                                shen_empty_list(ctx)))),
+                                  shen_cons(ctx, v,
+                                            shen_cons(ctx,
+                                                      shen_cons(ctx, shen_intern(ctx, "shen.demodulate"),
+                                                                shen_cons(ctx, w, shen_empty_list(ctx))),
+                                                      shen_empty_list(ctx)))));
+    let_form = shen_cons(ctx, shen_intern(ctx, "let"),
+                         shen_cons(ctx, w,
+                                   shen_cons(ctx, walk_call,
+                                             shen_cons(ctx, if_form,
+                                                       shen_empty_list(ctx)))));
+    handler = shen_cons(ctx, shen_intern(ctx, "lambda"),
+                        shen_cons(ctx, e,
+                                  shen_cons(ctx, v, shen_empty_list(ctx))));
+    trap = shen_cons(ctx, shen_intern(ctx, "trap-error"),
+                     shen_cons(ctx, let_form,
+                               shen_cons(ctx, handler, shen_empty_list(ctx))));
+    params = shen_cons(ctx, v, shen_empty_list(ctx));
+    demodulate = shen_cons(ctx, shen_intern(ctx, "defun"),
+                           shen_cons(ctx, shen_intern(ctx, "shen.demodulate"),
+                                     shen_cons(ctx, params,
+                                               shen_cons(ctx, trap,
+                                                         shen_empty_list(ctx)))));
+    forms[0] = demodulate;
+    out = tmpfile();
+    expect(out != NULL, "demodulate tmpfile");
+    expect(shen_emit_program(out, NULL, 0, forms, 1, NULL, "test_emit",
+                             &demod_report) == 0,
+           "emit shen.demodulate");
+    fseek(out, 0, SEEK_END);
+    size = ftell(out);
+    fseek(out, 0, SEEK_SET);
+    generated = malloc((size_t)size + 1);
+    expect(generated != NULL, "demodulate generated buffer");
+    if (generated != NULL && size > 0)
+      fread(generated, 1, (size_t)size, out);
+    if (generated != NULL)
+      generated[size] = '\0';
+    fclose(out);
+    expect(generated != NULL &&
+           strstr(generated, "shen_intern(ctx, \"shen.walk\")") != NULL,
+           "demodulate intern/applies shen.walk (not identity-folded)");
+    expect(generated != NULL &&
+           strstr(generated, "shen_intern(ctx, \"shen.demod\")") != NULL,
+           "demodulate intern/applies shen.demod (synonyms-h redefines it)");
+    expect(generated != NULL && strstr(generated, "shen_native_closure") != NULL,
+           "demodulate lambda stays shen_native_closure");
+    expect(generated != NULL && strstr(generated, "eval_kl_object") == NULL,
+           "demodulate is not eval_kl_object of source");
+  }
+
+  if (failures != 0) {
+    fprintf(stderr, "%d emit test(s) failed\n", failures);
+    return 1;
+  }
+
+  printf("emit tests ok\n");
+  return 0;
+}

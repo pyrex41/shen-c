@@ -1,0 +1,3 @@
+(defun sum3 (X Y Z) (+ (+ X Y) Z))
+
+(pr (str (sum3 10 20 12)) (value *stoutput*))

@@ -1,4 +1,11 @@
 #include "evaluator.h"
+#include "abi.h"
+#include "gc.h"
+
+static int is_heap_kl_boolean (KLObject* object)
+{
+  return !is_null(object) && GC_base(object) != NULL && is_kl_boolean(object);
+}
 
 static KLObject* eval_if_expression (KLObject* list_object,
                                      Environment* function_environment,
@@ -11,7 +18,7 @@ static KLObject* eval_if_expression (KLObject* list_object,
   KLObject* evaluated_test_object =
     eval_kl_object(test_object, function_environment, variable_environment);
 
-  if (!is_kl_boolean(evaluated_test_object))
+  if (!is_heap_kl_boolean(evaluated_test_object))
     throw_kl_exception("Test should be a boolean value");
 
   if (get_boolean(evaluated_test_object)) {
@@ -37,7 +44,7 @@ static KLObject* eval_and_expression (KLObject* list_object,
   KLObject* evaluated_test_object =
     eval_kl_object(test_object, function_environment, variable_environment);
 
-  if (!is_kl_boolean(evaluated_test_object))
+  if (!is_heap_kl_boolean(evaluated_test_object))
     throw_kl_exception("Arguments should be boolean values");
 
   if (!get_boolean(evaluated_test_object))
@@ -47,7 +54,7 @@ static KLObject* eval_and_expression (KLObject* list_object,
   KLObject* evaluated_else_object =
     eval_kl_object(else_object, function_environment, variable_environment);
 
-  if (!is_kl_boolean(evaluated_else_object))
+  if (!is_heap_kl_boolean(evaluated_else_object))
     throw_kl_exception("Arguments should be boolean values");
 
   return evaluated_else_object;
@@ -64,7 +71,7 @@ static KLObject* eval_or_expression (KLObject* list_object,
   KLObject* evaluated_test_object =
     eval_kl_object(test_object, function_environment, variable_environment);
 
-  if (!is_kl_boolean(evaluated_test_object))
+  if (!is_heap_kl_boolean(evaluated_test_object))
     throw_kl_exception("Arguments should be boolean value");
 
   if (get_boolean(evaluated_test_object))
@@ -74,7 +81,7 @@ static KLObject* eval_or_expression (KLObject* list_object,
   KLObject* evaluated_else_object
     = eval_kl_object(else_object, function_environment, variable_environment);
 
-  if (!is_kl_boolean(evaluated_else_object))
+  if (!is_heap_kl_boolean(evaluated_else_object))
     throw_kl_exception("Arguments should be boolean value");
 
   return evaluated_else_object;
@@ -101,7 +108,7 @@ static KLObject* eval_cond_tail_expression (KLObject* list_object,
   KLObject* evaluated_case_test_object =
     eval_kl_object(case_test_object, function_environment, variable_environment);
 
-  if (!is_kl_boolean(evaluated_case_test_object))
+  if (!is_heap_kl_boolean(evaluated_case_test_object))
     throw_kl_exception("Case test should be a boolean value");
 
   if (get_boolean(evaluated_case_test_object)) {
@@ -1059,19 +1066,6 @@ static KLObject* eval_kl_list_freeze_expression (KLObject* list_object,
                                 variable_environment);
 }
 
-static KLObject* eval_primitive_function_application
-(KLObject* function_object, Vector* arguments, Environment* function_environment,
- Environment* variable_environment)
-{
-  PrimitiveFunction* primitive_function =
-    get_kl_function_primitive_function(function_object);
-  NativeFunction* native_function
-    = get_primitive_function_native_function(primitive_function);
-  
-  return native_function(function_object, arguments, function_environment,
-                         variable_environment);
-}
-
 static KLObject* eval_user_function_application (KLObject* function_object,
                                                  Vector* arguments)
 {
@@ -1271,9 +1265,13 @@ static KLObject* eval_kl_list_primitive_function_application
   Vector* arguments = ((is_empty_kl_list(evaluated_cdr_object)) ?
                        NULL : kl_list_to_vector(evaluated_cdr_object));
 
-  return eval_primitive_function_application(function_object, arguments,
-                                             function_environment,
-                                             variable_environment);
+  /* Call through shen_apply so generated shen_tail_apply bounces are
+   * processed. Direct native() from the tree-walker drops the bounce
+   * (unlocked? / <-address) and returns NULL. */
+  (void)function_environment;
+  (void)variable_environment;
+
+  return shen_apply(&shen_root_context, function_object, arguments);
 }
 
 static KLObject* eval_kl_list_user_function_application
@@ -1366,7 +1364,16 @@ static KLObject* eval_symbol_function_application
 
 KLObject* eval_simple_closure_function_application (KLObject* function_object)
 {
-  Closure* closure = get_kl_function_closure(function_object);
+  Closure* closure;
+
+  if (is_primitive_kl_function(function_object) ||
+      is_user_kl_function(function_object))
+    return shen_apply(&shen_root_context, function_object, NULL);
+
+  if (!is_closure_kl_function(function_object))
+    throw_kl_exception("0-arity apply expects a function");
+
+  closure = get_kl_function_closure(function_object);
 
   return eval_kl_object(get_closure_body(closure),
                         get_closure_parent_function_environment(closure),
@@ -1431,6 +1438,52 @@ static KLObject* eval_kl_list_closure_function_application
                                            variable_environment);
 }
 
+static KLObject* eval_kl_list_function_object_application
+(KLObject* list_object, KLObject* function_object,
+ Environment* function_environment, Environment* variable_environment)
+{
+  KLObject* cdr_object;
+  KLObject* evaluated_cdr_object;
+  Vector* arguments;
+
+  if (is_closure_kl_function(function_object))
+    return eval_kl_list_closure_function_application(list_object,
+                                                     function_object,
+                                                     function_environment,
+                                                     variable_environment);
+
+  if (!is_primitive_kl_function(function_object) &&
+      !is_user_kl_function(function_object))
+    throw_kl_exception("Unknown type of function");
+
+  cdr_object = CDR(list_object);
+  evaluated_cdr_object =
+    eval_function_application_arguments(cdr_object, function_environment,
+                                        variable_environment);
+  arguments = ((is_empty_kl_list(evaluated_cdr_object)) ?
+               NULL : kl_list_to_vector(evaluated_cdr_object));
+
+  return shen_apply(&shen_root_context, function_object, arguments);
+}
+
+static KLObject* eval_trap_error_handler_application
+(KLObject* function_object, KLObject* exception_object,
+ Environment* function_environment, Environment* variable_environment)
+{
+  Vector* arguments;
+
+  if (is_closure_kl_function(function_object))
+    return eval_closure_function_application(function_object,
+                                             exception_object,
+                                             function_environment,
+                                             variable_environment);
+
+  arguments = create_vector(1);
+  set_vector_element(arguments, 0, exception_object);
+
+  return shen_apply(&shen_root_context, function_object, arguments);
+}
+
 static KLObject* eval_trap_error_expression (KLObject* list_object,
                                              Environment* function_environment,
                                              Environment* variable_environment)
@@ -1462,16 +1515,29 @@ static KLObject* eval_trap_error_expression (KLObject* list_object,
     KLObject* function_object =
       eval_kl_object(handler_object, function_environment, variable_environment);
 
-    return eval_closure_function_application(function_object,
-                                             exception_object,
-                                             function_environment,
-                                             variable_environment);
+    return eval_trap_error_handler_application(function_object,
+                                               exception_object,
+                                               function_environment,
+                                               variable_environment);
   }
 }
 
 static inline KLObject* eval_c_quote_expression (KLObject* list_object)
 {
   return CADR(list_object);
+}
+
+/* KLambda (type Value Type) evaluates Value only; Type is not evaluated.
+   Matching Forth sy-type / Go symType. (list symbol) and (t --> f) in
+   yacc/montague ascriptions are constructors, not applications. */
+static KLObject* eval_type_expression (KLObject* list_object,
+                                       Environment* function_environment,
+                                       Environment* variable_environment)
+{
+  check_function_argument_size(get_kl_list_size(list_object) - 1, 2);
+
+  return eval_kl_object(CADR(list_object), function_environment,
+                        variable_environment);
 }
 
 static inline KLObject* eval_c_mcons_expression (KLObject* list_object,
@@ -1551,6 +1617,9 @@ static KLObject* eval_kl_list (KLObject* list_object,
                                      variable_environment);
     if (evaluated_car_object == get_c_quote_symbol_object())
       return eval_c_quote_expression(list_object);
+    if (evaluated_car_object == get_type_symbol_object())
+      return eval_type_expression(list_object, function_environment,
+                                  variable_environment);
 
     return eval_symbol_function_application(list_object,
                                             evaluated_car_object,
@@ -1559,10 +1628,10 @@ static KLObject* eval_kl_list (KLObject* list_object,
   }
 
   if (is_kl_function(evaluated_car_object))
-    return eval_kl_list_closure_function_application(list_object,
-                                                     evaluated_car_object,
-                                                     function_environment,
-                                                     variable_environment);
+    return eval_kl_list_function_object_application(list_object,
+                                                    evaluated_car_object,
+                                                    function_environment,
+                                                    variable_environment);
   
   char* error_message =
     concatenate_string(kl_object_to_string(evaluated_car_object),
@@ -1579,6 +1648,9 @@ KLObject* eval_kl_object (KLObject* object,
                           Environment* function_environment,
                           Environment* variable_environment)
 {
+  if (is_null(object))
+    throw_kl_exception("eval-kl of null");
+
   if (is_non_empty_kl_list(object))
     return eval_kl_list(object, function_environment, variable_environment);
   else if (is_kl_symbol(object)) {

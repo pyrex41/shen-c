@@ -1,0 +1,2 @@
+(pr (cn "seed: maxinferences=" (cn (str (maxinferences -1)) (cn " exists-arity=" (cn (str (arity exists)) (cn " exists=" (cn (str (exists (cons 1 (cons (lambda X (+ X 1)) (cons (lambda X (= X 100)) ()))) (lambda X (> X 50)))) (cn " sum=" (cn (str (sum (cons 1 (cons 2 (cons 3 ()))))) "
+"))))))) (stoutput))

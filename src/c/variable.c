@@ -1,4 +1,5 @@
 #include "variable.h"
+#include "version.h"
 
 KLObject* earmuff_language_symbol_object;
 KLObject* earmuff_implementation_symbol_object;
@@ -127,7 +128,7 @@ static inline void initialize_earmuff_port_symbol_object (void)
 {
   earmuff_port_symbol_object = create_kl_symbol_by_name("*port*");
   set_kl_symbol_variable_value(earmuff_port_symbol_object,
-                               create_kl_string_with_intern("0.2.3"));
+                               create_kl_string_with_intern(SHEN_C_VERSION));
 }
 
 static inline void register_global_variable_earmuff_port (void)
@@ -219,4 +220,15 @@ void register_global_variables (void)
   register_global_variable_earmuff_stoutput();
   register_global_variable_earmuff_sterror();
   register_global_variable_earmuff_argv();
+}
+
+void set_command_line_arguments (int argc, char** argv)
+{
+  KLObject* list_object = EL;
+  int i;
+
+  for (i = argc - 1; i >= 0; --i)
+    list_object = CONS(create_kl_string_with_intern(argv[i]), list_object);
+
+  set_kl_symbol_variable_value(get_earmuff_argv_symbol_object(), list_object);
 }

@@ -1,4 +1,18 @@
 #include "overwrite.h"
+#include "abi.h"
+
+static KLObject* intern_overwrite_symbol (char* name)
+{
+  KLObject* string_object = create_kl_string_with_intern(name);
+  KLObject* symbol_object = lookup_symbol_table(string_object);
+
+  if (is_null(symbol_object)) {
+    symbol_object = create_kl_symbol(string_object);
+    extend_symbol_table(string_object, symbol_object);
+  }
+
+  return symbol_object;
+}
 
 static inline KLObject* get_prolog_vector_object (void)
 {
@@ -309,19 +323,20 @@ static inline KLObject* primitive_function_map
   KLObject* head_list_object = EL;
   KLObject* tail_list_object = head_list_object;
 
+  (void)function_environment;
+  (void)variable_environment;
+
   while (!is_empty_kl_list(argument_list_object)) {
     if (!is_non_empty_kl_list(argument_list_object))
       throw_kl_exception("Wrong arguments for map function");
 
-    KLObject* quoted_argument_object = CONS(get_c_quote_symbol_object(),
-                                            CONS(CAR(argument_list_object), EL));
-    KLObject* function_application_list_object = CONS(symbol_or_function_object,
-                                                      CONS(quoted_argument_object,
-                                                           EL));
-    KLObject* list_object =
-      CONS(eval_kl_object(function_application_list_object,
-                          function_environment,
-                          variable_environment),
+    Vector* apply_arguments = create_vector(1);
+    KLObject* list_object;
+
+    set_vector_element(apply_arguments, 0, CAR(argument_list_object));
+    list_object =
+      CONS(shen_apply(&shen_root_context, symbol_or_function_object,
+                      apply_arguments),
            EL);
 
     if (is_empty_kl_list(head_list_object))
@@ -342,6 +357,80 @@ static inline void register_primitive_kl_function_map (void)
     create_primitive_kl_function(2, &primitive_function_map);
 
   set_kl_symbol_function(get_map_symbol_object(), function_object);
+}
+
+static inline KLObject* primitive_function_shen_fix_help
+(KLObject* function_object, Vector* arguments, Environment* function_environment,
+ Environment* variable_environment)
+{
+  KLObject** objects =
+    get_kl_function_arguments_with_count_check(function_object, arguments);
+  KLObject* f_object = objects[0];
+  KLObject* x_object = objects[1];
+  KLObject* fx_object = objects[2];
+  shen_context* ctx = &shen_root_context;
+
+  (void)function_environment;
+  (void)variable_environment;
+
+  for (;;) {
+    Vector* equal_arguments = create_vector(2);
+    KLObject* equal_object;
+    Vector* apply_arguments;
+
+    set_vector_element(equal_arguments, 0, x_object);
+    set_vector_element(equal_arguments, 1, fx_object);
+    equal_object = shen_apply(ctx, intern_overwrite_symbol("="),
+                              equal_arguments);
+
+    if (is_kl_boolean(equal_object) && get_boolean(equal_object))
+      return fx_object;
+
+    apply_arguments = create_vector(1);
+    set_vector_element(apply_arguments, 0, fx_object);
+    x_object = fx_object;
+    fx_object = shen_apply(ctx, f_object, apply_arguments);
+  }
+}
+
+static inline void register_primitive_kl_function_shen_fix_help (void)
+{
+  KLObject* function_object =
+    create_primitive_kl_function(3, &primitive_function_shen_fix_help);
+
+  set_kl_symbol_function(intern_overwrite_symbol("shen.fix-help"),
+                         function_object);
+}
+
+static inline KLObject* primitive_function_fix
+(KLObject* function_object, Vector* arguments, Environment* function_environment,
+ Environment* variable_environment)
+{
+  KLObject** objects =
+    get_kl_function_arguments_with_count_check(function_object, arguments);
+  Vector* apply_arguments = create_vector(1);
+  Vector* help_arguments = create_vector(3);
+  KLObject* fx_object;
+
+  (void)function_environment;
+  (void)variable_environment;
+  set_vector_element(apply_arguments, 0, objects[1]);
+  fx_object = shen_apply(&shen_root_context, objects[0], apply_arguments);
+  set_vector_element(help_arguments, 0, objects[0]);
+  set_vector_element(help_arguments, 1, objects[1]);
+  set_vector_element(help_arguments, 2, fx_object);
+
+  return shen_apply(&shen_root_context,
+                    intern_overwrite_symbol("shen.fix-help"),
+                    help_arguments);
+}
+
+static inline void register_primitive_kl_function_fix (void)
+{
+  KLObject* function_object =
+    create_primitive_kl_function(2, &primitive_function_fix);
+
+  set_kl_symbol_function(intern_overwrite_symbol("fix"), function_object);
 }
 
 static inline KLObject* primitive_function_reverse
@@ -780,21 +869,21 @@ static inline KLObject* primitive_function_dict_fold
   KLObject* acc_object = objects[2];
   khash_t(StringPairTable)* table = get_kl_dictionary_table(dictionary_object);
 
+  (void)function_environment;
+  (void)variable_environment;
+
   for (khiter_t i = kh_begin(table); i != kh_end(table); ++i)
     if (kh_exist(table, i)) {
       Pair* pair = kh_value(table, i);
       KLObject* key_object = get_pair_car(pair);
       KLObject* value_object = get_pair_cdr(pair);
-      KLObject* function_application_list_object =
-        CONS(function_or_symbol_object,
-             CONS(CONS(get_c_quote_symbol_object(), CONS(key_object, get_empty_kl_list())),
-                  CONS(CONS(get_c_quote_symbol_object(), CONS(value_object, get_empty_kl_list())),
-                       CONS(CONS(get_c_quote_symbol_object(), CONS(acc_object, get_empty_kl_list())),
-                            get_empty_kl_list()))));
+      Vector* apply_arguments = create_vector(3);
 
-      acc_object =
-        eval_kl_object(function_application_list_object, function_environment,
-                       variable_environment);
+      set_vector_element(apply_arguments, 0, key_object);
+      set_vector_element(apply_arguments, 1, value_object);
+      set_vector_element(apply_arguments, 2, acc_object);
+      acc_object = shen_apply(&shen_root_context, function_or_symbol_object,
+                             apply_arguments);
     }
 
   return acc_object;
@@ -834,6 +923,91 @@ static inline void register_primitive_kl_function_length (void)
     create_primitive_kl_function(1, &primitive_function_length);
 
   set_kl_symbol_function(get_length_symbol_object(), function_object);
+}
+
+static inline KLObject* primitive_function_shen_fillvector
+(KLObject* function_object, Vector* arguments, Environment* function_environment,
+ Environment* variable_environment)
+{
+  KLObject** objects =
+    get_kl_function_arguments_with_count_check(function_object, arguments);
+  KLObject* vector_object = objects[0];
+  KLObject* start_object = objects[1];
+  KLObject* end_object = objects[2];
+  KLObject* value_object = objects[3];
+  Vector* vector;
+  long start;
+  long end;
+  long size;
+  long i;
+
+  if (!is_kl_vector(vector_object))
+    throw_kl_exception("First argument of shen.fillvector should be a vector");
+
+  if (!is_kl_number_l(start_object) || !is_kl_number_l(end_object))
+    throw_kl_exception("shen.fillvector indices should be integers");
+
+  vector = get_vector(vector_object);
+  start = get_kl_number_number_l(start_object);
+  end = get_kl_number_number_l(end_object);
+  size = get_vector_size(vector);
+
+  if (start < 0 || end >= size || start > end)
+    throw_kl_exception("shen.fillvector index is out of bound");
+
+  for (i = start; i <= end; ++i)
+    set_vector_element(vector, i, value_object);
+
+  return vector_object;
+}
+
+static inline void register_primitive_kl_function_shen_fillvector (void)
+{
+  KLObject* function_object =
+    create_primitive_kl_function(4, &primitive_function_shen_fillvector);
+
+  set_kl_symbol_function(intern_overwrite_symbol("shen.fillvector"),
+                         function_object);
+}
+
+static inline KLObject* primitive_function_vector
+(KLObject* function_object, Vector* arguments, Environment* function_environment,
+ Environment* variable_environment)
+{
+  KLObject** objects =
+    get_kl_function_arguments_with_count_check(function_object, arguments);
+  KLObject* size_object = objects[0];
+  KLObject* vector_object;
+  KLObject* fail_object;
+  Vector* vector;
+  long n;
+  long i;
+
+  if (!is_kl_number_l(size_object))
+    throw_kl_exception("Argument of vector should be an integer");
+
+  n = get_kl_number_number_l(size_object);
+
+  if (n < 0)
+    throw_kl_exception("Vector size should be a non-negative integer");
+
+  vector_object = create_kl_vector(n + 1);
+  vector = get_vector(vector_object);
+  fail_object = get_shen_fail_exclamation_symbol_object();
+  set_vector_element(vector, 0, create_kl_number_l(n));
+
+  for (i = 1; i <= n; ++i)
+    set_vector_element(vector, i, fail_object);
+
+  return vector_object;
+}
+
+static inline void register_primitive_kl_function_vector (void)
+{
+  KLObject* function_object =
+    create_primitive_kl_function(1, &primitive_function_vector);
+
+  set_kl_symbol_function(intern_overwrite_symbol("vector"), function_object);
 }
 
 static inline KLObject* primitive_function_shen_hdtl
@@ -1215,14 +1389,14 @@ static inline KLObject* primitive_function_bind_helper
  KLObject* argument_index_object, KLObject* argument_function_object,
  Environment* function_environment, Environment* variable_environment)
 {
+  KLObject* object;
+
+  (void)function_environment;
+  (void)variable_environment;
   primitive_function_shen_bindv_helper(argument_vector_object,
                                        argument_vector_value_object,
                                        argument_index_object);
-
-  KLObject* function_application_list_object = CONS(argument_function_object, EL);
-  KLObject* object = eval_kl_object(function_application_list_object,
-                                    function_environment, variable_environment);
-
+  object = shen_apply(&shen_root_context, argument_function_object, NULL);
   primitive_function_shen_unbindv_helper(argument_vector_object, argument_index_object);
 
   return object;
@@ -1253,12 +1427,9 @@ static inline KLObject* primitive_function_shen_lzy_equal_exclamation_helper
  KLObject* function_object, Environment* function_environment,
  Environment* variable_environment)
 {
-  if (is_kl_object_equal(object, list_or_vector_object)) {
-    KLObject* function_application_list_object = CONS(function_object, EL);
-
-    return eval_kl_object(function_application_list_object, function_environment,
-                          variable_environment);
-  } else if (is_kl_boolean_equal(primitive_function_shen_is_pvar_helper(list_or_vector_object),
+  if (is_kl_object_equal(object, list_or_vector_object))
+    return shen_apply(&shen_root_context, function_object, NULL);
+  else if (is_kl_boolean_equal(primitive_function_shen_is_pvar_helper(list_or_vector_object),
                                  get_true_boolean_object()) &&
              is_kl_boolean_equal(primitive_function_shen_is_occurs_helper(list_or_vector_object,
                                                                           primitive_function_shen_deref_helper(object,
@@ -1585,17 +1756,18 @@ static inline KLObject* primitive_function_shen_compose
   KLObject* list_object = objects[0];
   KLObject* object = objects[1];
 
+  (void)function_environment;
+  (void)variable_environment;
+
   while (!is_empty_kl_list(list_object)) {
+    Vector* apply_arguments;
+
     if (!is_non_empty_kl_list(list_object))
       throw_kl_exception("Wrong argument for shen.compose function");
 
-    KLObject* quoted_argument_list_object =
-      CONS(CONS(get_c_quote_symbol_object(), CONS(object, EL)), EL);
-    KLObject* function_application_list_object =
-      CONS(CAR(list_object), quoted_argument_list_object);
-
-    object = eval_kl_object(function_application_list_object,
-                            function_environment, variable_environment);
+    apply_arguments = create_vector(1);
+    set_vector_element(apply_arguments, 0, object);
+    object = shen_apply(&shen_root_context, CAR(list_object), apply_arguments);
     list_object = CDR(list_object);
   }
 
@@ -1631,6 +1803,8 @@ void register_overwrite_sys_primitive_kl_functions (void)
   register_primitive_kl_function_value_slash_or();
   register_primitive_kl_function_get_absvector_element_slash_or();
   register_primitive_kl_function_map();
+  register_primitive_kl_function_shen_fix_help();
+  register_primitive_kl_function_fix();
   register_primitive_kl_function_reverse();
   register_primitive_kl_function_append();
   register_primitive_kl_function_is_element();
@@ -1649,6 +1823,8 @@ void register_overwrite_sys_primitive_kl_functions (void)
   register_primitive_kl_function_dict_values();
   register_primitive_kl_function_dict_fold();
   register_primitive_kl_function_length();
+  register_primitive_kl_function_shen_fillvector();
+  register_primitive_kl_function_vector();
 }
 
 void register_overwrite_yacc_primitive_kl_functions (void)
@@ -1681,9 +1857,138 @@ void register_overwrite_prolog_primitive_kl_functions (void)
   register_primitive_kl_function_shen_newpv();
 }
 
+static inline KLObject* primitive_function_shen_char_stoutput_p
+(KLObject* function_object, Vector* arguments, Environment* function_environment,
+ Environment* variable_environment)
+{
+  KLObject** objects =
+    get_kl_function_arguments_with_count_check(function_object, arguments);
+
+  if (is_kl_stream(objects[0]) &&
+      get_kl_stream_stream_type(objects[0]) == KL_STREAM_TYPE_OUT)
+    return get_true_boolean_object();
+
+  return get_false_boolean_object();
+}
+
+static inline void register_primitive_kl_function_shen_char_stoutput_p (void)
+{
+  KLObject* function_object =
+    create_primitive_kl_function(1, &primitive_function_shen_char_stoutput_p);
+
+  set_kl_symbol_function(intern_overwrite_symbol("shen.char-stoutput?"),
+                         function_object);
+}
+
+static inline KLObject* primitive_function_shen_char_stinput_p
+(KLObject* function_object, Vector* arguments, Environment* function_environment,
+ Environment* variable_environment)
+{
+  get_kl_function_arguments_with_count_check(function_object, arguments);
+
+  return get_false_boolean_object();
+}
+
+static inline void register_primitive_kl_function_shen_char_stinput_p (void)
+{
+  KLObject* function_object =
+    create_primitive_kl_function(1, &primitive_function_shen_char_stinput_p);
+
+  set_kl_symbol_function(intern_overwrite_symbol("shen.char-stinput?"),
+                         function_object);
+}
+
+static inline KLObject* primitive_function_shen_write_string
+(KLObject* function_object, Vector* arguments, Environment* function_environment,
+ Environment* variable_environment)
+{
+  KLObject** objects =
+    get_kl_function_arguments_with_count_check(function_object, arguments);
+  char* string;
+  size_t length;
+  FILE* file;
+
+  if (!is_kl_string(objects[0]))
+    throw_kl_exception("Argument of shen.write-string should be a string");
+
+  if (!is_kl_stream(objects[1]))
+    throw_kl_exception("Argument of shen.write-string should be a stream");
+
+  string = get_string(objects[0]);
+  length = strlen(string);
+  file = get_kl_stream_file(objects[1]);
+
+  if (length > 0 && fwrite(string, 1, length, file) != length)
+    throw_kl_exception("Failed to write string to stream");
+
+  if (fflush(file) != 0)
+    throw_kl_exception("Failed to flush stream");
+
+  return objects[0];
+}
+
+static inline void register_primitive_kl_function_shen_write_string (void)
+{
+  KLObject* function_object =
+    create_primitive_kl_function(2, &primitive_function_shen_write_string);
+
+  set_kl_symbol_function(intern_overwrite_symbol("shen.write-string"),
+                         function_object);
+}
+
+static inline KLObject* primitive_function_pr
+(KLObject* function_object, Vector* arguments, Environment* function_environment,
+ Environment* variable_environment)
+{
+  KLObject** objects =
+    get_kl_function_arguments_with_count_check(function_object, arguments);
+  KLObject* hush_symbol = intern_overwrite_symbol("*hush*");
+  KLObject* hush_value;
+  char* string;
+  size_t length;
+  FILE* file;
+
+  /* *hush* gates stdout only — not stderr, not file streams. Do not use
+     shen.char-stoutput? (true for every out stream on this port). */
+  hush_value = get_kl_symbol_variable_value(hush_symbol);
+  if (hush_value == get_true_boolean_object() &&
+      objects[1] == get_std_output_stream_object())
+    return objects[0];
+
+  if (!is_kl_string(objects[0]))
+    throw_kl_exception("Argument of pr should be a string");
+
+  if (!is_kl_stream(objects[1]))
+    throw_kl_exception("Argument of pr should be a stream");
+
+  string = get_string(objects[0]);
+  length = strlen(string);
+  file = get_kl_stream_file(objects[1]);
+
+  if (length > 0 && fwrite(string, 1, length, file) != length)
+    throw_kl_exception("Failed to write string to stream");
+
+  if (fflush(file) != 0)
+    throw_kl_exception("Failed to flush stream");
+
+  return objects[0];
+}
+
+static inline void register_primitive_kl_function_pr (void)
+{
+  KLObject* function_object =
+    create_primitive_kl_function(2, &primitive_function_pr);
+
+  set_kl_symbol_function(intern_overwrite_symbol("pr"), function_object);
+}
+
 void register_overwrite_writer_primitive_kl_functions (void)
 {
   register_primitive_kl_function_shen_arg_to_str();
+  register_primitive_kl_function_shen_char_stoutput_p();
+  register_primitive_kl_function_shen_char_stinput_p();
+  register_primitive_kl_function_shen_write_string();
+  register_primitive_kl_function_pr();
 }
 
 void register_overwrite_macros_primitive_kl_functions (void)

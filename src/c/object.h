@@ -27,6 +27,7 @@ char* kl_object_to_string (KLObject* object);
 void print_kl_object (KLObject* object);
 void println_kl_object (KLObject* object);
 void printlnln_kl_object (KLObject* object);
+void println_kl_object_display (KLObject* object);
 bool is_kl_list_equal (KLObject* left_object, KLObject* right_object);
 bool is_kl_vector_equal (KLObject* left_object, KLObject* right_object);
 bool is_kl_object_equal (KLObject* left_object, KLObject* right_object);

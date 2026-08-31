@@ -1,0 +1,4 @@
+(defun depth (V7230 V7231 V7232 V7233) (depth-help (cons V7230 ()) V7231 V7232 V7233 ()))
+
+(defun depth-help (V7257 V7258 V7259 V7260 V7261) (cond ((and (cons? V7257) (V7259 (hd V7257))) (reverse (cons (hd V7257) V7261))) ((and (cons? V7257) (V7260 (hd V7257))) ()) (true (let Freeze7263 (freeze (cond ((cons? V7257) (depth-help (tl V7257) V7258 V7259 V7260 V7261)) (true ()))) (if (cons? V7257) (let Result7264 (fail-if (lambda Z7262 (empty? Z7262)) (depth-help (V7258 (hd V7257)) V7258 V7259 V7260 (cons (hd V7257) V7261))) (if (= Result7264 (fail)) (thaw Freeze7263) Result7264)) (thaw Freeze7263))))))
+

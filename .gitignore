@@ -2,6 +2,9 @@
 /obj/
 /tmp/
 /prof/
+/build/
+/build-ci/
+/evidence/
 /.vscode
 .#*
 .DS_Store

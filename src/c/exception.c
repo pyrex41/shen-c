@@ -24,7 +24,14 @@ extern bool is_kl_exception_equal (KLObject* left_object, KLObject* right_object
 
 void throw_kl_exception (char* error_message)
 {
-  KLObject* exception_object = peek_stack(get_trapped_kl_exception_stack());
+  Stack* trap_stack = get_trapped_kl_exception_stack();
+
+  if (is_null(trap_stack)) {
+    fprintf(stderr, "%s\n", error_message);
+    exit(EXIT_FAILURE);
+  }
+
+  KLObject* exception_object = peek_stack(trap_stack);
 
   if (is_empty_kl_list(exception_object)) {
     fprintf(stderr, "%s\n", error_message);
