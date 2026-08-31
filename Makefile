@@ -159,11 +159,32 @@ ${INTERP_AOT_APP}: ${BUILDER_BIN} ${INTERP_AOT_FIXTURE}/interp-aot.kl ${INTERP_A
 	rm -rf ${INTERP_AOT_APP}
 	SHEN_C_HOME=${CURDIR} ${BUILDER_BIN} ${INTERP_AOT_FIXTURE} ${INTERP_AOT_APP}
 
+OVERLAY_KL_DIR=obj/overlay
+INTERPRETER_SHEN=shen/test/s42/interpreter.shen
+PROLOGINTERP_SHEN=shen/test/s42/prologinterp.shen
+CODEGEN_SHEN_AOT=scripts/codegen-shen-aot.sh
+
+${OVERLAY_KL_DIR}/interpreter.kl: ${TARGET} ${INTERPRETER_SHEN} ${CODEGEN_SHEN_AOT} | ${OBJ_ROOT}
+	mkdir -p ${OVERLAY_KL_DIR}
+	${CODEGEN_SHEN_AOT} ${OVERLAY_KL_DIR} ${INTERPRETER_SHEN}
+
+${OVERLAY_KL_DIR}/prologinterp.kl: ${TARGET} ${PROLOGINTERP_SHEN} ${CODEGEN_SHEN_AOT} | ${OBJ_ROOT}
+	mkdir -p ${OVERLAY_KL_DIR}
+	${CODEGEN_SHEN_AOT} ${OVERLAY_KL_DIR} ${PROLOGINTERP_SHEN}
+
 # 579-defun runme AOT runner: kerneltests shake + incremental sidecar KL
-# (seed maxinferences, qmachine exists, depth, sum). Not the certified 134/0 path.
+# (seed maxinferences, qmachine exists, depth, sum). O2 overlay-after-load
+# is killed for this app: L-interp typecheck is inside load-help (1.18M
+# inf) before any defun swap, so install cannot drop the ~16s wall.
+# Overlay emit/install stay in libshenc + tests; do not wrap load here.
 ${RUNME_AOT_APP}: ${BUILDER_BIN} ${RUNME_AOT_FIXTURE}/kernel.kl ${RUNME_AOT_FIXTURE}/seed.kl ${RUNME_AOT_FIXTURE}/qmachine.kl ${RUNME_AOT_FIXTURE}/depth.kl ${RUNME_AOT_FIXTURE}/sum.kl ${RUNME_AOT_FIXTURE}/runme.kl
 	rm -rf ${RUNME_AOT_APP}
 	SHEN_C_HOME=${CURDIR} ${BUILDER_BIN} ${RUNME_AOT_FIXTURE} ${RUNME_AOT_APP}
+	! grep -F shen_wrap_load_for_overlays ${RUNME_AOT_APP}/app.c
+	! grep -F shen_register_overlay ${RUNME_AOT_APP}/app.c
+	test ! -f ${RUNME_AOT_APP}/overlay_interpreter.c
+	grep -F shen_add ${RUNME_AOT_APP}/app.c
+	grep -F shen_cons ${RUNME_AOT_APP}/app.c
 
 test: ${TEST_BIN} ${ABI_TEST_BIN} ${EMIT_TEST_BIN} ${SUM_APP} ${FIB_APP} ${HELLO_APP} ${FIB_YGG_APP} ${TC_YGG_APP} ${INTERP_AOT_APP} ${TARGET}
 	ASAN_OPTIONS=detect_leaks=0 ${TEST_BIN}

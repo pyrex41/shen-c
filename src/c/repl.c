@@ -3,6 +3,7 @@
 
 #include "repl.h"
 #include "boolean.h"
+#include "tc_cache.h"
 #include "variable.h"
 
 static KLObject* eval_in_global_environments (KLObject* object)
@@ -82,6 +83,7 @@ void load_shen_kl_files (void)
   register_overwrite_yacc_primitive_kl_functions();
 
   load_kl_file("shen/src/kl/types.kl");
+  shen_tc_cache_install_from_env();
 }
 
 void load_development_kl_file (void)

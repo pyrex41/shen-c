@@ -112,6 +112,12 @@ int main (void)
   expect(strstr(generated, "shen_apply_port_overwrites") != NULL,
          "generated main re-applies C port overwrites after defuns");
   expect(strstr(generated, "shen_intern") != NULL, "generated C uses intern");
+  expect(strstr(generated, "shen_add") != NULL, "add2 inlines + to shen_add");
+  expect(strstr(generated, "shen_sub") != NULL, "countdown inlines - to shen_sub");
+  expect(strstr(generated, "shen_intern(ctx, \"+\")") == NULL,
+         "exact-arity + is not intern+apply");
+  expect(strstr(generated, "shen_intern(ctx, \"-\")") == NULL,
+         "exact-arity - is not intern+apply");
   expect(strstr(generated, "goto tail_start_") != NULL,
          "self-tail countdown lowers to goto");
   expect(strstr(generated, "shen_eval_kl") == NULL,
@@ -205,6 +211,130 @@ int main (void)
            "demodulate lambda stays shen_native_closure");
     expect(generated != NULL && strstr(generated, "eval_kl_object") == NULL,
            "demodulate is not eval_kl_object of source");
+  }
+
+  {
+    FILE* overlay_out;
+    ShenEmitReport overlay_report = {0};
+    KLObject* overlay_forms[1];
+
+    overlay_forms[0] = form;
+    overlay_out = tmpfile();
+    expect(overlay_out != NULL, "overlay tmpfile");
+    expect(shen_emit_overlay(overlay_out, overlay_forms, 1, "interpreter",
+                             "interpreter.shen", 0x11ULL, 0x22ULL,
+                             &overlay_report) == 0,
+           "emit overlay module");
+    expect(overlay_report.defuns == 1, "overlay emits one defun");
+    fseek(overlay_out, 0, SEEK_END);
+    size = ftell(overlay_out);
+    fseek(overlay_out, 0, SEEK_SET);
+    free(generated);
+    generated = malloc((size_t)size + 1);
+    expect(generated != NULL, "overlay generated buffer");
+    if (generated != NULL && size > 0)
+      fread(generated, 1, (size_t)size, overlay_out);
+    if (generated != NULL)
+      generated[size] = '\0';
+    fclose(overlay_out);
+    expect(generated != NULL && strstr(generated, "int main") == NULL,
+           "overlay is not a second main");
+    expect(generated != NULL &&
+           strstr(generated, "shen_generated_install") == NULL,
+           "overlay does not emit shaken-app install");
+    expect(generated != NULL &&
+           strstr(generated, "SHEN_OVERLAY_FORMAT") != NULL,
+           "overlay records format tag");
+    expect(generated != NULL &&
+           strstr(generated, "shen_overlay_module_interpreter") != NULL,
+           "overlay exports module symbol");
+    expect(generated != NULL && strstr(generated, "shen_register_defun") != NULL,
+           "overlay install registers NativeFunction defuns");
+    expect(generated != NULL && strstr(generated, "native_") != NULL,
+           "overlay has compiled natives");
+    expect(generated != NULL && strstr(generated, "eval_kl_object(") == NULL,
+           "overlay is not eval_kl_object of sidecar source");
+    expect(generated != NULL && strstr(generated, "shen_add") != NULL,
+           "overlay add2 also inlines +");
+  }
+
+  {
+    KLObject* x;
+    KLObject* xs;
+    KLObject* cons_body;
+    KLObject* hd_body;
+    KLObject* tl_body;
+    KLObject* partial;
+    KLObject* forms[4];
+    ShenEmitReport list_report = {0};
+
+    x = shen_intern(ctx, "X");
+    xs = shen_intern(ctx, "Xs");
+    cons_body = shen_cons(ctx, shen_intern(ctx, "cons"),
+                          shen_cons(ctx, x,
+                                    shen_cons(ctx, xs, shen_empty_list(ctx))));
+    hd_body = shen_cons(ctx, shen_intern(ctx, "hd"),
+                        shen_cons(ctx, xs, shen_empty_list(ctx)));
+    tl_body = shen_cons(ctx, shen_intern(ctx, "tl"),
+                        shen_cons(ctx, xs, shen_empty_list(ctx)));
+    partial = shen_cons(ctx, shen_intern(ctx, "+"),
+                        shen_cons(ctx, x, shen_empty_list(ctx)));
+    forms[0] = shen_cons(ctx, shen_intern(ctx, "defun"),
+                         shen_cons(ctx, shen_intern(ctx, "snoc"),
+                                   shen_cons(ctx,
+                                             shen_cons(ctx, x,
+                                                       shen_cons(ctx, xs,
+                                                                 shen_empty_list(ctx))),
+                                             shen_cons(ctx, cons_body,
+                                                       shen_empty_list(ctx)))));
+    forms[1] = shen_cons(ctx, shen_intern(ctx, "defun"),
+                         shen_cons(ctx, shen_intern(ctx, "first"),
+                                   shen_cons(ctx, shen_cons(ctx, xs,
+                                                            shen_empty_list(ctx)),
+                                             shen_cons(ctx, hd_body,
+                                                       shen_empty_list(ctx)))));
+    forms[2] = shen_cons(ctx, shen_intern(ctx, "defun"),
+                         shen_cons(ctx, shen_intern(ctx, "rest"),
+                                   shen_cons(ctx, shen_cons(ctx, xs,
+                                                            shen_empty_list(ctx)),
+                                             shen_cons(ctx, tl_body,
+                                                       shen_empty_list(ctx)))));
+    forms[3] = shen_cons(ctx, shen_intern(ctx, "defun"),
+                         shen_cons(ctx, shen_intern(ctx, "plus1"),
+                                   shen_cons(ctx, shen_cons(ctx, x,
+                                                            shen_empty_list(ctx)),
+                                             shen_cons(ctx, partial,
+                                                       shen_empty_list(ctx)))));
+    out = tmpfile();
+    expect(out != NULL, "list-prim tmpfile");
+    expect(shen_emit_program(out, NULL, 0, forms, 4, NULL, "test_emit",
+                             &list_report) == 0,
+           "emit cons/hd/tl/partial+");
+    fseek(out, 0, SEEK_END);
+    size = ftell(out);
+    fseek(out, 0, SEEK_SET);
+    free(generated);
+    generated = malloc((size_t)size + 1);
+    expect(generated != NULL, "list-prim generated buffer");
+    if (generated != NULL && size > 0)
+      fread(generated, 1, (size_t)size, out);
+    if (generated != NULL)
+      generated[size] = '\0';
+    fclose(out);
+    expect(generated != NULL && strstr(generated, "shen_cons") != NULL,
+           "cons inlines to shen_cons");
+    expect(generated != NULL && strstr(generated, "shen_hd") != NULL,
+           "hd inlines to shen_hd");
+    expect(generated != NULL && strstr(generated, "shen_tl") != NULL,
+           "tl inlines to shen_tl");
+    expect(generated != NULL &&
+           strstr(generated, "shen_intern(ctx, \"cons\")") == NULL,
+           "exact-arity cons is not intern+apply");
+    expect(generated != NULL &&
+           strstr(generated, "shen_intern(ctx, \"+\")") != NULL,
+           "partial + stays intern+apply");
+    expect(generated != NULL && strstr(generated, "shen_native_closure") == NULL,
+           "list prims are not wrapped as closures");
   }
 
   if (failures != 0) {

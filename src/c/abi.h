@@ -1,8 +1,15 @@
 #ifndef SHEN_C_ABI_H
 #define SHEN_C_ABI_H
 
+#include <stddef.h>
+#include <stdint.h>
+
 #include "context.h"
 #include "kl.h"
+
+/* Bump when overlay emit / install contract changes so stale modules
+ * silently fall back to the loaded walker. */
+#define SHEN_OVERLAY_FORMAT "shen-c-aot-overlay-1"
 
 /*
  * Option 5 rung 1 embedding/codegen ABI. Generated defuns are C
@@ -22,6 +29,9 @@ KLObject* shen_cons (shen_context* ctx, KLObject* head, KLObject* tail);
 KLObject* shen_hd (shen_context* ctx, KLObject* list);
 KLObject* shen_tl (shen_context* ctx, KLObject* list);
 KLObject* shen_empty_list (shen_context* ctx);
+/* Boxed + / - for emit O4. Long+long is the t* (+ Infs 1) path. */
+KLObject* shen_add (shen_context* ctx, KLObject* x, KLObject* y);
+KLObject* shen_sub (shen_context* ctx, KLObject* x, KLObject* y);
 
 KLObject* shen_number_l (shen_context* ctx, long x);
 KLObject* shen_number_d (shen_context* ctx, double x);
@@ -74,5 +84,33 @@ void shen_simple_error (shen_context* ctx, const char* message);
 KLObject* shen_error_to_string (shen_context* ctx, KLObject* exception_object);
 
 KLObject* shen_eval_kl (shen_context* ctx, KLObject* object);
+
+typedef struct ShenOverlayNameArity {
+  const char* name;
+  long arity;
+} ShenOverlayNameArity;
+
+typedef struct ShenOverlayModule {
+  const char* label;
+  const char* format;
+  uint64_t source_fnv;
+  uint64_t kernel_fnv;
+  const ShenOverlayNameArity* compiled;
+  size_t ncompiled;
+  void (*install) (shen_context* ctx);
+} ShenOverlayModule;
+
+uint64_t shen_fnv64 (const unsigned char* bytes, size_t n);
+int shen_fnv64_file (const char* path, uint64_t* hash_out);
+uint64_t shen_kernel_digest (const char* kernel_dir);
+
+void shen_overlay_set_kernel_dir (const char* kernel_dir);
+void shen_register_overlay (const ShenOverlayModule* module);
+int shen_install_overlay (shen_context* ctx, const ShenOverlayModule* module);
+int shen_install_overlay_if_match (shen_context* ctx,
+                                   const ShenOverlayModule* module,
+                                   const unsigned char* live_src,
+                                   size_t live_len);
+void shen_wrap_load_for_overlays (void);
 
 #endif

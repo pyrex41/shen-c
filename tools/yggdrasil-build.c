@@ -7,6 +7,8 @@
 
 #include "emit.h"
 
+#define YGG_MAX_OVERLAYS 8
+
 /*
  * Stage-2 C builder: shaken dir -> C NativeFunctions + Makefile/CMake + exe.
  *   yggdrasil-build <shaken-dir> <out-dir>
@@ -168,11 +170,12 @@ static void cmake_escape (char* out, size_t cap, const char* s)
   out[n] = '\0';
 }
 
-static int write_app_makefile (const char* path, const char* home, const char* cc)
+static int write_app_makefile (const char* path, const char* home, const char* cc,
+                               const char* extra_srcs)
 {
   char home_mk[8192];
   char cc_mk[1024];
-  char text[16384];
+  char text[32768];
 
   makefile_escape(home_mk, sizeof(home_mk), home);
   makefile_escape(cc_mk, sizeof(cc_mk), cc);
@@ -189,22 +192,25 @@ static int write_app_makefile (const char* path, const char* home, const char* c
            "LIBS = $(SHEN_C_HOME)/bin/libshenc.a "
            "$(shell $(PKG_CONFIG) --libs bdw-gc)\n"
            "\n"
-           "app: app.c\n"
-           "\t$(CC) $(CFLAGS) app.c $(LIBS) -o app\n"
+           "app: app.c%s\n"
+           "\t$(CC) $(CFLAGS) app.c%s $(LIBS) -o app\n"
            "\n"
            ".PHONY: cmake-ninja\n"
            "cmake-ninja:\n"
            "\tcmake -G Ninja -S . -B build -D SHEN_C_HOME=$(SHEN_C_HOME)\n"
            "\tcmake --build build\n",
-           home_mk, cc_mk);
+           home_mk, cc_mk,
+           extra_srcs ? extra_srcs : "",
+           extra_srcs ? extra_srcs : "");
 
   return write_text(path, text);
 }
 
-static int write_app_cmakelists (const char* path, const char* home)
+static int write_app_cmakelists (const char* path, const char* home,
+                                 const char* extra_srcs)
 {
   char home_cm[8192];
-  char text[16384];
+  char text[32768];
 
   cmake_escape(home_cm, sizeof(home_cm), home);
   snprintf(text, sizeof(text),
@@ -216,7 +222,7 @@ static int write_app_cmakelists (const char* path, const char* home)
            "set(SHEN_C_HOME \"%s\" CACHE PATH \"shen-c checkout\")\n"
            "find_package(PkgConfig REQUIRED)\n"
            "pkg_check_modules(BDWGC REQUIRED IMPORTED_TARGET bdw-gc)\n"
-           "add_executable(app app.c)\n"
+           "add_executable(app app.c%s)\n"
            "target_compile_options(app PRIVATE\n"
            "  -fno-optimize-sibling-calls -fsigned-char\n"
            "  \"-iquote${SHEN_C_HOME}/src/c\")\n"
@@ -226,9 +232,78 @@ static int write_app_cmakelists (const char* path, const char* home)
            "  RUNTIME_OUTPUT_DIRECTORY \"${CMAKE_CURRENT_SOURCE_DIR}\"\n"
            "  RUNTIME_OUTPUT_DIRECTORY_DEBUG \"${CMAKE_CURRENT_SOURCE_DIR}\"\n"
            "  RUNTIME_OUTPUT_DIRECTORY_RELEASE \"${CMAKE_CURRENT_SOURCE_DIR}\")\n",
-           home_cm);
+           home_cm, extra_srcs ? extra_srcs : "");
 
   return write_text(path, text);
+}
+
+static void overlay_ident_from_kl (const char* kl_path, char* ident, size_t cap)
+{
+  const char* base = strrchr(kl_path, '/');
+  size_t n = 0;
+  const char* p;
+
+  base = (base == NULL) ? kl_path : base + 1;
+
+  if (cap < 2) {
+    if (cap > 0)
+      ident[0] = '\0';
+    return;
+  }
+
+  if (!((base[0] >= 'A' && base[0] <= 'Z') ||
+        (base[0] >= 'a' && base[0] <= 'z'))) {
+    ident[n++] = 'o';
+    ident[n++] = 'v';
+    ident[n++] = '_';
+  }
+
+  for (p = base; *p != '\0' && n + 1 < cap; ++p) {
+    unsigned char c = (unsigned char)*p;
+
+    if (c == '.')
+      break;
+
+    if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') ||
+        (c >= '0' && c <= '9'))
+      ident[n++] = (char)c;
+    else
+      ident[n++] = '_';
+  }
+
+  ident[n] = '\0';
+}
+
+static void c_escape (char* out, size_t cap, const char* s)
+{
+  size_t n = 0;
+
+  for (; *s != '\0' && n + 2 < cap; ++s) {
+    if (*s == '\\' || *s == '"')
+      out[n++] = '\\';
+    out[n++] = *s;
+  }
+
+  out[n] = '\0';
+}
+
+static int path_is_absolute (const char* path)
+{
+  return path != NULL && path[0] == '/';
+}
+
+static void resolve_overlay_path (char* out, size_t cap, const char* home,
+                                  const char* shaken, const char* spec)
+{
+  if (path_is_absolute(spec)) {
+    snprintf(out, cap, "%s", spec);
+    return;
+  }
+
+  if (strchr(spec, '/') != NULL)
+    snprintf(out, cap, "%s/%s", home, spec);
+  else
+    join_path(out, cap, shaken, spec);
 }
 
 int main (int argc, char** argv)
@@ -252,6 +327,13 @@ int main (int argc, char** argv)
   char init_name[256] = "";
   char users[32][256];
   int nusers = 0;
+  char overlay_kl_spec[YGG_MAX_OVERLAYS][1024];
+  char overlay_src_spec[YGG_MAX_OVERLAYS][1024];
+  char overlay_ident[YGG_MAX_OVERLAYS][64];
+  char overlay_c_name[YGG_MAX_OVERLAYS][256];
+  int noverlays = 0;
+  char extra_srcs[2048] = "";
+  char extra_main[16384] = "";
   char* line;
   KLObject** kernel_forms = NULL;
   long nkernel = 0;
@@ -306,6 +388,26 @@ int main (int argc, char** argv)
     else if (strcmp(line, "user") == 0 && nusers < 32) {
       snprintf(users[nusers], sizeof(users[nusers]), "%s", eq + 1);
       nusers++;
+    } else if (strcmp(line, "overlay") == 0 && noverlays < YGG_MAX_OVERLAYS) {
+      char* colon = strchr(eq + 1, ':');
+
+      if (colon == NULL) {
+        fprintf(stderr,
+                "yggdrasil-build: overlay= wants kl:src, got %s\n", eq + 1);
+        return 1;
+      }
+
+      *colon = '\0';
+      snprintf(overlay_kl_spec[noverlays], sizeof(overlay_kl_spec[noverlays]),
+               "%s", eq + 1);
+      snprintf(overlay_src_spec[noverlays], sizeof(overlay_src_spec[noverlays]),
+               "%s", colon + 1);
+      overlay_ident_from_kl(overlay_kl_spec[noverlays],
+                            overlay_ident[noverlays],
+                            sizeof(overlay_ident[noverlays]));
+      snprintf(overlay_c_name[noverlays], sizeof(overlay_c_name[noverlays]),
+               "overlay_%s.c", overlay_ident[noverlays]);
+      noverlays++;
     }
   }
 
@@ -357,14 +459,111 @@ int main (int argc, char** argv)
     return 1;
   }
 
-  if (shen_emit_program(out, kernel_forms, nkernel, user_store, nuser,
-                        init_name[0] ? init_name : NULL, shaken,
-                        &report) != 0) {
-    fprintf(stderr, "yggdrasil-build: emit failed\n");
-    return 1;
-  }
+  {
+    char kernel_dir[4096];
+    char kernel_dir_esc[8192];
+    uint64_t kernel_fnv;
 
-  fclose(out);
+    snprintf(kernel_dir, sizeof(kernel_dir), "%s/shen/src/kl", home);
+    kernel_fnv = shen_kernel_digest(kernel_dir);
+    c_escape(kernel_dir_esc, sizeof(kernel_dir_esc), kernel_dir);
+
+    if (noverlays > 0) {
+      snprintf(extra_main, sizeof(extra_main),
+               "  shen_overlay_set_kernel_dir(\"%s\");\n", kernel_dir_esc);
+
+      for (i = 0; i < noverlays; ++i) {
+        char chunk[1024];
+        char ident_esc[256];
+
+        c_escape(ident_esc, sizeof(ident_esc), overlay_ident[i]);
+        snprintf(chunk, sizeof(chunk),
+                 "  {\n    extern const ShenOverlayModule shen_overlay_module_%s;\n"
+                 "    shen_register_overlay(&shen_overlay_module_%s);\n  }\n",
+                 ident_esc, ident_esc);
+
+        if (strlen(extra_main) + strlen(chunk) + 40 >= sizeof(extra_main)) {
+          fprintf(stderr, "yggdrasil-build: overlay extra_in_main overflow\n");
+          return 1;
+        }
+
+        strcat(extra_main, chunk);
+        strcat(extra_srcs, " ");
+        strcat(extra_srcs, overlay_c_name[i]);
+      }
+
+      strcat(extra_main, "  shen_wrap_load_for_overlays();\n");
+    }
+
+    (void)kernel_fnv;
+
+    if (shen_emit_program_ex(out, kernel_forms, nkernel, user_store, nuser,
+                             init_name[0] ? init_name : NULL, shaken,
+                             extra_main[0] ? extra_main : NULL,
+                             &report) != 0) {
+      fprintf(stderr, "yggdrasil-build: emit failed\n");
+      return 1;
+    }
+
+    fclose(out);
+
+    for (i = 0; i < noverlays; ++i) {
+      char kl_path[4096];
+      char src_path[4096];
+      char overlay_c_path[4096];
+      KLObject** forms = NULL;
+      long n = 0;
+      FILE* overlay_out;
+      uint64_t source_fnv = 0;
+      ShenEmitReport overlay_report = {0};
+
+      resolve_overlay_path(kl_path, sizeof(kl_path), home, shaken,
+                           overlay_kl_spec[i]);
+      resolve_overlay_path(src_path, sizeof(src_path), home, shaken,
+                           overlay_src_spec[i]);
+      join_path(overlay_c_path, sizeof(overlay_c_path), out_dir,
+                overlay_c_name[i]);
+
+      if (shen_fnv64_file(src_path, &source_fnv) != 0) {
+        fprintf(stderr, "yggdrasil-build: cannot hash overlay source %s\n",
+                src_path);
+        return 1;
+      }
+
+      if (shen_read_kl_path(kl_path, &forms, &n) != 0) {
+        fprintf(stderr, "yggdrasil-build: cannot read overlay KL %s\n", kl_path);
+        return 1;
+      }
+
+      overlay_out = fopen(overlay_c_path, "w");
+
+      if (overlay_out == NULL) {
+        fprintf(stderr, "yggdrasil-build: cannot write %s\n", overlay_c_path);
+        return 1;
+      }
+
+      if (shen_emit_overlay(overlay_out, forms, n, overlay_ident[i],
+                            overlay_src_spec[i], source_fnv, kernel_fnv,
+                            &overlay_report) != 0) {
+        fprintf(stderr, "yggdrasil-build: overlay emit failed for %s\n",
+                kl_path);
+        return 1;
+      }
+
+      fclose(overlay_out);
+
+      if (overlay_report.defuns <= 0) {
+        fprintf(stderr, "yggdrasil-build: overlay %s compiled zero defuns\n",
+                kl_path);
+        return 1;
+      }
+
+      fprintf(stderr,
+              "yggdrasil/c: overlay %s defuns=%ld lambdas=%ld -> %s\n",
+              overlay_ident[i], overlay_report.defuns, overlay_report.lambdas,
+              overlay_c_path);
+    }
+  }
 
   {
     char lib[4096];
@@ -382,12 +581,12 @@ int main (int argc, char** argv)
   if (cc == NULL || cc[0] == '\0')
     cc = "clang";
 
-  if (write_app_makefile(mk_path, home, cc) != 0) {
+  if (write_app_makefile(mk_path, home, cc, extra_srcs) != 0) {
     fprintf(stderr, "yggdrasil-build: cannot write %s\n", mk_path);
     return 1;
   }
 
-  if (write_app_cmakelists(cmake_path, home) != 0) {
+  if (write_app_cmakelists(cmake_path, home, extra_srcs) != 0) {
     fprintf(stderr, "yggdrasil-build: cannot write %s\n", cmake_path);
     return 1;
   }

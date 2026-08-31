@@ -1,10 +1,14 @@
+#include <dirent.h>
 #include <pthread.h>
 #include <setjmp.h>
 #include <stddef.h>
+#include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/mman.h>
 #include <sys/resource.h>
+#include <sys/stat.h>
 #include <unistd.h>
 
 #ifndef MAP_ANONYMOUS
@@ -24,8 +28,10 @@
 #include "overwrite.h"
 #include "primitive.h"
 #include "stack.h"
+#include "stream.h"
 #include "string.h"
 #include "symbol.h"
+#include "tc_cache.h"
 
 /* libgc is built with threads; headers hide these unless GC_THREADS. */
 extern void GC_allow_register_threads (void);
@@ -276,6 +282,8 @@ void shen_apply_port_overwrites (void)
   register_overwrite_toplevel_primitive_kl_functions();
   register_overwrite_macros_primitive_kl_functions();
   register_overwrite_yacc_primitive_kl_functions();
+  /* After generated_install on AOT apps: wrap current load / typecheck. */
+  shen_tc_cache_install_from_env();
 }
 
 KLObject* shen_intern (shen_context* ctx, const char* name)
@@ -325,6 +333,34 @@ KLObject* shen_empty_list (shen_context* ctx)
   (void)ctx;
 
   return get_empty_kl_list();
+}
+
+KLObject* shen_add (shen_context* ctx, KLObject* x, KLObject* y)
+{
+  (void)ctx;
+
+  if (is_kl_number_l(x) && is_kl_number_l(y))
+    return create_kl_number_l(get_kl_number_number_l(x) +
+                              get_kl_number_number_l(y));
+
+  if (!is_kl_number(x) || !is_kl_number(y))
+    throw_kl_exception("arguments to + must be numbers");
+
+  return add_kl_number(x, y);
+}
+
+KLObject* shen_sub (shen_context* ctx, KLObject* x, KLObject* y)
+{
+  (void)ctx;
+
+  if (is_kl_number_l(x) && is_kl_number_l(y))
+    return create_kl_number_l(get_kl_number_number_l(x) -
+                              get_kl_number_number_l(y));
+
+  if (!is_kl_number(x) || !is_kl_number(y))
+    throw_kl_exception("arguments to - must be numbers");
+
+  return subtract_kl_number(x, y);
 }
 
 KLObject* shen_number_l (shen_context* ctx, long x)
@@ -794,4 +830,352 @@ KLObject* shen_eval_kl (shen_context* ctx, KLObject* object)
 
   return eval_kl_object(object, get_global_function_environment(),
                         get_global_variable_environment());
+}
+
+#define SHEN_OVERLAY_MAX 16
+
+static const ShenOverlayModule* overlay_modules[SHEN_OVERLAY_MAX];
+static int overlay_nmodules = 0;
+static char overlay_kernel_dir[4096];
+static KLObject* overlay_wrapped_load = NULL;
+static int overlay_load_wrapped = 0;
+static int overlay_kernel_fnv_ready = 0;
+static uint64_t overlay_kernel_fnv_cache = 0;
+
+uint64_t shen_fnv64 (const unsigned char* bytes, size_t n)
+{
+  uint64_t h = 0xcbf29ce484222325ULL;
+  size_t i;
+
+  for (i = 0; i < n; ++i) {
+    h ^= (uint64_t)bytes[i];
+    h *= 0x100000001b3ULL;
+  }
+
+  return h;
+}
+
+int shen_fnv64_file (const char* path, uint64_t* hash_out)
+{
+  FILE* file;
+  unsigned char buf[8192];
+  size_t n;
+  uint64_t h = 0xcbf29ce484222325ULL;
+
+  if (path == NULL || hash_out == NULL)
+    return -1;
+
+  file = fopen(path, "rb");
+
+  if (file == NULL)
+    return -1;
+
+  while ((n = fread(buf, 1, sizeof(buf), file)) > 0) {
+    size_t i;
+
+    for (i = 0; i < n; ++i) {
+      h ^= (uint64_t)buf[i];
+      h *= 0x100000001b3ULL;
+    }
+  }
+
+  if (ferror(file)) {
+    fclose(file);
+    return -1;
+  }
+
+  fclose(file);
+  *hash_out = h;
+
+  return 0;
+}
+
+static int overlay_name_cmp (const void* a, const void* b)
+{
+  return strcmp(*(char* const*)a, *(char* const*)b);
+}
+
+uint64_t shen_kernel_digest (const char* kernel_dir)
+{
+  DIR* dir;
+  struct dirent* ent;
+  char* names[512];
+  int nnames = 0;
+  uint64_t h = 0xcbf29ce484222325ULL;
+  int i;
+
+  if (kernel_dir == NULL || kernel_dir[0] == '\0')
+    return h;
+
+  dir = opendir(kernel_dir);
+
+  if (dir == NULL)
+    return h;
+
+  while ((ent = readdir(dir)) != NULL) {
+    const char* name = ent->d_name;
+    size_t len;
+    char path[4096];
+    struct stat st;
+
+    if (strcmp(name, ".") == 0 || strcmp(name, "..") == 0)
+      continue;
+
+    len = strlen(name);
+
+    if (len < 4 || strcmp(name + len - 3, ".kl") != 0)
+      continue;
+
+    snprintf(path, sizeof(path), "%s/%s", kernel_dir, name);
+
+    if (stat(path, &st) != 0 || !S_ISREG(st.st_mode))
+      continue;
+
+    if (nnames >= 512)
+      break;
+
+    {
+      char* copy = malloc(len + 1);
+
+      memcpy(copy, name, len + 1);
+      names[nnames++] = copy;
+    }
+  }
+
+  closedir(dir);
+  qsort(names, (size_t)nnames, sizeof(names[0]), overlay_name_cmp);
+
+  for (i = 0; i < nnames; ++i) {
+    char path[4096];
+    uint64_t file_h = 0xcbf29ce484222325ULL;
+    unsigned char le[8];
+    int b;
+    size_t j;
+
+    {
+      const unsigned char* nb = (const unsigned char*)names[i];
+      size_t nlen = strlen(names[i]);
+
+      for (j = 0; j < nlen; ++j) {
+        h ^= (uint64_t)nb[j];
+        h *= 0x100000001b3ULL;
+      }
+    }
+
+    snprintf(path, sizeof(path), "%s/%s", kernel_dir, names[i]);
+
+    if (shen_fnv64_file(path, &file_h) != 0)
+      file_h = shen_fnv64(NULL, 0);
+
+    for (b = 0; b < 8; ++b)
+      le[b] = (unsigned char)((file_h >> (8 * b)) & 0xff);
+
+    for (b = 0; b < 8; ++b) {
+      h ^= (uint64_t)le[b];
+      h *= 0x100000001b3ULL;
+    }
+  }
+
+  return h;
+}
+
+void shen_overlay_set_kernel_dir (const char* kernel_dir)
+{
+  overlay_kernel_fnv_ready = 0;
+
+  if (kernel_dir == NULL) {
+    overlay_kernel_dir[0] = '\0';
+    return;
+  }
+
+  snprintf(overlay_kernel_dir, sizeof(overlay_kernel_dir), "%s", kernel_dir);
+}
+
+void shen_register_overlay (const ShenOverlayModule* module)
+{
+  int i;
+
+  if (module == NULL)
+    return;
+
+  for (i = 0; i < overlay_nmodules; ++i) {
+    if (overlay_modules[i] == module)
+      return;
+  }
+
+  if (overlay_nmodules >= SHEN_OVERLAY_MAX)
+    return;
+
+  overlay_modules[overlay_nmodules++] = module;
+}
+
+int shen_install_overlay (shen_context* ctx, const ShenOverlayModule* module)
+{
+  size_t i;
+
+  if (module == NULL)
+    return 0;
+
+  for (i = 0; i < module->ncompiled; ++i) {
+    KLObject* symbol_object = shen_intern(ctx, module->compiled[i].name);
+    KLObject* function_object = shen_symbol_function(ctx, symbol_object);
+    long arity;
+
+    if (is_null(function_object) || !is_kl_function(function_object))
+      return 0;
+
+    arity = function_arity(function_object);
+
+    if (arity != module->compiled[i].arity)
+      return 0;
+  }
+
+  if (module->install != NULL)
+    module->install(ctx);
+
+  return 1;
+}
+
+static const char* overlay_kernel_dir_live (char* fallback, size_t fallback_cap)
+{
+  char* home;
+
+  if (overlay_kernel_dir[0] != '\0')
+    return overlay_kernel_dir;
+
+  home = get_shen_c_home_path();
+
+  if (home == NULL || home[0] == '\0')
+    return NULL;
+
+  snprintf(fallback, fallback_cap, "%sshen/src/kl", home);
+
+  return fallback;
+}
+
+int shen_install_overlay_if_match (shen_context* ctx,
+                                   const ShenOverlayModule* module,
+                                   const unsigned char* live_src,
+                                   size_t live_len)
+{
+  char fallback[4096];
+  const char* kernel_dir;
+
+  if (module == NULL || module->format == NULL)
+    return 0;
+
+  if (strcmp(module->format, SHEN_OVERLAY_FORMAT) != 0)
+    return 0;
+
+  if (shen_fnv64(live_src, live_len) != module->source_fnv)
+    return 0;
+
+  kernel_dir = overlay_kernel_dir_live(fallback, sizeof(fallback));
+
+  if (kernel_dir == NULL)
+    return 0;
+
+  if (!overlay_kernel_fnv_ready) {
+    overlay_kernel_fnv_cache = shen_kernel_digest(kernel_dir);
+    overlay_kernel_fnv_ready = 1;
+  }
+
+  if (overlay_kernel_fnv_cache != module->kernel_fnv)
+    return 0;
+
+  return shen_install_overlay(ctx, module);
+}
+
+static void overlay_try_path (shen_context* ctx, const char* path)
+{
+  FILE* file;
+  unsigned char* bytes;
+  long size;
+  int i;
+
+  if (path == NULL)
+    return;
+
+  file = fopen(path, "rb");
+
+  if (file == NULL)
+    return;
+
+  if (fseek(file, 0, SEEK_END) != 0) {
+    fclose(file);
+    return;
+  }
+
+  size = ftell(file);
+
+  if (size < 0) {
+    fclose(file);
+    return;
+  }
+
+  if (fseek(file, 0, SEEK_SET) != 0) {
+    fclose(file);
+    return;
+  }
+
+  bytes = malloc((size_t)size + 1);
+
+  if (size > 0 && fread(bytes, 1, (size_t)size, file) != (size_t)size) {
+    fclose(file);
+    return;
+  }
+
+  fclose(file);
+
+  for (i = 0; i < overlay_nmodules; ++i) {
+    if (shen_install_overlay_if_match(ctx, overlay_modules[i], bytes,
+                                      (size_t)size))
+      break;
+  }
+}
+
+static KLObject* native_overlay_load (KLObject* function_object, Vector* arguments,
+                                      Environment* function_environment,
+                                      Environment* variable_environment)
+{
+  shen_context* ctx = &shen_root_context;
+  KLObject** objects = shen_arguments(ctx, function_object, arguments);
+  KLObject* path_object = objects[0];
+  KLObject* result;
+
+  (void)function_environment;
+  (void)variable_environment;
+
+  result = shen_apply(ctx, overlay_wrapped_load, arguments);
+
+  if (is_kl_string(path_object))
+    overlay_try_path(ctx, get_string(path_object));
+
+  return result;
+}
+
+void shen_wrap_load_for_overlays (void)
+{
+  shen_context* ctx = &shen_root_context;
+  KLObject* load_symbol;
+  KLObject* current;
+
+  if (overlay_load_wrapped || overlay_nmodules == 0)
+    return;
+
+  load_symbol = shen_intern(ctx, "load");
+  current = shen_symbol_function(ctx, load_symbol);
+
+  if (is_null(current))
+    return;
+
+  overlay_wrapped_load = current;
+  {
+    KLObject* wrapper = create_primitive_kl_function(1, &native_overlay_load);
+
+    /* Thin post-load hook: do not trampoline the wrapper itself. The
+     * captured load native still hops when stack is low. */
+    set_kl_symbol_function(load_symbol, wrapper);
+  }
+  overlay_load_wrapped = 1;
 }

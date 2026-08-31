@@ -1,3 +1,4 @@
+#include <inttypes.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -795,9 +796,63 @@ static int emit_type (Emit* e, KLObject* list, int tail)
   return emit_expr(e, CADR(list), tail);
 }
 
+/* Exact-arity unbound + - cons hd tl: ABI helpers, not intern+Vector+apply.
+ * Locals named those symbols and partial application stay on shen_apply.
+ * if is already a special form (emit_if). */
+static int emit_prim_inline (Emit* e, KLObject* list)
+{
+  KLObject* head = CAR(list);
+  const char* name;
+  long n;
+  int a;
+  int b;
+  int t;
+
+  if (!is_kl_symbol(head) || lookup_bind(e, symbol_name(head)) >= 0)
+    return -1;
+
+  name = symbol_name(head);
+  n = get_kl_list_size(list) - 1;
+
+  if ((name[0] == '+' || name[0] == '-') && name[1] == '\0' && n == 2) {
+    a = emit_value(e, CADR(list));
+    b = emit_value(e, CADDR(list));
+    t = fresh(e);
+    cbuf_printf(e->stmt, "  KLObject* t%d = %s(ctx, t%d, t%d);\n",
+                t, name[0] == '+' ? "shen_add" : "shen_sub", a, b);
+    return t;
+  }
+
+  if (strcmp(name, "cons") == 0 && n == 2) {
+    a = emit_value(e, CADR(list));
+    b = emit_value(e, CADDR(list));
+    t = fresh(e);
+    cbuf_printf(e->stmt, "  KLObject* t%d = shen_cons(ctx, t%d, t%d);\n",
+                t, a, b);
+    return t;
+  }
+
+  if (strcmp(name, "hd") == 0 && n == 1) {
+    a = emit_value(e, CADR(list));
+    t = fresh(e);
+    cbuf_printf(e->stmt, "  KLObject* t%d = shen_hd(ctx, t%d);\n", t, a);
+    return t;
+  }
+
+  if (strcmp(name, "tl") == 0 && n == 1) {
+    a = emit_value(e, CADR(list));
+    t = fresh(e);
+    cbuf_printf(e->stmt, "  KLObject* t%d = shen_tl(ctx, t%d);\n", t, a);
+    return t;
+  }
+
+  return -1;
+}
+
 static int emit_expr (Emit* e, KLObject* expr, int tail)
 {
   KLObject* head;
+  int inlined;
 
   if (!is_non_empty_kl_list(expr))
     return emit_atom(e, expr);
@@ -838,6 +893,11 @@ static int emit_expr (Emit* e, KLObject* expr, int tail)
 
       return t;
     }
+
+    inlined = emit_prim_inline(e, expr);
+
+    if (inlined >= 0)
+      return inlined;
   }
 
   return emit_apply(e, expr, tail);
@@ -1098,6 +1158,18 @@ int shen_emit_program (FILE* out,
                        const char* source_label,
                        ShenEmitReport* report)
 {
+  return shen_emit_program_ex(out, kernel_forms, nkernel, user_forms, nuser,
+                              init_name, source_label, NULL, report);
+}
+
+int shen_emit_program_ex (FILE* out,
+                          KLObject** kernel_forms, long nkernel,
+                          KLObject** user_forms, long nuser,
+                          const char* init_name,
+                          const char* source_label,
+                          const char* extra_in_main,
+                          ShenEmitReport* report)
+{
   Emit e;
   int i;
 
@@ -1172,9 +1244,130 @@ int shen_emit_program (FILE* out,
             namebuf.data);
   }
 
+  if (extra_in_main != NULL && extra_in_main[0] != '\0')
+    fputs(extra_in_main, out);
+
   fprintf(out,
           "  shen_generated_run_user();\n"
           "  return 0;\n}\n");
+
+  if (report != NULL) {
+    report->defuns = e.defun_count;
+    report->toplevels = e.toplevel_count;
+    report->lambdas = e.lambda_count;
+  }
+
+  return 0;
+}
+
+static int overlay_ident_ok (const char* ident)
+{
+  const char* p;
+
+  if (ident == NULL || ident[0] == '\0')
+    return 0;
+
+  if (!(ident[0] == '_' ||
+        (ident[0] >= 'A' && ident[0] <= 'Z') ||
+        (ident[0] >= 'a' && ident[0] <= 'z')))
+    return 0;
+
+  for (p = ident + 1; *p != '\0'; ++p) {
+    if (!(*p == '_' ||
+          (*p >= 'A' && *p <= 'Z') ||
+          (*p >= 'a' && *p <= 'z') ||
+          (*p >= '0' && *p <= '9')))
+      return 0;
+  }
+
+  return 1;
+}
+
+int shen_emit_overlay (FILE* out,
+                       KLObject** forms, long nforms,
+                       const char* module_ident,
+                       const char* label,
+                       uint64_t source_fnv,
+                       uint64_t kernel_fnv,
+                       ShenEmitReport* report)
+{
+  Emit e;
+  int i;
+  CBuf labelbuf;
+
+  if (out == NULL || !overlay_ident_ok(module_ident))
+    return -1;
+
+  memset(&e, 0, sizeof(e));
+  cbuf_init(&e.helpers);
+  cbuf_init(&e.defuns);
+
+  e.in_user = 1;
+
+  for (i = 0; i < nforms; ++i) {
+    KLObject* form = forms[i];
+
+    if (is_non_empty_kl_list(form) && is_named_symbol(CAR(form), "defun"))
+      emit_defun_into(&e, form);
+  }
+
+  fprintf(out,
+          "/* Generated AOT overlay module (bootstrap defuns -> NativeFunctions).\n"
+          " * Install after (load) of the matching .shen. Not a second main.\n"
+          " * Not a source-string eval wrap. Source: %s\n"
+          " */\n"
+          "#include \"abi.h\"\n\n",
+          label ? label : module_ident);
+
+  if (e.helpers.data != NULL)
+    fputs(e.helpers.data, out);
+
+  if (e.defuns.data != NULL)
+    fputs(e.defuns.data, out);
+
+  fprintf(out, "static const ShenOverlayNameArity shen_overlay_compiled_%s[] = {\n",
+          module_ident);
+
+  for (i = 0; i < e.ndefun; ++i) {
+    CBuf namebuf;
+
+    cbuf_init(&namebuf);
+    cbuf_cstring(&namebuf, e.defun_recs[i].name);
+    fprintf(out, "  {%s, %ld},\n", namebuf.data, e.defun_recs[i].arity);
+  }
+
+  fprintf(out,
+          "};\n\nstatic void shen_overlay_install_%s (shen_context* ctx)\n{\n",
+          module_ident);
+
+  for (i = 0; i < e.ndefun; ++i) {
+    CBuf namebuf;
+
+    cbuf_init(&namebuf);
+    cbuf_cstring(&namebuf, e.defun_recs[i].name);
+    fprintf(out, "  shen_register_defun(ctx, %s, %ld, &native_%s);\n",
+            namebuf.data, e.defun_recs[i].arity, e.defun_recs[i].cname);
+  }
+
+  cbuf_init(&labelbuf);
+  cbuf_cstring(&labelbuf, label ? label : module_ident);
+  fprintf(out,
+          "}\n\nconst ShenOverlayModule shen_overlay_module_%s = {\n"
+          "  %s,\n"
+          "  SHEN_OVERLAY_FORMAT,\n"
+          "  %" PRIu64 "ULL,\n"
+          "  %" PRIu64 "ULL,\n"
+          "  shen_overlay_compiled_%s,\n"
+          "  %d,\n"
+          "  shen_overlay_install_%s\n"
+          "};\n",
+          module_ident,
+          labelbuf.data ? labelbuf.data : "\"overlay\"",
+          source_fnv,
+          kernel_fnv,
+          module_ident,
+          e.ndefun,
+          module_ident);
 
   if (report != NULL) {
     report->defuns = e.defun_count;
