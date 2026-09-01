@@ -1,10 +1,9 @@
 #include "boolean.h"
 
-KLObject* true_boolean_object;
-KLObject* false_boolean_object;
+KLObject* true_boolean_object = (KLObject*)KL_TRUE_TAG;
+KLObject* false_boolean_object = (KLObject*)KL_FALSE_TAG;
 
 extern bool get_boolean (KLObject* boolean_object);
-extern void set_boolean (KLObject* boolean_object, bool boolean);
 extern KLObject* create_kl_boolean (bool boolean);
 extern void initialize_true_boolean_object (void);
 extern void initialize_false_boolean_object (void);

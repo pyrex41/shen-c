@@ -1,24 +1,53 @@
 #include "evaluator.h"
 #include "abi.h"
-#include "gc.h"
 
-static int is_heap_kl_boolean (KLObject* object)
+/* Typecheck walk is let + small-arity apply. Count without a full scan past n,
+ * and apply through a stack Vector instead of CONS-then-create_vector. */
+#define EVAL_APPLY_STACK_ARGS 16
+
+static int kl_list_length_eq (KLObject* list_object, long n)
 {
-  return !is_null(object) && GC_base(object) != NULL && is_kl_boolean(object);
+  long i = 0;
+
+  while (!is_empty_kl_list(list_object)) {
+    if (i >= n)
+      return 0;
+
+    list_object = CDR(list_object);
+    ++i;
+  }
+
+  return i == n;
 }
+
+static void eval_list_into_array (KLObject* list_object, KLObject** out, long n,
+                                  Environment* function_environment,
+                                  Environment* variable_environment)
+{
+  long i;
+
+  for (i = 0; i < n; ++i) {
+    out[i] = eval_kl_object(CAR(list_object), function_environment,
+                            variable_environment);
+    list_object = CDR(list_object);
+  }
+}
+
+
 
 static KLObject* eval_if_expression (KLObject* list_object,
                                      Environment* function_environment,
                                      Environment* variable_environment)
 {
-  check_function_argument_size(get_kl_list_size(list_object) - 1, 3);
+  if (!kl_list_length_eq(CDR(list_object), 3))
+    throw_kl_exception("Wrong number of arguments passed to function");
 
   KLObject* cdr_object = CDR(list_object);
   KLObject* test_object = CAR(cdr_object);
   KLObject* evaluated_test_object =
     eval_kl_object(test_object, function_environment, variable_environment);
 
-  if (!is_heap_kl_boolean(evaluated_test_object))
+  if (!is_kl_boolean(evaluated_test_object))
     throw_kl_exception("Test should be a boolean value");
 
   if (get_boolean(evaluated_test_object)) {
@@ -37,14 +66,15 @@ static KLObject* eval_and_expression (KLObject* list_object,
                                       Environment* function_environment,
                                       Environment* variable_environment)
 {
-  check_function_argument_size(get_kl_list_size(list_object) - 1 , 2);
+  if (!kl_list_length_eq(CDR(list_object), 2))
+    throw_kl_exception("Wrong number of arguments passed to function");
 
   KLObject* cdr_object = CDR(list_object);
   KLObject* test_object = CAR(cdr_object);
   KLObject* evaluated_test_object =
     eval_kl_object(test_object, function_environment, variable_environment);
 
-  if (!is_heap_kl_boolean(evaluated_test_object))
+  if (!is_kl_boolean(evaluated_test_object))
     throw_kl_exception("Arguments should be boolean values");
 
   if (!get_boolean(evaluated_test_object))
@@ -54,7 +84,7 @@ static KLObject* eval_and_expression (KLObject* list_object,
   KLObject* evaluated_else_object =
     eval_kl_object(else_object, function_environment, variable_environment);
 
-  if (!is_heap_kl_boolean(evaluated_else_object))
+  if (!is_kl_boolean(evaluated_else_object))
     throw_kl_exception("Arguments should be boolean values");
 
   return evaluated_else_object;
@@ -64,14 +94,15 @@ static KLObject* eval_or_expression (KLObject* list_object,
                                      Environment* function_environment,
                                      Environment* variable_environment)
 {
-  check_function_argument_size(get_kl_list_size(list_object) - 1, 2);
+  if (!kl_list_length_eq(CDR(list_object), 2))
+    throw_kl_exception("Wrong number of arguments passed to function");
 
   KLObject* cdr_object = CDR(list_object);
   KLObject* test_object = CAR(cdr_object);
   KLObject* evaluated_test_object =
     eval_kl_object(test_object, function_environment, variable_environment);
 
-  if (!is_heap_kl_boolean(evaluated_test_object))
+  if (!is_kl_boolean(evaluated_test_object))
     throw_kl_exception("Arguments should be boolean value");
 
   if (get_boolean(evaluated_test_object))
@@ -81,7 +112,7 @@ static KLObject* eval_or_expression (KLObject* list_object,
   KLObject* evaluated_else_object
     = eval_kl_object(else_object, function_environment, variable_environment);
 
-  if (!is_heap_kl_boolean(evaluated_else_object))
+  if (!is_kl_boolean(evaluated_else_object))
     throw_kl_exception("Arguments should be boolean value");
 
   return evaluated_else_object;
@@ -108,7 +139,7 @@ static KLObject* eval_cond_tail_expression (KLObject* list_object,
   KLObject* evaluated_case_test_object =
     eval_kl_object(case_test_object, function_environment, variable_environment);
 
-  if (!is_heap_kl_boolean(evaluated_case_test_object))
+  if (!is_kl_boolean(evaluated_case_test_object))
     throw_kl_exception("Case test should be a boolean value");
 
   if (get_boolean(evaluated_case_test_object)) {
@@ -994,28 +1025,41 @@ static KLObject* eval_let_expression (KLObject* list_object,
                                       Environment* function_environment,
                                       Environment* variable_environment)
 {
-  long list_object_size = get_kl_list_size(list_object);
+  KLObject* cdr_object = CDR(list_object);
+  KLObject* cddr_object;
+  KLObject* cdddr_object;
+  KLObject* argument_object;
+  KLObject* parameter_object;
+  KLObject* body_object;
+  Environment* closure_variable_environment;
+  ShenLexMark mark;
+  KLObject* result;
 
-  if (list_object_size != 4)
+  if (is_empty_kl_list(cdr_object))
     throw_kl_exception("Wrong number of arguments for let expression");
 
-  KLObject* cdr_object = CDR(list_object);
-  KLObject* cddr_object = CDR(cdr_object);
-  KLObject* cdddr_object = CDR(cddr_object);
-  KLObject* argument_object = eval_kl_object(CAR(cddr_object),
-                                             function_environment,
-                                             variable_environment);
-  KLObject* parameter_object = CAR(cdr_object);
-  KLObject* body_object = CAR(cdddr_object);
+  cddr_object = CDR(cdr_object);
+
+  if (is_empty_kl_list(cddr_object))
+    throw_kl_exception("Wrong number of arguments for let expression");
+
+  cdddr_object = CDR(cddr_object);
+
+  if (is_empty_kl_list(cdddr_object) || !is_empty_kl_list(CDR(cdddr_object)))
+    throw_kl_exception("Wrong number of arguments for let expression");
+
+  argument_object = eval_kl_object(CAR(cddr_object),
+                                   function_environment,
+                                   variable_environment);
+  parameter_object = CAR(cdr_object);
+  body_object = CAR(cdddr_object);
 
   if (!is_kl_symbol(parameter_object))
     throw_kl_exception("Let variable should be a symbol");
 
-  Environment* closure_variable_environment =
+  closure_variable_environment =
     extend_environment(parameter_object, argument_object, variable_environment);
-  ShenLexMark mark = shen_lex_mark();
-  KLObject* result;
-
+  mark = shen_lex_mark();
   shen_lex_bind(parameter_object, argument_object);
   result = eval_kl_object(body_object, function_environment,
                           closure_variable_environment);
@@ -1074,40 +1118,109 @@ static KLObject* eval_kl_list_freeze_expression (KLObject* list_object,
                                 variable_environment);
 }
 
-static KLObject* eval_user_function_application (KLObject* function_object,
-                                                 Vector* arguments)
-{
-  UserFunction* user_function = get_kl_function_user_function(function_object);
-  long argument_size = (is_null(arguments)) ? 0 : get_vector_size(arguments);
-  Vector* parameters = get_user_function_parameters(user_function);
-  KLObject* body_object = get_user_function_body(user_function);
-  Environment* user_function_variable_environment =
-    get_global_variable_environment();
+typedef struct UserCall {
+  Environment* env;
+  ShenLexMark mark;
+} UserCall;
 
-  ShenLexMark mark = shen_lex_mark();
-  KLObject* result;
+/* Bind in a callee frame so args_buf is not live across the body eval. */
+static UserCall bind_user_call (KLObject* function_object, KLObject* cdr_object,
+                                long parameter_size,
+                                Environment* function_environment,
+                                Environment* variable_environment)
+{
+  UserCall call;
+  UserFunction* user_function = get_kl_function_user_function(function_object);
+  Vector* parameters = get_user_function_parameters(user_function);
+  KLObject* args_buf[EVAL_APPLY_STACK_ARGS];
   long i;
 
+  call.mark = shen_lex_mark();
   shen_lex_enter_frame();
+  call.env = get_global_variable_environment();
 
-  if (is_not_null(arguments) && is_not_null(parameters)) {
-    user_function_variable_environment =
-      extend_environment_n(get_vector_objects(parameters),
-                           get_vector_objects(arguments),
-                           argument_size,
-                           user_function_variable_environment);
+  if (parameter_size > 0) {
+    eval_list_into_array(cdr_object, args_buf, parameter_size,
+                         function_environment, variable_environment);
+    call.env = extend_environment_n(get_vector_objects(parameters), args_buf,
+                                    parameter_size, call.env);
 
-    for (i = 0; i < argument_size; ++i)
-      shen_lex_bind(get_vector_element(parameters, i),
-                    get_vector_element(arguments, i));
+    for (i = 0; i < parameter_size; ++i)
+      shen_lex_bind(get_vector_element(parameters, i), args_buf[i]);
   }
 
-  result = eval_kl_object(body_object,
-                          get_global_function_environment(),
-                          user_function_variable_environment);
-  shen_lex_rewind(mark);
+  return call;
+}
+
+static KLObject* eval_user_function_body (KLObject* function_object,
+                                          UserCall call)
+{
+  KLObject* result =
+    eval_kl_object(get_user_function_body(
+                     get_kl_function_user_function(function_object)),
+                   get_global_function_environment(), call.env);
+
+  shen_lex_rewind(call.mark);
 
   return result;
+}
+
+static KLObject* eval_user_function_application (KLObject* function_object,
+                                                 KLObject** arguments,
+                                                 long argument_size)
+{
+  UserFunction* user_function = get_kl_function_user_function(function_object);
+  Vector* parameters = get_user_function_parameters(user_function);
+  UserCall call;
+  long i;
+
+  call.mark = shen_lex_mark();
+  shen_lex_enter_frame();
+  call.env = get_global_variable_environment();
+
+  if (argument_size > 0 && is_not_null(arguments) && is_not_null(parameters)) {
+    call.env = extend_environment_n(get_vector_objects(parameters),
+                                    arguments, argument_size, call.env);
+
+    for (i = 0; i < argument_size; ++i)
+      shen_lex_bind(get_vector_element(parameters, i), arguments[i]);
+  }
+
+  return eval_user_function_body(function_object, call);
+}
+
+static Vector* eval_args_vector (KLObject* list_object, long n,
+                                 Environment* function_environment,
+                                 Environment* variable_environment)
+{
+  Vector* arguments;
+
+  if (n <= 0)
+    return NULL;
+
+  arguments = create_vector(n);
+  eval_list_into_array(list_object, get_vector_objects(arguments), n,
+                       function_environment, variable_environment);
+
+  return arguments;
+}
+
+static KLObject* eval_apply_stack (KLObject* function_object, KLObject* cdr_object,
+                                   long n, Environment* function_environment,
+                                   Environment* variable_environment)
+{
+  KLObject* args_buf[EVAL_APPLY_STACK_ARGS];
+  Vector stack_vector;
+
+  if (n <= 0)
+    return shen_apply(&shen_root_context, function_object, NULL);
+
+  eval_list_into_array(cdr_object, args_buf, n, function_environment,
+                       variable_environment);
+  stack_vector.size = n;
+  stack_vector.objects = args_buf;
+
+  return shen_apply(&shen_root_context, function_object, &stack_vector);
 }
 
 static KLObject* create_kl_list_function_application (KLObject* list_object,
@@ -1231,10 +1344,24 @@ static KLObject* eval_kl_list_primitive_function_application
   KLObject* cdr_object = CDR(list_object);
   PrimitiveFunction* primitive_function =
     get_kl_function_primitive_function(function_object);
-  long argument_size = get_kl_list_size(cdr_object);
   long parameter_size = get_primitive_function_parameter_size(primitive_function);
 
-  if (argument_size != parameter_size) {
+  if (kl_list_length_eq(cdr_object, parameter_size)) {
+    /* Call through shen_apply so generated shen_tail_apply bounces are
+     * processed. Direct native() from the tree-walker drops the bounce
+     * (unlocked? / <-address) and returns NULL. */
+    if (parameter_size <= EVAL_APPLY_STACK_ARGS)
+      return eval_apply_stack(function_object, cdr_object, parameter_size,
+                              function_environment, variable_environment);
+
+    return shen_apply(&shen_root_context, function_object,
+                      eval_args_vector(cdr_object, parameter_size,
+                                       function_environment,
+                                       variable_environment));
+  }
+
+  {
+    long argument_size = get_kl_list_size(cdr_object);
     Vector* arguments = ((is_empty_kl_list(cdr_object)) ?
                          NULL : kl_list_to_vector(cdr_object));
 
@@ -1262,31 +1389,18 @@ static KLObject* eval_kl_list_primitive_function_application
                             function_environment, variable_environment);
     }
 
-    KLObject* function_symbol_object = CAR(list_object);
-    KLObject* function_appliation_list_object = CONS(function_symbol_object, EL);
-    KLObject* partial_function_application_list_object
-      = create_kl_list_partial_function_application(function_appliation_list_object,
-                                                    arguments,
-                                                    0);
+    {
+      KLObject* function_symbol_object = CAR(list_object);
+      KLObject* function_appliation_list_object = CONS(function_symbol_object, EL);
+      KLObject* partial_function_application_list_object
+        = create_kl_list_partial_function_application(function_appliation_list_object,
+                                                      arguments,
+                                                      0);
 
-    return eval_kl_object(partial_function_application_list_object,
-                          function_environment, variable_environment);
+      return eval_kl_object(partial_function_application_list_object,
+                            function_environment, variable_environment);
+    }
   }
-
-  KLObject* evaluated_cdr_object =
-    eval_function_application_arguments(cdr_object,
-                                        function_environment,
-                                        variable_environment);
-  Vector* arguments = ((is_empty_kl_list(evaluated_cdr_object)) ?
-                       NULL : kl_list_to_vector(evaluated_cdr_object));
-
-  /* Call through shen_apply so generated shen_tail_apply bounces are
-   * processed. Direct native() from the tree-walker drops the bounce
-   * (unlocked? / <-address) and returns NULL. */
-  (void)function_environment;
-  (void)variable_environment;
-
-  return shen_apply(&shen_root_context, function_object, arguments);
 }
 
 static KLObject* eval_kl_list_user_function_application
@@ -1296,12 +1410,31 @@ static KLObject* eval_kl_list_user_function_application
   KLObject* cdr_object = CDR(list_object);
   UserFunction* user_function = get_kl_function_user_function(function_object);
   Vector* parameters = get_user_function_parameters(user_function);
-  long argument_size = get_kl_list_size(cdr_object);
   long parameter_size = (is_null(parameters)) ? 0 : get_vector_size(parameters);
 
-  if (argument_size != parameter_size) {
+  if (parameter_size <= EVAL_APPLY_STACK_ARGS &&
+      kl_list_length_eq(cdr_object, parameter_size))
+    return eval_user_function_body(function_object,
+                                   bind_user_call(function_object, cdr_object,
+                                                  parameter_size,
+                                                  function_environment,
+                                                  variable_environment));
+
+  {
+    long argument_size = get_kl_list_size(cdr_object);
     Vector* arguments = ((is_empty_kl_list(cdr_object)) ?
                          NULL : kl_list_to_vector(cdr_object));
+
+    if (argument_size == parameter_size) {
+      Vector* evaluated = eval_args_vector(cdr_object, parameter_size,
+                                           function_environment,
+                                           variable_environment);
+
+      return eval_user_function_application(function_object,
+                                            is_null(evaluated) ? NULL
+                                              : get_vector_objects(evaluated),
+                                            parameter_size);
+    }
 
     if (parameter_size > 0) {
       KLObject* symbol_object = CAR(list_object);
@@ -1327,25 +1460,18 @@ static KLObject* eval_kl_list_user_function_application
                             function_environment, variable_environment);
     }
 
-    KLObject* function_symbol_object = CAR(list_object);
-    KLObject* function_appliation_list_object = CONS(function_symbol_object, EL);
-    KLObject* partial_function_application_list_object
-      = create_kl_list_partial_function_application(function_appliation_list_object,
-                                                    arguments,
-                                                    0);
+    {
+      KLObject* function_symbol_object = CAR(list_object);
+      KLObject* function_appliation_list_object = CONS(function_symbol_object, EL);
+      KLObject* partial_function_application_list_object
+        = create_kl_list_partial_function_application(function_appliation_list_object,
+                                                      arguments,
+                                                      0);
 
-    return eval_kl_object(partial_function_application_list_object,
-                          function_environment, variable_environment);
+      return eval_kl_object(partial_function_application_list_object,
+                            function_environment, variable_environment);
+    }
   }
-
-  KLObject* evaluated_cdr_object =
-    eval_function_application_arguments(cdr_object,
-                                        function_environment,
-                                        variable_environment);
-  Vector* arguments = ((is_empty_kl_list(evaluated_cdr_object)) ?
-                       NULL : kl_list_to_vector(evaluated_cdr_object));
-
-  return eval_user_function_application(function_object, arguments);
 }
 
 static KLObject* eval_symbol_function_application
@@ -1452,21 +1578,25 @@ static KLObject* eval_kl_list_closure_function_application
  Environment* function_environment, Environment* variable_environment)
 {
   KLObject* cdr_object = CDR(list_object);
-  Vector* arguments = ((is_empty_kl_list(cdr_object)) ?
-                       NULL : kl_list_to_vector(cdr_object));
-  long argument_size = (is_null(arguments)) ? 0 : get_vector_size(arguments);
+  KLObject* argument_object;
 
-  if (argument_size > 1) {
+  if (is_empty_kl_list(cdr_object))
+    return eval_closure_function_application(function_object, NULL,
+                                             function_environment,
+                                             variable_environment);
+
+  if (!is_empty_kl_list(CDR(cdr_object))) {
+    Vector* arguments = kl_list_to_vector(cdr_object);
     KLObject* partial_function_application_list_object =
       create_kl_list_partial_function_application(function_object, arguments, 0);
 
     return eval_kl_object(partial_function_application_list_object,
                           function_environment,
                           variable_environment);
-  } 
+  }
 
-  KLObject* argument_object = (is_empty_kl_list(cdr_object)) ? NULL : CAR(cdr_object);
-  
+  argument_object = CAR(cdr_object);
+
   return eval_closure_function_application(function_object, argument_object,
                                            function_environment,
                                            variable_environment);
@@ -1477,8 +1607,7 @@ static KLObject* eval_kl_list_function_object_application
  Environment* function_environment, Environment* variable_environment)
 {
   KLObject* cdr_object;
-  KLObject* evaluated_cdr_object;
-  Vector* arguments;
+  long parameter_size;
 
   if (is_closure_kl_function(function_object))
     return eval_kl_list_closure_function_application(list_object,
@@ -1486,18 +1615,48 @@ static KLObject* eval_kl_list_function_object_application
                                                      function_environment,
                                                      variable_environment);
 
-  if (!is_primitive_kl_function(function_object) &&
-      !is_user_kl_function(function_object))
+  if (is_user_kl_function(function_object)) {
+    Vector* parameters =
+      get_user_function_parameters(get_kl_function_user_function(function_object));
+
+    cdr_object = CDR(list_object);
+    parameter_size = (is_null(parameters)) ? 0 : get_vector_size(parameters);
+
+    if (parameter_size <= EVAL_APPLY_STACK_ARGS &&
+        kl_list_length_eq(cdr_object, parameter_size))
+      return eval_user_function_body(function_object,
+                                     bind_user_call(function_object, cdr_object,
+                                                    parameter_size,
+                                                    function_environment,
+                                                    variable_environment));
+
+    {
+      long argument_size = get_kl_list_size(cdr_object);
+      Vector* arguments = eval_args_vector(cdr_object, argument_size,
+                                           function_environment,
+                                           variable_environment);
+
+      return shen_apply(&shen_root_context, function_object, arguments);
+    }
+  }
+
+  if (!is_primitive_kl_function(function_object))
     throw_kl_exception("Unknown type of function");
 
   cdr_object = CDR(list_object);
-  evaluated_cdr_object =
-    eval_function_application_arguments(cdr_object, function_environment,
-                                        variable_environment);
-  arguments = ((is_empty_kl_list(evaluated_cdr_object)) ?
-               NULL : kl_list_to_vector(evaluated_cdr_object));
 
-  return shen_apply(&shen_root_context, function_object, arguments);
+  {
+    long argument_size = get_kl_list_size(cdr_object);
+
+    if (argument_size <= EVAL_APPLY_STACK_ARGS)
+      return eval_apply_stack(function_object, cdr_object, argument_size,
+                              function_environment, variable_environment);
+
+    return shen_apply(&shen_root_context, function_object,
+                      eval_args_vector(cdr_object, argument_size,
+                                       function_environment,
+                                       variable_environment));
+  }
 }
 
 static KLObject* eval_trap_error_handler_application
@@ -1572,7 +1731,8 @@ static KLObject* eval_type_expression (KLObject* list_object,
                                        Environment* function_environment,
                                        Environment* variable_environment)
 {
-  check_function_argument_size(get_kl_list_size(list_object) - 1, 2);
+  if (!kl_list_length_eq(CDR(list_object), 2))
+    throw_kl_exception("Wrong number of arguments passed to function");
 
   return eval_kl_object(CADR(list_object), function_environment,
                         variable_environment);
@@ -1606,80 +1766,100 @@ static inline KLObject* eval_c_mcons_expression (KLObject* list_object,
   return head_list_object;
 }
 
+static KLObject* eval_kl_list_operator (KLObject* list_object,
+                                        KLObject* operator_object,
+                                        Environment* function_environment,
+                                        Environment* variable_environment)
+{
+  if (is_kl_symbol(operator_object))
+    return eval_symbol_function_application(list_object,
+                                            operator_object,
+                                            function_environment,
+                                            variable_environment);
+
+  if (is_kl_function(operator_object))
+    return eval_kl_list_function_object_application(list_object,
+                                                    operator_object,
+                                                    function_environment,
+                                                    variable_environment);
+
+  {
+    char* error_message =
+      concatenate_string(kl_object_to_string(operator_object),
+                         " should be a function object in ");
+
+    error_message = concatenate_string(error_message,
+                                       kl_object_to_string(list_object));
+    throw_kl_exception(error_message);
+  }
+
+  return NULL;
+}
+
 static KLObject* eval_kl_list (KLObject* list_object,
                                Environment* function_environment,
                                Environment* variable_environment)
 {
   KLObject* car_object = CAR(list_object);
-  KLObject* evaluated_car_object =
-    eval_kl_object(car_object, function_environment, variable_environment);
 
-  if (is_kl_symbol(evaluated_car_object)) {
-    if (evaluated_car_object == get_c_mcons_symbol_object())
-      return eval_c_mcons_expression(list_object, function_environment,
-                                     variable_environment);
-    if (evaluated_car_object == get_if_symbol_object())
-      return eval_if_expression(list_object, function_environment,
-                                variable_environment);
-    if (evaluated_car_object == get_and_symbol_object())
-      return eval_and_expression(list_object, function_environment,
-                                 variable_environment);
-    if (evaluated_car_object == get_or_symbol_object())
-      return eval_or_expression(list_object, function_environment,
-                                variable_environment);
-    if (evaluated_car_object == get_cond_symbol_object())
-      return eval_cond_expression(list_object, function_environment,
-                                  variable_environment);
-    if (evaluated_car_object == get_trap_error_symbol_object())
-      return eval_trap_error_expression(list_object, function_environment,
-                                        variable_environment);
-    if (evaluated_car_object == get_defun_symbol_object())
-      return eval_defun_expression(list_object);
-    if (evaluated_car_object == get_lambda_symbol_object())
-      return eval_kl_list_lambda_expression(list_object, function_environment,
-                                            variable_environment);
-    if (evaluated_car_object == get_let_symbol_object())
+  /* Special forms match Go: dispatch on the unevaluated head symbol.
+   * Let is first — the typecheck walk is let-heavy. */
+  if (is_kl_symbol(car_object)) {
+    if (car_object == get_let_symbol_object())
       return eval_let_expression(list_object, function_environment,
                                  variable_environment);
-    if (evaluated_car_object == get_freeze_symbol_object())
+    if (car_object == get_if_symbol_object())
+      return eval_if_expression(list_object, function_environment,
+                                variable_environment);
+    if (car_object == get_and_symbol_object())
+      return eval_and_expression(list_object, function_environment,
+                                 variable_environment);
+    if (car_object == get_or_symbol_object())
+      return eval_or_expression(list_object, function_environment,
+                                variable_environment);
+    if (car_object == get_cond_symbol_object())
+      return eval_cond_expression(list_object, function_environment,
+                                  variable_environment);
+    if (car_object == get_trap_error_symbol_object())
+      return eval_trap_error_expression(list_object, function_environment,
+                                        variable_environment);
+    if (car_object == get_defun_symbol_object())
+      return eval_defun_expression(list_object);
+    if (car_object == get_lambda_symbol_object())
+      return eval_kl_list_lambda_expression(list_object, function_environment,
+                                            variable_environment);
+    if (car_object == get_freeze_symbol_object())
       return eval_kl_list_freeze_expression(list_object, function_environment,
                                             variable_environment);
-    if (evaluated_car_object == get_c_loop_symbol_object())
+    if (car_object == get_c_loop_symbol_object())
       return eval_kl_list_c_loop_expression(list_object, function_environment,
                                             variable_environment);
-    if (evaluated_car_object == get_c_recur_symbol_object())
+    if (car_object == get_c_recur_symbol_object())
       return eval_c_recur_expression(list_object, function_environment,
                                      variable_environment);
-    if (evaluated_car_object == get_eval_kl_symbol_object())
+    if (car_object == get_eval_kl_symbol_object())
       return eval_eval_kl_expression(list_object, function_environment,
                                      variable_environment);
-    if (evaluated_car_object == get_c_quote_symbol_object())
+    if (car_object == get_c_quote_symbol_object())
       return eval_c_quote_expression(list_object);
-    if (evaluated_car_object == get_type_symbol_object())
+    if (car_object == get_type_symbol_object())
       return eval_type_expression(list_object, function_environment,
                                   variable_environment);
+    if (car_object == get_c_mcons_symbol_object())
+      return eval_c_mcons_expression(list_object, function_environment,
+                                     variable_environment);
 
-    return eval_symbol_function_application(list_object,
-                                            evaluated_car_object,
-                                            function_environment,
-                                            variable_environment);
+    /* Operator: symbol function first (Go evalFunction), no env walk. */
+    if (is_not_null(get_kl_symbol_function(car_object)))
+      return eval_symbol_function_application(list_object, car_object,
+                                              function_environment,
+                                              variable_environment);
   }
 
-  if (is_kl_function(evaluated_car_object))
-    return eval_kl_list_function_object_application(list_object,
-                                                    evaluated_car_object,
-                                                    function_environment,
-                                                    variable_environment);
-  
-  char* error_message =
-    concatenate_string(kl_object_to_string(evaluated_car_object),
-                       " should be a function object in ");
-
-  error_message = concatenate_string(error_message,
-                                     kl_object_to_string(list_object));
-  throw_kl_exception(error_message);
-
-  return NULL;
+  return eval_kl_list_operator(list_object,
+                               eval_kl_object(car_object, function_environment,
+                                              variable_environment),
+                               function_environment, variable_environment);
 }
 
 KLObject* eval_kl_object (KLObject* object,

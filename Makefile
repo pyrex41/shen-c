@@ -14,6 +14,25 @@ TEST_BIN=${BIN_ROOT}/test_foundation
 ABI_TEST_BIN=${BIN_ROOT}/test_abi
 EMIT_TEST_BIN=${BIN_ROOT}/test_emit
 BUILDER_BIN=${BIN_ROOT}/yggdrasil-build
+KERNEL_AOT_BUILD=${BIN_ROOT}/kernel-aot-build
+KERNEL_AOT_DIR=${OBJ_ROOT}/kernel_aot
+KERNEL_AOT_CS=${KERNEL_AOT_DIR}/sys.c \
+	${KERNEL_AOT_DIR}/writer.c \
+	${KERNEL_AOT_DIR}/core.c \
+	${KERNEL_AOT_DIR}/reader.c \
+	${KERNEL_AOT_DIR}/declarations.c \
+	${KERNEL_AOT_DIR}/toplevel.c \
+	${KERNEL_AOT_DIR}/macros.c \
+	${KERNEL_AOT_DIR}/load.c \
+	${KERNEL_AOT_DIR}/prolog.c \
+	${KERNEL_AOT_DIR}/sequent.c \
+	${KERNEL_AOT_DIR}/track.c \
+	${KERNEL_AOT_DIR}/t_star.c \
+	${KERNEL_AOT_DIR}/yacc.c \
+	${KERNEL_AOT_DIR}/types.c \
+	${KERNEL_AOT_DIR}/install_all.c
+KERNEL_AOT_OBJS=$(KERNEL_AOT_CS:.c=.o)
+KERNEL_AOT_STAMP=${KERNEL_AOT_DIR}/.stamp
 SUM_FIXTURE=test/fixtures/sum
 SUM_APP=${BIN_ROOT}/sum-app
 SUM_BIN=${SUM_APP}/app
@@ -107,7 +126,7 @@ RELEASE_ARCHIVE_NAME=${RELEASE_ARCHIVE_DIR_NAME}${ARCHIVE_SUFFIX}
 CMAKE_BUILD_DIR=build
 
 all: ${OBJ_ROOT} ${BIN_ROOT} ${TARGET} ${LIB_TARGET} ${BUILDER_BIN}
-${TARGET}: ${SRC_OBJS}
+${TARGET}: ${SRC_OBJS} ${KERNEL_AOT_OBJS}
 	${CC} -o $@ $^ ${LDFLAGS}
 
 ${LIB_TARGET}: ${LIB_OBJS} | ${BIN_ROOT}
@@ -134,6 +153,24 @@ ${EMIT_TEST_BIN}: ${LIB_TARGET} ${TEST_SRC_ROOT}/test_emit.c | ${BIN_ROOT}
 
 ${BUILDER_BIN}: ${LIB_TARGET} tools/yggdrasil-build.c | ${BIN_ROOT}
 	${CC} ${CFLAGS} -iquote ${SRC_ROOT} -o $@ tools/yggdrasil-build.c ${LIB_TARGET} ${LDFLAGS}
+
+${KERNEL_AOT_BUILD}: ${LIB_TARGET} tools/kernel-aot-build.c | ${BIN_ROOT}
+	${CC} ${CFLAGS} -iquote ${SRC_ROOT} -o $@ tools/kernel-aot-build.c ${LIB_TARGET} ${LDFLAGS}
+
+${KERNEL_AOT_STAMP}: ${KERNEL_AOT_BUILD} $(wildcard shen/src/kl/*.kl) | ${OBJ_ROOT}
+	mkdir -p ${KERNEL_AOT_DIR}
+	SHEN_C_HOME=${CURDIR} ${KERNEL_AOT_BUILD} shen/src/kl ${KERNEL_AOT_DIR}
+	! grep -F 'shen/test/s42/interpreter.shen' ${KERNEL_AOT_DIR}/*.c
+	! grep -F 'prologinterp.shen' ${KERNEL_AOT_DIR}/*.c
+	! grep -E '^int main' ${KERNEL_AOT_DIR}/*.c
+	grep -F shen_kernel_aot_install_all ${KERNEL_AOT_DIR}/install_all.c
+	grep -F shen_kernel_aot_install_t_star ${KERNEL_AOT_DIR}/t_star.c
+	touch $@
+
+$(KERNEL_AOT_CS): ${KERNEL_AOT_STAMP}
+
+${KERNEL_AOT_DIR}/%.o: ${KERNEL_AOT_DIR}/%.c ${KERNEL_AOT_STAMP}
+	${CC} ${CFLAGS} -iquote ${SRC_ROOT} -c -o $@ $<
 
 ${SUM_APP}: ${BUILDER_BIN} ${SUM_FIXTURE}/user.kl ${SUM_FIXTURE}/kernel.kl
 	rm -rf ${SUM_APP}
@@ -193,6 +230,11 @@ ${RUNME_AOT_APP}: ${BUILDER_BIN} ${RUNME_AOT_FIXTURE}/kernel.kl ${RUNME_AOT_FIXT
 	grep -F shen_absvector_p ${RUNME_AOT_APP}/app.c
 	grep -F 'apply_direct(ctx, "vector?"' ${RUNME_AOT_APP}/app.c
 	grep -F shen_apply_direct ${RUNME_AOT_APP}/app.c
+	! grep -F 'apply_direct(ctx, "+" ' ${RUNME_AOT_APP}/app.c
+	! grep -F 'apply_direct(ctx, "cons"' ${RUNME_AOT_APP}/app.c
+	! grep -F 'apply_direct(ctx, "hd"' ${RUNME_AOT_APP}/app.c
+	! grep -F 'apply_direct(ctx, "tl"' ${RUNME_AOT_APP}/app.c
+	! grep -F 'apply_direct(ctx, "="' ${RUNME_AOT_APP}/app.c
 
 test: ${TEST_BIN} ${ABI_TEST_BIN} ${EMIT_TEST_BIN} ${SUM_APP} ${FIB_APP} ${HELLO_APP} ${FIB_YGG_APP} ${TC_YGG_APP} ${INTERP_AOT_APP} ${TARGET}
 	ASAN_OPTIONS=detect_leaks=0 ${TEST_BIN}
@@ -264,6 +306,9 @@ test: ${TEST_BIN} ${ABI_TEST_BIN} ${EMIT_TEST_BIN} ${SUM_APP} ${FIB_APP} ${HELLO
 	env -u SHEN_C_HOME ${TARGET} eval -e '(tlstr "hello")' | grep -Fqx ello
 	env -u SHEN_C_HOME ${TARGET} eval -e '(n->string 65)' | grep -Fqx A
 	env -u SHEN_C_HOME ${TARGET} eval -e '(trap-error (simple-error "boom") (lambda E (error-to-string E)))' | grep -Fqx boom
+	grep -F shen_kernel_aot_install_all ${KERNEL_AOT_DIR}/install_all.c
+	! grep -F 'shen/test/s42/interpreter.shen' ${KERNEL_AOT_DIR}/*.c
+	! grep -F shen_wrap_load_for_overlays ${KERNEL_AOT_DIR}/*.c
 	@d=$$(mktemp -d) && \
 	  printf '%s\n' "(let S (open \"$$d/out\" out) (do (pr \"hello\" S) (close S)))" > "$$d/w.shen" && \
 	  env -u SHEN_C_HOME ${TARGET} eval -q -l "$$d/w.shen" && \

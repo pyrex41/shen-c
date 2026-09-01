@@ -61,12 +61,12 @@ inline KLObject* get_three_dots_string_object (void)
 
 inline char* get_string (KLObject* string_object)
 {
-  return string_object->value.string;
+  return kl_untag(string_object)->value.string;
 }
 
 inline void set_string (KLObject* string_object, char* string)
 {
-  string_object->value.string = string;
+  kl_untag(string_object)->value.string = string;
 }
 
 inline KLObject* create_kl_string (char *string)

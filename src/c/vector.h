@@ -76,12 +76,12 @@ inline void set_vector_element (Vector* vector, long index, KLObject* object)
 
 inline Vector* get_vector(KLObject* vector_object)
 {
-  return vector_object->value.vector;
+  return kl_untag(vector_object)->value.vector;
 }
 
 inline void set_vector (KLObject* vector_object, Vector* vector)
 {
-  vector_object->value.vector = vector;
+  kl_untag(vector_object)->value.vector = vector;
 }
 
 inline KLObject* create_kl_vector (long size)

@@ -349,6 +349,9 @@ bool is_kl_dictionary_equal (KLObject* left_object, KLObject* right_object)
 
 bool is_kl_object_equal (KLObject* left_object, KLObject* right_object)
 {
+  if (left_object == right_object)
+    return true;
+
   if (is_kl_symbol(left_object))
     return is_kl_symbol_equal(left_object, right_object);
   else if (is_kl_string(left_object))

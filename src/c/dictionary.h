@@ -31,12 +31,12 @@ inline Dictionary* create_dictionary (void)
 
 inline Dictionary* get_dictionary (KLObject* dictionary_object)
 {
-  return dictionary_object->value.dictionary;
+  return kl_untag(dictionary_object)->value.dictionary;
 }
 
 inline void set_dictionary (KLObject* dictionary_object, Dictionary* dictionary)
 {
-  dictionary_object->value.dictionary = dictionary;
+  kl_untag(dictionary_object)->value.dictionary = dictionary;
 }
 
 inline KLObject* create_kl_dictionary (void)

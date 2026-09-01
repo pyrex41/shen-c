@@ -80,12 +80,12 @@ inline char* stream_type_to_stream_type_string (KLStreamType stream_type)
 
 inline Stream* get_stream (KLObject* stream_object)
 {
-  return stream_object->value.stream;
+  return kl_untag(stream_object)->value.stream;
 }
 
 inline void set_stream (KLObject* stream_object, Stream* stream)
 {
-  stream_object->value.stream = stream;
+  kl_untag(stream_object)->value.stream = stream;
 }
 
 inline KLObject* create_kl_stream (char* file_path,

@@ -47,4 +47,13 @@ int shen_emit_overlay (FILE* out,
                        uint64_t kernel_fnv,
                        ShenEmitReport* report);
 
+/* Always-AOT kernel module: defuns only (toplevel declare/set stay on
+ * the tree-walker boot). Public install overwrites kernel UserFunctions
+ * with NativeFunctions. Not overlay-after-load. Not interpreter.shen. */
+int shen_emit_kernel_module (FILE* out,
+                             KLObject** forms, long nforms,
+                             const char* module_ident,
+                             const char* label,
+                             ShenEmitReport* report);
+
 #endif

@@ -1,23 +1,25 @@
 # AOT runme gap vs shen-go — sample, not emit churn
 
-Stage: `o7-apply-direct-lex-env` + `o6-rebar` + `aot-overlay-killed` +
-`o4-prim-inline-shipped` + `tc-cache-shipped`.
+Stage: `tagged-immediates` + `kernel-aot-install_all` + `o7-apply-direct-lex-env`
++ `o6-rebar` + `aot-overlay-killed` + `o4-prim-inline-shipped` +
+`tc-cache-shipped`.
 This file is the proof that matching Go’s **~5 s** suite wall is **not** a
 cheap CFLAGS / intern-leaf / mmap-per-tail patch, **and not** a rust-style
-load-then-swap overlay of sidecar defuns. O7 (this job) shipped rust
-analogs that **are** worth doing on the live sample: `shen_apply_direct`
-+ intern-static cache, lexical env as `EnvBinding` vec-by-SymId with a
-bound-id slot (no miss cache), cons still one Boehm `KLObject` (no
-separate `Pair*`; TLS cons slabs were tried and **killed** — Boehm does
-not treat `__thread` as a root). Both bars **134/0**. Cold AOT `runme`
-wall **8.33 s** / L-interp **6.555 s** (`1177672` inf) vs Go **4.94 s** /
-**2.211 s** (`1178236` inf). That is **low-teens-or-better, not 5 s**:
-still **~1.7×** wall and **~3.0×** L-interp. Overlay stays **unplugged**
+load-then-swap overlay of sidecar defuns. Final rebar shipped tagged
+immediates (fixnum / empty-list / bool; heap cons/symbol/string tags 2/4/6
+with `GC_register_displacement`) plus always-AOT kernel `install_all` on
+`bin/shen-c` (686 defuns after tree-walker boot; C overwrites last). That is
+**not** overlay-after-load: `interpreter.shen` / `prologinterp.shen` stay
+runtime load sidecars. Evaluator small-arity apply uses a stack `Vector`.
+Both bars **134/0**. Cold AOT `runme` wall **5.72 s** / L-interp **4.244 s**
+(`1177672` inf) vs this-job Go **4.84 s** / **2.141 s** (`1178236` inf), and
+vs O7 baseline **8.33 s** / **6.555 s**. That is **low-teens-or-better, not
+5 s**: still **~1.18×** this-job Go wall and **~2.0×** L-interp. Do not
+claim 5 s; the quoted wall is **5.72**. Overlay stays **unplugged**
 (`overlay_wrap=0`). O5 tc-cache remains env-gated; warm L-interp can
 match Go, cold one-shot does not. Do not unbox fib. Do not C++. Do not
 implement rung 2. Do not JIT `t*`. Do not bytecode-VM one-shot runme.
-Do not start `Value(u64)` / tagged immediates. Keep Boehm. Keep both
-**134/0** bars.
+Keep Boehm. Keep both 20→**134/0** bars.
 
 `cheap[]` is empty. The live Darwin sample of `bin/runme-aot-app` during
 L interpreter / Prolog interpreter **unblesses** those three flag/intern/mmap
@@ -27,19 +29,18 @@ source-hash + kernel-digest + arity match) was wired into runme-aot and
 **killed**: L-interp typecheck stayed **16.54–17.16 s** with overlay vs
 baseline **16.182 s** (`1177672` inf). After unplug (`evidence/runme-aot.log`
 `21:10:54Z`, still **134/0**): **16.845703 s** / **16.845723 s** after
-inferences. `load` prints `run time` around `shen.load-help` *before* any
+30→inferences. `load` prints `run time` around `shen.load-help` *before* any
 post-load swap; that clock is typecheck of the sidecar, not the later
 `normal-form` calls (~0.0005 s). Overlay emit/install remain in `abi.c` /
 `emit.c` / tests; runme-aot no longer registers or wraps `load`.
-Structural work (faster already-AOT `t*` / Prim*-style boxed ops, or
-tc-cache) is later. Do not re-litigate overlay-after-load for this wall.
+Do not re-litigate overlay-after-load for this wall.
 
 ## Bars (do not regress)
 
 | bar | evidence | status |
 |-----|----------|--------|
-| AOT runme **passed 134 / failed 0** | `evidence/runme-aot.log` (`app_pipe_exit=0`, SHA `0ebea4da80c9cec0d0102c6e1bf39d0f975e4cd3`, `00:28:53Z`–suite end, **8.33** real) | keep |
-| Interpreter certify **passed 134 / failed 0** | `evidence/certify.log` `00:29:27Z`–`00:30:07Z`, Shen **38.92 s**, `exit=0` | keep; **re-ran this job** (touched evaluator/env) |
+| AOT runme **passed 134 / failed 0** | `evidence/runme-aot.log` (`app_pipe_exit=0`, SHA `a6b9e240418fdce4c5ce65d70379cbe72ecb94a1`, app sha256 `ba7db6737b109668493eb707162604063200051dbdfb0b339693f2826a75eb6f`, `15:16:29Z`–`15:16:35Z`, **5.72** real) | keep |
+| Interpreter certify **passed 134 / failed 0** | `evidence/certify.log` `15:20:14Z`–`15:20:20Z`, Shen **6.182 s**, `exit=0` | keep; **re-ran this job** (kernel AOT + tagged heap) |
 | Boehm | `otool -L bin/runme-aot-app/app` → Nix `libgc.1.dylib` | stays |
 | Fib AOT **0.01 s** | shaken-boot (`test/fixtures/fib-ygg`, 55 defuns) | **not the gap** |
 
@@ -54,81 +55,84 @@ AOT runme is already **134/0**. Matching Go on wall is still **native
 typecheck of the sidecars**, not another trampoline. O7 cut intern+apply
 churn on already-AOT calls (`apply_direct` + intern-static) and made
 `lookup_environment` id-indexed with a bound-id slot — enough to move
-cold L-interp **15.35 s → 6.55 s**, not enough to 5 s. `interpreter.shen`
-/ `prologinterp.shen` remain **runtime load sidecars** whose typecheck
-walks boxed KL (`eval_kl_object` + `lookup_environment`). It is **not**
-`-O2` vs `-O3`, **not** mmap-per-tail, **not** overlay-after-load, **not**
-fib unbox, **not** C++, **not** rung 2, **not** tagged immediates.
+cold L-interp **15.35 s → 6.55 s**. This rebar’s tagged immediates +
+stack-apply moved cold L-interp **6.555 s → 4.244 s** and wall **8.33 s →
+5.72 s**, not to 5 s. `interpreter.shen` / `prologinterp.shen` remain
+**runtime load sidecars** whose typecheck walks boxed KL (`eval_kl_object`
++ `lookup_environment`). It is **not** `-O2` vs `-O3`, **not** mmap-per-tail,
+**not** overlay-after-load, **not** fib unbox, **not** C++, **not** rung 2,
+**not** a bytecode VM, **not** JIT `t*`.
 
 ## Timed windows (quoted)
 
-O7 apply_direct + lex env (`evidence/runme-aot.log`,
-`start_utc: 2026-09-01T00:28:53Z`, `cwd` `shen/test/s42`, `defuns=597`,
+Final rebar tagged immediates + stack apply (`evidence/runme-aot.log`,
+`start_utc: 2026-09-01T15:16:29Z`, `cwd` `shen/test/s42`, `defuns=597`,
 `eval_kl_object=0` in generated `app.c`, `overlay_wrap=0`, intern **2426**,
-`apply_direct` **4259**, `shen_apply(` **96**, SHA
-`0ebea4da80c9cec0d0102c6e1bf39d0f975e4cd3`):
+`apply_direct` **4259**, `shen_apply(` **96**, git SHA
+`a6b9e240418fdce4c5ce65d70379cbe72ecb94a1`):
 
 ```
 L interpreter: (load "interpreter.shen") = loaded
-run time: 6.554886 secs
+run time: 4.244059 secs
 typechecked in 1177672 inferences
 
 Prolog interpreter: (load "prologinterp.shen") = loaded
-run time: 1.290217 secs
+run time: 0.791181999999999 secs
 typechecked in 1634304 inferences
 
 passed ... 134
 failed ... 0
 
-run time: 11.822422 secs
-        8.33 real        11.24 user         0.61 sys
+run time: 8.150703 secs
+        5.72 real         7.79 user         0.38 sys
 app_pipe_exit=0
 ```
 
 Go same suite (`evidence/compare-runme-shen-go.log`,
-`start_utc: 2026-09-01T00:29:13Z`):
+`end_utc: 2026-09-01T15:19:44Z`):
 
 ```
 L interpreter: (load "interpreter.shen") = loaded
-run time: 2.2113229580000002 secs
+run time: 2.141432458 secs
 typechecked in 1178236 inferences
 
 Prolog interpreter: (load "prologinterp.shen") = loaded
-run time: 0.47066749999999935 secs
+run time: 0.4519664169999995 secs
 typechecked in 1634868 inferences
 
 passed ... 134
 failed ... 0
 
-run time: 4.729523416 secs
-        4.94 real         7.48 user         0.19 sys
+run time: 4.6181311670000005 secs
+        4.84 real         7.34 user         0.16 sys
 ```
 
-Interpreter certify re-run (`evidence/certify.log`, tree-walker `bin/shen-c`,
-`start_utc: 2026-09-01T00:29:27Z`):
+Interpreter certify re-run (`evidence/certify.log`, `bin/shen-c` with
+kernel `install_all`, `start_utc: 2026-09-01T15:20:14Z`):
 
 ```
 passed ... 134
 failed ... 0
 
-run time: 38.865483 secs
+run time: 6.174035 secs
 loaded
 
-run time: 38.919785 secs
+run time: 6.182002 secs
 exit=0
-end_utc: 2026-09-01T00:30:07Z
+end_utc: 2026-09-01T15:20:20Z
 ```
 
-Certify L interpreter typecheck **20.870 s** / **1177672** inf; prologinterp
-**3.890 s** / **1634304** inf (prior certify L-interp **46.93 s**, Shen
-**91.27 s**). Wall variance is real, bar is **134/0**.
+Certify L interpreter typecheck **3.182 s** / **1177672** inf; prologinterp
+**0.651 s** / **1634304** inf (O7 certify L-interp **20.870 s**, Shen
+**38.92 s**). Wall variance is real, bar is **134/0**. Kernel AOT does not
+AOT the sidecars.
 
-Prior O6 cold AOT (`21:52:10Z`): **15.31** real, L-interp **15.351 s**.
-O4 unsampled (`23:50:26Z`): L-interp **13.624 s**, **18.52** real. O7 is
-**8.33** real / **6.555 s** L-interp vs Go **4.94** / **2.211 s**: about
-**1.7×** wall, **3.0×** L-interp, **not 5 s**. User>real on AOT is still
-trampoline hops (pthread), not proof mmap is the hotspot. Overlay remains
-killed.
+O7 apply_direct + lex env (`00:28:53Z`): **8.33** real, L-interp **6.555 s**.
+O6 cold AOT (`21:52:10Z`): **15.31** real, L-interp **15.351 s**.
+This rebar is **5.72** real / **4.244 s** L-interp vs this-job Go **4.84** /
+**2.141 s**, and vs the O7-quoted Go **4.94** / **2.211 s**: about **1.18×**
+wall, **2.0×** L-interp, **not 5 s**. User>real on AOT is still trampoline
+hops (pthread), not proof mmap is the hotspot. Overlay remains killed.
 
 Generated intern **7465→2426** (named callees no longer intern at the
 call site). Named calls emit `shen_apply_direct` / `shen_tail_apply_direct`
@@ -142,14 +146,13 @@ SIGSEGV’d hello-ygg at `shen.change-pointer-value`.
 Live **2026-08-31** Darwin arm64. Job: `time yes|bin/runme-aot-app` vs
 shen-go `script runme` (cwd `shen/test/s42`). Sample AOT pid **30 s** during
 L interpreter / prologinterp. Bars kept: AOT runme 134/0 and interpreter
-certify 134/0 (certify **re-ran** this job; `21:52:53Z`–`21:54:26Z` Shen
-**91.27 s**). Boehm stays (`otool libgc.1.dylib`). No fib unbox, no C++,
+certify 134/0. Boehm stays (`otool libgc.1.dylib`). No fib unbox, no C++,
 no rung 2. Fib **0.01 s** is shaken-boot (55 defuns), not the gap.
 
 Emit intern/apply (`src/c/emit.c`): O7 named calls emit
 `shen_apply_direct` / `shen_tail_apply_direct` (intern-static + stack
 args). Unbound *value* atoms still intern. Self-tails `goto`. O6 sample
-binary (`intern=14852` `apply=11515`) is **not** this binary; live O7
+binary (`intern=14852` `apply=11515`) is **not** this binary; live O7/rebar
 `app.c` is intern **2426** `apply_direct` **4259**. `yggdrasil-build.c` Makefile `CFLAGS ?= -O2`
 (top-level Makefile `CFLAGS ?= -O3` for `libshenc`). `abi.c`
 `apply_on_fresh_stack`: `mmap(16MiB+guard)+pthread_attr_setstack+GC_pthread_create/join`
@@ -159,13 +162,17 @@ sample.
 Wall times (`yes | /usr/bin/time -l`; this rebar `app_pipe_exit=0`;
 earlier logs may show pipe exit **141** from `yes` SIGPIPE after 134/0 ok):
 
-- AOT clean O7 (this job, `00:28:53Z`): **8.33** real / **11.24**
-  user / **0.61** sys, Shen **11.822 s**, RSS **59.8 MiB** (`62734336`),
-  passed **134** / failed **0**. L interpreter typecheck **6.555 s** /
-  **1177672** inf. Prologinterp **1.290 s** / **1634304** inf.
+- AOT final rebar (this job, `15:16:29Z`): **5.72** real / **7.79**
+  user / **0.38** sys, Shen **8.151 s**, RSS **51.9 MiB** (`54394880`),
+  passed **134** / failed **0**. L interpreter typecheck **4.244 s** /
+  **1177672** inf. Prologinterp **0.791 s** / **1634304** inf.
   intern **2426**, apply_direct **4259**. `overlay_wrap=0`. Boehm
-  `libgc.1.dylib`. **Not 5 s** (Go this job **4.94** real / L-interp
-  **2.211 s**).
+  `libgc.1.dylib`. **Not 5 s** (Go this job **4.84** real / L-interp
+  **2.141 s**; O7-quoted Go **4.94** / **2.211 s**).
+- AOT clean O7 (`00:28:53Z`): **8.33** real / **11.24** user / **0.61**
+  sys, Shen **11.822 s**, RSS **59.8 MiB** (`62734336`), passed **134** /
+  failed **0**. L interpreter typecheck **6.555 s** / **1177672** inf.
+  Prologinterp **1.290 s** / **1634304** inf.
 - AOT clean O6 rebar (no sample, `21:52:10Z`): **15.31** real / **26.73**
   user / **1.24** sys, Shen **27.895 s**, RSS **69.2 MiB** (`72613888`),
   **306846384894** inst, passed **134** / failed **0**. L interpreter
@@ -176,15 +183,17 @@ earlier logs may show pipe exit **141** from `yes` SIGPIPE after 134/0 ok):
   `/usr/bin/time` parent): Shen **32.969 s**, L interpreter **18.850 s** /
   **1177672** inf, prologinterp **3.057 s** / **1634304** inf, still
   **134/0**.
-- Go clean O6 rebar `.bin/shen-go script runme.shen` (`21:52:35Z`): **4.89**
-  real / **7.36** user / **0.15** sys, Shen **4.670 s**, RSS **216.4 MiB**
-  (`226869248`), L interpreter typecheck **2.161 s** / **1178236** inf,
-  prologinterp **0.477 s** / **1634868** inf, **134/0**.
+- Go this job `.bin/shen-go script runme.shen` (`15:19:44Z`): **4.84**
+  real / **7.34** user / **0.16** sys, Shen **4.618 s**, RSS **217.0 MiB**
+  (`227557376`), L interpreter typecheck **2.141 s** / **1178236** inf,
+  prologinterp **0.452 s** / **1634868** inf, **134/0**.
+- Go clean O6 rebar (`21:52:35Z`): **4.89** real / **7.36** user / **0.15**
+  sys, Shen **4.670 s**, L-interp **2.161 s** / **1178236** inf.
 - Prior AOT (`19:32Z`): **15.13** real / **27.92** user, Shen **29.046 s**,
   L-interp **16.182 s**. Prior Go (`19:33Z`): **4.57** / **7.20**, Shen
   **4.391 s**, L-interp **2.041 s**. `option5-profile` (`18:58Z`): AOT
   **15.36** / **25.19** Shen **26.14 s**; Go **5.37** / **7.80** Shen
-  **5.05 s**. Variance high; AOT still **~3×** Go wall, not a match.
+  **5.05 s**. Variance high; AOT is **~1.18×** this-job Go wall, not a match.
   User>real on AOT is trampoline hops (pthread), not proof mmap is the
   hotspot.
 
@@ -228,7 +237,7 @@ gap; (3) mmap stack per tail: `apply_on_fresh_stack`/`mmap`/`munmap`/
 native typecheck / less intern+apply, not another trampoline. Proof: L
 interpreter is a runtime load sidecar whose typecheck is `eval_kl_object` +
 `lookup_environment` + system-S-h/`t*` via `shen_apply` of boxed KL,
-**16.2 s** vs Go native **2.04 s** on the same **1.18 M** inferences. Do
+**4.244 s** vs Go native **2.141 s** on the same **~1.18 M** inferences. Do
 not chase trampoline, fib unbox, C++, or rung 2.
 
 ## Why `cheap[]` is empty (code the sample did not bless)
@@ -236,7 +245,7 @@ not chase trampoline, fib unbox, C++, or rung 2.
 ### 1. Generated `CFLAGS ?= -O2` vs `libshenc` `-O3`
 
 `tools/yggdrasil-build.c` writes `CFLAGS ?= -O2` into
-`bin/runme-aot-app/Makefile`. Top-level `Makefile` uses `CFLAGS ?= -O3` for
+`bin/runme-aot-app/Makefile`. Top-level Makefile uses `CFLAGS ?= -O3` for
 `bin/libshenc.a` / `bin/shen-c`. The sample has **zero** symbols that are
 an optimization-level leaf. Flipping the generated flag is a rebuild, not
 a named hotspot.
@@ -249,18 +258,11 @@ Unbound atoms intern (`src/c/emit.c` `emit_atom`):
 cbuf_printf(e->stmt, "  KLObject* t%d = shen_intern(ctx, ", t);
 ```
 
-Calls allocate a `Vector` then `shen_apply` / `shen_tail_apply`. Live
-`native_kl_shen_2et_2a_507` (AOT kernel `t*`) starts:
-
-```c
-KLObject* t31257 = shen_intern(ctx, "+");
-KLObject* t31259 = shen_number_l(ctx, 1);
-/* Vector of 2 → shen_apply  — this is (+ Infs 1), not PrimNumberAdd */
-```
-
-`intern_kl_string` already caches via `lookup_string_table`. Exclusive
-`intern_kl_string`+`shen_intern` ≈ **7.0%**. Caching intern harder does not
-close 3×.
+O4 already inlines `+` / `cons` / `hd` / `tl` / `=` to `shen_add` /
+`shen_cons` / … in generated `t*`. Remaining intern is unbound *value*
+atoms, not those prim call sites. Exclusive `intern_kl_string`+`shen_intern`
+on the O6 sample ≈ **7.0%**. Caching intern harder does not close the
+sidecar gap.
 
 ### 3. mmap stack per tail
 
@@ -275,27 +277,21 @@ class, not hop rewrite.
 
 ## Structural (later; not this file)
 
-1. Emit Prim*-style boxed ops for `+` / `cons` / `=` / `hd` / `tl`
-   (direct `shen_cons` / `shen_hd` / number add, not intern symbol +
-   `shen_vector` + `shen_apply`). Go: `codegen/codegen.go`
-   `PrimNumberAdd` / `PrimCons` / `PrimEqual`; `cmd/shen/t-star.go`
-   `PrimNumberAdd(V, MakeNumber(1))`; `kl/types.go` `MakeInteger` fixnum.
-2. Faster already-AOT `t*` (O4 prim inline / less intern+apply), not
-   overlay of the sidecar's own defuns. L interpreter / prologinterp stay
-   `eval_kl_object`+`lookup_environment` via `load`/`map`/`eval-kl`
-   (**28.9%** load graph; exclusive `lookup_environment` **15.9%**)
-   during `shen.load-help`. Kernel `t*` is already a `NativeFunction`.
-   Load-then-swap overlay of `interpreter.shen` defuns was measured and
+1. Faster sidecar typecheck (still `eval_kl_object` of `interpreter.shen`).
+   Generated `t*` already uses Prim*-style `shen_add` / `shen_cons`. Go
+   typechecks loaded files as native. O5 tc-cache is env-gated
+   (`SHEN_C_TC_CACHE`); warm L-interp **2.040 s** / **14/14** replay
+   (`evidence/runme-aot-tc-warm.log`). Do not cache `shen->kl`.
+2. Do **not** overlay-after-load the sidecar’s own defuns. Measured and
    **killed** (O2 gate): wall **16.54–17.16 s**, inferences unchanged.
-   Go `cmd/shen` typechecks loaded files as native. O5 tc-cache is
-   env-gated (`SHEN_C_TC_CACHE`); warm L-interp **2.040 s** / **14/14**
-   replay (`evidence/runme-aot-tc-warm.log`). Do not cache `shen->kl`.
-3. Do **not** chase another trampoline.
+3. Do **not** chase another trampoline. Do not JIT `t*`. Do not bytecode-VM
+   one-shot runme. Do not unbox fib. Do not C++.
 
 Kernel `t*` / `typecheck` being NativeFunctions is already true
 (`shen_register_defun(ctx, "shen.t*", 6, &native_kl_shen_2et_2a_507)`).
-The gap is the **sidecar** walking boxed KL through those natives, plus
-prims still going intern+apply.
+`bin/shen-c` additionally overwrites boot UserFunctions via
+`shen_kernel_aot_install_all` (686 defuns). The remaining gap is the
+**sidecar** walking boxed KL through those natives.
 
 ## How to run (exact)
 
@@ -351,22 +347,25 @@ changes (`rm bin/runme-aot-app/app` if the fixture did not change).
 
 ## What this job did
 
-- `shen_apply_direct` / `shen_tail_apply_direct`: named AOT calls intern
-  via a pointer cache of C string literals (`shen_intern_static`) and pass
-  a stack `KLObject*[]` (no `shen_vector` at the call site). Dispatch still
-  goes through `shen_apply` so tail bounce and trampoline hops work.
-- Environment frames store `EnvBinding {id, value}` (vec-by-SymId). Bound
-  locals also sit in a TLS slot keyed by id; **misses are not cached**
-  (caching NULL made `(cn X "!")` typecheck as `number --> number`).
-  `trap-error` rewinds the slot on throw.
-- Cons stays **one** Boehm `KLObject` with an inline pair. A TLS cons/number
-  slab was measured then **killed**: interior cells plus unscanned TLS
-  SIGSEGV’d hello-ygg.
+- Tagged immediates: fixnum tag **1**, empty-list **3**, false/true **5/7**;
+  heap cons/symbol/string tags **2/4/6**. Overflow longs and doubles stay
+  atomic Boehm cells. `GC_register_displacement(2/4/6)` before `GC_init`.
+  Cons stays **one** Boehm `KLObject` with an inline pair.
+- Always-AOT kernel `install_all` (`tools/kernel-aot-build.c`, 686 defuns)
+  linked only into `bin/shen-c`. Weak no-op in `libshenc`. After boot,
+  overwrite kernel UserFunctions; C map/pr/… and tc-cache wrap last.
+  `SHEN_C_NO_AOT` skips the call. Not overlay-after-load. Sidecar tests
+  stay on the tree-walker. Generated kernel C has no `int main` and no
+  `interpreter.shen`.
+- Tree-walker small-arity primitive apply uses a stack `Vector` (no
+  CONS-then-`create_vector` on the typecheck hot path). Pointer identity
+  is the first check in `is_kl_object_equal`.
 - Overlay stays **killed**. No JIT `t*`, no bytecode VM for one-shot runme,
-  no `Value(u64)` / tagged immediates, no fib unbox, no C++, no rung 2.
-- AOT runme **134/0** (`evidence/runme-aot.log`): L-interp **6.555 s**,
-  wall **8.33 s**. Go **2.211 s** / **4.94 s**. Certify **134/0**, Shen
-  **38.92 s** (`evidence/certify.log`). Honest: **not 5 s**.
+  no fib unbox, no C++, no rung 2, no trampoline/mmap rewrite, no Homebrew.
+- AOT runme **134/0** (`evidence/runme-aot.log`): L-interp **4.244 s**,
+  wall **5.72 s**. Go this job **2.141 s** / **4.84 s**. O7 baseline
+  **6.555 s** / **8.33 s**. Certify **134/0**, Shen **6.182 s**
+  (`evidence/certify.log`). Honest: **not 5 s**.
 
 ## What this job did not do
 
@@ -374,7 +373,7 @@ changes (`rm bin/runme-aot-app/app` if the fixture did not change).
   does **not** register overlays or wrap `load` (`overlay_wrap=0`).
 - No CFLAGS flip in `tools/yggdrasil-build.c`.
 - No `apply_on_fresh_stack` / mmap / pthread rewrite.
-- No JIT of `t*`, no bytecode VM for one-shot runme, no `Value(u64)`.
+- No JIT of `t*`, no bytecode VM for one-shot runme.
 - No Boehm removal, no fib unbox, no C++, no rung 2 (`docs/rung2.md` remains
   documentation only).
-- Tagged immediates stay a separate heap project.
+- Did not AOT `interpreter.shen` / `prologinterp.shen`.

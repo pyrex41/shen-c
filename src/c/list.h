@@ -53,43 +53,56 @@
 
 inline Pair* get_pair (KLObject* list_object)
 {
-  return &list_object->value.pair;
+  return &kl_untag(list_object)->value.pair;
 }
 
 inline void set_pair (KLObject* list_object, Pair* pair)
 {
-  list_object->value.pair = *pair;
+  kl_untag(list_object)->value.pair = *pair;
 }
 
 inline KLObject* create_kl_list (KLObject* car_object, KLObject* cdr_object)
 {
   /* One Boehm allocation: type tag + inline pair (no separate Pair*). */
   KLObject* list_object = create_kl_object(KL_TYPE_LIST);
+  KLObject* cell = kl_untag(list_object);
 
-  list_object->value.pair.car = car_object;
-  list_object->value.pair.cdr = cdr_object;
+  cell->value.pair.car = car_object;
+  cell->value.pair.cdr = cdr_object;
 
   return list_object;
 }
 
 inline KLObject* get_head_kl_list (KLObject* list_object)
 {
-  return list_object->value.pair.car;
+  if (kl_as_word(list_object) == KL_EMPTY_TAG)
+    return list_object;
+
+  return kl_untag(list_object)->value.pair.car;
 }
 
 inline void set_head_kl_list (KLObject* list_object, KLObject* car_object)
 {
-  list_object->value.pair.car = car_object;
+  if (kl_as_word(list_object) == KL_EMPTY_TAG)
+    return;
+
+  kl_untag(list_object)->value.pair.car = car_object;
 }
 
 inline KLObject* get_tail_kl_list (KLObject* list_object)
 {
-  return list_object->value.pair.cdr;
+  if (kl_as_word(list_object) == KL_EMPTY_TAG)
+    return list_object;
+
+  return kl_untag(list_object)->value.pair.cdr;
 }
 
 inline void set_tail_kl_list (KLObject* list_object, KLObject* cdr_object)
 {
-  list_object->value.pair.cdr = cdr_object;
+  if (kl_as_word(list_object) == KL_EMPTY_TAG)
+    return;
+
+  kl_untag(list_object)->value.pair.cdr = cdr_object;
 }
 
 inline bool is_kl_list (KLObject* object)

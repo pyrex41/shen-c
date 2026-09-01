@@ -1,3 +1,4 @@
+#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -26,12 +27,13 @@ static void expect (int condition, const char* message)
 
 static void test_gc_heap (void)
 {
-  KLObject* object = create_kl_number_l(7);
+  KLObject* object = CONS(create_kl_number_l(7), EL);
   void* block = shen_gc_malloc(&shen_root_context, 64);
 
   expect(shen_root_context.gc_ready == 1, "shen_context GC is initialized");
   expect(object != NULL, "KLObject allocation");
-  expect(GC_base(object) != NULL, "KLObject lives on Boehm GC heap");
+  expect(GC_base(object) == kl_untag(object), "cons lives on Boehm GC heap");
+  expect((kl_as_word(object) & KL_TAG_MASK) == KL_CONS_TAG, "cons has heap tag");
   expect(block != NULL, "shen_gc_malloc");
   expect(GC_base(block) != NULL, "shen_gc_malloc lives on Boehm GC heap");
 }
@@ -50,16 +52,58 @@ static void test_numbers_and_lists (void)
 
   expect(is_kl_number_l(sum), "sum is a long");
   expect(get_kl_number_number_l(sum) == 3, "1 + 2 == 3");
+  expect(kl_is_fixnum(one) && kl_is_fixnum(sum), "small longs are fixnums");
+  expect(create_kl_number_l(1) == one, "equal fixnums are identical");
+  expect(kl_is_immediate(one), "fixnum is a non-pointer immediate");
+  expect(GC_base(one) == NULL, "fixnum is not a GC object");
+  expect(is_kl_list(EL) && is_empty_kl_list(EL), "empty list is a list");
+  expect(kl_is_immediate(EL) && GC_base(EL) == NULL,
+         "empty list is a non-pointer immediate");
+  expect(is_kl_boolean(get_true_boolean_object()) &&
+         get_boolean(get_true_boolean_object()),
+         "true is a boolean immediate");
+  expect(GC_base(get_true_boolean_object()) == NULL &&
+         GC_base(get_false_boolean_object()) == NULL,
+         "booleans are not GC objects");
   expect(is_non_empty_kl_list(list), "list is non-empty");
   expect(get_kl_list_size(list) == 2, "list size is 2");
   expect(CAR(list) == one, "list head");
   expect(CDR(list) != EL && CAR(CDR(list)) == two, "list tail head");
-  expect(GC_base(list) == list, "cons cell is a GC object");
-  expect(GC_base(get_pair(list)) == list,
+  expect(GC_base(list) == kl_untag(list), "cons cell is a GC object");
+  expect(GC_base(get_pair(list)) == kl_untag(list),
          "cons pair is interior to the cons cell");
-  expect(GC_base(one) == one, "number is a GC object");
-  expect(GC_base(get_number(one)) == one,
-         "number payload is interior to the number object");
+  {
+    KLObject* boxed = create_kl_number_l(LONG_MAX);
+    KLObject* dbl = create_kl_number_d(1.5);
+
+    expect(is_kl_number_l(boxed) && !kl_is_fixnum(boxed),
+           "overflow long is a heap number");
+    expect(GC_base(boxed) == boxed, "overflow long is a GC object");
+    expect(is_kl_number_d(dbl) && GC_base(dbl) == dbl,
+           "double remains a heap number");
+  }
+}
+
+static void test_tagged_heap_gc (void)
+{
+  KLObject* inner = CONS(create_kl_number_l(9), EL);
+  KLObject* outer = CONS(inner, EL);
+  KLObject* name = create_kl_string_with_intern("tagged-heap-sym");
+  KLObject* sym;
+
+  expect((kl_as_word(inner) & KL_TAG_MASK) == KL_CONS_TAG, "inner cons tagged");
+  expect((kl_as_word(name) & KL_TAG_MASK) == KL_STRING_TAG, "string tagged");
+  inner = NULL;
+  GC_gcollect();
+  GC_gcollect();
+  expect(is_kl_list(CAR(outer)), "tagged car survived GC");
+  expect(get_kl_number_number_l(CAR(CAR(outer))) == 9,
+         "tagged payload survived GC");
+
+  sym = create_kl_symbol(name);
+  expect((kl_as_word(sym) & KL_TAG_MASK) == KL_SYMBOL_TAG, "symbol tagged");
+  expect(GC_base(sym) == kl_untag(sym), "GC_base strips symbol tag");
+  expect(GC_base(name) == kl_untag(name), "GC_base strips string tag");
 }
 
 static void test_type_special_form (void)
@@ -193,6 +237,7 @@ int main (void)
   test_gc_heap();
   test_version();
   test_numbers_and_lists();
+  test_tagged_heap_gc();
   test_type_special_form();
   test_primitive_add();
   test_reader_eof();

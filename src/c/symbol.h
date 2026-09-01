@@ -75,12 +75,12 @@ inline Symbol* create_symbol (KLObject* string_object)
 
 inline Symbol* get_symbol (KLObject* symbol_object)
 {
-  return symbol_object->value.symbol;
+  return kl_untag(symbol_object)->value.symbol;
 }
 
 inline void set_symbol (KLObject* symbol_object, Symbol* symbol)
 {
-  symbol_object->value.symbol = symbol;
+  kl_untag(symbol_object)->value.symbol = symbol;
 }
 
 inline uint32_t get_kl_symbol_id (KLObject* symbol_object)

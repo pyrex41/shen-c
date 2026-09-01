@@ -23,6 +23,11 @@ void shen_boot (shen_context* ctx, const char* home_path);
 /* Re-apply C port overwrites after shaken defuns are installed (same
  * order as load_shen_kl_files: kernel first, then C). */
 void shen_apply_port_overwrites (void);
+/* After kernel KL boot: overwrite defuns with generated NativeFunctions.
+ * Strong symbol is linked only into bin/shen-c (rust install_all).
+ * libshenc has a weak no-op so runme-aot-app / tests do not pull kernel AOT.
+ * SHEN_C_NO_AOT skips the call. Not overlay-after-load. */
+void shen_kernel_aot_install_all (void);
 
 KLObject* shen_intern (shen_context* ctx, const char* name);
 KLObject* shen_cons (shen_context* ctx, KLObject* head, KLObject* tail);

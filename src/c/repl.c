@@ -1,7 +1,9 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "repl.h"
+#include "abi.h"
 #include "boolean.h"
 #include "tc_cache.h"
 #include "variable.h"
@@ -83,7 +85,12 @@ void load_shen_kl_files (void)
   register_overwrite_yacc_primitive_kl_functions();
 
   load_kl_file("shen/src/kl/types.kl");
-  shen_tc_cache_install_from_env();
+  /* rust install_all: after boot, overwrite kernel defuns with natives.
+   * Loaded tests stay on the tree-walker. interpreter.shen is not AOT. */
+  if (getenv("SHEN_C_NO_AOT") == NULL)
+    shen_kernel_aot_install_all();
+  /* C map/pr/... win over AOT kernel cells; tc-cache wraps last. */
+  shen_apply_port_overwrites();
 }
 
 void load_development_kl_file (void)

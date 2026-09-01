@@ -235,12 +235,12 @@ inline Function* create_function (KLFunctionType function_type)
 
 inline Function* get_function (KLObject* function_object)
 {
-  return function_object->value.function;
+  return kl_untag(function_object)->value.function;
 }
 
 inline void set_function (KLObject* function_object, Function* function)
 {
-  function_object->value.function = function;
+  kl_untag(function_object)->value.function = function;
 }
 
 inline bool is_kl_function (KLObject* object)

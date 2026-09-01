@@ -1435,3 +1435,68 @@ int shen_emit_overlay (FILE* out,
 
   return 0;
 }
+
+int shen_emit_kernel_module (FILE* out,
+                             KLObject** forms, long nforms,
+                             const char* module_ident,
+                             const char* label,
+                             ShenEmitReport* report)
+{
+  Emit e;
+  int i;
+
+  if (out == NULL || !overlay_ident_ok(module_ident))
+    return -1;
+
+  memset(&e, 0, sizeof(e));
+  cbuf_init(&e.helpers);
+  cbuf_init(&e.defuns);
+
+  e.in_user = 1;
+
+  for (i = 0; i < nforms; ++i) {
+    KLObject* form = forms[i];
+
+    if (is_non_empty_kl_list(form) && is_named_symbol(CAR(form), "defun"))
+      emit_defun_into(&e, form);
+  }
+
+  fprintf(out,
+          "/* Generated always-AOT kernel module (KL defuns -> NativeFunctions).\n"
+          " * Install after tree-walker boot overwrites UserFunctions.\n"
+          " * Toplevel declare/set stay on the walker. Not overlay-after-load.\n"
+          " * Sidecar tests stay on the tree-walker. Not a second main. Source: %s\n"
+          " */\n"
+          "#include \"abi.h\"\n\n"
+          "void shen_kernel_aot_install_%s (shen_context* ctx);\n\n",
+          label ? label : module_ident, module_ident);
+
+  if (e.helpers.data != NULL)
+    fputs(e.helpers.data, out);
+
+  if (e.defuns.data != NULL)
+    fputs(e.defuns.data, out);
+
+  fprintf(out,
+          "void shen_kernel_aot_install_%s (shen_context* ctx)\n{\n",
+          module_ident);
+
+  for (i = 0; i < e.ndefun; ++i) {
+    CBuf namebuf;
+
+    cbuf_init(&namebuf);
+    cbuf_cstring(&namebuf, e.defun_recs[i].name);
+    fprintf(out, "  shen_register_defun(ctx, %s, %ld, &native_%s);\n",
+            namebuf.data, e.defun_recs[i].arity, e.defun_recs[i].cname);
+  }
+
+  fprintf(out, "}\n");
+
+  if (report != NULL) {
+    report->defuns = e.defun_count;
+    report->toplevels = 0;
+    report->lambdas = e.lambda_count;
+  }
+
+  return 0;
+}

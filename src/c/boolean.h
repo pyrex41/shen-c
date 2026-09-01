@@ -10,31 +10,22 @@ extern KLObject* false_boolean_object;
 
 inline bool get_boolean (KLObject* boolean_object)
 {
-  return boolean_object->value.boolean;
-}
-
-inline void set_boolean (KLObject* boolean_object, bool boolean)
-{
-  boolean_object->value.boolean = boolean;
+  return kl_as_word(boolean_object) == KL_TRUE_TAG;
 }
 
 inline KLObject* create_kl_boolean (bool boolean)
 {
-  KLObject* boolean_object = create_kl_object(KL_TYPE_BOOLEAN);
-
-  set_boolean(boolean_object, boolean);
-
-  return boolean_object;
+  return kl_from_word(boolean ? KL_TRUE_TAG : KL_FALSE_TAG);
 }
 
 inline void initialize_true_boolean_object (void)
 {
-  true_boolean_object = create_kl_boolean(true);
+  true_boolean_object = kl_from_word(KL_TRUE_TAG);
 }
 
 inline void initialize_false_boolean_object (void)
 {
-  false_boolean_object = create_kl_boolean(false);
+  false_boolean_object = kl_from_word(KL_FALSE_TAG);
 }
 
 inline void initialize_boolean_objects (void)
@@ -55,7 +46,9 @@ inline KLObject* get_false_boolean_object (void)
 
 inline bool is_kl_boolean (KLObject* object)
 {
-  return get_kl_object_type(object) == KL_TYPE_BOOLEAN;
+  uintptr_t tag = kl_as_word(object) & KL_TAG_MASK;
+
+  return tag == KL_FALSE_TAG || tag == KL_TRUE_TAG;
 }
 
 inline char* kl_boolean_to_string (KLObject* boolean_object)

@@ -43,12 +43,12 @@ inline Exception* create_exception (void)
 
 inline Exception* get_exception (KLObject* exception_object)
 {
-  return exception_object->value.exception;
+  return kl_untag(exception_object)->value.exception;
 }
 
 inline void set_exception (KLObject* exception_object, Exception* exception)
 {
-  exception_object->value.exception = exception;
+  kl_untag(exception_object)->value.exception = exception;
 }
 
 inline KLObject* create_kl_exception (void)

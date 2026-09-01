@@ -11,6 +11,9 @@ extern Number* create_number_d (double x);
 
 extern Number* get_number (KLObject* number_object);
 extern void set_number (KLObject* number_object, Number* number);
+extern int kl_fixnum_fits (long x);
+extern long kl_fixnum_value (KLObject* object);
+extern KLObject* kl_make_fixnum (long x);
 extern KLObject* create_kl_number_l (long x);
 extern KLObject* create_kl_number_d (double x);
 extern long get_kl_number_number_l (KLObject* number_object);

@@ -1,7 +1,14 @@
 #include "kl.h"
 
-KLObject* empty_list_object = NULL;
+KLObject* empty_list_object = (KLObject*)KL_EMPTY_TAG;
 
+extern uintptr_t kl_as_word (KLObject* object);
+extern KLObject* kl_from_word (uintptr_t word);
+extern KLObject* kl_untag (KLObject* object);
+extern uintptr_t kl_heap_tag (KLType type);
+extern KLObject* kl_tag_heap (KLObject* object, KLType type);
+extern int kl_is_immediate (KLObject* object);
+extern int kl_is_fixnum (KLObject* object);
 extern KLType get_kl_object_type (KLObject* object);
 extern void set_kl_object_type (KLObject* object, KLType type);
 extern KLObject* create_kl_object (KLType type);

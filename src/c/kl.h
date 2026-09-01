@@ -192,31 +192,107 @@ typedef struct LoopFrameStack {
 
 extern KLObject* empty_list_object;
 
+/* Odd low tags: non-pointer immediates (Boehm ignores them).
+ * Even low tags: heap cons/symbol/string. Other heap types stay
+ * 8-aligned (tag 0). Nix bdw-gc has interior pointers; also
+ * GC_register_displacement(2/4/6) in shen_context_init. */
+#define KL_TAG_MASK ((uintptr_t)7)
+#define KL_HEAP_TAG ((uintptr_t)0)
+#define KL_FIXNUM_TAG ((uintptr_t)1)
+#define KL_CONS_TAG ((uintptr_t)2)
+#define KL_EMPTY_TAG ((uintptr_t)3)
+#define KL_SYMBOL_TAG ((uintptr_t)4)
+#define KL_FALSE_TAG ((uintptr_t)5)
+#define KL_STRING_TAG ((uintptr_t)6)
+#define KL_TRUE_TAG ((uintptr_t)7)
+#define KL_FIXNUM_SHIFT 3
+
+inline uintptr_t kl_as_word (KLObject* object)
+{
+  return (uintptr_t)object;
+}
+
+inline KLObject* kl_from_word (uintptr_t word)
+{
+  return (KLObject*)word;
+}
+
+inline KLObject* kl_untag (KLObject* object)
+{
+  return kl_from_word(kl_as_word(object) & ~KL_TAG_MASK);
+}
+
+inline uintptr_t kl_heap_tag (KLType type)
+{
+  if (type == KL_TYPE_LIST)
+    return KL_CONS_TAG;
+
+  if (type == KL_TYPE_SYMBOL)
+    return KL_SYMBOL_TAG;
+
+  if (type == KL_TYPE_STRING)
+    return KL_STRING_TAG;
+
+  return KL_HEAP_TAG;
+}
+
+inline KLObject* kl_tag_heap (KLObject* object, KLType type)
+{
+  return kl_from_word(kl_as_word(object) | kl_heap_tag(type));
+}
+
+inline int kl_is_immediate (KLObject* object)
+{
+  return (kl_as_word(object) & (uintptr_t)1) != 0;
+}
+
+inline int kl_is_fixnum (KLObject* object)
+{
+  return (kl_as_word(object) & KL_TAG_MASK) == KL_FIXNUM_TAG;
+}
+
 inline KLType get_kl_object_type (KLObject* object)
 {
-  return object->type;
+  uintptr_t tag = kl_as_word(object) & KL_TAG_MASK;
+
+  if (tag == KL_HEAP_TAG)
+    return object->type;
+
+  if (tag == KL_FIXNUM_TAG)
+    return KL_TYPE_NUMBER;
+
+  if (tag == KL_CONS_TAG || tag == KL_EMPTY_TAG)
+    return KL_TYPE_LIST;
+
+  if (tag == KL_SYMBOL_TAG)
+    return KL_TYPE_SYMBOL;
+
+  if (tag == KL_STRING_TAG)
+    return KL_TYPE_STRING;
+
+  return KL_TYPE_BOOLEAN;
 }
 
 inline void set_kl_object_type (KLObject* object, KLType type)
 {
-  object->type = type;
+  kl_untag(object)->type = type;
 }
 
 inline KLObject* create_kl_object (KLType type)
 {
   KLObject* object = shen_gc_malloc(&shen_root_context, sizeof(KLObject));
 
-  set_kl_object_type(object, type);
+  object->type = type;
 
-  return object;
+  return kl_tag_heap(object, type);
 }
 
 inline KLObject* create_kl_object_atomic (KLType type)
 {
-  /* Numbers have no heap pointers; still Boehm, not libc malloc. */
+  /* Doubles / overflow longs: no internal pointers. Tag 0. */
   KLObject* object = shen_gc_malloc_atomic(&shen_root_context, sizeof(KLObject));
 
-  set_kl_object_type(object, type);
+  object->type = type;
 
   return object;
 }
@@ -263,11 +339,7 @@ inline Pair* create_pair (KLObject* car_object, KLObject* cdr_object)
 
 inline void initialize_empty_kl_list (void)
 {
-  KLObject* list_object = create_kl_object(KL_TYPE_LIST);
-
-  list_object->value.pair.car = list_object;
-  list_object->value.pair.cdr = list_object;
-  empty_list_object = list_object;
+  empty_list_object = kl_from_word(KL_EMPTY_TAG);
 }
 
 inline KLObject* get_empty_kl_list (void)
@@ -277,7 +349,7 @@ inline KLObject* get_empty_kl_list (void)
 
 inline bool is_empty_kl_list (KLObject* object)
 {
-  return object == get_empty_kl_list();
+  return kl_as_word(object) == KL_EMPTY_TAG;
 }
 
 #define EL get_empty_kl_list()

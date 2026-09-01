@@ -695,8 +695,20 @@ int main (void)
   shen_boot(&shen_root_context, ".");
 
   expect(shen_root_context.gc_ready == 1, "shen_context GC is initialized");
-  expect(GC_base(shen_number_l(&shen_root_context, 1)) != NULL,
-         "numbers live on Boehm GC heap");
+  {
+    KLObject* cons = shen_cons(&shen_root_context,
+                               shen_number_l(&shen_root_context, 1),
+                               shen_empty_list(&shen_root_context));
+
+    expect(GC_base(cons) == kl_untag(cons), "cons lives on Boehm GC heap");
+    expect((kl_as_word(cons) & KL_TAG_MASK) == KL_CONS_TAG,
+           "ABI cons has heap tag");
+  }
+  expect(GC_base(shen_number_l(&shen_root_context, 1)) == NULL,
+         "fixnum is a non-pointer immediate");
+  expect(GC_base(shen_true(&shen_root_context)) == NULL &&
+         GC_base(shen_empty_list(&shen_root_context)) == NULL,
+         "bool and empty-list are non-pointer immediates");
 
   test_intern_cons();
   test_apply_add();

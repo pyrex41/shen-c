@@ -293,6 +293,13 @@ void shen_apply_port_overwrites (void)
   shen_tc_cache_install_from_env();
 }
 
+/* Weak no-op: AOT apps and unit tests link libshenc only. bin/shen-c
+ * supplies a strong generated install_all. */
+__attribute__((weak))
+void shen_kernel_aot_install_all (void)
+{
+}
+
 static KLObject* shen_intern_uncached (shen_context* ctx, const char* name)
 {
   KLObject* string_object = intern_kl_string(name);

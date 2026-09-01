@@ -49,7 +49,34 @@ set_target_properties(shenc PROPERTIES
   ARCHIVE_OUTPUT_DIRECTORY_DEBUG "${CMAKE_CURRENT_SOURCE_DIR}/bin"
 )
 
-add_executable(shen-c src/c/main.c)
+add_executable(kernel-aot-build tools/kernel-aot-build.c)
+target_link_libraries(kernel-aot-build PRIVATE shenc)
+set_target_properties(kernel-aot-build PROPERTIES
+  RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin"
+)
+
+set(KERNEL_AOT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/obj/kernel_aot")
+set(KERNEL_AOT_MODULES
+  sys writer core reader declarations toplevel macros load
+  prolog sequent track t_star yacc types)
+set(KERNEL_AOT_SRCS "${KERNEL_AOT_DIR}/install_all.c")
+foreach(_mod ${KERNEL_AOT_MODULES})
+  list(APPEND KERNEL_AOT_SRCS "${KERNEL_AOT_DIR}/${_mod}.c")
+endforeach()
+file(GLOB KERNEL_KL CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/shen/src/kl/*.kl")
+add_custom_command(
+  OUTPUT ${KERNEL_AOT_SRCS} "${KERNEL_AOT_DIR}/.stamp"
+  COMMAND ${CMAKE_COMMAND} -E make_directory "${KERNEL_AOT_DIR}"
+  COMMAND ${CMAKE_COMMAND} -E env SHEN_C_HOME=${CMAKE_CURRENT_SOURCE_DIR}
+          $<TARGET_FILE:kernel-aot-build>
+          "${CMAKE_CURRENT_SOURCE_DIR}/shen/src/kl" "${KERNEL_AOT_DIR}"
+  COMMAND ${CMAKE_COMMAND} -E touch "${KERNEL_AOT_DIR}/.stamp"
+  DEPENDS kernel-aot-build ${KERNEL_KL}
+  COMMENT "Always-AOT kernel NativeFunctions (install_all)"
+)
+
+add_executable(shen-c src/c/main.c ${KERNEL_AOT_SRCS})
+target_compile_options(shen-c PRIVATE "-iquote${CMAKE_CURRENT_SOURCE_DIR}/src/c")
 target_link_libraries(shen-c PRIVATE shenc)
 set_target_properties(shen-c PROPERTIES
   RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin"

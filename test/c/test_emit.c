@@ -264,6 +264,47 @@ int main (void)
   }
 
   {
+    FILE* kernel_out;
+    ShenEmitReport kernel_report = {0};
+    KLObject* kernel_forms[1];
+
+    kernel_forms[0] = form;
+    kernel_out = tmpfile();
+    expect(kernel_out != NULL, "kernel-aot tmpfile");
+    expect(shen_emit_kernel_module(kernel_out, kernel_forms, 1, "core",
+                                   "core.kl", &kernel_report) == 0,
+           "emit always-AOT kernel module");
+    expect(kernel_report.defuns == 1, "kernel module emits one defun");
+    expect(kernel_report.toplevels == 0, "kernel module skips toplevels");
+    fseek(kernel_out, 0, SEEK_END);
+    size = ftell(kernel_out);
+    fseek(kernel_out, 0, SEEK_SET);
+    free(generated);
+    generated = malloc((size_t)size + 1);
+    expect(generated != NULL, "kernel generated buffer");
+    if (generated != NULL && size > 0)
+      fread(generated, 1, (size_t)size, kernel_out);
+    if (generated != NULL)
+      generated[size] = '\0';
+    fclose(kernel_out);
+    expect(generated != NULL && strstr(generated, "int main") == NULL,
+           "kernel module is not a second main");
+    expect(generated != NULL &&
+           strstr(generated, "shen_kernel_aot_install_core") != NULL,
+           "kernel module exports install_core");
+    expect(generated != NULL &&
+           strstr(generated, "SHEN_OVERLAY_FORMAT") == NULL,
+           "kernel install_all is not overlay-after-load");
+    expect(generated != NULL &&
+           strstr(generated, "shen/test/s42/interpreter.shen") == NULL,
+           "kernel module does not AOT the L-interp sidecar");
+    expect(generated != NULL && strstr(generated, "shen_register_defun") != NULL,
+           "kernel install registers NativeFunction defuns");
+    expect(generated != NULL && strstr(generated, "eval_kl_object(") == NULL,
+           "kernel module is not eval_kl_object of source");
+  }
+
+  {
     KLObject* x;
     KLObject* xs;
     KLObject* cons_body;

@@ -71,21 +71,44 @@ inline Number* create_number_d (double x)
 
 inline Number* get_number (KLObject* number_object)
 {
-  return &number_object->value.number;
+  return &kl_untag(number_object)->value.number;
 }
 
 inline void set_number (KLObject* number_object, Number* number)
 {
-  number_object->value.number = *number;
+  kl_untag(number_object)->value.number = *number;
+}
+
+inline int kl_fixnum_fits (long x)
+{
+  const int bits = (int)(sizeof(intptr_t) * 8 - KL_FIXNUM_SHIFT);
+  long max = (long)(((uintptr_t)1 << (bits - 1)) - 1);
+  long min = -max - 1;
+
+  return x >= min && x <= max;
+}
+
+inline long kl_fixnum_value (KLObject* object)
+{
+  return (long)((intptr_t)kl_as_word(object) >> KL_FIXNUM_SHIFT);
+}
+
+inline KLObject* kl_make_fixnum (long x)
+{
+  return kl_from_word(((uintptr_t)(intptr_t)x << KL_FIXNUM_SHIFT) |
+                      KL_FIXNUM_TAG);
 }
 
 inline KLObject* create_kl_number_l (long x)
 {
-  /* Pointer-free payload: atomic Boehm cell, not a tagged immediate. */
+  if (kl_fixnum_fits(x))
+    return kl_make_fixnum(x);
+
+  /* Overflow longs stay pointer-free atomic heap cells. */
   KLObject* number_object = create_kl_object_atomic(KL_TYPE_NUMBER);
 
-  number_object->value.number.number_type = KL_NUMBER_TYPE_LONG;
-  number_object->value.number.value.number_l = x;
+  kl_untag(number_object)->value.number.number_type = KL_NUMBER_TYPE_LONG;
+  kl_untag(number_object)->value.number.value.number_l = x;
 
   return number_object;
 }
@@ -94,14 +117,17 @@ inline KLObject* create_kl_number_d (double x)
 {
   KLObject* number_object = create_kl_object_atomic(KL_TYPE_NUMBER);
 
-  number_object->value.number.number_type = KL_NUMBER_TYPE_DOUBLE;
-  number_object->value.number.value.number_d = x;
+  kl_untag(number_object)->value.number.number_type = KL_NUMBER_TYPE_DOUBLE;
+  kl_untag(number_object)->value.number.value.number_d = x;
 
   return number_object;
 }
 
 inline long get_kl_number_number_l (KLObject* number_object)
 {
+  if (kl_is_fixnum(number_object))
+    return kl_fixnum_value(number_object);
+
   return get_number_number_l(get_number(number_object));
 }
 
@@ -112,6 +138,9 @@ inline double get_kl_number_number_d (KLObject* number_object)
 
 inline KLNumberType get_kl_number_number_type (KLObject* number_object)
 {
+  if (kl_is_fixnum(number_object))
+    return KL_NUMBER_TYPE_LONG;
+
   return get_number_number_type(get_number(number_object));
 }
 
@@ -122,6 +151,9 @@ inline bool is_kl_number (KLObject* object)
 
 inline bool is_kl_number_l (KLObject* object)
 {
+  if (kl_is_fixnum(object))
+    return true;
+
   return (is_kl_number(object) &&
           get_kl_number_number_type(object) == KL_NUMBER_TYPE_LONG);
 }

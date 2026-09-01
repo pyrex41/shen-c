@@ -30,6 +30,11 @@ extern shen_context shen_root_context;
 
 inline void shen_context_init (shen_context* ctx)
 {
+  /* Heap cons/symbol/string tags (kl.h 2/4/6). No-op if interior
+   * pointers are on (Nix bdw-gc default); required if they are off. */
+  GC_register_displacement(2);
+  GC_register_displacement(4);
+  GC_register_displacement(6);
   GC_init();
   ctx->gc_ready = 1;
 }
