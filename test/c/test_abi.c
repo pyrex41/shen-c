@@ -68,6 +68,22 @@ static void test_intern_cons (void)
   expect(strcmp(shen_string_value(ctx, name), "hello") == 0, "string intern");
   expect(shen_number_l_value(ctx, shen_add(ctx, one, two)) == 3, "shen_add longs");
   expect(shen_number_l_value(ctx, shen_sub(ctx, two, one)) == 1, "shen_sub longs");
+  expect(shen_number_l_value(ctx, shen_mul(ctx, two, one)) == 2, "shen_mul longs");
+  expect(shen_number_l_value(ctx, shen_div(ctx, two, one)) == 2, "shen_div longs");
+  expect(shen_eq(ctx, one, one) == shen_true(ctx), "shen_eq identical");
+  expect(shen_eq(ctx, one, two) == shen_false(ctx), "shen_eq distinct longs");
+  expect(shen_cons_p(ctx, list) == shen_true(ctx), "shen_cons_p pair");
+  expect(shen_cons_p(ctx, shen_empty_list(ctx)) == shen_false(ctx),
+         "shen_cons_p empty");
+  expect(shen_lt(ctx, one, two) == shen_true(ctx), "shen_lt longs");
+  expect(shen_gt(ctx, two, one) == shen_true(ctx), "shen_gt longs");
+  expect(shen_lte(ctx, one, one) == shen_true(ctx), "shen_lte longs");
+  expect(shen_gte(ctx, two, two) == shen_true(ctx), "shen_gte longs");
+  expect(shen_number_p(ctx, one) == shen_true(ctx), "shen_number_p");
+  expect(shen_string_p(ctx, name) == shen_true(ctx), "shen_string_p");
+  expect(shen_symbol_p(ctx, plus) == shen_true(ctx), "shen_symbol_p interned");
+  expect(shen_symbol_p(ctx, one) == shen_false(ctx), "shen_symbol_p number");
+  expect(shen_absvector_p(ctx, one) == shen_false(ctx), "shen_absvector_p number");
 }
 
 static void test_apply_add (void)

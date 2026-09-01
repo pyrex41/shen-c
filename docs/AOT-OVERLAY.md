@@ -131,20 +131,20 @@ table, not `shen_intern` + `shen_apply` every time.
 
 ### O4 — inline hot prims in emit
 
-**Shipped (O4).** Exact-arity unbound `+` `-` `cons` `hd` `tl` emit
-`shen_add` / `shen_sub` / `shen_cons` / `shen_hd` / `shen_tl` (`if` was
-already `emit_if`). Locals of those names and partial `+` stay
-intern+apply. Overlay stays **unplugged** (O2 kill: load-help clocks
+**Shipped (O4).** Exact-arity unbound klcompile prims emit ABI helpers
+(`+` `-` `*` `/` `<` `>` `<=` `>=` `=` `cons` `hd` `tl` `cons?`
+`number?` `string?` `symbol?` `absvector?`). `if` was already `emit_if`.
+Do **not** alias `vector?` to `absvector?` — it is a kernel defun
+(absvector? plus slot 0). Locals of those names and partial application
+stay intern+apply. Overlay stays **unplugged** (O2 kill: load-help clocks
 typecheck before swap). AOT runme `evidence/runme-aot.log`
-`21:44:33Z`–`21:44:48Z`: intern **14852→9150**, apply **11515→6030**,
-`shen_add=41` `shen_cons=2923` `eval_kl_object=0` `shen_native_closure=282`,
+`23:50:26Z`–`23:50:47Z`: intern **9150→7465**, apply **6030→4355**,
+`shen_eq=761` `shen_cons_p=858` `eval_kl_object=0` `shen_native_closure=282`,
 still **134/0**, overlay_wrap=0, Boehm `libgc.1.dylib`. L-interp
-**15.732471 s** / **1177672** inf (baseline **16.182 s**, Go **2.041 s**)
-— still ~16 s, not well under. Prologinterp **2.919 s**. Certify
-`21:45:04Z`–`21:46:22Z` still **134/0** (tree-walker L-interp **42.16 s**).
+**13.623762 s** / **1177672** inf (retry **14.267524 s**, prior **15.351 s**,
+Go **2.161 s**) — still ~14 s, not well under. Prologinterp **1.854 s**.
 Do not start O3. Remaining lever is O5 warm tc-cache (already shipped)
-or faster already-AOT `t*` beyond these five prims (`=` / `*` still
-intern+apply).
+or faster already-AOT `t*` beyond boxed prim helpers.
 
 ### O5 — tc-cache (optional, parallel-ok after O2)
 

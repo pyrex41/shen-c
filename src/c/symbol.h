@@ -13,6 +13,22 @@
 extern unsigned long auto_increment_symbol_name_id;
 extern char* auto_increment_symbol_name_prefix;
 extern khash_t(SymbolTable)* symbol_table;
+extern uint32_t next_symbol_id;
+extern uint32_t global_symbol_capacity;
+extern KLObject** global_function_table;
+extern KLObject** global_variable_table;
+
+void grow_global_symbol_tables (uint32_t min_capacity);
+
+inline uint32_t mint_symbol_id (void)
+{
+  uint32_t id = next_symbol_id++;
+
+  if (id >= global_symbol_capacity)
+    grow_global_symbol_tables(id + 1);
+
+  return id;
+}
 
 inline KLObject* get_symbol_name (Symbol* symbol)
 {
@@ -52,6 +68,7 @@ inline Symbol* create_symbol (KLObject* string_object)
   set_symbol_name(symbol, string_object);
   set_symbol_function(symbol, NULL);
   set_symbol_variable_value(symbol, NULL);
+  symbol->id = mint_symbol_id();
 
   return symbol;
 }
@@ -64,6 +81,11 @@ inline Symbol* get_symbol (KLObject* symbol_object)
 inline void set_symbol (KLObject* symbol_object, Symbol* symbol)
 {
   symbol_object->value.symbol = symbol;
+}
+
+inline uint32_t get_kl_symbol_id (KLObject* symbol_object)
+{
+  return get_symbol(symbol_object)->id;
 }
 
 inline KLObject* create_kl_symbol (KLObject* string_object)
@@ -99,7 +121,10 @@ inline KLObject* get_kl_symbol_function (KLObject* symbol_object)
 inline void set_kl_symbol_function (KLObject* symbol_object,
                                     KLObject* function_object)
 {
-  set_symbol_function(get_symbol(symbol_object), function_object);
+  Symbol* symbol = get_symbol(symbol_object);
+
+  set_symbol_function(symbol, function_object);
+  global_function_table[symbol->id] = function_object;
 }
 
 inline KLObject* get_kl_symbol_variable_value (KLObject* symbol_object)
@@ -110,8 +135,10 @@ inline KLObject* get_kl_symbol_variable_value (KLObject* symbol_object)
 inline void set_kl_symbol_variable_value (KLObject* symbol_object,
                                           KLObject* variable_value_object)
 {
-  set_symbol_variable_value(get_symbol(symbol_object),
-                            variable_value_object);
+  Symbol* symbol = get_symbol(symbol_object);
+
+  set_symbol_variable_value(symbol, variable_value_object);
+  global_variable_table[symbol->id] = variable_value_object;
 }
 
 inline bool is_kl_symbol (KLObject* object)
@@ -172,6 +199,11 @@ inline khash_t(SymbolTable)* get_symbol_table (void)
 inline void initialize_symbol_table (void)
 {
   symbol_table = kh_init(SymbolTable);
+  next_symbol_id = 1;
+  global_symbol_capacity = 0;
+  global_function_table = NULL;
+  global_variable_table = NULL;
+  grow_global_symbol_tables(256);
 }
 
 inline KLObject* lookup_symbol_table (KLObject* string_object)

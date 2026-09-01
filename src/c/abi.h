@@ -29,9 +29,22 @@ KLObject* shen_cons (shen_context* ctx, KLObject* head, KLObject* tail);
 KLObject* shen_hd (shen_context* ctx, KLObject* list);
 KLObject* shen_tl (shen_context* ctx, KLObject* list);
 KLObject* shen_empty_list (shen_context* ctx);
-/* Boxed + / - for emit O4. Long+long is the t* (+ Infs 1) path. */
+/* Boxed exact-arity prims for emit (klcompile inlinable set, minus
+ * vector? which is a kernel defun). Long+long is the t* (+ Infs 1) path. */
 KLObject* shen_add (shen_context* ctx, KLObject* x, KLObject* y);
 KLObject* shen_sub (shen_context* ctx, KLObject* x, KLObject* y);
+KLObject* shen_mul (shen_context* ctx, KLObject* x, KLObject* y);
+KLObject* shen_div (shen_context* ctx, KLObject* x, KLObject* y);
+KLObject* shen_lt (shen_context* ctx, KLObject* x, KLObject* y);
+KLObject* shen_gt (shen_context* ctx, KLObject* x, KLObject* y);
+KLObject* shen_lte (shen_context* ctx, KLObject* x, KLObject* y);
+KLObject* shen_gte (shen_context* ctx, KLObject* x, KLObject* y);
+KLObject* shen_eq (shen_context* ctx, KLObject* x, KLObject* y);
+KLObject* shen_cons_p (shen_context* ctx, KLObject* x);
+KLObject* shen_number_p (shen_context* ctx, KLObject* x);
+KLObject* shen_string_p (shen_context* ctx, KLObject* x);
+KLObject* shen_symbol_p (shen_context* ctx, KLObject* x);
+KLObject* shen_absvector_p (shen_context* ctx, KLObject* x);
 
 KLObject* shen_number_l (shen_context* ctx, long x);
 KLObject* shen_number_d (shen_context* ctx, double x);
@@ -55,6 +68,10 @@ void shen_register_defun (shen_context* ctx, const char* name, long arity,
                           NativeFunction* native_function);
 KLObject* shen_apply (shen_context* ctx, KLObject* function_or_symbol,
                       Vector* arguments);
+/* Named exact-arity AOT call: intern_static cache + stack arg array,
+ * no Vector. Partial / extra arity falls back to shen_apply. */
+KLObject* shen_apply_direct (shen_context* ctx, const char* name, long n,
+                             KLObject** arguments);
 /* Tail-position apply: bounce into shen_apply when already inside a
  * generated NativeFunction. Each shen_apply saves/restores bounce state
  * so nested map/walk/trap-error cannot clobber an outer bounce. Self-tails
@@ -64,6 +81,8 @@ KLObject* shen_apply (shen_context* ctx, KLObject* function_or_symbol,
  * and eval_kl_object user/closure application are not hopped. */
 KLObject* shen_tail_apply (shen_context* ctx, KLObject* function_or_symbol,
                            Vector* arguments);
+KLObject* shen_tail_apply_direct (shen_context* ctx, const char* name, long n,
+                                  KLObject** arguments);
 
 KLObject* shen_true (shen_context* ctx);
 KLObject* shen_false (shen_context* ctx);

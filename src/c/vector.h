@@ -32,10 +32,10 @@ inline void set_vector_size (Vector* vector, long size)
 
 inline Vector* create_vector (long size)
 {
-  Vector* vector = malloc(sizeof(Vector));
-  KLObject** objects = malloc(sizeof(KLObject*) * (size_t)size);
+  size_t n = (size_t)size;
+  Vector* vector = malloc(sizeof(Vector) + n * sizeof(KLObject*));
 
-  set_vector_objects(vector, objects);
+  set_vector_objects(vector, n == 0 ? NULL : (KLObject**)(vector + 1));
   set_vector_size(vector, size);
 
   return vector;

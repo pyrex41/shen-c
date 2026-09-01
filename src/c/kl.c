@@ -5,6 +5,7 @@ KLObject* empty_list_object = NULL;
 extern KLType get_kl_object_type (KLObject* object);
 extern void set_kl_object_type (KLObject* object, KLType type);
 extern KLObject* create_kl_object (KLType type);
+extern KLObject* create_kl_object_atomic (KLType type);
 extern bool is_null (void* object);
 extern bool is_not_null (void* object);
 

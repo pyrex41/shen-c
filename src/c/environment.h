@@ -1,28 +1,23 @@
 #ifndef SHEN_C_ENVIRONMENT_H
 #define SHEN_C_ENVIRONMENT_H
 
-#include "khash.h"
-
+#include "exception.h"
 #include "kl.h"
-#include "object.h"
 #include "symbol.h"
 
 extern Environment* global_function_environment;
 extern Environment* global_variable_environment;
 
-KLObject* lookup_environment (KLObject* symbol_object, Environment* environment);
+typedef struct ShenLexMark {
+  uint32_t epoch;
+  uint32_t undo_sp;
+} ShenLexMark;
 
-inline khash_t(ObjectTable)* get_environment_symbol_object_table
-(Environment* environment)
-{
-  return environment->symbol_object_table;
-}
-
-inline void set_environment_symbol_object_table
-(Environment* environment, khash_t(ObjectTable)* symbol_object_table)
-{
-  environment->symbol_object_table = symbol_object_table;
-}
+ShenLexMark shen_lex_mark (void);
+void shen_lex_rewind (ShenLexMark mark);
+void shen_lex_enter_frame (void);
+void shen_lex_bind (KLObject* symbol_object, KLObject* value);
+void shen_lex_assign (KLObject* symbol_object, KLObject* value);
 
 inline Environment* get_parent_environment (Environment* environment)
 {
@@ -39,8 +34,11 @@ inline Environment* create_environment (void)
 {
   Environment* environment = malloc(sizeof(Environment));
 
-  set_environment_symbol_object_table(environment, kh_init(ObjectTable));
-  set_parent_environment(environment, NULL);
+  environment->parent = NULL;
+  environment->size = 0;
+  environment->id = 0;
+  environment->value = NULL;
+  environment->binds = NULL;
 
   return environment;
 }
@@ -61,19 +59,81 @@ inline Environment* get_global_variable_environment (void)
   return global_variable_environment;
 }
 
-inline void extend_environment (KLObject* symbol_object, KLObject* object,
+inline Environment* extend_environment (KLObject* symbol_object, KLObject* object,
+                                        Environment* parent)
+{
+  Environment* environment = malloc(sizeof(Environment));
+
+  environment->parent = parent;
+  environment->size = 1;
+  environment->id = get_kl_symbol_id(symbol_object);
+  environment->value = object;
+  environment->binds = NULL;
+
+  return environment;
+}
+
+inline Environment* extend_environment_n (KLObject** symbols, KLObject** values,
+                                          long n, Environment* parent)
+{
+  Environment* environment;
+  EnvBinding* binds;
+  long i;
+
+  if (n <= 0)
+    return parent;
+
+  if (n == 1)
+    return extend_environment(symbols[0], values[0], parent);
+
+  binds = malloc((size_t)n * sizeof(EnvBinding));
+  environment = malloc(sizeof(Environment));
+  environment->parent = parent;
+  environment->size = (uint32_t)n;
+  environment->id = 0;
+  environment->value = NULL;
+  environment->binds = binds;
+
+  for (i = 0; i < n; ++i) {
+    binds[i].id = get_kl_symbol_id(symbols[i]);
+    binds[i].value = values[i];
+  }
+
+  return environment;
+}
+
+inline void update_environment (KLObject* symbol_object, KLObject* object,
                                 Environment* environment)
 {
-  khash_t(ObjectTable)* symbol_object_table =
-    get_environment_symbol_object_table(environment);
-  int put_result;
-  khiter_t hash_iterator = kh_put(ObjectTable, symbol_object_table,
-                                  (kl_khint_ptr_t)symbol_object, &put_result);
+  uint32_t id = get_kl_symbol_id(symbol_object);
 
-  if (put_result == -1)
-    throw_kl_exception("Failed to extend environment");
+  while (environment != NULL) {
+    uint32_t n = environment->size;
 
-  kh_value(symbol_object_table, hash_iterator) = object;
+    if (n == 1) {
+      if (environment->id == id) {
+        environment->value = object;
+        return;
+      }
+    } else if (n > 1) {
+      EnvBinding* binds = environment->binds;
+      uint32_t i;
+
+      for (i = n; i-- > 0; ) {
+        if (binds[i].id == id) {
+          binds[i].value = object;
+          return;
+        }
+      }
+    }
+
+    environment = environment->parent;
+  }
+
+  throw_kl_exception("Failed to extend environment");
 }
+
+KLObject* lookup_environment (KLObject* symbol_object,
+                              Environment* environment);
 
 #endif

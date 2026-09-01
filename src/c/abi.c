@@ -45,6 +45,13 @@ static int bounce_pending = 0;
 static KLObject* bounce_fn = NULL;
 static Vector* bounce_args = NULL;
 
+#define SHEN_INTERN_PTR_SLOTS 8192
+
+static struct {
+  const char* key;
+  KLObject* object;
+} intern_ptr_cache[SHEN_INTERN_PTR_SLOTS];
+
 /* Measured wrapping-complete t-star / system-S-h: sample graph ~19k
  * native frames + ~23k shen_apply on Darwin 8MiB thread stack, then
  * SIGSEGV 139. Tail bounce does not apply (if-false chains). Hop
@@ -286,9 +293,10 @@ void shen_apply_port_overwrites (void)
   shen_tc_cache_install_from_env();
 }
 
-KLObject* shen_intern (shen_context* ctx, const char* name)
+static KLObject* shen_intern_uncached (shen_context* ctx, const char* name)
 {
   KLObject* string_object = intern_kl_string(name);
+  KLObject* symbol_object;
 
   (void)ctx;
 
@@ -297,7 +305,7 @@ KLObject* shen_intern (shen_context* ctx, const char* name)
   else if (is_kl_string_equal(string_object, false_string_object))
     return get_false_boolean_object();
 
-  KLObject* symbol_object = lookup_symbol_table(string_object);
+  symbol_object = lookup_symbol_table(string_object);
 
   if (is_null(symbol_object)) {
     symbol_object = create_kl_symbol(string_object);
@@ -305,6 +313,37 @@ KLObject* shen_intern (shen_context* ctx, const char* name)
   }
 
   return symbol_object;
+}
+
+KLObject* shen_intern (shen_context* ctx, const char* name)
+{
+  if (name == NULL)
+    throw_kl_exception("intern of null");
+
+  return shen_intern_uncached(ctx, name);
+}
+
+/* AOT call-target literals only. Do not use for reusable buffers. */
+static KLObject* shen_intern_static (shen_context* ctx, const char* name)
+{
+  uintptr_t key;
+  size_t idx;
+  KLObject* object;
+
+  if (name == NULL)
+    throw_kl_exception("intern of null");
+
+  key = (uintptr_t)name;
+  idx = ((key >> 3) ^ (key >> 16)) & (SHEN_INTERN_PTR_SLOTS - 1);
+
+  if (intern_ptr_cache[idx].key == name)
+    return intern_ptr_cache[idx].object;
+
+  object = shen_intern_uncached(ctx, name);
+  intern_ptr_cache[idx].key = name;
+  intern_ptr_cache[idx].object = object;
+
+  return object;
 }
 
 KLObject* shen_cons (shen_context* ctx, KLObject* head, KLObject* tail)
@@ -361,6 +400,120 @@ KLObject* shen_sub (shen_context* ctx, KLObject* x, KLObject* y)
     throw_kl_exception("arguments to - must be numbers");
 
   return subtract_kl_number(x, y);
+}
+
+static KLObject* shen_pred (int yes)
+{
+  return yes ? get_true_boolean_object() : get_false_boolean_object();
+}
+
+KLObject* shen_mul (shen_context* ctx, KLObject* x, KLObject* y)
+{
+  (void)ctx;
+
+  if (is_kl_number_l(x) && is_kl_number_l(y))
+    return create_kl_number_l(get_kl_number_number_l(x) *
+                              get_kl_number_number_l(y));
+
+  if (!is_kl_number(x) || !is_kl_number(y))
+    throw_kl_exception("arguments to * must be numbers");
+
+  return multiply_kl_number(x, y);
+}
+
+KLObject* shen_div (shen_context* ctx, KLObject* x, KLObject* y)
+{
+  (void)ctx;
+
+  if (!is_kl_number(x) || !is_kl_number(y))
+    throw_kl_exception("arguments to / must be numbers");
+
+  return divide_kl_number(x, y);
+}
+
+KLObject* shen_lt (shen_context* ctx, KLObject* x, KLObject* y)
+{
+  (void)ctx;
+
+  if (is_kl_number_l(x) && is_kl_number_l(y))
+    return shen_pred(get_kl_number_number_l(x) < get_kl_number_number_l(y));
+
+  return shen_pred(is_kl_number_less(x, y));
+}
+
+KLObject* shen_gt (shen_context* ctx, KLObject* x, KLObject* y)
+{
+  (void)ctx;
+
+  if (is_kl_number_l(x) && is_kl_number_l(y))
+    return shen_pred(get_kl_number_number_l(x) > get_kl_number_number_l(y));
+
+  return shen_pred(is_kl_number_greater(x, y));
+}
+
+KLObject* shen_lte (shen_context* ctx, KLObject* x, KLObject* y)
+{
+  (void)ctx;
+
+  if (is_kl_number_l(x) && is_kl_number_l(y))
+    return shen_pred(get_kl_number_number_l(x) <= get_kl_number_number_l(y));
+
+  return shen_pred(is_kl_number_less_or_equal(x, y));
+}
+
+KLObject* shen_gte (shen_context* ctx, KLObject* x, KLObject* y)
+{
+  (void)ctx;
+
+  if (is_kl_number_l(x) && is_kl_number_l(y))
+    return shen_pred(get_kl_number_number_l(x) >= get_kl_number_number_l(y));
+
+  return shen_pred(is_kl_number_greater_or_equal(x, y));
+}
+
+KLObject* shen_eq (shen_context* ctx, KLObject* x, KLObject* y)
+{
+  (void)ctx;
+
+  if (x == y)
+    return get_true_boolean_object();
+
+  return shen_pred(is_kl_object_equal(x, y));
+}
+
+KLObject* shen_cons_p (shen_context* ctx, KLObject* x)
+{
+  (void)ctx;
+
+  return shen_pred(is_non_empty_kl_list(x));
+}
+
+KLObject* shen_number_p (shen_context* ctx, KLObject* x)
+{
+  (void)ctx;
+
+  return shen_pred(is_kl_number(x));
+}
+
+KLObject* shen_string_p (shen_context* ctx, KLObject* x)
+{
+  (void)ctx;
+
+  return shen_pred(is_kl_string(x));
+}
+
+KLObject* shen_symbol_p (shen_context* ctx, KLObject* x)
+{
+  (void)ctx;
+
+  return shen_pred(is_kl_symbol(x));
+}
+
+KLObject* shen_absvector_p (shen_context* ctx, KLObject* x)
+{
+  (void)ctx;
+
+  return shen_pred(is_kl_vector(x));
 }
 
 KLObject* shen_number_l (shen_context* ctx, long x)
@@ -530,25 +683,30 @@ static KLObject* apply_user_function (KLObject* function_object, Vector* argumen
   long argument_size = (is_null(arguments)) ? 0 : get_vector_size(arguments);
   Vector* parameters = get_user_function_parameters(user_function);
   long parameter_size = (is_null(parameters)) ? 0 : get_vector_size(parameters);
-  Environment* function_environment = create_environment();
-  Environment* variable_environment = create_environment();
+  Environment* variable_environment = get_global_variable_environment();
+  ShenLexMark mark = shen_lex_mark();
+  KLObject* result;
+  long i;
 
   check_function_argument_size(argument_size, parameter_size);
-  set_parent_environment(function_environment, get_global_function_environment());
-  set_parent_environment(variable_environment, get_global_variable_environment());
+  shen_lex_enter_frame();
 
   if (is_not_null(arguments) && is_not_null(parameters)) {
-    KLObject** argument_objects = get_vector_objects(arguments);
-    KLObject** parameter_objects = get_vector_objects(parameters);
-    long i;
+    variable_environment =
+      extend_environment_n(get_vector_objects(parameters),
+                           get_vector_objects(arguments),
+                           argument_size, variable_environment);
 
     for (i = 0; i < argument_size; ++i)
-      extend_environment(parameter_objects[i], argument_objects[i],
-                         variable_environment);
+      shen_lex_bind(get_vector_element(parameters, i),
+                    get_vector_element(arguments, i));
   }
 
-  return eval_kl_object(get_user_function_body(user_function),
-                        function_environment, variable_environment);
+  result = eval_kl_object(get_user_function_body(user_function),
+                          get_global_function_environment(), variable_environment);
+  shen_lex_rewind(mark);
+
+  return result;
 }
 
 static KLObject* apply_closure (KLObject* function_object, Vector* arguments)
@@ -557,23 +715,29 @@ static KLObject* apply_closure (KLObject* function_object, Vector* arguments)
   KLObject* parameter_object = get_closure_parameter(closure);
   long argument_size = (is_null(arguments)) ? 0 : get_vector_size(arguments);
   long parameter_size = (is_null(parameter_object)) ? 0 : 1;
-  Environment* function_environment = create_environment();
-  Environment* variable_environment = create_environment();
+  Environment* function_environment =
+    get_closure_parent_function_environment(closure);
+  Environment* variable_environment =
+    get_closure_parent_variable_environment(closure);
   KLObject* argument_object = NULL;
+  ShenLexMark mark = shen_lex_mark();
+  KLObject* result;
 
   check_function_argument_size(argument_size, parameter_size);
-  set_parent_environment(function_environment,
-                         get_closure_parent_function_environment(closure));
-  set_parent_environment(variable_environment,
-                         get_closure_parent_variable_environment(closure));
+  shen_lex_enter_frame();
 
   if (parameter_size > 0) {
     argument_object = get_vector_element(arguments, 0);
-    extend_environment(parameter_object, argument_object, variable_environment);
+    variable_environment =
+      extend_environment(parameter_object, argument_object, variable_environment);
+    shen_lex_bind(parameter_object, argument_object);
   }
 
-  return eval_kl_object(get_closure_body(closure), function_environment,
-                        variable_environment);
+  result = eval_kl_object(get_closure_body(closure), function_environment,
+                          variable_environment);
+  shen_lex_rewind(mark);
+
+  return result;
 }
 
 static long function_arity (KLObject* function_object)
@@ -762,6 +926,51 @@ KLObject* shen_tail_apply (shen_context* ctx, KLObject* function_or_symbol,
   return shen_apply(ctx, function_or_symbol, arguments);
 }
 
+static Vector* vector_from_args (long n, KLObject** arguments)
+{
+  Vector* vector;
+  long i;
+
+  if (n <= 0)
+    return NULL;
+
+  vector = create_vector(n);
+
+  for (i = 0; i < n; ++i)
+    set_vector_element(vector, i, arguments[i]);
+
+  return vector;
+}
+
+KLObject* shen_apply_direct (shen_context* ctx, const char* name, long n,
+                             KLObject** arguments)
+{
+  KLObject* symbol_object;
+  Vector stack_vector;
+
+  if (n < 0)
+    throw_kl_exception("apply_direct negative arity");
+
+  symbol_object = shen_intern_static(ctx, name);
+  stack_vector.size = n;
+  stack_vector.objects = n == 0 ? NULL : arguments;
+
+  return shen_apply(ctx, symbol_object, &stack_vector);
+}
+
+KLObject* shen_tail_apply_direct (shen_context* ctx, const char* name, long n,
+                                  KLObject** arguments)
+{
+  if (apply_depth > 0) {
+    bounce_fn = shen_intern_static(ctx, name);
+    bounce_args = vector_from_args(n, arguments);
+    bounce_pending = 1;
+    return NULL;
+  }
+
+  return shen_apply_direct(ctx, name, n, arguments);
+}
+
 KLObject* shen_trap_error (shen_context* ctx, shen_trap_body body,
                            shen_trap_handler handler, void* data)
 {
@@ -770,6 +979,7 @@ KLObject* shen_trap_error (shen_context* ctx, shen_trap_body body,
   int saved_bounce = bounce_pending;
   KLObject* saved_fn = bounce_fn;
   Vector* saved_args = bounce_args;
+  ShenLexMark saved_lex = shen_lex_mark();
 
   (void)ctx;
 
@@ -785,6 +995,7 @@ KLObject* shen_trap_error (shen_context* ctx, shen_trap_body body,
     bounce_pending = saved_bounce;
     bounce_fn = saved_fn;
     bounce_args = saved_args;
+    shen_lex_rewind(saved_lex);
 
     return object;
   }
@@ -796,6 +1007,7 @@ KLObject* shen_trap_error (shen_context* ctx, shen_trap_body body,
     bounce_pending = saved_bounce;
     bounce_fn = saved_fn;
     bounce_args = saved_args;
+    shen_lex_rewind(saved_lex);
 
     if (is_null((void*)handler))
       return exception_object;

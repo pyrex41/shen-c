@@ -185,6 +185,14 @@ ${RUNME_AOT_APP}: ${BUILDER_BIN} ${RUNME_AOT_FIXTURE}/kernel.kl ${RUNME_AOT_FIXT
 	test ! -f ${RUNME_AOT_APP}/overlay_interpreter.c
 	grep -F shen_add ${RUNME_AOT_APP}/app.c
 	grep -F shen_cons ${RUNME_AOT_APP}/app.c
+	grep -F shen_eq ${RUNME_AOT_APP}/app.c
+	grep -F shen_cons_p ${RUNME_AOT_APP}/app.c
+	grep -F shen_mul ${RUNME_AOT_APP}/app.c
+	grep -F shen_string_p ${RUNME_AOT_APP}/app.c
+	grep -F shen_symbol_p ${RUNME_AOT_APP}/app.c
+	grep -F shen_absvector_p ${RUNME_AOT_APP}/app.c
+	grep -F 'apply_direct(ctx, "vector?"' ${RUNME_AOT_APP}/app.c
+	grep -F shen_apply_direct ${RUNME_AOT_APP}/app.c
 
 test: ${TEST_BIN} ${ABI_TEST_BIN} ${EMIT_TEST_BIN} ${SUM_APP} ${FIB_APP} ${HELLO_APP} ${FIB_YGG_APP} ${TC_YGG_APP} ${INTERP_AOT_APP} ${TARGET}
 	ASAN_OPTIONS=detect_leaks=0 ${TEST_BIN}

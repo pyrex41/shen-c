@@ -821,9 +821,11 @@ static KLObject* eval_c_loop_expression (Vector* parameters,
           KLObject** parameter_objects = get_vector_objects(frame_parameters);
           long argument_size = get_vector_size(frame_arguments);
 
-          for (long i = 0; i < argument_size; ++i)
-            extend_environment(parameter_objects[i], argument_objects[i],
+          for (long i = 0; i < argument_size; ++i) {
+            update_environment(parameter_objects[i], argument_objects[i],
                                variable_environment);
+            shen_lex_assign(parameter_objects[i], argument_objects[i]);
+          }
         }
       }
     }
@@ -922,26 +924,33 @@ static KLObject* eval_kl_list_c_loop_expression (KLObject* list_object,
                        kl_list_to_vector(argument_list_object));
   Vector* parameters = ((is_empty_kl_list(parameter_list_object)) ? NULL :
                         kl_list_to_vector(parameter_list_object));
-  Environment* loop_function_environment = create_environment();
-  Environment* loop_variable_environment = create_environment();
+  Environment* loop_variable_environment = variable_environment;
 
-  set_parent_environment(loop_function_environment, function_environment);
-  set_parent_environment(loop_variable_environment, variable_environment);
+  {
+    ShenLexMark mark = shen_lex_mark();
+    KLObject* result;
+    KLObject* body_object = CAR(cddr_object);
 
-  if (is_not_null(arguments) && is_not_null(parameters)) {
-    KLObject** argument_objects = get_vector_objects(arguments);
-    KLObject** parameter_objects = get_vector_objects(parameters);
-    long argument_size = get_vector_size(arguments);
+    if (is_not_null(arguments) && is_not_null(parameters)) {
+      long i;
+      long n = get_vector_size(arguments);
 
-    for (long i = 0; i < argument_size; ++i)
-      extend_environment(parameter_objects[i], argument_objects[i],
-                         loop_variable_environment);
+      loop_variable_environment =
+        extend_environment_n(get_vector_objects(parameters),
+                             get_vector_objects(arguments),
+                             n, loop_variable_environment);
+
+      for (i = 0; i < n; ++i)
+        shen_lex_bind(get_vector_element(parameters, i),
+                      get_vector_element(arguments, i));
+    }
+
+    result = eval_c_loop_expression(parameters, body_object, function_environment,
+                                    loop_variable_environment);
+    shen_lex_rewind(mark);
+
+    return result;
   }
-
-  KLObject* body_object = CAR(cddr_object);
-
-  return eval_c_loop_expression(parameters, body_object, loop_function_environment,
-                                loop_variable_environment);
 }
 
 static KLObject* eval_lambda_expression (KLObject* parameter_object,
@@ -1002,18 +1011,17 @@ static KLObject* eval_let_expression (KLObject* list_object,
   if (!is_kl_symbol(parameter_object))
     throw_kl_exception("Let variable should be a symbol");
 
-  Environment* closure_function_environment = create_environment();
-  Environment* closure_variable_environment = create_environment();
+  Environment* closure_variable_environment =
+    extend_environment(parameter_object, argument_object, variable_environment);
+  ShenLexMark mark = shen_lex_mark();
+  KLObject* result;
 
-  set_parent_environment(closure_function_environment,
-                         function_environment);
-  set_parent_environment(closure_variable_environment,
-                         variable_environment);
-  extend_environment(parameter_object, argument_object,
-                     closure_variable_environment);
+  shen_lex_bind(parameter_object, argument_object);
+  result = eval_kl_object(body_object, function_environment,
+                          closure_variable_environment);
+  shen_lex_rewind(mark);
 
-  return eval_kl_object(body_object, closure_function_environment,
-                        closure_variable_environment);
+  return result;
 }
 
 static KLObject* eval_eval_kl_expression (KLObject* list_object,
@@ -1073,26 +1081,33 @@ static KLObject* eval_user_function_application (KLObject* function_object,
   long argument_size = (is_null(arguments)) ? 0 : get_vector_size(arguments);
   Vector* parameters = get_user_function_parameters(user_function);
   KLObject* body_object = get_user_function_body(user_function);
-  Environment* user_function_function_environment = create_environment();
-  Environment* user_function_variable_environment = create_environment();
+  Environment* user_function_variable_environment =
+    get_global_variable_environment();
 
-  set_parent_environment(user_function_function_environment,
-                         get_global_function_environment());
-  set_parent_environment(user_function_variable_environment,
-                         get_global_variable_environment());
-    
+  ShenLexMark mark = shen_lex_mark();
+  KLObject* result;
+  long i;
+
+  shen_lex_enter_frame();
+
   if (is_not_null(arguments) && is_not_null(parameters)) {
-    KLObject** argument_objects = get_vector_objects(arguments);
-    KLObject** parameter_objects = get_vector_objects(parameters);
+    user_function_variable_environment =
+      extend_environment_n(get_vector_objects(parameters),
+                           get_vector_objects(arguments),
+                           argument_size,
+                           user_function_variable_environment);
 
-    for (long i = 0; i < argument_size; ++i)
-      extend_environment(parameter_objects[i], argument_objects[i],
-                         user_function_variable_environment);
+    for (i = 0; i < argument_size; ++i)
+      shen_lex_bind(get_vector_element(parameters, i),
+                    get_vector_element(arguments, i));
   }
 
-  return eval_kl_object(body_object,
-                        user_function_function_environment,
-                        user_function_variable_environment);
+  result = eval_kl_object(body_object,
+                          get_global_function_environment(),
+                          user_function_variable_environment);
+  shen_lex_rewind(mark);
+
+  return result;
 }
 
 static KLObject* create_kl_list_function_application (KLObject* list_object,
@@ -1375,9 +1390,18 @@ KLObject* eval_simple_closure_function_application (KLObject* function_object)
 
   closure = get_kl_function_closure(function_object);
 
-  return eval_kl_object(get_closure_body(closure),
-                        get_closure_parent_function_environment(closure),
-                        get_closure_parent_variable_environment(closure));
+  {
+    ShenLexMark mark = shen_lex_mark();
+    KLObject* result;
+
+    shen_lex_enter_frame();
+    result = eval_kl_object(get_closure_body(closure),
+                            get_closure_parent_function_environment(closure),
+                            get_closure_parent_variable_environment(closure));
+    shen_lex_rewind(mark);
+
+    return result;
+  }
 }
 
 static KLObject* eval_closure_function_application
@@ -1396,21 +1420,31 @@ static KLObject* eval_closure_function_application
   check_function_argument_size(argument_size, parameter_size);
 
   KLObject* body_object = get_closure_body(closure);
-  Environment* closure_function_environment = create_environment();
-  Environment* closure_variable_environment = create_environment();
+  Environment* closure_function_environment =
+    get_closure_parent_function_environment(closure);
+  Environment* closure_variable_environment =
+    get_closure_parent_variable_environment(closure);
 
-  set_parent_environment(closure_function_environment,
-                         get_closure_parent_function_environment(closure));
-  set_parent_environment(closure_variable_environment,
-                         get_closure_parent_variable_environment(closure));
+  {
+    ShenLexMark mark = shen_lex_mark();
+    KLObject* result;
 
-  if (parameter_size > 0)
-    extend_environment(parameter_object, evaluated_argument_object,
-                       closure_variable_environment);
+    shen_lex_enter_frame();
 
-  return eval_kl_object(body_object,
-                        closure_function_environment,
-                        closure_variable_environment);
+    if (parameter_size > 0) {
+      closure_variable_environment =
+        extend_environment(parameter_object, evaluated_argument_object,
+                           closure_variable_environment);
+      shen_lex_bind(parameter_object, evaluated_argument_object);
+    }
+
+    result = eval_kl_object(body_object,
+                            closure_function_environment,
+                            closure_variable_environment);
+    shen_lex_rewind(mark);
+
+    return result;
+  }
 }
 
 static KLObject* eval_kl_list_closure_function_application
@@ -1495,6 +1529,7 @@ static KLObject* eval_trap_error_expression (KLObject* list_object,
   
   KLObject* cdr_object = CDR(list_object);
   jmp_buf jump_buffer;
+  ShenLexMark mark = shen_lex_mark();
   
   if (sigsetjmp(jump_buffer, 0) == 0) {
     KLObject* body_object = CAR(cdr_object);
@@ -1512,7 +1547,10 @@ static KLObject* eval_trap_error_expression (KLObject* list_object,
   } else {
     KLObject* handler_object = CADR(cdr_object);
     KLObject* exception_object = pop_stack(get_trapped_kl_exception_stack());
-    KLObject* function_object =
+    KLObject* function_object;
+
+    shen_lex_rewind(mark);
+    function_object =
       eval_kl_object(handler_object, function_environment, variable_environment);
 
     return eval_trap_error_handler_application(function_object,

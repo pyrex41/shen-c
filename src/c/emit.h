@@ -8,9 +8,10 @@
 
 /*
  * Option 5 rung 1: shaken KLambda -> C NativeFunctions on shen_context /
- * Boehm. Exact-arity + - cons hd tl become ABI helpers; other calls
- * intern/apply. Self-tails become goto; other tails bounce through
- * shen_tail_apply. This is not eval_kl_object of a source string.
+ * Boehm. Exact-arity + - cons hd tl become ABI helpers; named calls
+ * shen_apply_direct (intern cache + stack args). Self-tails become goto;
+ * other tails bounce through shen_tail_apply_direct. This is not
+ * eval_kl_object of a source string.
  */
 
 typedef struct ShenEmitReport {

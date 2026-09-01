@@ -753,6 +753,38 @@ static int emit_apply (Emit* e, KLObject* list, int tail)
   }
 
   t = fresh(e);
+
+  if (is_kl_symbol(CAR(list)) && lookup_bind(e, symbol_name(CAR(list))) < 0) {
+    const char* helper = tail ? "shen_tail_apply_direct" : "shen_apply_direct";
+
+    for (i = 0; i < n; ++i) {
+      arg_temps[i] = emit_value(e, CAR(args));
+      args = CDR(args);
+    }
+
+    if (n == 0) {
+      cbuf_printf(e->stmt, "  KLObject* t%d = %s(ctx, ", t, helper);
+      cbuf_cstring(e->stmt, symbol_name(CAR(list)));
+      cbuf_printf(e->stmt, ", 0, NULL);\n");
+      return t;
+    }
+
+    cbuf_printf(e->stmt, "  KLObject* t%d;\n  {\n    KLObject* a%d[] = {", t, t);
+
+    for (i = 0; i < n; ++i) {
+      if (i > 0)
+        cbuf_printf(e->stmt, ", ");
+
+      cbuf_printf(e->stmt, "t%d", arg_temps[i]);
+    }
+
+    cbuf_printf(e->stmt, "};\n    t%d = %s(ctx, ", t, helper);
+    cbuf_cstring(e->stmt, symbol_name(CAR(list)));
+    cbuf_printf(e->stmt, ", %ld, a%d);\n  }\n", n, t);
+
+    return t;
+  }
+
   head = emit_value(e, CAR(list));
 
   for (i = 0; i < n; ++i) {
@@ -796,13 +828,15 @@ static int emit_type (Emit* e, KLObject* list, int tail)
   return emit_expr(e, CADR(list), tail);
 }
 
-/* Exact-arity unbound + - cons hd tl: ABI helpers, not intern+Vector+apply.
- * Locals named those symbols and partial application stay on shen_apply.
+/* Exact-arity unbound klcompile prims: ABI helpers, not intern+Vector+apply.
+ * Locals of those names and partial application stay on shen_apply.
+ * vector? is a kernel defun (absvector? plus slot 0); do not alias it.
  * if is already a special form (emit_if). */
 static int emit_prim_inline (Emit* e, KLObject* list)
 {
   KLObject* head = CAR(list);
   const char* name;
+  const char* helper = NULL;
   long n;
   int a;
   int b;
@@ -814,36 +848,60 @@ static int emit_prim_inline (Emit* e, KLObject* list)
   name = symbol_name(head);
   n = get_kl_list_size(list) - 1;
 
-  if ((name[0] == '+' || name[0] == '-') && name[1] == '\0' && n == 2) {
-    a = emit_value(e, CADR(list));
-    b = emit_value(e, CADDR(list));
-    t = fresh(e);
-    cbuf_printf(e->stmt, "  KLObject* t%d = %s(ctx, t%d, t%d);\n",
-                t, name[0] == '+' ? "shen_add" : "shen_sub", a, b);
-    return t;
+  if (n == 2) {
+    if (strcmp(name, "+") == 0)
+      helper = "shen_add";
+    else if (strcmp(name, "-") == 0)
+      helper = "shen_sub";
+    else if (strcmp(name, "*") == 0)
+      helper = "shen_mul";
+    else if (strcmp(name, "/") == 0)
+      helper = "shen_div";
+    else if (strcmp(name, "<") == 0)
+      helper = "shen_lt";
+    else if (strcmp(name, ">") == 0)
+      helper = "shen_gt";
+    else if (strcmp(name, "<=") == 0)
+      helper = "shen_lte";
+    else if (strcmp(name, ">=") == 0)
+      helper = "shen_gte";
+    else if (strcmp(name, "=") == 0)
+      helper = "shen_eq";
+    else if (strcmp(name, "cons") == 0)
+      helper = "shen_cons";
+
+    if (helper != NULL) {
+      a = emit_value(e, CADR(list));
+      b = emit_value(e, CADDR(list));
+      t = fresh(e);
+      cbuf_printf(e->stmt, "  KLObject* t%d = %s(ctx, t%d, t%d);\n",
+                  t, helper, a, b);
+      return t;
+    }
   }
 
-  if (strcmp(name, "cons") == 0 && n == 2) {
-    a = emit_value(e, CADR(list));
-    b = emit_value(e, CADDR(list));
-    t = fresh(e);
-    cbuf_printf(e->stmt, "  KLObject* t%d = shen_cons(ctx, t%d, t%d);\n",
-                t, a, b);
-    return t;
-  }
+  if (n == 1) {
+    if (strcmp(name, "hd") == 0)
+      helper = "shen_hd";
+    else if (strcmp(name, "tl") == 0)
+      helper = "shen_tl";
+    else if (strcmp(name, "cons?") == 0)
+      helper = "shen_cons_p";
+    else if (strcmp(name, "number?") == 0)
+      helper = "shen_number_p";
+    else if (strcmp(name, "string?") == 0)
+      helper = "shen_string_p";
+    else if (strcmp(name, "symbol?") == 0)
+      helper = "shen_symbol_p";
+    else if (strcmp(name, "absvector?") == 0)
+      helper = "shen_absvector_p";
 
-  if (strcmp(name, "hd") == 0 && n == 1) {
-    a = emit_value(e, CADR(list));
-    t = fresh(e);
-    cbuf_printf(e->stmt, "  KLObject* t%d = shen_hd(ctx, t%d);\n", t, a);
-    return t;
-  }
-
-  if (strcmp(name, "tl") == 0 && n == 1) {
-    a = emit_value(e, CADR(list));
-    t = fresh(e);
-    cbuf_printf(e->stmt, "  KLObject* t%d = shen_tl(ctx, t%d);\n", t, a);
-    return t;
+    if (helper != NULL) {
+      a = emit_value(e, CADR(list));
+      t = fresh(e);
+      cbuf_printf(e->stmt, "  KLObject* t%d = %s(ctx, t%d);\n", t, helper, a);
+      return t;
+    }
   }
 
   return -1;

@@ -109,15 +109,20 @@ int main (void)
          "generated C registers NativeFunction defun");
   expect(strstr(generated, "native_") != NULL, "generated C has native_*");
   expect(strstr(generated, "shen_apply") != NULL, "generated C applies primitives");
+  expect(strstr(generated, "shen_apply_direct") != NULL ||
+         strstr(generated, "shen_add") != NULL,
+         "named calls are apply_direct or inlined prims");
   expect(strstr(generated, "shen_apply_port_overwrites") != NULL,
          "generated main re-applies C port overwrites after defuns");
-  expect(strstr(generated, "shen_intern") != NULL, "generated C uses intern");
   expect(strstr(generated, "shen_add") != NULL, "add2 inlines + to shen_add");
   expect(strstr(generated, "shen_sub") != NULL, "countdown inlines - to shen_sub");
+  expect(strstr(generated, "shen_eq") != NULL, "countdown inlines = to shen_eq");
   expect(strstr(generated, "shen_intern(ctx, \"+\")") == NULL,
          "exact-arity + is not intern+apply");
   expect(strstr(generated, "shen_intern(ctx, \"-\")") == NULL,
          "exact-arity - is not intern+apply");
+  expect(strstr(generated, "shen_intern(ctx, \"=\")") == NULL,
+         "exact-arity = is not intern+apply");
   expect(strstr(generated, "goto tail_start_") != NULL,
          "self-tail countdown lowers to goto");
   expect(strstr(generated, "shen_eval_kl") == NULL,
@@ -202,11 +207,11 @@ int main (void)
       generated[size] = '\0';
     fclose(out);
     expect(generated != NULL &&
-           strstr(generated, "shen_intern(ctx, \"shen.walk\")") != NULL,
-           "demodulate intern/applies shen.walk (not identity-folded)");
+           strstr(generated, "apply_direct(ctx, \"shen.walk\"") != NULL,
+           "demodulate apply_direct shen.walk (not identity-folded)");
     expect(generated != NULL &&
-           strstr(generated, "shen_intern(ctx, \"shen.demod\")") != NULL,
-           "demodulate intern/applies shen.demod (synonyms-h redefines it)");
+           strstr(generated, "apply_direct(ctx, \"shen.demod\"") != NULL,
+           "demodulate apply_direct shen.demod (synonyms-h redefines it)");
     expect(generated != NULL && strstr(generated, "shen_native_closure") != NULL,
            "demodulate lambda stays shen_native_closure");
     expect(generated != NULL && strstr(generated, "eval_kl_object") == NULL,
@@ -331,10 +336,234 @@ int main (void)
            strstr(generated, "shen_intern(ctx, \"cons\")") == NULL,
            "exact-arity cons is not intern+apply");
     expect(generated != NULL &&
-           strstr(generated, "shen_intern(ctx, \"+\")") != NULL,
-           "partial + stays intern+apply");
+           strstr(generated, "apply_direct(ctx, \"+\"") != NULL,
+           "partial + stays apply_direct");
     expect(generated != NULL && strstr(generated, "shen_native_closure") == NULL,
            "list prims are not wrapped as closures");
+  }
+
+  {
+    KLObject* x;
+    KLObject* y;
+    KLObject* forms[6];
+    ShenEmitReport pred_report = {0};
+
+    x = shen_intern(ctx, "X");
+    y = shen_intern(ctx, "Y");
+    forms[0] = shen_cons(ctx, shen_intern(ctx, "defun"),
+                         shen_cons(ctx, shen_intern(ctx, "pair?"),
+                                   shen_cons(ctx, shen_cons(ctx, x,
+                                                            shen_empty_list(ctx)),
+                                             shen_cons(ctx,
+                                                       shen_cons(ctx, shen_intern(ctx, "cons?"),
+                                                                 shen_cons(ctx, x, shen_empty_list(ctx))),
+                                                       shen_empty_list(ctx)))));
+    forms[1] = shen_cons(ctx, shen_intern(ctx, "defun"),
+                         shen_cons(ctx, shen_intern(ctx, "same"),
+                                   shen_cons(ctx,
+                                             shen_cons(ctx, x,
+                                                       shen_cons(ctx, y,
+                                                                 shen_empty_list(ctx))),
+                                             shen_cons(ctx,
+                                                       shen_cons(ctx, shen_intern(ctx, "="),
+                                                                 shen_cons(ctx, x,
+                                                                           shen_cons(ctx, y, shen_empty_list(ctx)))),
+                                                       shen_empty_list(ctx)))));
+    forms[2] = shen_cons(ctx, shen_intern(ctx, "defun"),
+                         shen_cons(ctx, shen_intern(ctx, "times"),
+                                   shen_cons(ctx,
+                                             shen_cons(ctx, x,
+                                                       shen_cons(ctx, y,
+                                                                 shen_empty_list(ctx))),
+                                             shen_cons(ctx,
+                                                       shen_cons(ctx, shen_intern(ctx, "*"),
+                                                                 shen_cons(ctx, x,
+                                                                           shen_cons(ctx, y, shen_empty_list(ctx)))),
+                                                       shen_empty_list(ctx)))));
+    forms[3] = shen_cons(ctx, shen_intern(ctx, "defun"),
+                         shen_cons(ctx, shen_intern(ctx, "bigger"),
+                                   shen_cons(ctx,
+                                             shen_cons(ctx, x,
+                                                       shen_cons(ctx, y,
+                                                                 shen_empty_list(ctx))),
+                                             shen_cons(ctx,
+                                                       shen_cons(ctx, shen_intern(ctx, ">"),
+                                                                 shen_cons(ctx, x,
+                                                                           shen_cons(ctx, y, shen_empty_list(ctx)))),
+                                                       shen_empty_list(ctx)))));
+    forms[4] = shen_cons(ctx, shen_intern(ctx, "defun"),
+                         shen_cons(ctx, shen_intern(ctx, "nump"),
+                                   shen_cons(ctx, shen_cons(ctx, x,
+                                                            shen_empty_list(ctx)),
+                                             shen_cons(ctx,
+                                                       shen_cons(ctx, shen_intern(ctx, "number?"),
+                                                                 shen_cons(ctx, x, shen_empty_list(ctx))),
+                                                       shen_empty_list(ctx)))));
+    forms[5] = shen_cons(ctx, shen_intern(ctx, "defun"),
+                         shen_cons(ctx, shen_intern(ctx, "times1"),
+                                   shen_cons(ctx, shen_cons(ctx, x,
+                                                            shen_empty_list(ctx)),
+                                             shen_cons(ctx,
+                                                       shen_cons(ctx, shen_intern(ctx, "*"),
+                                                                 shen_cons(ctx, x, shen_empty_list(ctx))),
+                                                       shen_empty_list(ctx)))));
+    out = tmpfile();
+    expect(out != NULL, "pred-prim tmpfile");
+    expect(shen_emit_program(out, NULL, 0, forms, 6, NULL, "test_emit",
+                             &pred_report) == 0,
+           "emit cons?/=/*/>/number?/partial*");
+    fseek(out, 0, SEEK_END);
+    size = ftell(out);
+    fseek(out, 0, SEEK_SET);
+    free(generated);
+    generated = malloc((size_t)size + 1);
+    expect(generated != NULL, "pred-prim generated buffer");
+    if (generated != NULL && size > 0)
+      fread(generated, 1, (size_t)size, out);
+    if (generated != NULL)
+      generated[size] = '\0';
+    fclose(out);
+    expect(generated != NULL && strstr(generated, "shen_cons_p") != NULL,
+           "cons? inlines to shen_cons_p");
+    expect(generated != NULL && strstr(generated, "shen_eq") != NULL,
+           "= inlines to shen_eq");
+    expect(generated != NULL && strstr(generated, "shen_mul") != NULL,
+           "* inlines to shen_mul");
+    expect(generated != NULL && strstr(generated, "shen_gt") != NULL,
+           "> inlines to shen_gt");
+    expect(generated != NULL && strstr(generated, "shen_number_p") != NULL,
+           "number? inlines to shen_number_p");
+    expect(generated != NULL &&
+           strstr(generated, "shen_intern(ctx, \"cons?\")") == NULL,
+           "exact-arity cons? is not intern+apply");
+    expect(generated != NULL &&
+           strstr(generated, "shen_intern(ctx, \"=\")") == NULL,
+           "exact-arity = is not intern+apply");
+    expect(generated != NULL &&
+           strstr(generated, "apply_direct(ctx, \"*\"") != NULL,
+           "partial * stays apply_direct");
+  }
+
+  {
+    KLObject* x;
+    KLObject* y;
+    KLObject* forms[8];
+    ShenEmitReport rest_report = {0};
+
+    x = shen_intern(ctx, "X");
+    y = shen_intern(ctx, "Y");
+    forms[0] = shen_cons(ctx, shen_intern(ctx, "defun"),
+                         shen_cons(ctx, shen_intern(ctx, "strp"),
+                                   shen_cons(ctx, shen_cons(ctx, x,
+                                                            shen_empty_list(ctx)),
+                                             shen_cons(ctx,
+                                                       shen_cons(ctx, shen_intern(ctx, "string?"),
+                                                                 shen_cons(ctx, x, shen_empty_list(ctx))),
+                                                       shen_empty_list(ctx)))));
+    forms[1] = shen_cons(ctx, shen_intern(ctx, "defun"),
+                         shen_cons(ctx, shen_intern(ctx, "symp"),
+                                   shen_cons(ctx, shen_cons(ctx, x,
+                                                            shen_empty_list(ctx)),
+                                             shen_cons(ctx,
+                                                       shen_cons(ctx, shen_intern(ctx, "symbol?"),
+                                                                 shen_cons(ctx, x, shen_empty_list(ctx))),
+                                                       shen_empty_list(ctx)))));
+    forms[2] = shen_cons(ctx, shen_intern(ctx, "defun"),
+                         shen_cons(ctx, shen_intern(ctx, "absp"),
+                                   shen_cons(ctx, shen_cons(ctx, x,
+                                                            shen_empty_list(ctx)),
+                                             shen_cons(ctx,
+                                                       shen_cons(ctx, shen_intern(ctx, "absvector?"),
+                                                                 shen_cons(ctx, x, shen_empty_list(ctx))),
+                                                       shen_empty_list(ctx)))));
+    forms[3] = shen_cons(ctx, shen_intern(ctx, "defun"),
+                         shen_cons(ctx, shen_intern(ctx, "vecp"),
+                                   shen_cons(ctx, shen_cons(ctx, x,
+                                                            shen_empty_list(ctx)),
+                                             shen_cons(ctx,
+                                                       shen_cons(ctx, shen_intern(ctx, "vector?"),
+                                                                 shen_cons(ctx, x, shen_empty_list(ctx))),
+                                                       shen_empty_list(ctx)))));
+    forms[4] = shen_cons(ctx, shen_intern(ctx, "defun"),
+                         shen_cons(ctx, shen_intern(ctx, "quot"),
+                                   shen_cons(ctx,
+                                             shen_cons(ctx, x,
+                                                       shen_cons(ctx, y,
+                                                                 shen_empty_list(ctx))),
+                                             shen_cons(ctx,
+                                                       shen_cons(ctx, shen_intern(ctx, "/"),
+                                                                 shen_cons(ctx, x,
+                                                                           shen_cons(ctx, y, shen_empty_list(ctx)))),
+                                                       shen_empty_list(ctx)))));
+    forms[5] = shen_cons(ctx, shen_intern(ctx, "defun"),
+                         shen_cons(ctx, shen_intern(ctx, "smaller"),
+                                   shen_cons(ctx,
+                                             shen_cons(ctx, x,
+                                                       shen_cons(ctx, y,
+                                                                 shen_empty_list(ctx))),
+                                             shen_cons(ctx,
+                                                       shen_cons(ctx, shen_intern(ctx, "<"),
+                                                                 shen_cons(ctx, x,
+                                                                           shen_cons(ctx, y, shen_empty_list(ctx)))),
+                                                       shen_empty_list(ctx)))));
+    forms[6] = shen_cons(ctx, shen_intern(ctx, "defun"),
+                         shen_cons(ctx, shen_intern(ctx, "atmost"),
+                                   shen_cons(ctx,
+                                             shen_cons(ctx, x,
+                                                       shen_cons(ctx, y,
+                                                                 shen_empty_list(ctx))),
+                                             shen_cons(ctx,
+                                                       shen_cons(ctx, shen_intern(ctx, "<="),
+                                                                 shen_cons(ctx, x,
+                                                                           shen_cons(ctx, y, shen_empty_list(ctx)))),
+                                                       shen_empty_list(ctx)))));
+    forms[7] = shen_cons(ctx, shen_intern(ctx, "defun"),
+                         shen_cons(ctx, shen_intern(ctx, "atleast"),
+                                   shen_cons(ctx,
+                                             shen_cons(ctx, x,
+                                                       shen_cons(ctx, y,
+                                                                 shen_empty_list(ctx))),
+                                             shen_cons(ctx,
+                                                       shen_cons(ctx, shen_intern(ctx, ">="),
+                                                                 shen_cons(ctx, x,
+                                                                           shen_cons(ctx, y, shen_empty_list(ctx)))),
+                                                       shen_empty_list(ctx)))));
+    out = tmpfile();
+    expect(out != NULL, "rest-prim tmpfile");
+    expect(shen_emit_program(out, NULL, 0, forms, 8, NULL, "test_emit",
+                             &rest_report) == 0,
+           "emit string?/symbol?/absvector?/vector?///</<=/>=");
+    fseek(out, 0, SEEK_END);
+    size = ftell(out);
+    fseek(out, 0, SEEK_SET);
+    free(generated);
+    generated = malloc((size_t)size + 1);
+    expect(generated != NULL, "rest-prim generated buffer");
+    if (generated != NULL && size > 0)
+      fread(generated, 1, (size_t)size, out);
+    if (generated != NULL)
+      generated[size] = '\0';
+    fclose(out);
+    expect(generated != NULL && strstr(generated, "shen_string_p") != NULL,
+           "string? inlines to shen_string_p");
+    expect(generated != NULL && strstr(generated, "shen_symbol_p") != NULL,
+           "symbol? inlines to shen_symbol_p");
+    expect(generated != NULL && strstr(generated, "shen_absvector_p") != NULL,
+           "absvector? inlines to shen_absvector_p");
+    expect(generated != NULL && strstr(generated, "shen_div") != NULL,
+           "/ inlines to shen_div");
+    expect(generated != NULL && strstr(generated, "shen_lt") != NULL,
+           "< inlines to shen_lt");
+    expect(generated != NULL && strstr(generated, "shen_lte") != NULL,
+           "<= inlines to shen_lte");
+    expect(generated != NULL && strstr(generated, "shen_gte") != NULL,
+           ">= inlines to shen_gte");
+    expect(generated != NULL &&
+           strstr(generated, "shen_intern(ctx, \"string?\")") == NULL,
+           "exact-arity string? is not intern+apply");
+    expect(generated != NULL &&
+           strstr(generated, "apply_direct(ctx, \"vector?\"") != NULL,
+           "vector? stays apply_direct (kernel defun)");
   }
 
   if (failures != 0) {

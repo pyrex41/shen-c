@@ -55,17 +55,30 @@ typedef KLObject* (NativeFunction) (KLObject* function_object, Vector* arguments
                                     Environment* function_environment,
                                     Environment* variable_environment);
 
+struct Number {
+  KLNumberType number_type;
+  union {
+    long number_l;
+    double number_d;
+  } value;
+};
+
+struct Pair {
+  KLObject* car;
+  KLObject* cdr;
+};
+
 struct KLObject {
   KLType type;
   union {
     Symbol* symbol;
     char* string;
-    Number* number;
+    Number number;
     bool boolean;
     Function* function;
     Stream* stream;
     Exception* exception;
-    Pair* pair;
+    Pair pair;
     Vector* vector;
     Dictionary* dictionary;
   } value;
@@ -78,13 +91,11 @@ KHASH_MAP_INIT_STR(StringPairTable, Pair*)
 // 32bit
 typedef khint_t kl_khint_ptr_t;
 KHASH_MAP_INIT_INT(SymbolTable, KLObject*)
-KHASH_MAP_INIT_INT(ObjectTable, KLObject*)
 
 #elif UINTPTR_MAX == 0xffffffffffffffff
 // 64bit
 typedef khint64_t kl_khint_ptr_t;
 KHASH_MAP_INIT_INT64(SymbolTable, KLObject*)
-KHASH_MAP_INIT_INT64(ObjectTable, KLObject*)
 
 #else
 #error Could not determine pointer size
@@ -95,14 +106,7 @@ struct Symbol {
   KLObject* name;
   KLObject* function;
   KLObject* variable_value;
-};
-
-struct Number {
-  KLNumberType number_type;
-  union {
-    long number_l;
-    double number_d;
-  } value;
+  uint32_t id;
 };
 
 typedef struct PrimitiveFunction {
@@ -143,11 +147,6 @@ struct Exception {
   jmp_buf* jump_buffer;
 };
 
-struct Pair {
-  KLObject* car;
-  KLObject* cdr;
-};
-
 struct Vector {
   KLObject** objects;
   long size;
@@ -157,9 +156,17 @@ struct Dictionary {
   khash_t(StringPairTable)* table;
 };
 
+typedef struct EnvBinding {
+  uint32_t id;
+  KLObject* value;
+} EnvBinding;
+
 struct Environment {
-  khash_t(ObjectTable)* symbol_object_table;
   Environment* parent;
+  uint32_t size;
+  uint32_t id;
+  KLObject* value;
+  EnvBinding* binds;
 };
 
 typedef struct Stack {
@@ -198,6 +205,16 @@ inline void set_kl_object_type (KLObject* object, KLType type)
 inline KLObject* create_kl_object (KLType type)
 {
   KLObject* object = shen_gc_malloc(&shen_root_context, sizeof(KLObject));
+
+  set_kl_object_type(object, type);
+
+  return object;
+}
+
+inline KLObject* create_kl_object_atomic (KLType type)
+{
+  /* Numbers have no heap pointers; still Boehm, not libc malloc. */
+  KLObject* object = shen_gc_malloc_atomic(&shen_root_context, sizeof(KLObject));
 
   set_kl_object_type(object, type);
 
@@ -248,7 +265,8 @@ inline void initialize_empty_kl_list (void)
 {
   KLObject* list_object = create_kl_object(KL_TYPE_LIST);
 
-  list_object->value.pair = create_pair(list_object, list_object);
+  list_object->value.pair.car = list_object;
+  list_object->value.pair.cdr = list_object;
   empty_list_object = list_object;
 }
 

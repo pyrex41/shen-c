@@ -71,30 +71,31 @@ inline Number* create_number_d (double x)
 
 inline Number* get_number (KLObject* number_object)
 {
-  return number_object->value.number;
+  return &number_object->value.number;
 }
 
 inline void set_number (KLObject* number_object, Number* number)
 {
-  number_object->value.number = number;
+  number_object->value.number = *number;
 }
 
 inline KLObject* create_kl_number_l (long x)
 {
-  KLObject* number_object = create_kl_object(KL_TYPE_NUMBER);
-  Number* number = create_number_l(x);
+  /* Pointer-free payload: atomic Boehm cell, not a tagged immediate. */
+  KLObject* number_object = create_kl_object_atomic(KL_TYPE_NUMBER);
 
-  set_number(number_object, number);
+  number_object->value.number.number_type = KL_NUMBER_TYPE_LONG;
+  number_object->value.number.value.number_l = x;
 
   return number_object;
 }
 
 inline KLObject* create_kl_number_d (double x)
 {
-  KLObject* number_object = create_kl_object(KL_TYPE_NUMBER);
-  Number* number = create_number_d(x);
+  KLObject* number_object = create_kl_object_atomic(KL_TYPE_NUMBER);
 
-  set_number(number_object, number);
+  number_object->value.number.number_type = KL_NUMBER_TYPE_DOUBLE;
+  number_object->value.number.value.number_d = x;
 
   return number_object;
 }

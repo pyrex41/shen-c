@@ -40,6 +40,12 @@ inline void* shen_gc_malloc (shen_context* ctx, size_t size)
   return GC_malloc(size);
 }
 
+inline void* shen_gc_malloc_atomic (shen_context* ctx, size_t size)
+{
+  (void)ctx;
+  return GC_malloc_atomic(size);
+}
+
 inline void* shen_gc_realloc (shen_context* ctx, void* pointer, size_t size)
 {
   (void)ctx;
