@@ -34,7 +34,7 @@ jobs:
         run: nix develop -c make CC=${{ matrix.cc }} test
       - name: CLI --version
         run: nix develop -c ./bin/shen-c --version
-      - name: Certify S42 (runme.shen)
+      - name: Certify ShenOSKernel 42.2 (runme.shen)
         run: nix develop -c make CC=${{ matrix.cc }} certify
       - name: Upload certify log
         if: always()

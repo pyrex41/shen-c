@@ -116,8 +116,19 @@ static inline KLObject* primitive_function_hash (KLObject* function_object,
 {
   KLObject** objects =
     get_kl_function_arguments_with_count_check(function_object, arguments);
+  KLObject* key_object = objects[0];
 
-  return kl_object_bounded_hash(objects[0], objects[1]);
+  /* Values that are = must hash alike, or the shen.dict property store
+   * (42.2 *property-vector*) misses: 1.0 hashes as 1, -0.0 as 0. Booleans
+   * are already shared with (intern "true"). */
+  if (is_kl_number_d(key_object)) {
+    double d = get_kl_number_number_d(key_object);
+
+    if (d >= -9.2e18 && d <= 9.2e18 && (double)(long)d == d)
+      key_object = create_kl_number_l((long)d);
+  }
+
+  return kl_object_bounded_hash(key_object, objects[1]);
 }
 
 static inline void register_primitive_kl_function_hash (void)

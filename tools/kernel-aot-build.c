@@ -12,7 +12,8 @@
  *   kernel-aot-build <kl-dir> <out-dir>
  *
  * Emits one C TU per boot KL file (defuns only) plus install_all.c.
- * Does not read interpreter.shen / prologinterp.shen / backend.kl.
+ * ShenOSKernel 42.2 modules (dict.kl and init.kl included; stlib.kl is not
+ * booted). Does not read interpreter.shen / prologinterp.shen.
  */
 
 static const char* const KERNEL_FILES[] = {
@@ -30,6 +31,8 @@ static const char* const KERNEL_FILES[] = {
   "t-star.kl",
   "yacc.kl",
   "types.kl",
+  "dict.kl",
+  "init.kl",
   NULL
 };
 

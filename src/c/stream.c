@@ -9,6 +9,7 @@ KLObject* std_error_stream_object;
 size_t read_buffer_allocation_size = 100;
 char* read_buffer;
 size_t read_buffer_position = 0;
+bool stdin_line_pending = false;
 
 extern void initialize_shen_c_home_path (char* home_path);
 extern char* get_shen_c_home_path (void);
@@ -48,7 +49,7 @@ extern void initialize_std_stream_objects (void);
 extern bool is_kl_stream (KLObject* object);
 extern bool is_kl_stream_equal (KLObject* left_object, KLObject* right_object);
 
-extern char read_byte (FILE* file);
+extern int read_byte (FILE* file);
 extern KLObject* read_kl_stream_byte (KLObject* stream_object);
 extern char* get_read_buffer (void);
 extern void set_read_buffer (char* buffer);
