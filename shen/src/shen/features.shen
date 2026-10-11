@@ -38,20 +38,23 @@
 (define current -> (value *features*))
 
 (define initialise
-  Features -> (let _ (trap-error
-                      (value *features*)
-                      (/. E (do (set *features* [])
-                                (shen.set-lambda-form-entry
-                                 [shen.x.features.cond-expand-macro
-                                  | (/. X (cond-expand-macro X))])
-                                 (shen.add-macro cond-expand-macro))))
-                   Old (current)
-                   _ (set *features* Features)
-                Old))
+  Features -> (do (declare initialise [[list symbol] --> [list symbol]])
+                  (declare current [--> [list symbol]])
+                  (declare add [symbol --> [list symbol]])
+                  (let F (trap-error
+                          (value *features*)
+                          (/. E (do (set *features* [])
+                                    (shen.set-lambda-form-entry
+                                     [shen.x.features.cond-expand-macro
+                                      | (/. X (cond-expand-macro X))])
+                                     (shen.record-macro cond-expand-macro (/. X (cond-expand-macro X))))))
+                       Old (current)
+                       F (set *features* Features)
+                    Old)))
 
 (define add
   Feature -> (let Old (current)
-                  _ (set *features* (adjoin Feature Old))
+                  F (set *features* (adjoin Feature Old))
                Old))
 
 )
