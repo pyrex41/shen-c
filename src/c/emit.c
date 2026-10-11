@@ -479,6 +479,7 @@ static int emit_lambda_or_freeze (Emit* e, KLObject* list, int is_freeze)
   int t = fresh(e);
   int i;
   int saved_bind;
+  Bind saved_binds[256];
   CBuf body;
   CBuf* saved_stmt;
   KLObject* param = NULL;
@@ -509,6 +510,11 @@ static int emit_lambda_or_freeze (Emit* e, KLObject* list, int is_freeze)
   cbuf_init(&body);
   saved_stmt = e->stmt;
   saved_bind = e->nbind;
+  memcpy(saved_binds, e->binds, sizeof(saved_binds));
+  /* The lambda body is its own C function: only its captures and parameter
+   * are in scope there. Outer bindings must not stay visible, or a nested
+   * trap-error would copy an enclosing function's temporaries into its env. */
+  e->nbind = 0;
   e->stmt = &body;
   {
     int saved_goto = e->allow_self_goto;
@@ -554,6 +560,7 @@ static int emit_lambda_or_freeze (Emit* e, KLObject* list, int is_freeze)
   cbuf_printf(&body, "}\n\n");
     e->allow_self_goto = saved_goto;
   }
+  memcpy(e->binds, saved_binds, sizeof(saved_binds));
   e->nbind = saved_bind;
   e->stmt = saved_stmt;
   cbuf_printf(&e->helpers, "%s", body.data ? body.data : "");
