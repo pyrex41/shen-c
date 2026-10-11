@@ -30,6 +30,8 @@ KERNEL_AOT_CS=${KERNEL_AOT_DIR}/sys.c \
 	${KERNEL_AOT_DIR}/t_star.c \
 	${KERNEL_AOT_DIR}/yacc.c \
 	${KERNEL_AOT_DIR}/types.c \
+	${KERNEL_AOT_DIR}/dict.c \
+	${KERNEL_AOT_DIR}/init.c \
 	${KERNEL_AOT_DIR}/install_all.c
 KERNEL_AOT_OBJS=$(KERNEL_AOT_CS:.c=.o)
 KERNEL_AOT_STAMP=${KERNEL_AOT_DIR}/.stamp
@@ -102,6 +104,8 @@ else ifeq ($(shell uname -s),Darwin)
     ARCH_NAME=$(shell uname -p)
 	ARCHIVE_SUFFIX=.tar.gz
 else ifeq ($(shell uname -s),Linux)
+    # -std=c17 hides POSIX (fdopen, getaddrinfo, realpath) in glibc headers.
+    CFLAGS += -D_GNU_SOURCE
     OS_NAME=linux
     ARCH_NAME=$(shell uname -p)
 	ARCHIVE_SUFFIX=.tar.gz
@@ -300,7 +304,7 @@ test: ${TEST_BIN} ${ABI_TEST_BIN} ${EMIT_TEST_BIN} ${SUM_APP} ${FIB_APP} ${HELLO
 	${TARGET} --version
 	SHEN_C_HOME=${CURDIR} ${TARGET} eval -e '(version)'
 	env -u SHEN_C_HOME ${TARGET} eval -e '(version)'
-	env -u SHEN_C_HOME ${TARGET} eval -e '(version)' | grep -qx 42
+	env -u SHEN_C_HOME ${TARGET} eval -e '(version)' | grep -qx 42.2
 	SHEN_C_HOME=${CURDIR} ${TARGET} eval -e '(+ 1 1)'
 	env -u SHEN_C_HOME ${TARGET} eval -e '(@s "foo" "bar")' | grep -Fqx foobar
 	env -u SHEN_C_HOME ${TARGET} eval -e '(tlstr "hello")' | grep -Fqx ello
@@ -315,23 +319,24 @@ test: ${TEST_BIN} ${ABI_TEST_BIN} ${EMIT_TEST_BIN} ${SUM_APP} ${FIB_APP} ${HELLO
 	  test -s "$$d/out" && \
 	  rm -rf "$$d"
 
-# Canonical S42 suite (Tarver runme.shen). Pipe yes for y-or-n? on fail.
-# Grep the last passed/failed report; intermediate groups also print failed ... 0.
-# Ship only when evidence/certify.log contains "passed ... 134" and "failed ... 0".
+# Canonical ShenOSKernel 42.2 suite (shen/test/kernel/runme.shen, vendored
+# byte-for-byte). Pipe yes for y-or-n? on fail. Grep the last passed/failed
+# report; intermediate groups also print failed ... 0.
+# Ship only when evidence/certify.log contains "passed ... 143" and "failed ... 0".
 certify: ${TARGET}
 	mkdir -p evidence
 	{ \
 	  echo "start_utc: $$(date -u +%Y-%m-%dT%H:%M:%SZ)"; \
 	  git rev-parse HEAD 2>/dev/null || true; \
 	  echo "bin: ${CURDIR}/${TARGET}"; \
-	  echo "cwd: ${CURDIR}/shen/test/s42"; \
+	  echo "cwd: ${CURDIR}/shen/test/kernel"; \
 	  echo "cmd: yes | env -u SHEN_C_HOME ${CURDIR}/${TARGET} script runme.shen"; \
 	} > evidence/certify.log
-	cd shen/test/s42 && yes | env -u SHEN_C_HOME ../../../${TARGET} script runme.shen >> ../../../evidence/certify.log 2>&1; \
+	cd shen/test/kernel && yes | env -u SHEN_C_HOME ../../../${TARGET} script runme.shen >> ../../../evidence/certify.log 2>&1; \
 	  echo "exit=$$?" >> ${CURDIR}/evidence/certify.log
 	echo "end_utc: $$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> evidence/certify.log
 	cp evidence/certify.log evidence/corpus.log
-	grep -E 'passed \.\.\. 134' evidence/certify.log
+	grep -E 'passed \.\.\. 143' evidence/certify.log
 	tail -n 40 evidence/certify.log | grep -E 'failed \.\.\. 0'
 
 repl: all

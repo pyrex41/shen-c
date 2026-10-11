@@ -21,6 +21,10 @@ message(STATUS "bdw-gc ${BDWGC_VERSION} include=${BDWGC_INCLUDE_DIRS}")
 option(SHEN_C_SANITIZE "Enable AddressSanitizer and UndefinedBehaviorSanitizer" OFF)
 
 add_compile_options(-fno-optimize-sibling-calls -fsigned-char)
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+  # -std=c17 hides POSIX (fdopen, getaddrinfo, realpath) in glibc headers.
+  add_compile_definitions(_GNU_SOURCE)
+endif()
 if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
   add_compile_options(-O3)
 endif()
@@ -58,7 +62,7 @@ set_target_properties(kernel-aot-build PROPERTIES
 set(KERNEL_AOT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/obj/kernel_aot")
 set(KERNEL_AOT_MODULES
   sys writer core reader declarations toplevel macros load
-  prolog sequent track t_star yacc types)
+  prolog sequent track t_star yacc types dict init)
 set(KERNEL_AOT_SRCS "${KERNEL_AOT_DIR}/install_all.c")
 foreach(_mod ${KERNEL_AOT_MODULES})
   list(APPEND KERNEL_AOT_SRCS "${KERNEL_AOT_DIR}/${_mod}.c")

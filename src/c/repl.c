@@ -49,47 +49,46 @@ void load_kl_path (char* file_path)
   fclose(file);
 }
 
+/* ShenOSKernel 42.2 modules. Each file holds only defuns, so the order is
+ * not significant; all top-level state (globals, *property-vector* as a
+ * shen.dict, the arity table, lambda forms, datatype declarations) is set up
+ * afterwards by shen.initialise in init.kl. stlib.kl is vendored but not
+ * booted. */
+static const char* const shen_kernel_kl_files[] = {
+  "shen/src/kl/sys.kl",
+  "shen/src/kl/writer.kl",
+  "shen/src/kl/core.kl",
+  "shen/src/kl/reader.kl",
+  "shen/src/kl/declarations.kl",
+  "shen/src/kl/toplevel.kl",
+  "shen/src/kl/macros.kl",
+  "shen/src/kl/load.kl",
+  "shen/src/kl/prolog.kl",
+  "shen/src/kl/sequent.kl",
+  "shen/src/kl/track.kl",
+  "shen/src/kl/t-star.kl",
+  "shen/src/kl/yacc.kl",
+  "shen/src/kl/types.kl",
+  "shen/src/kl/dict.kl",
+  "shen/src/kl/init.kl",
+  NULL
+};
+
 void load_shen_kl_files (void)
 {
-  /* S42 install.lsp order. backend.kl is not booted. */
-  load_kl_file("shen/src/kl/sys.kl");
-  register_overwrite_sys_primitive_kl_functions();
+  int i;
 
-  load_kl_file("shen/src/kl/writer.kl");
-  register_overwrite_writer_primitive_kl_functions();
+  for (i = 0; shen_kernel_kl_files[i] != NULL; ++i)
+    load_kl_file((char*)shen_kernel_kl_files[i]);
 
-  load_kl_file("shen/src/kl/core.kl");
-  register_overwrite_core_primitive_kl_functions();
-
-  load_kl_file("shen/src/kl/reader.kl");
-  register_overwrite_reader_primitive_kl_functions();
-
-  load_kl_file("shen/src/kl/declarations.kl");
-
-  load_kl_file("shen/src/kl/toplevel.kl");
-  register_overwrite_toplevel_primitive_kl_functions();
-
-  load_kl_file("shen/src/kl/macros.kl");
-  register_overwrite_macros_primitive_kl_functions();
-
-  load_kl_file("shen/src/kl/load.kl");
-
-  load_kl_file("shen/src/kl/prolog.kl");
-  /* S42 prolog is interpreted; 22.4 C overwrites are not used. */
-
-  load_kl_file("shen/src/kl/sequent.kl");
-  load_kl_file("shen/src/kl/track.kl");
-  load_kl_file("shen/src/kl/t-star.kl");
-
-  load_kl_file("shen/src/kl/yacc.kl");
-  register_overwrite_yacc_primitive_kl_functions();
-
-  load_kl_file("shen/src/kl/types.kl");
-  /* rust install_all: after boot, overwrite kernel defuns with natives.
-   * Loaded tests stay on the tree-walker. interpreter.shen is not AOT. */
+  /* rust install_all: overwrite kernel defuns with natives generated from
+   * the same .kl files. Loaded user code stays on the tree-walker. */
   if (getenv("SHEN_C_NO_AOT") == NULL)
     shen_kernel_aot_install_all();
-  /* C map/pr/... win over AOT kernel cells; tc-cache wraps last. */
+
+  /* C hash/map/pr/... win over the AOT kernel cells; tc-cache wraps last.
+   * This runs before shen.initialise so the property dict is built and
+   * read with one hash. Prolog stays on the kernel definitions. */
   shen_apply_port_overwrites();
 }
 
@@ -100,7 +99,16 @@ void load_development_kl_file (void)
 
 void call_shen_initialise (void)
 {
-  /* S42 has no shen.initialise; declarations.kl top-level forms initialise. */
+  KLObject* initialise_symbol_object =
+    lookup_symbol_table(create_kl_string_with_intern("shen.initialise"));
+
+  if (is_null(initialise_symbol_object) ||
+      is_null(get_kl_symbol_function(initialise_symbol_object))) {
+    fprintf(stderr, "shen-c: kernel has no shen.initialise (init.kl)\n");
+    exit(EXIT_FAILURE);
+  }
+
+  eval_in_global_environments(CONS(initialise_symbol_object, EL));
 }
 
 static KLObject* lookup_named_symbol (char* name)
@@ -251,7 +259,7 @@ void run_kl_repl (void)
 
 void run_shen_repl (void)
 {
-  KLObject * shen_string_object = create_kl_string_with_intern("shen.shen");
+  KLObject * shen_string_object = create_kl_string_with_intern("shen.repl");
   KLObject* shen_symbol_object = lookup_symbol_table(shen_string_object);
   KLObject* list_object = CONS(shen_symbol_object, EL);
 

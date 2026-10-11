@@ -3,10 +3,11 @@
 A [Shen](https://shenlanguage.org/) port in C17. This repository
 ([`pyrex41/shen-c`](https://github.com/pyrex41/shen-c), default branch
 `main`) is a fork of [otabat/shen-c](https://github.com/otabat/shen-c).
-It boots Mark Tarver's **Shen S42** kernel (`*version*` is `"42"`) and
-passes the upstream suite **passed 134 / failed 0** both as
-`bin/shen-c` (`make certify`) and as a Yggdrasil-generated AOT app
-(`bin/runme-aot-app`).
+It boots the community **ShenOSKernel 42.2** (`*version*` is `"42.2"`,
+vendored byte-for-byte from Shen-Language/shen-sources tag `shen-42.2`;
+see `shen/src/kl/PROVENANCE.md`) and passes the kernel suite
+**passed 143 / failed 0** as `bin/shen-c` (`make certify`). The port is
+experimental.
 
 Shen is a portable functional language by [Mark Tarver](https://marktarver.com/)
 with pattern matching, macros, optional sequent-calculus types, Prolog, and
@@ -16,8 +17,8 @@ Shen-YACC.
 rejected). Values are tagged words: fixnum / bool / empty-list are non-pointer
 immediates; cons, symbol, and string pointers use
 `GC_register_displacement`. After a KL boot, `bin/shen-c` overwrites kernel
-defuns with generated `NativeFunction`s (rust-style `install_all`; 686 names)
-and re-applies C port overwrites. Loaded test files still typecheck as boxed
+defuns with generated `NativeFunction`s (rust-style `install_all`; 730 names),
+re-applies C port overwrites, then calls `(shen.initialise)`. Loaded test files still typecheck as boxed
 KL through AOT `t*`. Tails hop on a 16 MiB mmap trampoline (Darwin Boehm
 workers). Overlay-after-load is wired in `abi.c` / `emit.c` and **unplugged**
 for runme (`overlay_wrap=0`).
@@ -26,9 +27,13 @@ for runme (`overlay_wrap=0`).
 
 | Bar | How | Status |
 |-----|-----|--------|
-| Interpreter certify | `nix develop -c make CC=clang certify` | **134 / 0**, Shen **6.18 s** |
-| AOT runme | `yes \| bin/runme-aot-app/app` from `shen/test/s42` | **134 / 0**, **5.72 s** real |
-| Same suite, shen-go | `script runme.shen` | **134 / 0**, **4.84 s** real |
+| Interpreter certify (42.2) | `nix develop -c make CC=clang certify` | **143 / 0** |
+| AOT runme (S42 shake) | `yes \| bin/runme-aot-app/app` from `shen/test/s42` | **134 / 0** |
+
+The AOT runme fixture (`test/fixtures/runme-aot`) and the other Yggdrasil
+fixtures are shaken from the earlier Tarver S42 kernel and still run on this
+runtime; reshaking them from 42.2 needs a 42.2 Yggdrasil host. Timings below
+are from the S42 kernel.
 
 L interpreter typecheck is **4.244 s** / 1 177 672 inferences (Go **2.141 s** /
 1 178 236). Cold AOT is **~1.18×** Go wall, not a match. Warm
@@ -68,7 +73,8 @@ shen-c eval -e EXPR
 shen-c script FILE
 ```
 
-Quit the REPL with `(exit 0)` or stdin EOF. `(value *version*)` is `"42"`.
+Quit the REPL with `(exit 0)` or stdin EOF. `(value *version*)` is `"42.2"`.
+A last input line without a trailing newline is still read.
 
 ## Build from source
 
@@ -82,9 +88,9 @@ nix develop -c make certify
 nix develop -c cmake -G Ninja -B build && nix develop -c cmake --build build
 ```
 
-`make certify` runs Tarver S42 `shen/test/s42/runme.shen` on `bin/shen-c` and
-writes `evidence/certify.log`. Certified means that log contains
-`passed ... 134` and `failed ... 0`.
+`make certify` runs the ShenOSKernel 42.2 suite `shen/test/kernel/runme.shen`
+on `bin/shen-c` and writes `evidence/certify.log`. Certified means that log
+contains `passed ... 143` and `failed ... 0`.
 
 AOT of the same suite (shaken kernel + runtime load of test sidecars):
 
