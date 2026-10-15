@@ -46,6 +46,7 @@ struct Recycle;
 typedef struct {
   Program *p; Buf code; Binding *bind; int nb, cap, slots, label, max_args; bool symbol_used;
   int arity, boolean_tail; bool self_loop;
+  int *physical,*free_slots,slot_cap,frame_slots,nfree; unsigned char *active;
   char fail[64]; struct Recycle *recycle;
 } RcEmitFn;
 static void put(Buf *b, const char *fmt, ...) {
@@ -77,7 +78,43 @@ static void bind(RcEmitFn *f,const char *s,int slot) {
   if(f->nb==f->cap) { f->cap=f->cap?f->cap*2:32; f->bind=resize(p,f->bind,(size_t)f->cap*sizeof(*f->bind)); if(!f->bind) bad(p,"rc emitter binding allocation"); }
   f->bind[f->nb++]=(Binding){s,slot};
 }
-static int fresh(RcEmitFn *f) { return f->slots++; }
+static int fresh(RcEmitFn *f) {
+  int slot=f->slots++;
+  if(f->slots>f->slot_cap) {
+    f->slot_cap=f->slot_cap?f->slot_cap*2:32;
+    f->physical=resize(f->p,f->physical,(size_t)f->slot_cap*sizeof(*f->physical));
+    f->free_slots=resize(f->p,f->free_slots,(size_t)f->slot_cap*sizeof(*f->free_slots));
+    f->active=resize(f->p,f->active,(size_t)f->slot_cap*sizeof(*f->active));
+  }
+  f->physical[slot]=f->nfree?f->free_slots[--f->nfree]:f->frame_slots++;
+  f->active[slot]=1;return slot;
+}
+/* Logical slots remain unique for bindings, liveness, and trap boundaries.
+ * Only private expression temporaries become available for frame reuse. In
+ * particular, an ancestor binding stays pinned even after a last-use drop:
+ * later branch paths and drop_dead may still refer to that logical slot. */
+static void retire_scope(RcEmitFn *f,int mark,int result) {
+  if(f->p->options.conservative_ownership)return;
+  for(int i=mark;i<f->slots;i++)if(i!=result&&f->active[i]) {
+    f->active[i]=0;f->free_slots[f->nfree++]=f->physical[i];
+  }
+}
+/* Rewrite only C identifiers, leaving source strings (including escaped
+ * quotes and text such as "t[123]") byte-for-byte intact. */
+static void frame_code(Buf *out,const RcEmitFn *f) {
+  const char *s=f->code.p?f->code.p:"";size_t start=0,i=0;
+  while(s[i]) {
+    if(s[i]=='\"'||s[i]=='\'') {
+      char quote=s[i++];while(s[i]){if(s[i]=='\\'&&s[i+1])i+=2;else if(s[i++]==quote)break;}
+    }else if(s[i]=='t'&&s[i+1]=='['&&(i==0||!((s[i-1]>='a'&&s[i-1]<='z')||(s[i-1]>='A'&&s[i-1]<='Z')||(s[i-1]>='0'&&s[i-1]<='9')||s[i-1]=='_'))) {
+      size_t end=i+2;int slot=0;while(s[end]>='0'&&s[end]<='9'){slot=slot*10+s[end]-'0';end++;}
+      if(end>i+2&&s[end]==']'&&slot<f->slots) {
+        put(out,"%.*st[%d]",(int)(i-start),s+start,f->physical[slot]);i=end+1;start=i;
+      }else i++;
+    }else i++;
+  }
+  put(out,"%s",s+start);
+}
 static void drop(RcEmitFn *f,int x) { put(&f->code,"  if(t[%d]) rc_release(t[%d]); t[%d]=NULL;\n",x,x,x); }
 static void check(RcEmitFn *f,int x) { put(&f->code,"  if(!t[%d]) goto %s;\n",x,f->fail); }
 static void move(RcEmitFn *f,int dst,int src) { put(&f->code,"  t[%d]=t[%d]; t[%d]=NULL;\n",dst,src,src); }
@@ -147,7 +184,14 @@ static Live sequence_live(RcEmitFn *f,RcValue *expressions,const Live *after){
 static void dead_range(RcEmitFn *f,int first,int end){
  if(end==first+1){drop(f,first);return;}
  f->p->drop_range_used=true;
- put(&f->code,"  rc_drop_range(t,%d,%d);\n",first,end);
+ /* Logical neighbors need not be physical neighbors after scope reuse. */
+ int begin=f->physical[first],limit=begin+1;
+ for(int i=first+1;i<end;i++) {
+  if(f->physical[i]==limit){limit++;continue;}
+  put(&f->code,"  rc_drop_range(t,%d,%d);\n",begin,limit);
+  begin=f->physical[i];limit=begin+1;
+ }
+ put(&f->code,"  rc_drop_range(t,%d,%d);\n",begin,limit);
 }
 static void drop_dead(RcEmitFn *f,const Live *live){
  if(!optimize(f))return;
@@ -262,7 +306,11 @@ static int function_head(RcEmitFn *f,RcValue *head,const Live *after){
  }
  int fn=expr(f,head,0,after);put(&f->code,"  if(rc_type(t[%d])==RC_SYMBOL) { RcValue *resolved=rc_function_get(ctx,t[%d]); rc_release(t[%d]); t[%d]=resolved; }\n",fn,fn,fn,fn);check(f,fn);return fn;
 }
+static int expr_inner(RcEmitFn *f,RcValue *x,int tail,const Live *after);
 static int expr(RcEmitFn *f,RcValue *x,int tail,const Live *after){
+ int mark=f->slots,result=expr_inner(f,x,tail,after);retire_scope(f,mark,result);return result;
+}
+static int expr_inner(RcEmitFn *f,RcValue *x,int tail,const Live *after){
  Program *p=f->p;if(!is_list(x)||rc_is_nil(x))return atom(f,x,tail,after);
  RcValue *head=first(x),*args=rest(x);bool special=is_symbol(head)&&binding(f,name(head))<0;
  if(special&&named(head,"if"))return branch(f,args,tail,after);
@@ -345,15 +393,16 @@ static void finish_function(RcEmitFn *f,int id,int arity,int r){
  Program *p=f->p;
  put(&p->functions,"static RcValue *rc_native_%d(RcContext *ctx,RcValue *self,size_t argc,RcValue *%s*argv) {\n  (void)self; (void)argv;\n  if(argc!=%d) return rc_error(ctx,\"native arity mismatch\");\n  RcValue *result=NULL;\n",id,optimize(f)?"":"const ",arity);
  symbol_frame(&p->functions,f->symbol_used);
- if(f->slots>64)put(&p->functions,"  RcValue **t=calloc(%d,sizeof(*t));\n  if(!t) return rc_error(ctx,\"native frame allocation failed\");\n  RcValue **a=t+%d; (void)a;\n",f->slots+f->max_args,f->slots);
- else put(&p->functions,"  RcValue *t[%d]={0}; RcValue *a[%d]; (void)a;\n",f->slots?f->slots:1,f->max_args?f->max_args:1);
+ if(f->frame_slots>64)put(&p->functions,"  RcValue **t=calloc(%d,sizeof(*t));\n  if(!t) return rc_error(ctx,\"native frame allocation failed\");\n  RcValue **a=t+%d; (void)a;\n",f->frame_slots+f->max_args,f->frame_slots);
+ else put(&p->functions,"  RcValue *t[%d]={0}; RcValue *a[%d]; (void)a;\n",f->frame_slots?f->frame_slots:1,f->max_args?f->max_args:1);
  if(f->self_loop)put(&p->functions,"entry:;\n");
- put(&p->functions,"%s  result=t[%d]; t[%d]=NULL;\ncleanup:\n  for(size_t i=0;i<%d;i++) if(t[i]) rc_release(t[i]);\n",f->code.p?f->code.p:"",r,r,f->slots);if(f->slots>64)put(&p->functions,"  free(t);\n");put(&p->functions,"  return result;\n");
+ frame_code(&p->functions,f);r=f->physical[r];
+ put(&p->functions,"  result=t[%d]; t[%d]=NULL;\ncleanup:\n  for(size_t i=0;i<%d;i++) if(t[i]) rc_release(t[i]);\n",r,r,f->frame_slots);if(f->frame_slots>64)put(&p->functions,"  free(t);\n");put(&p->functions,"  return result;\n");
  if(f->self_loop){
   /* a owns the staged arguments while the previous iteration's lexical and
    * temporary owners are dropped. argv belongs to the active runtime call,
    * so it is distinct from this callback's frame and scratch storage. */
-  put(&p->functions,"recur:\n  for(size_t i=0;i<%d;i++) if(t[i]) { rc_release(t[i]); t[i]=NULL; }\n",f->slots);
+  put(&p->functions,"recur:\n  for(size_t i=0;i<%d;i++) if(t[i]) { rc_release(t[i]); t[i]=NULL; }\n",f->frame_slots);
   for(int i=0;i<arity;i++)put(&p->functions,"  argv[%d]=a[%d]; a[%d]=NULL;\n",i,i,i);
   put(&p->functions,"  rc_safepoint(ctx);\n  goto entry;\n");
  }
