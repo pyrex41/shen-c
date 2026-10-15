@@ -6,6 +6,25 @@
 #include <stdlib.h>
 #include <string.h>
 
+#if defined(__has_feature)
+# if __has_feature(address_sanitizer)
+#  define RC_ASAN 1
+# endif
+#endif
+#if defined(__SANITIZE_ADDRESS__)
+# define RC_ASAN 1
+#endif
+#ifdef RC_ASAN
+# include <sanitizer/asan_interface.h>
+# define RC_POISON(p) __asan_poison_memory_region((p), sizeof(RcValue))
+# define RC_UNPOISON(p) __asan_unpoison_memory_region((p), sizeof(RcValue))
+#else
+# define RC_POISON(p) ((void)(p))
+# define RC_UNPOISON(p) ((void)(p))
+#endif
+
+#define RC_OBJECT_CACHE_LIMIT 1024
+
 struct RcValue {
     RcType type;
     size_t refs, bytes, trial, visit_epoch;
@@ -43,6 +62,8 @@ typedef struct RcResolvedSymbols {
 } RcResolvedSymbols;
 struct RcContext {
     RcValue *objects;
+    RcValue *object_cache[RC_OBJECT_CACHE_LIMIT];
+    bool destroying;
     RcValue **symbols;
     size_t symbol_capacity, symbol_count;
     RcResolvedSymbols *compiled_symbols;
@@ -82,8 +103,17 @@ void rc_clear_error(RcContext *ctx) { if (ctx) { free(ctx->error); ctx->error = 
 
 static RcValue *allocate(RcContext *ctx, RcType type, size_t extra) {
     if (!ctx || extra > SIZE_MAX - sizeof(RcValue)) return rc_error(ctx, "allocation size overflow");
-    RcValue *v = calloc(1, sizeof(*v));
-    if (!v) return rc_error(ctx, "out of memory");
+    RcValue *v;
+    if (ctx->stats.cached_objects) {
+        v = ctx->object_cache[--ctx->stats.cached_objects];
+        ctx->stats.cached_bytes -= sizeof(*v);
+        RC_UNPOISON(v);
+        memset(v, 0, sizeof(*v));
+    } else {
+        v = calloc(1, sizeof(*v));
+        if (!v) return rc_error(ctx, "out of memory");
+        ctx->stats.system_allocations++;
+    }
     v->type = type; v->refs = 1; v->ctx = ctx; v->bytes = sizeof(*v) + extra;
     v->next = ctx->objects;
     if (v->next) v->next->prev = v;
@@ -179,7 +209,17 @@ static void raw_free(RcValue *v) {
     case RC_STREAM: if (v->as.stream.file && v->as.stream.close) fclose(v->as.stream.file); break;
     default: break;
     }
-    free(v);
+    RcContext *ctx = v->ctx;
+    if (!ctx->destroying && ctx->stats.cached_objects < RC_OBJECT_CACHE_LIMIT) {
+        ctx->object_cache[ctx->stats.cached_objects++] = v;
+        ctx->stats.cached_bytes += sizeof(*v);
+        if (ctx->stats.cached_bytes > ctx->stats.peak_cached_bytes)
+            ctx->stats.peak_cached_bytes = ctx->stats.cached_bytes;
+        RC_POISON(v);
+    } else {
+        ctx->stats.system_frees++;
+        free(v);
+    }
 }
 static void release_edge(RcValue *v, void *data) {
     if (!v || v == &nil_value) return;
@@ -264,9 +304,15 @@ void rc_context_free(RcContext *ctx) {
         free(ctx->compiled_symbols);
         ctx->compiled_symbols = next;
     }
+    ctx->destroying = true;
     free(ctx->symbols);
     RcValue *v = ctx->objects;
     while (v) { RcValue *next = v->next; raw_free(v); v = next; }
+    while (ctx->stats.cached_objects) {
+        v = ctx->object_cache[--ctx->stats.cached_objects];
+        RC_UNPOISON(v);
+        free(v);
+    }
     free(ctx->error); free(ctx);
 }
 RcType rc_type(const RcValue *v) { return v ? v->type : RC_NIL; }

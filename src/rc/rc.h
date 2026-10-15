@@ -26,6 +26,11 @@ typedef RcValue *(*RcNativeOwned)(RcContext *, RcValue *self, size_t argc,
 typedef struct {
     size_t live_objects, live_bytes, total_allocations, total_frees;
     size_t collections, cycle_objects_freed, peak_objects;
+    /* Physical RcValue blocks only; variable payloads are freed immediately.
+     * cached_bytes is reserved dead storage, additional to live_bytes. Each
+     * context also embeds a fixed 1,024-pointer cache index. */
+    size_t cached_objects, cached_bytes, peak_cached_bytes;
+    size_t system_allocations, system_frees;
     /* Actual managed-value reference count increments/decrements, including
      * internal edge operations; ownership transfers do not increment these. */
     size_t retain_calls, release_calls;
