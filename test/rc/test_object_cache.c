@@ -12,25 +12,25 @@ static RcValue *identity(RcContext *ctx,RcValue *self,size_t argc,RcValue *const
 int main(int argc,char **argv) {
     RcContext *ctx=rc_context_new();assert(ctx);
     if(argc==2&&!strcmp(argv[1],"--uaf")) {
-        RcValue *dead=rc_integer(ctx,42);rc_release(dead);
+        RcValue *dead=rc_number(ctx,42.0);rc_release(dead);
         /* No reuse intervenes: ASan must still diagnose the stale handle. */
         printf("stale type=%d\n",(int)rc_type(dead));
         rc_context_free(ctx);return 0;
     }
     enum { LIMIT=1024, TOTAL=LIMIT*2+9 };
     RcValue *values[TOTAL];
-    for(size_t i=0;i<TOTAL;i++)values[i]=rc_integer(ctx,(int64_t)i);
+    for(size_t i=0;i<TOTAL;i++)values[i]=rc_number(ctx,(double)i);
     for(size_t i=0;i<TOTAL;i++)rc_release(values[i]);
     RcStats s=rc_stats(ctx);
     assert(!s.live_objects&&!s.live_bytes&&s.total_allocations==s.total_frees);
     assert(s.cached_objects==LIMIT&&s.system_allocations==TOTAL&&s.system_frees==TOTAL-LIMIT);
     size_t block=s.cached_bytes/LIMIT;
     assert(block&&s.cached_bytes==LIMIT*block&&s.peak_cached_bytes==s.cached_bytes);
-    for(size_t i=0;i<LIMIT;i++)values[i]=rc_integer(ctx,(int64_t)i);
+    for(size_t i=0;i<LIMIT;i++)values[i]=rc_number(ctx,(double)i);
     assert(rc_stats(ctx).system_allocations==s.system_allocations);
     assert(!rc_stats(ctx).cached_objects&&!rc_stats(ctx).cached_bytes);
-    for(size_t i=0;i<LIMIT;i++){assert(rc_integer_value(values[i])==(int64_t)i);rc_release(values[i]);}
-    RcContext *other=rc_context_new();RcValue *independent=rc_integer(other,7);
+    for(size_t i=0;i<LIMIT;i++){assert(rc_number_value(values[i])==(double)i);rc_release(values[i]);}
+    RcContext *other=rc_context_new();RcValue *independent=rc_number(other,7.0);
     assert(rc_stats(other).system_allocations==1&&!rc_stats(other).cached_objects);
     rc_release(independent);rc_context_free(other);
     /* Exercise freeing/reusing every separately allocated payload kind. */

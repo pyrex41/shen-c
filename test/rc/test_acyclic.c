@@ -96,7 +96,8 @@ static void bounded_writes(void) {
     RcContext *ctx = context(); rc_set_collection_interval(ctx, 1);
     RcValue *v = rc_vector(ctx, 1);
     for (size_t i = 0; i < 10000; ++i) {
-        RcValue *n = rc_integer(ctx, (int64_t)i); assert(n);
+        /* Exercise physical allocation/release even when exact integers are immediate. */
+        RcValue *n = rc_number(ctx, (double)i); assert(n);
         assert(rc_vector_set(ctx, v, 0, n)); rc_release(n); rc_safepoint(ctx);
         assert(rc_stats(ctx).live_objects == 2 && rc_stats(ctx).collections == 0);
     }

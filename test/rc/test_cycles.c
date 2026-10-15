@@ -313,7 +313,7 @@ static void test_deep_release(void)
         rc_release(head); rc_release(list);
         list = next;
     }
-    CHECK(rc_stats(ctx).live_objects == 400000);
+    CHECK(rc_stats(ctx).live_objects == (SHEN_RC_IMMEDIATE_INTEGERS ? 200000 : 400000));
     rc_release(list);
     CHECK(rc_stats(ctx).live_objects == 0);
     empty(ctx);

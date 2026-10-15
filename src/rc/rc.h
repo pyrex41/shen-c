@@ -6,8 +6,24 @@
 #include <stdint.h>
 #include <stdio.h>
 
+/* Immediate integers require the conventional 64-bit pointer representation.
+ * Other targets use boxed numbers. Define SHEN_RC_IMMEDIATE_INTEGERS=0 to use
+ * the boxed implementation on supported targets as well. */
+#ifndef SHEN_RC_IMMEDIATE_INTEGERS
+#if UINTPTR_MAX == UINT64_MAX && (defined(__aarch64__) || defined(__x86_64__)) && !defined(__CHERI_PURE_CAPABILITY__)
+#define SHEN_RC_IMMEDIATE_INTEGERS 1
+#else
+#define SHEN_RC_IMMEDIATE_INTEGERS 0
+#endif
+#endif
+#if SHEN_RC_IMMEDIATE_INTEGERS && UINTPTR_MAX != UINT64_MAX
+#error "Immediate integers require 64-bit uintptr_t"
+#endif
+
 /* Inputs are borrowed and value results owned, unless explicitly documented.
- * Every live value must belong to the same context. NULL denotes failure.
+ * Heap values must belong to the same context. Nil and immediate integers
+ * are immutable, context-independent handles. NULL denotes failure.
+ * RcValue pointers are opaque handles and must never be dereferenced by callers.
  * C callers must release owned temporaries, including on error paths. */
 typedef struct RcContext RcContext;
 typedef struct RcValue RcValue;
@@ -24,6 +40,7 @@ typedef RcValue *(*RcNative)(RcContext *, RcValue *self, size_t argc,
 typedef RcValue *(*RcNativeOwned)(RcContext *, RcValue *self, size_t argc,
                                   RcValue **argv);
 typedef struct {
+    /* Physical managed heap storage only; immediate integers allocate nothing. */
     size_t live_objects, live_bytes, total_allocations, total_frees;
     size_t collections, cycle_objects_freed, peak_objects;
     /* Physical RcValue blocks only; variable payloads are freed immediately.
@@ -47,7 +64,8 @@ RcContext *rc_context_new(void);
  * The default build/context continues to support unrestricted mutable cycles. */
 RcContext *rc_context_new_with_policy(RcCyclePolicy policy);
 bool rc_context_is_acyclic(const RcContext *ctx);
-/* Invalidates every value in the context, including outstanding C roots. */
+/* Invalidates every heap value in the context, including outstanding C roots.
+ * Nil and immediate integer handles remain valid. */
 void rc_context_free(RcContext *ctx);
 /* Defaults adapt the allocation budget to the surviving graph at each
  * collection. This setter selects an exact fixed budget; zero disables
@@ -59,11 +77,14 @@ RcStats rc_stats(const RcContext *ctx);
 RcValue *rc_retain(RcValue *value);
 void rc_release(RcValue *value);
 RcType rc_type(const RcValue *value);
+/* Immortal values (nil and immediate integers) report SIZE_MAX. */
 size_t rc_refcount(const RcValue *value);
 RcValue *rc_nil(void); /* Immortal singleton; release is harmless. */
 bool rc_is_nil(const RcValue *value);
 
 RcValue *rc_number(RcContext *ctx, double value);
+/* On supported targets [-2^62, 2^62-1] is immediate; full int64_t values
+ * remain exact via heap fallback. A valid context is required in both modes. */
 RcValue *rc_integer(RcContext *ctx, int64_t value);
 double rc_number_value(const RcValue *value);
 bool rc_number_is_integer(const RcValue *value);

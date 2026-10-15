@@ -70,7 +70,9 @@ with tempfile.TemporaryDirectory(prefix='shen-rc-ownership.') as tmp:
     assert opt['pair_reuses'] >= 100, metrics
     assert base['pair_allocations'] - opt['pair_allocations'] >= 100, metrics
     assert opt['capture_edges_created'] < base['capture_edges_created'], metrics
-    assert opt['live_objects'] + 300 < base['live_objects'], metrics
+    # Dropping the unused 200-element capture must free its 200 pairs.
+    # Small integer leaves are immediate and do not add physical heap objects.
+    assert opt['live_objects'] + 200 <= base['live_objects'], metrics
     assert opt['retain_calls'] + opt['release_calls'] < base['retain_calls'] + base['release_calls'], metrics
     print('RC ownership: %d differential cases PASS; unique traversal reused cells; aliases/handlers/redefinitions preserved' % len(cases))
     print('RC ownership metrics ' + json.dumps(metrics, sort_keys=True))

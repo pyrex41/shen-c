@@ -131,7 +131,7 @@ int main(void) {
     guard_caps[1]=value;guard=rc_closure(ctx,0,guarded_zero,2,guard_caps);
     assert(!rc_apply(ctx,guard,0,NULL)&&rc_has_error(ctx));
     rc_clear_error(ctx);rc_release(guard);rc_release(yes);
-    RcContext *other=rc_context_new();RcValue *foreign=rc_integer(other,1);
+    RcContext *other=rc_context_new();RcValue *foreign=rc_number(other,1.0);
     RcValue *invalid[]={foreign};
     assert(!rc_apply_owned_args(ctx,owned,1,invalid)&&!invalid[0]&&rc_has_error(ctx));rc_clear_error(ctx);
     rc_context_free(other);

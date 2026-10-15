@@ -10,7 +10,7 @@ int main(void) {
  RcValue *args[]={rc_integer(a,20),rc_integer(a,22)};
  RcValue *v=rc_primitive_call_owned(a,f,2,args,true);
  assert(v&&rc_integer_value(v)==42&&!args[0]&&!args[1]);rc_release(v);
- args[0]=rc_integer(b,20);args[1]=rc_integer(a,22);
+ args[0]=rc_number(b,20.0);args[1]=rc_integer(a,22);
  assert(!rc_primitive_call_owned(a,f,2,args,false));
  assert(rc_has_error(a)&&!args[0]&&!args[1]);rc_clear_error(a);
  assert(!rc_primitive_call_owned(a,f,2,NULL,true));assert(rc_has_error(a));rc_clear_error(a);

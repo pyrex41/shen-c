@@ -94,7 +94,7 @@ static void aliases_and_failures(void) {
     out = rc_cons_reuse(ctx, cell, replacement, replacement);
     assert(out == cell && rc_integer_value(rc_head_borrowed(out)) == 2);
     rc_release(out);
-    RcValue *foreign = rc_integer(other, 9);
+    RcValue *foreign = rc_number(other, 9.0);
     cell = rc_cons(ctx, one, rc_nil());
     size_t live = rc_stats(ctx).live_objects;
     out = rc_cons_reuse(ctx, cell, foreign, rc_nil());
@@ -184,7 +184,7 @@ static void errors_and_borrowed_bridge(void) {
     assert(!rc_apply_owned_args(ctx, notfn, 1, invalid) && !invalid[0] && rc_has_error(ctx));
     rc_clear_error(ctx); rc_release(notfn);
     fn = rc_closure(ctx, 1, borrowed_identity, 0, NULL);
-    RcValue *arg[] = {rc_integer(ctx, 42)}, *value = arg[0];
+    RcValue *arg[] = {rc_number(ctx, 42.0)}, *value = arg[0];
     RcValue *result = rc_apply_owned_args(ctx, fn, 1, arg);
     assert(result == value && !arg[0] && rc_refcount(result) == 1);
     rc_release(result); rc_release(fn);

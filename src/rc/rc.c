@@ -75,6 +75,32 @@ struct RcContext {
 };
 static RcValue nil_value = {.type = RC_NIL, .refs = SIZE_MAX};
 
+#if SHEN_RC_IMMEDIATE_INTEGERS
+_Static_assert(_Alignof(RcValue) >= 2, "heap values must have a clear low bit");
+#endif
+/* These opaque handles are never dereferenced. Unsigned shifts preserve all
+ * payload bits without signed overflow, including the negative boundary. */
+static bool is_immediate(const RcValue *v) {
+#if SHEN_RC_IMMEDIATE_INTEGERS
+    return ((uintptr_t)v & UINT64_C(1)) != 0;
+#else
+    (void)v;
+    return false;
+#endif
+}
+static int64_t immediate_integer(const RcValue *v) {
+    uint64_t payload = (uint64_t)(uintptr_t)v >> 1;
+    return (int64_t)(payload & UINT64_C(0x3fffffffffffffff)) -
+           (int64_t)(payload & UINT64_C(0x4000000000000000));
+}
+static bool is_heap(const RcValue *v) {
+    return v && v != &nil_value && !is_immediate(v);
+}
+static bool may_reach_vector(const RcValue *v) {
+    return is_heap(v) && v->reaches_vector;
+}
+
+
 RcValue *rc_error(RcContext *ctx, const char *format, ...) {
     if (!ctx) return NULL;
     ctx->error_active = true;
@@ -157,7 +183,7 @@ RcContext *rc_context_new_with_policy(RcCyclePolicy policy) {
 }
 bool rc_context_is_acyclic(const RcContext *ctx) { return ctx && ctx->acyclic; }
 RcValue *rc_retain(RcValue *v) {
-    if (v && v != &nil_value) {
+    if (is_heap(v)) {
         if (v->refs == SIZE_MAX) abort();
         v->ctx->stats.retain_calls++;
         v->refs++;
@@ -166,7 +192,7 @@ RcValue *rc_retain(RcValue *v) {
 }
 typedef void (*EdgeFn)(RcValue *, void *);
 static void edges(RcValue *v, EdgeFn fn, void *data) {
-    switch (v->type) {
+    switch (rc_type(v)) {
     case RC_PAIR: fn(v->as.pair.head, data); fn(v->as.pair.tail, data); break;
     case RC_VECTOR:
         for (size_t i = 0; i < v->as.vector.length; ++i) fn(v->as.vector.items[i], data);
@@ -189,7 +215,7 @@ static void unlink_object(RcValue *v) {
     ctx->stats.live_objects--;
     ctx->stats.live_bytes -= v->bytes;
     ctx->stats.total_frees++;
-    switch (v->type) {
+    switch (rc_type(v)) {
     case RC_PAIR: ctx->graph_slots -= 2; break;
     case RC_VECTOR:
         ctx->graph_slots -= v->as.vector.length;
@@ -204,7 +230,7 @@ static void unlink_object(RcValue *v) {
     }
 }
 static void raw_free(RcValue *v) {
-    switch (v->type) {
+    switch (rc_type(v)) {
     case RC_STRING: case RC_SYMBOL: free(v->as.text.data); break;
     case RC_VECTOR: free(v->as.vector.items); break;
     case RC_CLOSURE: free(v->as.closure.captures); free(v->as.closure.bound); break;
@@ -225,7 +251,7 @@ static void raw_free(RcValue *v) {
     }
 }
 static void release_edge(RcValue *v, void *data) {
-    if (!v || v == &nil_value) return;
+    if (!is_heap(v)) return;
     RcValue **work = data;
     if (!v->refs) abort();
     v->ctx->stats.release_calls++;
@@ -245,16 +271,16 @@ void rc_release(RcValue *v) {
 #if !defined(SHEN_RC_ACYCLIC_ONLY) || !SHEN_RC_ACYCLIC_ONLY
 static void subtract_edge(RcValue *v, void *unused) {
     (void)unused;
-    if (v && v != &nil_value) { if (!v->trial) abort(); v->trial--; }
+    if (is_heap(v)) { if (!v->trial) abort(); v->trial--; }
 }
 static void mark_edge(RcValue *v, void *data) {
-    if (!v || v == &nil_value || v->marked) return;
+    if (!is_heap(v) || v->marked) return;
     RcValue **work = data;
     v->marked = true; v->work = *work; *work = v;
 }
 static void release_live_edge(RcValue *v, void *unused) {
     (void)unused;
-    if (v && v != &nil_value && v->marked) rc_release(v);
+    if (is_heap(v) && v->marked) rc_release(v);
 }
 #endif
 void rc_collect(RcContext *ctx) {
@@ -326,34 +352,40 @@ void rc_context_free(RcContext *ctx) {
     }
     free(ctx->error); free(ctx);
 }
-RcType rc_type(const RcValue *v) { return v ? v->type : RC_NIL; }
-size_t rc_refcount(const RcValue *v) { return v ? v->refs : 0; }
+RcType rc_type(const RcValue *v) { return is_immediate(v) ? RC_NUMBER : v ? v->type : RC_NIL; }
+size_t rc_refcount(const RcValue *v) { return is_immediate(v) ? SIZE_MAX : v ? v->refs : 0; }
 RcValue *rc_nil(void) { return &nil_value; }
 bool rc_is_nil(const RcValue *v) { return v == &nil_value; }
-static bool belongs(RcContext *ctx, const RcValue *v) { return v && (v == &nil_value || v->ctx == ctx); }
+static bool belongs(RcContext *ctx, const RcValue *v) { return v && (v == &nil_value || is_immediate(v) || v->ctx == ctx); }
 RcValue *rc_number(RcContext *ctx, double n) {
     RcValue *v = allocate(ctx, RC_NUMBER, 0);
     if (v) v->as.number.real = n;
     return v;
 }
 RcValue *rc_integer(RcContext *ctx, int64_t n) {
+    if (!ctx) return NULL;
+#if SHEN_RC_IMMEDIATE_INTEGERS
+    if (n >= -INT64_C(4611686018427387904) && n <= INT64_C(4611686018427387903))
+        return (RcValue *)(uintptr_t)(((uint64_t)n << 1) | UINT64_C(1));
+#endif
     RcValue *v = allocate(ctx, RC_NUMBER, 0);
     if (v) { v->as.number.integer = n; v->as.number.real = (double)n; v->as.number.exact = true; }
     return v;
 }
-double rc_number_value(const RcValue *v) { return v && v->type == RC_NUMBER ? v->as.number.real : NAN; }
+double rc_number_value(const RcValue *v) { return is_immediate(v) ? (double)immediate_integer(v) : v && rc_type(v) == RC_NUMBER ? v->as.number.real : NAN; }
 bool rc_number_is_integer(const RcValue *v) {
-    return v && v->type == RC_NUMBER && (v->as.number.exact || (isfinite(v->as.number.real) && trunc(v->as.number.real) == v->as.number.real));
+    return is_immediate(v) || (v && rc_type(v) == RC_NUMBER && (v->as.number.exact || (isfinite(v->as.number.real) && trunc(v->as.number.real) == v->as.number.real)));
 }
 bool rc_number_is_exact_integer(const RcValue *v) {
-    return v && v->type == RC_NUMBER && v->as.number.exact;
+    return is_immediate(v) || (v && rc_type(v) == RC_NUMBER && v->as.number.exact);
 }
 bool rc_number_is_int64(const RcValue *v) {
     if (!rc_number_is_integer(v)) return false;
-    return v->as.number.exact || (v->as.number.real >= -9223372036854775808.0 && v->as.number.real < 9223372036854775808.0);
+    return is_immediate(v) || v->as.number.exact || (v->as.number.real >= -9223372036854775808.0 && v->as.number.real < 9223372036854775808.0);
 }
 int64_t rc_integer_value(const RcValue *v) {
-    if (!v || v->type != RC_NUMBER) return 0;
+    if (is_immediate(v)) return immediate_integer(v);
+    if (!v || rc_type(v) != RC_NUMBER) return 0;
     if (v->as.number.exact) return v->as.number.integer;
     double n = v->as.number.real;
     if (!isfinite(n) || n < -9223372036854775808.0 || n >= 9223372036854775808.0) return 0;
@@ -442,25 +474,25 @@ RcValue *const *rc_symbol_table(RcContext *ctx, const RcSymbolTable *table) {
     ctx->compiled_symbols = entry;
     return entry->values;
 }
-const char *rc_text(const RcValue *v) { return v && (v->type == RC_STRING || v->type == RC_SYMBOL) ? v->as.text.data : NULL; }
-size_t rc_text_length(const RcValue *v) { return v && (v->type == RC_STRING || v->type == RC_SYMBOL) ? v->as.text.length : 0; }
+const char *rc_text(const RcValue *v) { return v && (rc_type(v) == RC_STRING || rc_type(v) == RC_SYMBOL) ? v->as.text.data : NULL; }
+size_t rc_text_length(const RcValue *v) { return v && (rc_type(v) == RC_STRING || rc_type(v) == RC_SYMBOL) ? v->as.text.length : 0; }
 RcValue *rc_true(RcContext *ctx) {
     return ctx && ctx->true_symbol ? rc_retain(ctx->true_symbol) : rc_symbol(ctx, "true");
 }
 RcValue *rc_false(RcContext *ctx) {
     return ctx && ctx->false_symbol ? rc_retain(ctx->false_symbol) : rc_symbol(ctx, "false");
 }
-bool rc_is_true(const RcValue *v) { return v && v->type == RC_SYMBOL && v == v->ctx->true_symbol; }
-bool rc_is_false(const RcValue *v) { return v && v->type == RC_SYMBOL && v == v->ctx->false_symbol; }
+bool rc_is_true(const RcValue *v) { return rc_type(v) == RC_SYMBOL && v == v->ctx->true_symbol; }
+bool rc_is_false(const RcValue *v) { return rc_type(v) == RC_SYMBOL && v == v->ctx->false_symbol; }
 bool rc_is_boolean(const RcValue *v) {
-    return v && v->type == RC_SYMBOL && (v == v->ctx->true_symbol || v == v->ctx->false_symbol);
+    return rc_type(v) == RC_SYMBOL && (v == v->ctx->true_symbol || v == v->ctx->false_symbol);
 }
 RcValue *rc_cons(RcContext *ctx, RcValue *head, RcValue *tail) {
     if (!belongs(ctx, head) || !belongs(ctx, tail)) return rc_error(ctx, "invalid cons value/context");
     RcValue *v = allocate(ctx, RC_PAIR, 0);
     if (v) {
         v->as.pair.head = rc_retain(head); v->as.pair.tail = rc_retain(tail);
-        v->reaches_vector = head->reaches_vector || tail->reaches_vector;
+        v->reaches_vector = may_reach_vector(head) || may_reach_vector(tail);
     }
     return v;
 }
@@ -472,7 +504,7 @@ RcValue *rc_cons_reuse(RcContext *ctx, RcValue *candidate, RcValue *head, RcValu
         rc_release(candidate);
         return rc_error(ctx, "invalid cons reuse value/context");
     }
-    if (candidate && candidate->type == RC_PAIR && candidate->refs == 1 &&
+    if (candidate && rc_type(candidate) == RC_PAIR && candidate->refs == 1 &&
         candidate != head && candidate != tail) {
         /* Protect replacement children before releasing any old graph edges.
          * The candidate stays a rooted, valid pair throughout; release never
@@ -480,7 +512,7 @@ RcValue *rc_cons_reuse(RcContext *ctx, RcValue *candidate, RcValue *head, RcValu
         rc_retain(head); rc_retain(tail);
         RcValue *old_head = candidate->as.pair.head, *old_tail = candidate->as.pair.tail;
         candidate->as.pair.head = head; candidate->as.pair.tail = tail;
-        candidate->reaches_vector = head->reaches_vector || tail->reaches_vector;
+        candidate->reaches_vector = may_reach_vector(head) || may_reach_vector(tail);
         rc_release(old_head); rc_release(old_tail);
         ctx->stats.pair_reuses++;
         return candidate;
@@ -492,7 +524,7 @@ RcValue *rc_cons_reuse(RcContext *ctx, RcValue *candidate, RcValue *head, RcValu
 }
 RcValue *rc_pair_take_tail_reuse(RcContext *ctx, RcValue *candidate, RcValue **out) {
     if (out) *out = NULL;
-    if (!out || !belongs(ctx, candidate) || candidate->type != RC_PAIR) {
+    if (!out || !belongs(ctx, candidate) || rc_type(candidate) != RC_PAIR) {
         rc_release(candidate);
         return rc_error(ctx, "tail reuse projection expects a pair and output slot");
     }
@@ -513,10 +545,10 @@ RcValue *rc_pair_take_tail_reuse(RcContext *ctx, RcValue *candidate, RcValue **o
     *out = candidate;
     return tail;
 }
-RcValue *rc_head(RcContext *ctx, RcValue *v) { return v && v->type == RC_PAIR ? rc_retain(v->as.pair.head) : rc_error(ctx, "hd expects a nonempty list"); }
-RcValue *rc_tail(RcContext *ctx, RcValue *v) { return v && v->type == RC_PAIR ? rc_retain(v->as.pair.tail) : rc_error(ctx, "tl expects a nonempty list"); }
-RcValue *rc_head_borrowed(const RcValue *v) { return v && v->type == RC_PAIR ? v->as.pair.head : NULL; }
-RcValue *rc_tail_borrowed(const RcValue *v) { return v && v->type == RC_PAIR ? v->as.pair.tail : NULL; }
+RcValue *rc_head(RcContext *ctx, RcValue *v) { return v && rc_type(v) == RC_PAIR ? rc_retain(v->as.pair.head) : rc_error(ctx, "hd expects a nonempty list"); }
+RcValue *rc_tail(RcContext *ctx, RcValue *v) { return v && rc_type(v) == RC_PAIR ? rc_retain(v->as.pair.tail) : rc_error(ctx, "tl expects a nonempty list"); }
+RcValue *rc_head_borrowed(const RcValue *v) { return v && rc_type(v) == RC_PAIR ? v->as.pair.head : NULL; }
+RcValue *rc_tail_borrowed(const RcValue *v) { return v && rc_type(v) == RC_PAIR ? v->as.pair.tail : NULL; }
 RcValue *rc_vector(RcContext *ctx, size_t length) {
     if (length > SIZE_MAX / sizeof(RcValue *)) return rc_error(ctx, "vector size overflow");
     RcValue **items = length ? malloc(length * sizeof(*items)) : NULL;
@@ -528,9 +560,9 @@ RcValue *rc_vector(RcContext *ctx, size_t length) {
     v->reaches_vector = true;
     return v;
 }
-size_t rc_vector_length(const RcValue *v) { return v && v->type == RC_VECTOR ? v->as.vector.length : 0; }
+size_t rc_vector_length(const RcValue *v) { return v && rc_type(v) == RC_VECTOR ? v->as.vector.length : 0; }
 RcValue *rc_vector_get(RcContext *ctx, RcValue *v, size_t i) {
-    return v && v->type == RC_VECTOR && i < v->as.vector.length ? rc_retain(v->as.vector.items[i]) : rc_error(ctx, "absvector index out of bounds");
+    return v && rc_type(v) == RC_VECTOR && i < v->as.vector.length ? rc_retain(v->as.vector.items[i]) : rc_error(ctx, "absvector index out of bounds");
 }
 typedef struct {
     RcContext *ctx;
@@ -539,7 +571,7 @@ typedef struct {
 } CycleSearch;
 static void cycle_search_edge(RcValue *v, void *data) {
     CycleSearch *search = data;
-    if (!v || v == &nil_value || !v->reaches_vector) return;
+    if (!may_reach_vector(v)) return;
     if (v == search->target) { search->found = true; return; }
     if (v->visit_epoch == search->ctx->visit_epoch) return;
     v->visit_epoch = search->ctx->visit_epoch;
@@ -574,7 +606,7 @@ static bool would_create_cycle(RcContext *ctx, RcValue *target, RcValue *item, s
     return search.found;
 }
 bool rc_vector_set(RcContext *ctx, RcValue *v, size_t i, RcValue *item) {
-    if (!belongs(ctx, v) || v->type != RC_VECTOR || i >= v->as.vector.length || !belongs(ctx, item)) { rc_error(ctx, "invalid absvector assignment"); return false; }
+    if (!belongs(ctx, v) || rc_type(v) != RC_VECTOR || i >= v->as.vector.length || !belongs(ctx, item)) { rc_error(ctx, "invalid absvector assignment"); return false; }
     /* Immutable graph nodes conservatively record whether they reach a vector.
      * Their flags cannot gain paths while aliased: pair rewriting requires
      * unique ownership; pending tail rewrites remain private. Vectors always
@@ -583,7 +615,7 @@ bool rc_vector_set(RcContext *ctx, RcValue *v, size_t i, RcValue *item) {
      * plus slots, then conservatively mark a source. A marked source stays
      * marked until freed;
      * removing edges may leave a harmless false positive. */
-    if (item->reaches_vector && (ctx->acyclic || !v->cycle_source) &&
+    if (may_reach_vector(item) && (ctx->acyclic || !v->cycle_source) &&
         would_create_cycle(ctx, v, item, ctx->acyclic ? SIZE_MAX : 256)) {
         if (ctx->acyclic) {
             rc_error(ctx, "acyclic mode rejects vector assignment that would create a cycle");
@@ -610,7 +642,7 @@ static RcValue *closure_create(RcContext *ctx, size_t arity, RcNative native,
     v->as.closure.captures = copy; v->as.closure.capture_count = capture_count;
     for (size_t i = 0; i < capture_count; ++i) {
         copy[i] = rc_retain(captures[i]);
-        v->reaches_vector |= captures[i]->reaches_vector;
+        v->reaches_vector |= may_reach_vector(captures[i]);
     }
     return v;
 }
@@ -629,14 +661,14 @@ bool rc_call_values_belong(RcContext *ctx,RcValue *function,size_t argc,
     return true;
 }
 bool rc_closure_is_native(const RcValue *v, RcNative native) {
-    return v && v->type == RC_CLOSURE && v->as.closure.native == native &&
+    return v && rc_type(v) == RC_CLOSURE && v->as.closure.native == native &&
            !v->as.closure.owned_native;
 }
 RcValue *rc_capture(const RcValue *v, size_t i) {
-    return v && v->type == RC_CLOSURE && i < v->as.closure.capture_count ? v->as.closure.captures[i] : NULL;
+    return v && rc_type(v) == RC_CLOSURE && i < v->as.closure.capture_count ? v->as.closure.captures[i] : NULL;
 }
 size_t rc_arity(const RcValue *v) {
-    return v && v->type == RC_CLOSURE ? v->as.closure.arity - v->as.closure.bound_count : 0;
+    return v && rc_type(v) == RC_CLOSURE ? v->as.closure.arity - v->as.closure.bound_count : 0;
 }
 static RcValue *partial(RcContext *ctx, RcValue *fn, size_t argc, RcValue *const *argv) {
     size_t n = fn->as.closure.bound_count + argc;
@@ -649,7 +681,7 @@ static RcValue *partial(RcContext *ctx, RcValue *fn, size_t argc, RcValue *const
     if (!v) { free(bound); return NULL; }
     for (size_t i = 0; i < fn->as.closure.bound_count; ++i) bound[i] = rc_retain(fn->as.closure.bound[i]);
     for (size_t i = 0; i < argc; ++i) bound[fn->as.closure.bound_count + i] = rc_retain(argv[i]);
-    for (size_t i = 0; i < n; ++i) v->reaches_vector |= bound[i]->reaches_vector;
+    for (size_t i = 0; i < n; ++i) v->reaches_vector |= may_reach_vector(bound[i]);
     v->as.closure.bound = bound; v->as.closure.bound_count = n;
     v->bytes += n * sizeof(*bound); ctx->stats.live_bytes += n * sizeof(*bound);
     ctx->graph_slots += n;
@@ -664,10 +696,10 @@ RcValue *rc_tailcall(RcContext *ctx, RcValue *fn, size_t argc, RcValue *const *a
     if (!v) { free(copy); return NULL; }
     if (argc && argc <= 3) copy = v->as.tail.inline_args;
     v->as.tail.function = rc_retain(fn); v->as.tail.argc = argc; v->as.tail.argv = copy;
-    v->reaches_vector = fn->reaches_vector;
+    v->reaches_vector = may_reach_vector(fn);
     ctx->graph_slots += argc;
     for (size_t i = 0; i < argc; ++i) {
-        copy[i] = rc_retain(argv[i]); v->reaches_vector |= argv[i]->reaches_vector;
+        copy[i] = rc_retain(argv[i]); v->reaches_vector |= may_reach_vector(argv[i]);
     }
     return v;
 }
@@ -695,10 +727,10 @@ RcValue *rc_tailcall_owned_args(RcContext *ctx, RcValue *fn, size_t argc, RcValu
     if (!v) { free(copy); consume_arguments(argc, argv); return NULL; }
     if (argc && argc <= 3) copy = v->as.tail.inline_args;
     v->as.tail.function = rc_retain(fn); v->as.tail.argc = argc; v->as.tail.argv = copy;
-    v->reaches_vector = fn->reaches_vector;
+    v->reaches_vector = may_reach_vector(fn);
     ctx->graph_slots += argc;
     for (size_t i = 0; i < argc; ++i) {
-        copy[i] = argv[i]; v->reaches_vector |= argv[i]->reaches_vector;
+        copy[i] = argv[i]; v->reaches_vector |= may_reach_vector(argv[i]);
         argv[i] = NULL;
     }
     return v;
@@ -708,7 +740,7 @@ RcValue *rc_require_boolean(RcContext *ctx, RcValue *value) {
         if (!rc_has_error(ctx)) rc_error(ctx, "missing boolean result");
         return NULL;
     }
-    if (belongs(ctx, value) && value->type == RC_TAIL) {
+    if (belongs(ctx, value) && rc_type(value) == RC_TAIL) {
         if (value->refs > 1 && !value->as.tail.require_boolean) {
             RcValue *copy = rc_tailcall(ctx, value->as.tail.function,
                                         value->as.tail.argc, value->as.tail.argv);
@@ -737,12 +769,12 @@ static RcValue *apply_request(RcContext *ctx, RcValue *request) {
         }
         RcValue *target = request->as.tail.function;
         RcValue *resolved = NULL;
-        if (target->type == RC_SYMBOL) {
+        if (rc_type(target) == RC_SYMBOL) {
             resolved = rc_function_get(ctx, target);
             if (!resolved) goto fail;
             target = resolved;
         }
-        if (target->type != RC_CLOSURE) { rc_error(ctx, "attempt to apply a non-function"); rc_release(resolved); goto fail; }
+        if (rc_type(target) != RC_CLOSURE) { rc_error(ctx, "attempt to apply a non-function"); rc_release(resolved); goto fail; }
         size_t available = request->as.tail.argc;
         size_t needed = rc_arity(target);
         if (available < needed) {
@@ -792,7 +824,7 @@ static RcValue *apply_request(RcContext *ctx, RcValue *request) {
         if (!result) goto fail;
         if (rc_has_error(ctx)) { rc_release(result); result = NULL; goto fail; }
         rc_safepoint(ctx);
-        if (result->type == RC_TAIL) { request = result; result = NULL; continue; }
+        if (rc_type(result) == RC_TAIL) { request = result; result = NULL; continue; }
         while (pending && !pending->args) {
             ApplyPending *p = pending; pending = p->next; free(p);
             result = rc_require_boolean(ctx, result);
@@ -803,7 +835,7 @@ static RcValue *apply_request(RcContext *ctx, RcValue *request) {
         request = p->args;
         /* Replace the dummy function edge with this owned result. */
         request->as.tail.function = result;
-        request->reaches_vector |= result->reaches_vector;
+        request->reaches_vector |= may_reach_vector(result);
         result = NULL;
         free(p);
     }
@@ -822,8 +854,8 @@ static RcValue *apply_small(RcContext *ctx, RcValue *fn, size_t argc,
     if (argc > 8 || !belongs(ctx, fn) || (argc && !argv)) return NULL;
     for (size_t i = 0; i < argc; ++i) if (!belongs(ctx, argv[i])) return NULL;
     RcValue *target = fn;
-    if (target->type == RC_SYMBOL) target = target->as.text.function;
-    if (!target || target->type != RC_CLOSURE || target->as.closure.bound_count ||
+    if (rc_type(target) == RC_SYMBOL) target = target->as.text.function;
+    if (!target || rc_type(target) != RC_CLOSURE || target->as.closure.bound_count ||
         argc != target->as.closure.arity) return NULL;
     *handled = true;
     rc_retain(target);
@@ -841,7 +873,7 @@ static RcValue *apply_small(RcContext *ctx, RcValue *fn, size_t argc,
     if (!result) return NULL;
     if (rc_has_error(ctx)) { rc_release(result); return NULL; }
     rc_safepoint(ctx);
-    return result->type == RC_TAIL ? apply_request(ctx, result) : result;
+    return rc_type(result) == RC_TAIL ? apply_request(ctx, result) : result;
 }
 RcValue *rc_apply(RcContext *ctx, RcValue *fn, size_t argc, RcValue *const *argv) {
     bool handled;
@@ -860,29 +892,29 @@ RcValue *rc_stream_with_direction(RcContext *ctx, FILE *file, bool close, bool i
     return v;
 }
 RcValue *rc_stream(RcContext *ctx, FILE *file, bool close) { return rc_stream_with_direction(ctx, file, close, file == stdin); }
-FILE *rc_stream_file(const RcValue *v) { return v && v->type == RC_STREAM ? v->as.stream.file : NULL; }
-bool rc_stream_is_input(const RcValue *v) { return v && v->type == RC_STREAM && v->as.stream.input; }
+FILE *rc_stream_file(const RcValue *v) { return v && rc_type(v) == RC_STREAM ? v->as.stream.file : NULL; }
+bool rc_stream_is_input(const RcValue *v) { return v && rc_type(v) == RC_STREAM && v->as.stream.input; }
 bool rc_stream_close(RcContext *ctx, RcValue *v) {
-    if (!belongs(ctx, v) || v->type != RC_STREAM || !v->as.stream.file) { rc_error(ctx, "close expects an open stream"); return false; }
+    if (!belongs(ctx, v) || rc_type(v) != RC_STREAM || !v->as.stream.file) { rc_error(ctx, "close expects an open stream"); return false; }
     FILE *file = v->as.stream.file;
     v->as.stream.file = NULL;
     if (v->as.stream.close && fclose(file)) { rc_error(ctx, "stream close failed"); return false; }
     return true;
 }
 static bool set_symbol_slot(RcContext *ctx, RcValue *symbol, RcValue *value, bool function) {
-    if (!belongs(ctx, symbol) || symbol->type != RC_SYMBOL || !belongs(ctx, value)) { rc_error(ctx, "invalid binding/context"); return false; }
+    if (!belongs(ctx, symbol) || rc_type(symbol) != RC_SYMBOL || !belongs(ctx, value)) { rc_error(ctx, "invalid binding/context"); return false; }
     /* These are context roots, not graph edges: the context owns their counts.
      * Interned symbols survive until context teardown, so slots stay addressable. */
     RcValue **slot = function ? &symbol->as.text.function : &symbol->as.text.global;
     RcValue *old = *slot; *slot = rc_retain(value); rc_release(old); return true;
 }
 RcValue *rc_global_get(RcContext *ctx, RcValue *symbol) {
-    if (!belongs(ctx, symbol) || symbol->type != RC_SYMBOL) return rc_error(ctx, "value expects a symbol");
+    if (!belongs(ctx, symbol) || rc_type(symbol) != RC_SYMBOL) return rc_error(ctx, "value expects a symbol");
     return symbol->as.text.global ? rc_retain(symbol->as.text.global) : rc_error(ctx, "variable %s has no value", rc_text(symbol));
 }
 bool rc_global_set(RcContext *ctx, RcValue *symbol, RcValue *value) { return ctx && set_symbol_slot(ctx, symbol, value, false); }
 RcValue *rc_function_lookup(RcContext *ctx, RcValue *symbol) {
-    if (!belongs(ctx, symbol) || symbol->type != RC_SYMBOL) return NULL;
+    if (!belongs(ctx, symbol) || rc_type(symbol) != RC_SYMBOL) return NULL;
     return rc_retain(symbol->as.text.function);
 }
 RcValue *rc_function_get(RcContext *ctx, RcValue *symbol) {
@@ -890,30 +922,30 @@ RcValue *rc_function_get(RcContext *ctx, RcValue *symbol) {
     return v ? v : rc_error(ctx, "undefined function %s", rc_text(symbol) ? rc_text(symbol) : "<non-symbol>");
 }
 bool rc_function_set(RcContext *ctx, RcValue *symbol, RcValue *fn) {
-    if (!fn || fn->type != RC_CLOSURE) { rc_error(ctx, "function binding expects a closure"); return false; }
+    if (!fn || rc_type(fn) != RC_CLOSURE) { rc_error(ctx, "function binding expects a closure"); return false; }
     return ctx && set_symbol_slot(ctx, symbol, fn, true);
 }
 
 typedef struct EqualPair { const RcValue *left, *right; } EqualPair;
 static bool scalar_equal(const RcValue *a, const RcValue *b) {
     if (a == b) return true;
-    if (!a || !b || a->type != b->type) return false;
-    if (a->type == RC_NUMBER) {
-        if (a->as.number.exact && b->as.number.exact) return a->as.number.integer == b->as.number.integer;
-        if (a->as.number.exact || b->as.number.exact) {
-            const RcValue *i = a->as.number.exact ? a : b, *d = a->as.number.exact ? b : a;
+    if (!a || !b || rc_type(a) != rc_type(b)) return false;
+    if (rc_type(a) == RC_NUMBER) {
+        if (rc_number_is_exact_integer(a) && rc_number_is_exact_integer(b)) return rc_integer_value(a) == rc_integer_value(b);
+        if (rc_number_is_exact_integer(a) || rc_number_is_exact_integer(b)) {
+            const RcValue *i = rc_number_is_exact_integer(a) ? a : b, *d = rc_number_is_exact_integer(a) ? b : a;
             double n = d->as.number.real;
-            return isfinite(n) && n >= -9223372036854775808.0 && n < 9223372036854775808.0 && trunc(n) == n && (int64_t)n == i->as.number.integer;
+            return isfinite(n) && n >= -9223372036854775808.0 && n < 9223372036854775808.0 && trunc(n) == n && (int64_t)n == rc_integer_value(i);
         }
         return a->as.number.real == b->as.number.real;
     }
-    if (a->type == RC_STRING || a->type == RC_SYMBOL)
+    if (rc_type(a) == RC_STRING || rc_type(a) == RC_SYMBOL)
         return a->as.text.length == b->as.text.length && !memcmp(a->as.text.data, b->as.text.data, a->as.text.length);
     return false;
 }
 bool rc_equal(const RcValue *left, const RcValue *right) {
-    if (left == right || !left || !right || left->type != right->type ||
-        (left->type != RC_PAIR && left->type != RC_VECTOR)) return scalar_equal(left, right);
+    if (left == right || !left || !right || rc_type(left) != rc_type(right) ||
+        (rc_type(left) != RC_PAIR && rc_type(left) != RC_VECTOR)) return scalar_equal(left, right);
     RcContext *ctx = left->ctx;
     size_t count = 0, capacity = 32, cursor = 0;
     EqualPair *pairs = malloc(capacity * sizeof(*pairs));
@@ -924,13 +956,13 @@ bool rc_equal(const RcValue *left, const RcValue *right) {
         EqualPair p = pairs[cursor++];
         const RcValue *a = p.left, *b = p.right;
         if (a == b) continue;
-        if (!a || !b || a->type != b->type) { equal = false; break; }
-        if (a->type != RC_PAIR && a->type != RC_VECTOR) { equal = scalar_equal(a, b); continue; }
-        size_t n = a->type == RC_PAIR ? 2 : a->type == RC_VECTOR ? a->as.vector.length : 0;
-        if ((a->type != RC_PAIR && a->type != RC_VECTOR) || (a->type == RC_VECTOR && n != b->as.vector.length)) { equal = false; break; }
+        if (!a || !b || rc_type(a) != rc_type(b)) { equal = false; break; }
+        if (rc_type(a) != RC_PAIR && rc_type(a) != RC_VECTOR) { equal = scalar_equal(a, b); continue; }
+        size_t n = rc_type(a) == RC_PAIR ? 2 : rc_type(a) == RC_VECTOR ? a->as.vector.length : 0;
+        if ((rc_type(a) != RC_PAIR && rc_type(a) != RC_VECTOR) || (rc_type(a) == RC_VECTOR && n != b->as.vector.length)) { equal = false; break; }
         for (size_t i = 0; i < n && equal; ++i) {
             EqualPair child;
-            if (a->type == RC_PAIR) child = i ? (EqualPair){a->as.pair.tail, b->as.pair.tail} : (EqualPair){a->as.pair.head, b->as.pair.head};
+            if (rc_type(a) == RC_PAIR) child = i ? (EqualPair){a->as.pair.tail, b->as.pair.tail} : (EqualPair){a->as.pair.head, b->as.pair.head};
             else child = (EqualPair){a->as.vector.items[i], b->as.vector.items[i]};
             bool seen = false;
             for (size_t k = 0; k < count; ++k) if (pairs[k].left == child.left && pairs[k].right == child.right) { seen = true; break; }
