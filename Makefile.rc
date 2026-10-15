@@ -1,0 +1,50 @@
+# Standalone runtime build: no pkg-config, Nix, or Boehm dependency.
+CC ?= cc
+AR ?= ar
+RC_BUILD ?= obj/rc
+RC_BIN ?= bin/rc
+RC_CFLAGS ?= -O2 -g
+RC_CFLAGS += -std=c17 -Wall -Wextra -Wpedantic -Isrc/rc
+RC_LDFLAGS ?=
+RC_LDLIBS ?= -lm
+RC_SANITIZE ?= 0
+ifeq ($(RC_SANITIZE),1)
+RC_CFLAGS += -O1 -fsanitize=address,undefined -fno-sanitize-recover=all -fno-omit-frame-pointer
+RC_LDFLAGS += -fsanitize=address,undefined
+endif
+RC_SOURCES := src/rc/rc.c src/rc/primitives.c src/rc/eval.c src/rc/read.c
+RC_OBJECTS := $(patsubst src/rc/%.c,$(RC_BUILD)/%.o,$(RC_SOURCES))
+RC_TESTS := test_cycles test_primitives test_eval test_bool_tail test_collection
+RC_TEST_BINS := $(addprefix $(RC_BIN)/,$(RC_TESTS))
+
+all: $(RC_BIN)/libshenrc.a
+
+$(RC_BUILD) $(RC_BIN):
+	mkdir -p $@
+
+$(RC_BUILD)/%.o: src/rc/%.c $(wildcard src/rc/*.h) | $(RC_BUILD)
+	$(CC) $(RC_CFLAGS) -c $< -o $@
+
+$(RC_BIN)/libshenrc.a: $(RC_OBJECTS) | $(RC_BIN)
+	$(AR) rcs $@ $^
+
+$(RC_BIN)/test_%: test/rc/test_%.c $(RC_BIN)/libshenrc.a
+	$(CC) $(RC_CFLAGS) $< $(RC_BIN)/libshenrc.a $(RC_LDFLAGS) $(RC_LDLIBS) -o $@
+
+test-binaries: $(RC_TEST_BINS)
+
+test: test-binaries
+	$(RC_BIN)/test_cycles
+	$(RC_BIN)/test_primitives
+	$(RC_BIN)/test_eval
+	$(RC_BIN)/test_bool_tail
+	$(RC_BIN)/test_collection
+
+# Separate output directories keep sanitizer objects out of release artifacts.
+sanitize:
+	$(MAKE) -f Makefile.rc RC_SANITIZE=1 RC_BUILD=obj/rc-sanitize RC_BIN=bin/rc-sanitize test
+
+clean:
+	rm -rf $(RC_BUILD) $(RC_BIN)
+
+.PHONY: all test-binaries test sanitize clean

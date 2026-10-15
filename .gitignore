@@ -4,6 +4,7 @@
 /prof/
 /build/
 /build-ci/
+/build-rc/
 /evidence/
 /.vscode
 .#*

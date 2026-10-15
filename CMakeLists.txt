@@ -9,6 +9,26 @@ if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release CACHE STRING "Build type" FORCE)
 endif()
 
+option(SHEN_RC_ONLY "Build only the Boehm-free RC runtime and tests" OFF)
+option(SHEN_RC_SANITIZE "Enable ASan/UBSan for the RC runtime and tests" OFF)
+add_library(shenrc STATIC src/rc/rc.c src/rc/primitives.c src/rc/eval.c src/rc/read.c)
+target_include_directories(shenrc PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/src/rc")
+target_compile_options(shenrc PRIVATE -Wall -Wextra -Wpedantic)
+target_link_libraries(shenrc PUBLIC m)
+if(SHEN_RC_SANITIZE)
+  target_compile_options(shenrc PUBLIC -fsanitize=address,undefined -fno-sanitize-recover=all -fno-omit-frame-pointer -g)
+  target_link_options(shenrc PUBLIC -fsanitize=address,undefined)
+endif()
+enable_testing()
+foreach(_test cycles primitives eval bool_tail collection)
+  add_executable(test_rc_${_test} test/rc/test_${_test}.c)
+  target_link_libraries(test_rc_${_test} PRIVATE shenrc)
+  add_test(NAME rc_${_test} COMMAND test_rc_${_test})
+endforeach()
+if(SHEN_RC_ONLY)
+  return()
+endif()
+
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(BDWGC REQUIRED IMPORTED_TARGET bdw-gc)
 
@@ -105,6 +125,12 @@ set_target_properties(test_emit PROPERTIES
 add_executable(yggdrasil-build tools/yggdrasil-build.c)
 target_link_libraries(yggdrasil-build PRIVATE shenc)
 set_target_properties(yggdrasil-build PROPERTIES
+  RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin"
+)
+
+add_executable(rc-build tools/rc-build.c)
+target_link_libraries(rc-build PRIVATE shenc)
+set_target_properties(rc-build PROPERTIES
   RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin"
 )
 

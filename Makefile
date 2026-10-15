@@ -154,6 +154,11 @@ ${EMIT_TEST_BIN}: ${LIB_TARGET} ${TEST_SRC_ROOT}/test_emit.c | ${BIN_ROOT}
 ${BUILDER_BIN}: ${LIB_TARGET} tools/yggdrasil-build.c | ${BIN_ROOT}
 	${CC} ${CFLAGS} -iquote ${SRC_ROOT} -o $@ tools/yggdrasil-build.c ${LIB_TARGET} ${LDFLAGS}
 
+# Compiler host uses the established KL reader. Its generated applications
+# link the separate reference-counted runtime, never libshenc or Boehm.
+${BIN_ROOT}/rc-build: ${LIB_TARGET} tools/rc-build.c | ${BIN_ROOT}
+	${CC} ${CFLAGS} -iquote ${SRC_ROOT} -o $@ tools/rc-build.c ${LIB_TARGET} ${LDFLAGS}
+
 ${KERNEL_AOT_BUILD}: ${LIB_TARGET} tools/kernel-aot-build.c | ${BIN_ROOT}
 	${CC} ${CFLAGS} -iquote ${SRC_ROOT} -o $@ tools/kernel-aot-build.c ${LIB_TARGET} ${LDFLAGS}
 

@@ -12,6 +12,17 @@ Shen is a portable functional language by [Mark Tarver](https://marktarver.com/)
 with pattern matching, macros, optional sequent-calculus types, Prolog, and
 Shen-YACC.
 
+**Experimental Boehm-free backend.** `bin/rc-build` compiles KLambda into
+native C functions linked to a separate reference-counted runtime. It reclaims
+unreachable cycles with an exact graph pass, supports native closures and
+runtime `eval-kl`, and uses explicit ownership cleanup on errors and tail calls.
+The compiler host still uses Boehm to read KL; generated applications do not.
+The emitted complete kernel passes the bundled S42 suite: **134 passed, 0 failed**,
+including a full ASan+UBSan run.
+This is scoped ownership with temporary drops and return moves, not a complete
+Perceus last-use/reuse implementation. See [RC usage](docs/RC-BACKEND.md) and
+[validation boundaries](docs/rc-validation.md).
+
 **Runtime.** Boehm GC (`bdw-gc`) via Nix `pkg-config` (Homebrew paths are
 rejected). Values are tagged words: fixnum / bool / empty-list are non-pointer
 immediates; cons, symbol, and string pointers use
