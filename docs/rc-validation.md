@@ -6,6 +6,65 @@ the supported Make/CMake/Nix build. It adds local last-use ownership, free-varia
 captures, owned calls, and selective pair reuse. Exact cycle reclamation remains
 enabled for unrestricted mutable Shen values.
 
+## Release performance
+
+Performance remains **OPEN**. Correctness qualification did not establish a
+speedup. The previously reported 752.389-second execution used ASan/UBSan;
+it is not a release benchmark. Compilation time is excluded below.
+
+Darwin arm64, serial runs of `script runme.shen`, identical unchanged S42
+sources and stdin, no sanitizer or profiler:
+
+| Executable | Wall seconds | User CPU seconds | Result |
+| --- | ---: | ---: | --- |
+| Preserved Boehm CLI, two runs | 12.54–15.43 | 12.00–14.66 | 134/134 each |
+| RC checkpoint `4157892`, one run | 103.85 | 94.66 | 134/134 |
+| Small-call fast path only, one run | 68.37 | 66.37 | 134/134 |
+| Current combined changes, two runs | 57.09–70.88 | 55.55–64.86 | 134/134 each |
+
+See [initial comparison](evidence/rc-performance-20261015/matched-initial.json)
+and [final serial comparison](evidence/rc-performance-20261015/matched-final.json).
+Wall time varies with host scheduling; these few runs are not a statistical
+benchmark campaign. The final candidate still executes about 4.22 times the
+retired instructions of the Boehm binary. This compares complete implementations,
+not an isolated experiment measuring reference counting versus garbage collection.
+RC uses a fresh O3 CMake build; exact historical Boehm compiler flags are unknown.
+The original Boehm binary needed an explicitly recorded installed 8.2.12 collector
+library because its original Nix store path had disappeared. Its bytes were unchanged.
+
+The implemented fixes are:
+
+- Exact unbound calls with at most eight arguments avoid allocating a request
+  and argument arrays, preserving owned/borrowed arguments and callback roots.
+- Tail argument arrays use three existing union slots when they fit, without
+  increasing the value object size. Larger calls keep the heap fallback.
+- Generated code skips external release calls for already-empty slots.
+
+Exact cycle reclamation remains enabled. The original five-second profile
+showed allocation/free, call dispatch, symbol lookup, and release overhead;
+collector work occupied about 10% of that early sample. It cannot explain the
+whole regression. The [current artifact profile](evidence/rc-performance-20261015/profile-current-flat.txt)
+still puts symbol lookup, releases, and collector work near the top. This was
+a separate, intentionally partial diagnostic, excluded from all suite timings.
+Further performance work is required; no Boehm parity claim.
+
+Current-source validation: fresh full kernel and CLI build, eight runtime tests,
+13 reader cases, three empty-directory CLI checks, and dependency audits
+[passed](evidence/rc-performance-20261015/cmake-release.json).
+All eight runtime tests passed fatal
+[ASan/UBSan](evidence/rc-performance-20261015/runtime-asan.json).
+A fresh sanitizer compiler passed 64 emitted semantics cases, 20 ownership cases,
+and four large-frame assertions
+[on the current sources](evidence/rc-performance-20261015/emitted-asan.json).
+The full 134-case sanitizer suite was not rerun after these performance changes;
+its earlier result belongs to checkpoint `4157892` below.
+
+The fresh release compiler and CLI are installed in `bin/`; their
+[identities](evidence/rc-performance-20261015/installed-binaries.json) are recorded,
+and the prior binaries are retained under `evidence/rc/perf-baseline-installed`.
+Portable receipts replace local paths; the
+[provenance manifest](evidence/rc-performance-20261015/provenance.json) binds raw copies.
+
 ## Evidence scope
 
 The canonical runner builds a fresh compiler and generates all 14 bundled KL
@@ -20,11 +79,11 @@ application. It excludes CLI `main.c`, which is compiled and hashed separately
 by the fresh toolchain and CMake CLI checks. Source hashes identify the tested
 working tree even when its parent commit is also recorded.
 
-## Executed checks
+## Checkpoint 4157892 qualification
 
-Executed on Darwin arm64 with Apple Clang. The final compiler/runtime snapshot
-passed local qualification. Each receipt records its own source and artifact
-hashes; earlier runs are not substituted for changed sources.
+Executed on Darwin arm64 with Apple Clang. Checkpoint `4157892` passed these
+local correctness checks. The subsequent performance changes have separate
+evidence below; these historical receipts do not qualify changed sources.
 
 | Check | Result | Evidence |
 | --- | --- | --- |
@@ -40,7 +99,7 @@ hashes; earlier runs are not substituted for changed sources.
 The runtime heap matrix contains 20 named cases and 252,189 assertions; reuse
 has 9 cases and the optional acyclic policy has 7. The runtime sanitizer receipt
 predates the final emitter edits, but every runtime implementation, header, and
-test source still matches. Its older compiler-host fields are not final-emitter
+test source matched that checkpoint. Its older compiler-host fields are not final-emitter
 evidence. The focused receipt uses the freshly rebuilt final compiler.
 
 The large-frame regression initially produced 2,002,985 bytes of C, exceeded a
@@ -53,10 +112,10 @@ regression measurement, not a general performance benchmark.
 Portable receipt copies replace local paths with `${REPO}`, `${HOME}`, and
 `${TMP}`. Their hashes describe original bytes; original receipts remain under
 `evidence/rc`. Use those originals with the acceptance runner. Qualified CMake
-Release binaries are installed in the worktree's `bin/`; see the
+Release binaries were installed at that checkpoint; see their
 [binary identities](evidence/rc-standalone-20261015/local-binaries.json).
 An [independent final crosscheck](evidence/rc-standalone-20261015/independent-review.json)
-verifies current source hashes, retained artifacts, sanitizer flags, native
+verifies checkpoint source hashes, retained artifacts, sanitizer flags, native
 results, negative controls, and the correspondence of the published receipts.
 
 ## Ownership measurements

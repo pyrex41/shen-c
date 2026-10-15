@@ -77,7 +77,7 @@ static void bind(RcEmitFn *f,const char *s,int slot) {
   f->bind[f->nb++]=(Binding){s,slot};
 }
 static int fresh(RcEmitFn *f) { return f->slots++; }
-static void drop(RcEmitFn *f,int x) { put(&f->code,"  rc_release(t[%d]); t[%d]=NULL;\n",x,x); }
+static void drop(RcEmitFn *f,int x) { put(&f->code,"  if(t[%d]) rc_release(t[%d]); t[%d]=NULL;\n",x,x,x); }
 static void check(RcEmitFn *f,int x) { put(&f->code,"  if(!t[%d]) goto %s;\n",x,f->fail); }
 static void move(RcEmitFn *f,int dst,int src) { put(&f->code,"  t[%d]=t[%d]; t[%d]=NULL;\n",dst,src,src); }
 /* The runtime borrows this scratch storage only for the duration of a call;
@@ -304,7 +304,7 @@ static void finish_function(RcEmitFn *f,int id,int arity,int r){
  put(&p->functions,"static RcValue *rc_native_%d(RcContext *ctx,RcValue *self,size_t argc,RcValue *%s*argv) {\n  (void)self; (void)argv;\n  if(argc!=%d) return rc_error(ctx,\"native arity mismatch\");\n  RcValue *result=NULL;\n",id,optimize(f)?"":"const ",arity);
  if(f->slots>64)put(&p->functions,"  RcValue **t=calloc(%d,sizeof(*t));\n  if(!t) return rc_error(ctx,\"native frame allocation failed\");\n  RcValue **a=t+%d; (void)a;\n",f->slots+f->max_args,f->slots);
  else put(&p->functions,"  RcValue *t[%d]={0}; RcValue *a[%d]; (void)a;\n",f->slots?f->slots:1,f->max_args?f->max_args:1);
- put(&p->functions,"%s  result=t[%d]; t[%d]=NULL;\ncleanup:\n  for(size_t i=0;i<%d;i++) rc_release(t[i]);\n",f->code.p?f->code.p:"",r,r,f->slots);if(f->slots>64)put(&p->functions,"  free(t);\n");put(&p->functions,"  return result;\n}\n");
+ put(&p->functions,"%s  result=t[%d]; t[%d]=NULL;\ncleanup:\n  for(size_t i=0;i<%d;i++) if(t[i]) rc_release(t[i]);\n",f->code.p?f->code.p:"",r,r,f->slots);if(f->slots>64)put(&p->functions,"  free(t);\n");put(&p->functions,"  return result;\n}\n");
 }
 static int compile(Program *p,RcValue *params,RcValue *body,Binding *caps,int ncaps,int freeze){
  RcEmitFn f={0};f.p=p;f.code.owner=p;int id=p->next++,arity=freeze==1?0:(freeze==2?1:count(p,params));snprintf(f.fail,sizeof f.fail,"cleanup");
@@ -328,7 +328,7 @@ static int literal(Program *p,RcValue *x){
  put(&p->literals,"static RcValue *rc_literal_%d(RcContext *ctx) {\n  RcValue *result=NULL;\n",id);
  if(f.slots>64)put(&p->literals,"  RcValue **t=calloc(%d,sizeof(*t)); if(!t) return rc_error(ctx,\"source metadata allocation failed\");\n",f.slots);
  else put(&p->literals,"  RcValue *t[%d]={0};\n",f.slots?f.slots:1);
- put(&p->literals,"%s  result=t[%d]; t[%d]=NULL;\ncleanup:\n  for(size_t i=0;i<%d;i++) rc_release(t[i]);\n",f.code.p?f.code.p:"",result,result,f.slots);
+ put(&p->literals,"%s  result=t[%d]; t[%d]=NULL;\ncleanup:\n  for(size_t i=0;i<%d;i++) if(t[i]) rc_release(t[i]);\n",f.code.p?f.code.p:"",result,result,f.slots);
  if(f.slots>64)put(&p->literals,"  free(t);\n");put(&p->literals,"  return result;\n}\n");return id;
 }
 static void metadata_helpers(FILE *out){
@@ -437,7 +437,7 @@ bool rc_emit_program(RcContext *ctx,FILE *out,RcValue *const *kernel,size_t nker
         "#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n"
         "#include <stdint.h>\n#include <math.h>\n#include \"rc.h\"\n#include \"primitives.h\"\n#include \"eval.h\"\n",out);
   if(p->drop_range_used)fputs("static void rc_drop_range(RcValue **slots,size_t first,size_t end) {\n"
-                            "  for(size_t i=first;i<end;i++) { rc_release(slots[i]); slots[i]=NULL; }\n}\n",out);
+                            "  for(size_t i=first;i<end;i++) { if(slots[i]) rc_release(slots[i]); slots[i]=NULL; }\n}\n",out);
   for(int i=0;i<p->next;i++) fprintf(out,"static RcValue *rc_native_%d(RcContext*,RcValue*,size_t,RcValue *%s*);\n",i,options->conservative_ownership?"const":"");
   if(p->next_literal) metadata_helpers(out);
   if(p->literals.p) fputs(p->literals.p,out);

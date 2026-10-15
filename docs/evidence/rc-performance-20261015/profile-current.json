@@ -1,0 +1,24 @@
+{
+  "scope": "Intentionally partial diagnostic only; no suite verdict; sample5seconds at10ms after5second warmup, own process group terminated in finally",
+  "command": [
+    "${TMP}/shen-rc-perf-combined-20261015/shen-rc",
+    "script",
+    "runme.shen"
+  ],
+  "binary_sha256": "c8de0c1d98499653629395f5ee932a4cc8a81d3816b39410483f1cfb9f911cdf",
+  "sample_command": [
+    "/usr/bin/sample",
+    "3152",
+    "5",
+    "10",
+    "-file",
+    "${REPO}/evidence/rc/perf-combined-sample-20261015/sample.txt"
+  ],
+  "sample_exit": 0,
+  "termination": "SIGTERM sent to own process group after successful sample; child waited; wrapper artifact stage initially rejected28MiB against16MiB budget, then compressed under64MiB bound",
+  "suite_verdict": "INTENTIONAL PARTIAL; no pass/fail claim",
+  "sample_uncompressed_bytes": 29831992,
+  "sample_gzip_sha256": "3aa83550043ff2cb2444d19fe545bc1692f96aacb26cce356e91443276b516ed",
+  "flat_sha256": "9ff9a4fdfa7d4823b8a3548b51b5e816f6c2ab590ecd8f0054e4ebeebbb4132c",
+  "completed_utc": "2026-10-15T22:54:11.288940+00:00"
+}

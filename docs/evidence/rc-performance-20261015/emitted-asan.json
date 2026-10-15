@@ -1,0 +1,116 @@
+{
+  "started_utc": "2026-10-15T22:50:01.034084+00:00",
+  "before": {
+    "src/rc/emit.c": "1b915972196b699ba016fddd3e838ac5c8574042a3826304c153d66c2617094c",
+    "src/rc/emit.h": "ae1946b669f771941b12a706316a28090aefd126f54cc687fa00a3b10b322a9f",
+    "src/rc/eval.c": "1fa1e61b5ebc2bb55d17b62153e8be9c55e46c0b42948fa5b497f31c5310da13",
+    "src/rc/eval.h": "40840e20cb00334a7032ef11aec08ce6a0846912ae05dfb0d08e894ba7ad2e15",
+    "src/rc/main.c": "aed4ac89c8aaf338f8519b35554effd251b04d47bbee6dbf5781343097d74275",
+    "src/rc/primitives.c": "db07db3d3fb9c71e212abdec2180085ac66d2bbd9d5318c2764845f8599b94d7",
+    "src/rc/primitives.h": "d3e6db49c69741c8a656822b6564c5fe8494a8ceb0813c89f75971abcb95d59d",
+    "src/rc/rc.c": "60173e2b94a5d01ab3421d407dffad4f84c1c9782b9865097258f625b99e0fef",
+    "src/rc/rc.h": "b7b44e2a8e43d019a87157564a90cbf6b926e842a2bbe6bef2c4f05236363ee3",
+    "src/rc/read.c": "f61444980f2d34d3986f9640103b3478501c4d368f6c2dd5058a4b39b3143667",
+    "src/rc/read.h": "71fb3e8ce757174ee47dde95f732200ae1b023c66f8164ac0a4d82ebb241fea5",
+    "test/rc/test_builder_paths.sh": "603cfb1c0666a6566192f4764ba8d0238c4da51c236344813b13b315a7179dbc",
+    "test/rc/test_frames.sh": "b608a680c74cfc9e798b19802d2200300cfb75be3d45e76c9e6c37f693a5f2f0",
+    "test/rc/test_ownership.sh": "60a54c29cfda314f331491de108ab8745a5cce3fa9d1f951bf62216146c251c9",
+    "test/rc/test_reader_capture.sh": "37d226cdb9e05422473a9212386ba52646dbd7e0bc8fbef9e1695c5364a684b8",
+    "test/rc/test_semantics.sh": "53d0d421669aa875356980dbe354eee602df838a2b43a055f0c143267c2686ef",
+    "test/rc/test_source_compile.sh": "6e2e1fdc1197228c00bb7212360fb7cb32ac0738f86d2443eafa7f24e3a22d9e",
+    "test/rc/test_source_metadata.sh": "2237d542b4bcd152542bee7ca364b330c2345920f5ee0c127659e97a3ea20c80",
+    "tools/rc-build.c": "0b3bc4244c14bf1d4f2c857f74c09b7100606172fc3535622bfaa2d3b6e5a484"
+  },
+  "environment": {
+    "CC": "/Library/Developer/CommandLineTools/usr/bin/clang",
+    "CFLAGS": "-O1 -g -fsanitize=address,undefined -fno-sanitize-recover=all -fno-omit-frame-pointer -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk",
+    "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1:abort_on_error=1",
+    "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1",
+    "PATH": "/nix/store/308q7v3aaiw4d1wjijy7xcszlgnfadb6-gnumake-4.4.1/bin:${HOME}/.nix-profile/bin:${TMP}/shenlogic-lean.gn70kC/elan/bin:/usr/local/bin:/System/Cryptexes/App/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin:/pkg/env/global/bin:/Library/Apple/usr/bin:${HOME}/.nix-profile/bin:${HOME}/.codex/packages/app-server-daemon/releases/0.163.0-aarch64-apple-darwin/codex-path:${HOME}/.codex${TMP}/arg0-macos/codex-arg0sqKZ9d:${HOME}/.codex${TMP}/arg0/codex-arg0af2ptM:${HOME}/.codex/packages/app-server-daemon/releases/0.162.1-aarch64-apple-darwin/codex-path:${HOME}/.codex${TMP}/arg0/codex-arg0ANybcp:/nix/store/d9dj59jyqk3sra3m3fg8xyxq47c65amd-codex-0.162.1/lib/codex/codex-path:${HOME}/.optmem:/nix/var/nix/profiles/default/bin:${HOME}/go/bin:${HOME}/go:${HOME}/.cargo/bin:${HOME}/.opencode/bin:${HOME}/.local/bin:${HOME}/.local/Homebrew/bin:${HOME}/.grok/bin:${HOME}/.githooks-guard/bin:${HOME}/BrewApplications/Ghostty.app/Contents/MacOS:${HOME}/.orbstack/bin",
+    "NM": "/nix/store/05zb83k72p9ynnvsy4rpi6x57sc052jj-cctools-1010.6/bin/nm",
+    "OTOOL": "/nix/store/05zb83k72p9ynnvsy4rpi6x57sc052jj-cctools-1010.6/bin/otool"
+  },
+  "commands": [
+    {
+      "name": "host-build",
+      "command": [
+        "/Library/Developer/CommandLineTools/usr/bin/clang",
+        "-O1",
+        "-g",
+        "-fsanitize=address,undefined",
+        "-fno-sanitize-recover=all",
+        "-fno-omit-frame-pointer",
+        "-isysroot",
+        "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk",
+        "-std=c17",
+        "-Isrc/rc",
+        "tools/rc-build.c",
+        "src/rc/emit.c",
+        "${REPO}/src/rc/rc.c",
+        "${REPO}/src/rc/primitives.c",
+        "${REPO}/src/rc/eval.c",
+        "${REPO}/src/rc/read.c",
+        "-lm",
+        "-o",
+        "${REPO}/evidence/rc/perf-emitted-final/rc-build"
+      ],
+      "exit": 0,
+      "seconds": 3.0078712920003454
+    },
+    {
+      "name": "semantics",
+      "command": [
+        "sh",
+        "test/rc/test_semantics.sh",
+        "${REPO}/evidence/rc/perf-emitted-final/rc-build"
+      ],
+      "exit": 0,
+      "seconds": 9.54963695799961
+    },
+    {
+      "name": "ownership",
+      "command": [
+        "sh",
+        "test/rc/test_ownership.sh",
+        "${REPO}/evidence/rc/perf-emitted-final/rc-build"
+      ],
+      "exit": 0,
+      "seconds": 8.39952645899757
+    },
+    {
+      "name": "frames",
+      "command": [
+        "sh",
+        "test/rc/test_frames.sh",
+        "${REPO}/evidence/rc/perf-emitted-final/rc-build"
+      ],
+      "exit": 0,
+      "seconds": 7.385600166999211
+    }
+  ],
+  "builder_sha256": "d93b086e6a83e2ef56ff6e8290ef9c592d3f98b870d2fa7d19bbb9e90bd8edce",
+  "result": "PASS",
+  "after": {
+    "src/rc/emit.c": "1b915972196b699ba016fddd3e838ac5c8574042a3826304c153d66c2617094c",
+    "src/rc/emit.h": "ae1946b669f771941b12a706316a28090aefd126f54cc687fa00a3b10b322a9f",
+    "src/rc/eval.c": "1fa1e61b5ebc2bb55d17b62153e8be9c55e46c0b42948fa5b497f31c5310da13",
+    "src/rc/eval.h": "40840e20cb00334a7032ef11aec08ce6a0846912ae05dfb0d08e894ba7ad2e15",
+    "src/rc/main.c": "aed4ac89c8aaf338f8519b35554effd251b04d47bbee6dbf5781343097d74275",
+    "src/rc/primitives.c": "db07db3d3fb9c71e212abdec2180085ac66d2bbd9d5318c2764845f8599b94d7",
+    "src/rc/primitives.h": "d3e6db49c69741c8a656822b6564c5fe8494a8ceb0813c89f75971abcb95d59d",
+    "src/rc/rc.c": "60173e2b94a5d01ab3421d407dffad4f84c1c9782b9865097258f625b99e0fef",
+    "src/rc/rc.h": "b7b44e2a8e43d019a87157564a90cbf6b926e842a2bbe6bef2c4f05236363ee3",
+    "src/rc/read.c": "f61444980f2d34d3986f9640103b3478501c4d368f6c2dd5058a4b39b3143667",
+    "src/rc/read.h": "71fb3e8ce757174ee47dde95f732200ae1b023c66f8164ac0a4d82ebb241fea5",
+    "test/rc/test_builder_paths.sh": "603cfb1c0666a6566192f4764ba8d0238c4da51c236344813b13b315a7179dbc",
+    "test/rc/test_frames.sh": "b608a680c74cfc9e798b19802d2200300cfb75be3d45e76c9e6c37f693a5f2f0",
+    "test/rc/test_ownership.sh": "60a54c29cfda314f331491de108ab8745a5cce3fa9d1f951bf62216146c251c9",
+    "test/rc/test_reader_capture.sh": "37d226cdb9e05422473a9212386ba52646dbd7e0bc8fbef9e1695c5364a684b8",
+    "test/rc/test_semantics.sh": "53d0d421669aa875356980dbe354eee602df838a2b43a055f0c143267c2686ef",
+    "test/rc/test_source_compile.sh": "6e2e1fdc1197228c00bb7212360fb7cb32ac0738f86d2443eafa7f24e3a22d9e",
+    "test/rc/test_source_metadata.sh": "2237d542b4bcd152542bee7ca364b330c2345920f5ee0c127659e97a3ea20c80",
+    "tools/rc-build.c": "0b3bc4244c14bf1d4f2c857f74c09b7100606172fc3535622bfaa2d3b6e5a484"
+  },
+  "sources_unchanged": true,
+  "ended_utc": "2026-10-15T22:50:29.439699+00:00"
+}

@@ -18,6 +18,10 @@ Their implemented scope and evidence are described in
 [RC-BACKEND.md](docs/RC-BACKEND.md) and
 [the validation record](docs/rc-validation.md).
 
+Release performance still trails the preserved Boehm implementation on the
+full S42 suite. See the [matched timings](docs/rc-validation.md#release-performance)
+for measured results; the Boehm-free migration is not a demonstrated speedup.
+
 ## Build
 
 A C17 compiler, Make, and an archiver are sufficient. Nix is optional.

@@ -27,9 +27,15 @@ struct RcValue {
             RcValue **captures, **bound;
         } closure;
         struct { FILE *file; bool close, input; } stream;
-        struct { RcValue *function; size_t argc; RcValue **argv; bool require_boolean; } tail;
+        struct {
+            RcValue *function; size_t argc; RcValue **argv; bool require_boolean;
+            RcValue *inline_args[3];
+        } tail;
     } as;
 };
+/* Three inline tail arguments fit in the pre-existing closure-sized union. */
+_Static_assert(sizeof(((RcValue *)0)->as.tail) <= sizeof(((RcValue *)0)->as.closure),
+               "inline tail arguments must not enlarge RcValue");
 struct RcContext {
     RcValue *objects;
     RcValue **symbols;
@@ -90,7 +96,7 @@ static RcValue *allocate(RcContext *ctx, RcType type, size_t extra) {
     switch (type) {
     case RC_PAIR: ctx->graph_slots += 2; break;
     case RC_VECTOR: case RC_CLOSURE: ctx->graph_slots += extra / sizeof(RcValue *); break;
-    case RC_TAIL: ctx->graph_slots += 1 + extra / sizeof(RcValue *); break;
+    case RC_TAIL: ctx->graph_slots++; break;
     default: break;
     }
     if (ctx->stats.live_objects > ctx->stats.peak_objects) ctx->stats.peak_objects = ctx->stats.live_objects;
@@ -162,7 +168,7 @@ static void raw_free(RcValue *v) {
     case RC_STRING: case RC_SYMBOL: free(v->as.text.data); break;
     case RC_VECTOR: free(v->as.vector.items); break;
     case RC_CLOSURE: free(v->as.closure.captures); free(v->as.closure.bound); break;
-    case RC_TAIL: free(v->as.tail.argv); break;
+    case RC_TAIL: if (v->as.tail.argv != v->as.tail.inline_args) free(v->as.tail.argv); break;
     case RC_STREAM: if (v->as.stream.file && v->as.stream.close) fclose(v->as.stream.file); break;
     default: break;
     }
@@ -504,11 +510,13 @@ static RcValue *partial(RcContext *ctx, RcValue *fn, size_t argc, RcValue *const
 RcValue *rc_tailcall(RcContext *ctx, RcValue *fn, size_t argc, RcValue *const *argv) {
     if (!belongs(ctx, fn) || argc > SIZE_MAX / sizeof(RcValue *) || (argc && !argv)) return rc_error(ctx, "invalid application");
     for (size_t i = 0; i < argc; ++i) if (!belongs(ctx, argv[i])) return rc_error(ctx, "invalid argument/context");
-    RcValue **copy = argc ? malloc(argc * sizeof(*copy)) : NULL;
-    if (argc && !copy) return rc_error(ctx, "out of memory");
-    RcValue *v = allocate(ctx, RC_TAIL, argc * sizeof(*copy));
+    RcValue **copy = argc > 3 ? malloc(argc * sizeof(*copy)) : NULL;
+    if (argc > 3 && !copy) return rc_error(ctx, "out of memory");
+    RcValue *v = allocate(ctx, RC_TAIL, argc > 3 ? argc * sizeof(*copy) : 0);
     if (!v) { free(copy); return NULL; }
+    if (argc && argc <= 3) copy = v->as.tail.inline_args;
     v->as.tail.function = rc_retain(fn); v->as.tail.argc = argc; v->as.tail.argv = copy;
+    ctx->graph_slots += argc;
     for (size_t i = 0; i < argc; ++i) copy[i] = rc_retain(argv[i]);
     return v;
 }
@@ -527,14 +535,16 @@ RcValue *rc_tailcall_owned_args(RcContext *ctx, RcValue *fn, size_t argc, RcValu
         consume_arguments(argc, argv);
         return rc_error(ctx, "invalid owned argument/context");
     }
-    RcValue **copy = argc ? malloc(argc * sizeof(*copy)) : NULL;
-    if (argc && !copy) {
+    RcValue **copy = argc > 3 ? malloc(argc * sizeof(*copy)) : NULL;
+    if (argc > 3 && !copy) {
         consume_arguments(argc, argv);
         return rc_error(ctx, "out of memory");
     }
-    RcValue *v = allocate(ctx, RC_TAIL, argc * sizeof(*copy));
+    RcValue *v = allocate(ctx, RC_TAIL, argc > 3 ? argc * sizeof(*copy) : 0);
     if (!v) { free(copy); consume_arguments(argc, argv); return NULL; }
+    if (argc && argc <= 3) copy = v->as.tail.inline_args;
     v->as.tail.function = rc_retain(fn); v->as.tail.argc = argc; v->as.tail.argv = copy;
+    ctx->graph_slots += argc;
     for (size_t i = 0; i < argc; ++i) { copy[i] = argv[i]; argv[i] = NULL; }
     return v;
 }
@@ -594,8 +604,9 @@ static RcValue *apply_request(RcContext *ctx, RcValue *request) {
             }
             size_t n = target->as.closure.arity;
             if (n > SIZE_MAX / sizeof(RcValue *)) { rc_error(ctx, "call size overflow"); rc_release(resolved); goto fail; }
-            RcValue **actual = n ? malloc(n * sizeof(*actual)) : NULL;
-            if (n && !actual) { rc_error(ctx, "out of memory"); rc_release(resolved); goto fail; }
+            RcValue *small_actual[8];
+            RcValue **actual = n <= 8 ? small_actual : malloc(n * sizeof(*actual));
+            if (!actual) { rc_error(ctx, "out of memory"); rc_release(resolved); goto fail; }
             size_t bound = target->as.closure.bound_count;
             if (target->as.closure.owned_native) {
                 /* Bound arguments remain closure-owned and are shared here.
@@ -620,7 +631,7 @@ static RcValue *apply_request(RcContext *ctx, RcValue *request) {
                 for (size_t i = 0; i < needed; ++i) actual[bound + i] = request->as.tail.argv[i];
                 result = target->as.closure.native(ctx, target, n, actual);
             }
-            free(actual);
+            if (actual != small_actual) free(actual);
         }
         rc_release(resolved);
         rc_release(request); request = NULL;
@@ -645,11 +656,46 @@ fail:
     while (pending) { ApplyPending *next = pending->next; rc_release(pending->args); free(pending); pending = next; }
     return NULL;
 }
+/* Small exact calls need no managed request or heap argument arrays. The
+ * callee is rooted before entry: callbacks may replace its symbol binding and
+ * collect. Owned caller slots are cleared before any callback can inspect them.
+ * Partial/overapplication and larger calls retain the general request path. */
+static RcValue *apply_small(RcContext *ctx, RcValue *fn, size_t argc,
+                            RcValue *const *argv, RcValue **owned, bool *handled) {
+    *handled = false;
+    if (argc > 8 || !belongs(ctx, fn) || (argc && !argv)) return NULL;
+    for (size_t i = 0; i < argc; ++i) if (!belongs(ctx, argv[i])) return NULL;
+    RcValue *target = fn;
+    if (target->type == RC_SYMBOL) target = target->as.text.function;
+    if (!target || target->type != RC_CLOSURE || target->as.closure.bound_count ||
+        argc != target->as.closure.arity) return NULL;
+    *handled = true;
+    rc_retain(target);
+    RcValue *actual[8];
+    RcValue *result;
+    for (size_t i = 0; i < argc; ++i) {
+        actual[i] = owned ? owned[i] : rc_retain(argv[i]);
+        if (owned) owned[i] = NULL;
+    }
+    if (target->as.closure.owned_native)
+        result = target->as.closure.owned_native(ctx, target, argc, actual);
+    else result = target->as.closure.native(ctx, target, argc, actual);
+    consume_arguments(argc, actual);
+    rc_release(target);
+    if (!result) return NULL;
+    if (rc_has_error(ctx)) { rc_release(result); return NULL; }
+    rc_safepoint(ctx);
+    return result->type == RC_TAIL ? apply_request(ctx, result) : result;
+}
 RcValue *rc_apply(RcContext *ctx, RcValue *fn, size_t argc, RcValue *const *argv) {
-    return apply_request(ctx, rc_tailcall(ctx, fn, argc, argv));
+    bool handled;
+    RcValue *result = apply_small(ctx, fn, argc, argv, NULL, &handled);
+    return handled ? result : apply_request(ctx, rc_tailcall(ctx, fn, argc, argv));
 }
 RcValue *rc_apply_owned_args(RcContext *ctx, RcValue *fn, size_t argc, RcValue **argv) {
-    return apply_request(ctx, rc_tailcall_owned_args(ctx, fn, argc, argv));
+    bool handled;
+    RcValue *result = apply_small(ctx, fn, argc, argv, argv, &handled);
+    return handled ? result : apply_request(ctx, rc_tailcall_owned_args(ctx, fn, argc, argv));
 }
 RcValue *rc_stream_with_direction(RcContext *ctx, FILE *file, bool close, bool input) {
     if (!file) return rc_error(ctx, "invalid stream");

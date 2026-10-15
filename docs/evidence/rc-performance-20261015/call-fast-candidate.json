@@ -1,0 +1,78 @@
+{
+  "schema": 1,
+  "scope": "Candidate runtime O3 rc.c only, relink preserved full kernel/main/runtime companion objects; no benchmark executed",
+  "input_sha256": {
+    "${REPO}/src/rc/rc.c": "d973d5c637aba9b473774caaa0efedfbb2f2b480bcf87d131195e51afe9bb9c7",
+    "${REPO}/src/rc/rc.h": "b7b44e2a8e43d019a87157564a90cbf6b926e842a2bbe6bef2c4f05236363ee3",
+    "${TMP}/shen-rc-cmake-default-cli-20261015T213508Z/CMakeFiles/shen-rc.dir/src/rc/main.c.o": "ecd391974db0c6aeef5a9852f2d66beac2e2c6601c05aacdc23e312068d70e07",
+    "${TMP}/shen-rc-cmake-default-cli-20261015T213508Z/CMakeFiles/shen-rc.dir/rc-kernel.c.o": "e13a81d010e7f1276258800a5155b1c9b5108615aa3460ca62cdc4e7143f9de9",
+    "${TMP}/shen-rc-cmake-default-cli-20261015T213508Z/CMakeFiles/shenrc.dir/src/rc/primitives.c.o": "6b519afe00a9a9d3a1982cda8c0ae5c52ad073daf85d4529b56c361f7f587782",
+    "${TMP}/shen-rc-cmake-default-cli-20261015T213508Z/CMakeFiles/shenrc.dir/src/rc/eval.c.o": "cb85143c9d23598a9f88c5bbac88c5d6e594e245e054dd9a4d031057f31467e5",
+    "${TMP}/shen-rc-cmake-default-cli-20261015T213508Z/CMakeFiles/shenrc.dir/src/rc/read.c.o": "a0f8366153017b8734dd789ca40223fc09944b7eabb88e9b5433a9dd18a50793"
+  },
+  "commands": [
+    {
+      "name": "compile-runtime",
+      "argv": [
+        "/Library/Developer/CommandLineTools/usr/bin/clang",
+        "-O3",
+        "-DNDEBUG",
+        "-std=c17",
+        "-arch",
+        "arm64",
+        "-isysroot",
+        "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk",
+        "-I${REPO}/src/rc",
+        "-c",
+        "${REPO}/src/rc/rc.c",
+        "-o",
+        "${REPO}/evidence/rc/perf-call-fast/rc.o"
+      ],
+      "exit_code": 0,
+      "seconds": 5.803
+    },
+    {
+      "name": "link-candidate",
+      "argv": [
+        "/Library/Developer/CommandLineTools/usr/bin/clang",
+        "-O3",
+        "-DNDEBUG",
+        "-std=c17",
+        "-arch",
+        "arm64",
+        "-isysroot",
+        "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk",
+        "-Wl,-search_paths_first",
+        "-Wl,-headerpad_max_install_names",
+        "${TMP}/shen-rc-cmake-default-cli-20261015T213508Z/CMakeFiles/shen-rc.dir/src/rc/main.c.o",
+        "${TMP}/shen-rc-cmake-default-cli-20261015T213508Z/CMakeFiles/shen-rc.dir/rc-kernel.c.o",
+        "${REPO}/evidence/rc/perf-call-fast/rc.o",
+        "${TMP}/shen-rc-cmake-default-cli-20261015T213508Z/CMakeFiles/shenrc.dir/src/rc/primitives.c.o",
+        "${TMP}/shen-rc-cmake-default-cli-20261015T213508Z/CMakeFiles/shenrc.dir/src/rc/eval.c.o",
+        "${TMP}/shen-rc-cmake-default-cli-20261015T213508Z/CMakeFiles/shenrc.dir/src/rc/read.c.o",
+        "-lm",
+        "-o",
+        "${REPO}/evidence/rc/perf-call-fast/shen-rc"
+      ],
+      "exit_code": 0,
+      "seconds": 0.145
+    },
+    {
+      "name": "audit",
+      "argv": [
+        "sh",
+        "scripts/test-rc.sh",
+        "--audit-only",
+        "${REPO}/evidence/rc/perf-call-fast/shen-rc"
+      ],
+      "exit_code": 0,
+      "seconds": 0.511
+    }
+  ],
+  "output_sha256": {
+    "${REPO}/evidence/rc/perf-call-fast/rc.o": "3bc6163e58bc4db7e8518a5198a1320b838b6e00fe7bf167ae82258e1f16e699",
+    "${REPO}/evidence/rc/perf-call-fast/shen-rc": "3b604134456436db5551e1fdccbf9b94abae781807701f07ab30f56d53a49c70"
+  },
+  "inputs_unchanged": true,
+  "status": "PASS"
+}

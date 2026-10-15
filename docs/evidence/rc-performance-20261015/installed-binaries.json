@@ -1,0 +1,17 @@
+{
+  "shen-rc": {
+    "sha256": "c8de0c1d98499653629395f5ee932a4cc8a81d3816b39410483f1cfb9f911cdf",
+    "source": "${TMP}/shen-rc-perf-combined-20261015/shen-rc",
+    "previous_artifact": "${REPO}/evidence/rc/perf-baseline-installed/shen-rc"
+  },
+  "shen-c": {
+    "sha256": "c8de0c1d98499653629395f5ee932a4cc8a81d3816b39410483f1cfb9f911cdf",
+    "source": "${TMP}/shen-rc-perf-combined-20261015/shen-c",
+    "previous_artifact": "${REPO}/evidence/rc/perf-baseline-installed/shen-c"
+  },
+  "rc-build": {
+    "sha256": "1a0d032d26efeae5f108533f9caae1b4a7cf75d68ddc1ce66ed9da50eb5c3c0c",
+    "source": "${TMP}/shen-rc-perf-combined-20261015/rc-build",
+    "previous_artifact": "${REPO}/evidence/rc/perf-baseline-installed/rc-build"
+  }
+}

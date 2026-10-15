@@ -1,0 +1,49 @@
+{
+  "runtime_source_sha256": "60173e2b94a5d01ab3421d407dffad4f84c1c9782b9865097258f625b99e0fef",
+  "focused_source_sha256": "e41657011832a96ce4fbea7e8a6408c01417c82bfcccbecafeaa69b5eb87ca33",
+  "flags": "-O1 -g -fsanitize=address,undefined -fno-sanitize-recover=all -fno-omit-frame-pointer",
+  "ASAN_OPTIONS": "halt_on_error=1:malloc_context_size=10",
+  "UBSAN_OPTIONS": "halt_on_error=1",
+  "runs": [
+    {
+      "test": "test_cycles",
+      "exit": 0,
+      "seconds": 0.9879922499967506
+    },
+    {
+      "test": "test_primitives",
+      "exit": 0,
+      "seconds": 0.3372727920068428
+    },
+    {
+      "test": "test_eval",
+      "exit": 0,
+      "seconds": 3.574295999998867
+    },
+    {
+      "test": "test_bool_tail",
+      "exit": 0,
+      "seconds": 0.41195141700154636
+    },
+    {
+      "test": "test_collection",
+      "exit": 0,
+      "seconds": 0.4559406249973108
+    },
+    {
+      "test": "test_reuse",
+      "exit": 0,
+      "seconds": 0.3762137499943492
+    },
+    {
+      "test": "test_acyclic",
+      "exit": 0,
+      "seconds": 0.2858474169988767
+    },
+    {
+      "test": "test_apply_fast",
+      "exit": 0,
+      "seconds": 0.294584292001673
+    }
+  ]
+}

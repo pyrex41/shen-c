@@ -94,3 +94,26 @@ Compiler owns the AST/frontend migration first, then hands the native emitter
 to the ownership lane. Runtime owns reuse and opt-in owned call ABI. Evaluator
 owns the CLI. Coordinator owns builds, integration, and full qualification;
 validation and review independently check executable evidence and semantics.
+
+## Performance continuation after 4157892
+
+The sanitizer suite result is not a release performance result. The initial
+O3 CLI run passes 134/134 in 99.978 seconds including sampling overhead;
+performance remains open. Preserve Boehm-free operation and exact cycle
+reclamation while completing these steps:
+
+1. Measure preserved Boehm and RC release CLIs on identical suite sources,
+   input, and invocation; record binary hashes and separate wall/CPU time.
+2. Profile allocation, call dispatch, cycle collection, and dynamic evaluation.
+3. Remove redundant ordinary-call allocations with ownership-preserving fast
+   paths, independently review, and run focused sanitizer regressions.
+4. Compare unchanged release binaries serially, then qualify improvements
+   against the full suite and dependency audit. Report remaining regression.
+
+The first bounded performance pass is implemented and validated: small exact
+calls, inline tail arguments, and empty-slot release guards. Current full-suite
+release runs are 57.09–70.88 seconds versus preserved Boehm 12.54–15.43 seconds,
+all 134/134. Performance parity remains OPEN. See `rc-validation.md` for current
+receipts and historical sanitizer boundaries. The new artifact was profiled
+separately; next work should reduce remaining dispatch, symbol lookup, and allocation costs;
+do not disable cycle reclamation or substitute a smaller suite.

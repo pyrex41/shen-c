@@ -1,0 +1,8 @@
+{
+  "checked_at_utc": "2026-10-15T22:54:59.528336+00:00",
+  "status": "PASS",
+  "source_and_artifact_bindings_checked": 135,
+  "scope": "Coordinator readback of current full CMake and emitted sanitizer source/artifact bindings plus installed binaries. Historical comparison binaries remain independently identified.",
+  "performance_parity": "OPEN",
+  "full_current_suite": "134/134 twice release; full sanitizer suite remains checkpoint evidence only"
+}

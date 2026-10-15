@@ -236,7 +236,8 @@ static void length_proportional_reuse(bool shared) {
         assert(after.pair_allocations == before.pair_allocations);
         assert(after.pair_reuses == length && after.pair_reuse_misses == 0);
         assert(after.pair_tail_transfers == length && after.pair_tail_shares == 0);
-        assert(after.total_allocations - before.total_allocations == length + 1);
+        /* The exact outer call is allocation-free; one request per tail step. */
+        assert(after.total_allocations - before.total_allocations == length);
     }
     RcValue *cursor = result;
     for (size_t i = 0; i < length; ++i) {
