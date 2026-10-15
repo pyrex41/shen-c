@@ -132,14 +132,17 @@ static RcValue *allocate(RcContext *ctx, RcType type, size_t extra) {
     RcValue *v;
     if (ctx->stats.cached_objects) {
         v = ctx->object_cache[--ctx->stats.cached_objects];
-        ctx->stats.cached_bytes -= sizeof(*v);
         RC_UNPOISON(v);
-        memset(v, 0, sizeof(*v));
     } else {
         v = calloc(1, sizeof(*v));
         if (!v) return rc_error(ctx, "out of memory");
         ctx->stats.system_allocations++;
     }
+    /* Constructors initialize every field they read. Collector trial values
+     * are reset before a collection, and work links are set before insertion.
+     * Reset the lifetime-wide defaults that must not survive pooled reuse. */
+    v->prev = NULL; v->visit_epoch = 0;
+    v->marked = false; v->reaches_vector = false; v->cycle_source = false;
     v->type = type; v->refs = 1; v->ctx = ctx; v->bytes = sizeof(*v) + extra;
     v->next = ctx->objects;
     if (v->next) v->next->prev = v;
@@ -241,9 +244,9 @@ static void raw_free(RcValue *v) {
     RcContext *ctx = v->ctx;
     if (!ctx->destroying && ctx->stats.cached_objects < RC_OBJECT_CACHE_LIMIT) {
         ctx->object_cache[ctx->stats.cached_objects++] = v;
-        ctx->stats.cached_bytes += sizeof(*v);
-        if (ctx->stats.cached_bytes > ctx->stats.peak_cached_bytes)
-            ctx->stats.peak_cached_bytes = ctx->stats.cached_bytes;
+        size_t cached_bytes = ctx->stats.cached_objects * sizeof(*v);
+        if (cached_bytes > ctx->stats.peak_cached_bytes)
+            ctx->stats.peak_cached_bytes = cached_bytes;
         RC_POISON(v);
     } else {
         ctx->stats.system_frees++;
@@ -333,7 +336,14 @@ void rc_safepoint(RcContext *ctx) {
 void rc_set_collection_interval(RcContext *ctx, size_t n) {
     if (ctx) { ctx->collection_interval = n; ctx->adaptive_collection = false; }
 }
-RcStats rc_stats(const RcContext *ctx) { RcStats zero = {0}; return ctx ? ctx->stats : zero; }
+RcStats rc_stats(const RcContext *ctx) {
+    RcStats result = {0};
+    if (ctx) {
+        result = ctx->stats;
+        result.cached_bytes = result.cached_objects * sizeof(RcValue);
+    }
+    return result;
+}
 void rc_context_free(RcContext *ctx) {
     if (!ctx) return;
     while (ctx->compiled_symbols) {
@@ -359,7 +369,7 @@ bool rc_is_nil(const RcValue *v) { return v == &nil_value; }
 static bool belongs(RcContext *ctx, const RcValue *v) { return v && (v == &nil_value || is_immediate(v) || v->ctx == ctx); }
 RcValue *rc_number(RcContext *ctx, double n) {
     RcValue *v = allocate(ctx, RC_NUMBER, 0);
-    if (v) v->as.number.real = n;
+    if (v) { v->as.number.real = n; v->as.number.exact = false; }
     return v;
 }
 RcValue *rc_integer(RcContext *ctx, int64_t n) {
@@ -442,6 +452,7 @@ RcValue *rc_symbol(RcContext *ctx, const char *name) {
     RcValue *v = text_value(ctx, RC_SYMBOL, name, strlen(name));
     if (!v) return NULL;
     size_t bucket = (size_t)hash & (ctx->symbol_capacity - 1);
+    v->as.text.global = NULL; v->as.text.function = NULL;
     v->as.text.hash = hash;
     v->as.text.intern_next = ctx->symbols[bucket];
     ctx->symbols[bucket] = rc_retain(v); ctx->symbol_count++;
@@ -640,6 +651,7 @@ static RcValue *closure_create(RcContext *ctx, size_t arity, RcNative native,
     v->as.closure.native = native; v->as.closure.arity = arity;
     v->as.closure.owned_native = owned_native;
     v->as.closure.captures = copy; v->as.closure.capture_count = capture_count;
+    v->as.closure.bound = NULL; v->as.closure.bound_count = 0;
     for (size_t i = 0; i < capture_count; ++i) {
         copy[i] = rc_retain(captures[i]);
         v->reaches_vector |= may_reach_vector(captures[i]);
@@ -696,6 +708,7 @@ RcValue *rc_tailcall(RcContext *ctx, RcValue *fn, size_t argc, RcValue *const *a
     if (!v) { free(copy); return NULL; }
     if (argc && argc <= 3) copy = v->as.tail.inline_args;
     v->as.tail.function = rc_retain(fn); v->as.tail.argc = argc; v->as.tail.argv = copy;
+    v->as.tail.require_boolean = false;
     v->reaches_vector = may_reach_vector(fn);
     ctx->graph_slots += argc;
     for (size_t i = 0; i < argc; ++i) {
@@ -727,6 +740,7 @@ RcValue *rc_tailcall_owned_args(RcContext *ctx, RcValue *fn, size_t argc, RcValu
     if (!v) { free(copy); consume_arguments(argc, argv); return NULL; }
     if (argc && argc <= 3) copy = v->as.tail.inline_args;
     v->as.tail.function = rc_retain(fn); v->as.tail.argc = argc; v->as.tail.argv = copy;
+    v->as.tail.require_boolean = false;
     v->reaches_vector = may_reach_vector(fn);
     ctx->graph_slots += argc;
     for (size_t i = 0; i < argc; ++i) {

@@ -9,6 +9,32 @@
 static RcValue *identity(RcContext *ctx,RcValue *self,size_t argc,RcValue *const *args) {
     (void)ctx;(void)self;return argc?rc_retain(args[0]):rc_nil();
 }
+static RcValue *captured(RcContext *ctx,RcValue *self,size_t argc,RcValue *const *args) {
+    (void)ctx;(void)argc;(void)args;return rc_retain(rc_capture(self,0));
+}
+static void recycled_defaults(void) {
+    RcContext *ctx=rc_context_new();assert(ctx);
+    RcValue *integer=rc_integer(ctx,INT64_MAX);rc_release(integer);
+    RcValue *value=rc_number(ctx,2.5);
+    assert(!rc_number_is_exact_integer(value)&&rc_number_value(value)==2.5);
+    RcValue *fn=rc_closure(ctx,3,identity,0,NULL),*args[]={value,value,value};
+    RcValue *tail=rc_tailcall(ctx,fn,3,args);rc_release(tail);
+    /* The old tail's inline argv occupies the new symbol's slot offsets. */
+    RcValue *symbol=rc_symbol(ctx,"fresh-pooled-symbol");
+    assert(!rc_function_lookup(ctx,symbol));
+    assert(!rc_global_get(ctx,symbol)&&rc_has_error(ctx));rc_clear_error(ctx);
+    RcValue *part=rc_apply(ctx,fn,1,&value);assert(part);rc_release(part);
+    RcValue *zero=rc_closure(ctx,0,identity,0,NULL);
+    assert(rc_arity(zero)==0);RcValue *out=rc_apply(ctx,zero,0,NULL);
+    assert(rc_is_nil(out));rc_release(out);rc_release(zero);
+    rc_release(fn);fn=rc_closure(ctx,1,identity,0,NULL);
+    tail=rc_require_boolean(ctx,rc_tailcall(ctx,fn,1,&value));assert(tail);rc_release(tail);
+    tail=rc_tailcall(ctx,fn,1,&value);
+    RcValue *wrapper=rc_closure(ctx,0,captured,1,&tail);
+    out=rc_apply(ctx,wrapper,0,NULL);assert(out==value&&!rc_has_error(ctx));rc_release(out);
+    rc_release(wrapper);rc_release(tail);rc_release(fn);rc_release(value);rc_release(symbol);
+    rc_context_free(ctx);
+}
 int main(int argc,char **argv) {
     RcContext *ctx=rc_context_new();assert(ctx);
     if(argc==2&&!strcmp(argv[1],"--uaf")) {
@@ -17,6 +43,7 @@ int main(int argc,char **argv) {
         printf("stale type=%d\n",(int)rc_type(dead));
         rc_context_free(ctx);return 0;
     }
+    recycled_defaults();
     enum { LIMIT=1024, TOTAL=LIMIT*2+9 };
     RcValue *values[TOTAL];
     for(size_t i=0;i<TOTAL;i++)values[i]=rc_number(ctx,(double)i);
