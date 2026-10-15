@@ -79,6 +79,8 @@ size_t rc_text_length(const RcValue *value);
 RcValue *rc_true(RcContext *ctx);
 RcValue *rc_false(RcContext *ctx);
 bool rc_is_true(const RcValue *value);
+bool rc_is_false(const RcValue *value);
+bool rc_is_boolean(const RcValue *value);
 RcValue *rc_cons(RcContext *ctx, RcValue *head, RcValue *tail);
 /* Consumes candidate, including on failure. head/tail remain borrowed. A unique
  * pair is recycled; shared/nonpair candidates allocate a fresh pair. Direct

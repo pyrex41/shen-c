@@ -8,7 +8,7 @@ static RcValue *evaluate(RcContext *, RcValue *, RcValue *, bool);
 static bool named(RcValue *v, const char *name) {
     return rc_type(v) == RC_SYMBOL && strcmp(rc_text(v), name) == 0;
 }
-static bool boolean(RcValue *v) { return named(v,"true") || named(v,"false"); }
+static bool boolean(RcValue *v) { return rc_is_boolean(v); }
 static RcValue *lookup(RcValue *env, RcValue *name) {
     while (rc_type(env) == RC_PAIR) {
         RcValue *binding = rc_head_borrowed(env);

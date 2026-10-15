@@ -46,6 +46,7 @@ struct RcContext {
     RcValue **symbols;
     size_t symbol_capacity, symbol_count;
     RcResolvedSymbols *compiled_symbols;
+    RcValue *true_symbol, *false_symbol; /* Borrowed intern-table roots. */
     RcStats stats;
     size_t collection_interval, since_collection, graph_slots, visit_epoch;
     char *error;
@@ -355,6 +356,10 @@ RcValue *rc_symbol(RcContext *ctx, const char *name) {
     v->as.text.hash = hash;
     v->as.text.intern_next = ctx->symbols[bucket];
     ctx->symbols[bucket] = rc_retain(v); ctx->symbol_count++;
+    /* Only a new interned identity needs name comparisons. These borrowed
+     * pointers live exactly as long as the context's intern-table roots. */
+    if (!strcmp(name, "true")) ctx->true_symbol = v;
+    else if (!strcmp(name, "false")) ctx->false_symbol = v;
     return v;
 }
 RcValue *const *rc_symbol_table(RcContext *ctx, const RcSymbolTable *table) {
@@ -382,9 +387,17 @@ RcValue *const *rc_symbol_table(RcContext *ctx, const RcSymbolTable *table) {
 }
 const char *rc_text(const RcValue *v) { return v && (v->type == RC_STRING || v->type == RC_SYMBOL) ? v->as.text.data : NULL; }
 size_t rc_text_length(const RcValue *v) { return v && (v->type == RC_STRING || v->type == RC_SYMBOL) ? v->as.text.length : 0; }
-RcValue *rc_true(RcContext *ctx) { return rc_symbol(ctx, "true"); }
-RcValue *rc_false(RcContext *ctx) { return rc_symbol(ctx, "false"); }
-bool rc_is_true(const RcValue *v) { return v && v->type == RC_SYMBOL && !strcmp(v->as.text.data, "true"); }
+RcValue *rc_true(RcContext *ctx) {
+    return ctx && ctx->true_symbol ? rc_retain(ctx->true_symbol) : rc_symbol(ctx, "true");
+}
+RcValue *rc_false(RcContext *ctx) {
+    return ctx && ctx->false_symbol ? rc_retain(ctx->false_symbol) : rc_symbol(ctx, "false");
+}
+bool rc_is_true(const RcValue *v) { return v && v->type == RC_SYMBOL && v == v->ctx->true_symbol; }
+bool rc_is_false(const RcValue *v) { return v && v->type == RC_SYMBOL && v == v->ctx->false_symbol; }
+bool rc_is_boolean(const RcValue *v) {
+    return v && v->type == RC_SYMBOL && (v == v->ctx->true_symbol || v == v->ctx->false_symbol);
+}
 RcValue *rc_cons(RcContext *ctx, RcValue *head, RcValue *tail) {
     if (!belongs(ctx, head) || !belongs(ctx, tail)) return rc_error(ctx, "invalid cons value/context");
     RcValue *v = allocate(ctx, RC_PAIR, 0);
@@ -598,8 +611,7 @@ RcValue *rc_require_boolean(RcContext *ctx, RcValue *value) {
         value->as.tail.require_boolean = true;
         return value;
     }
-    if (belongs(ctx, value) && value->type == RC_SYMBOL &&
-        (!strcmp(value->as.text.data, "true") || !strcmp(value->as.text.data, "false"))) return value;
+    if (belongs(ctx, value) && rc_is_boolean(value)) return value;
     rc_release(value);
     return rc_error(ctx, "boolean expected");
 }

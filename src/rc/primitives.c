@@ -46,7 +46,7 @@ static const struct Primitive overwrites[] = {
 static bool symbol_is(RcValue *v,const char *s) {
  return rc_type(v)==RC_SYMBOL && strcmp(rc_text(v),s)==0;
 }
-static bool boolean(RcValue *v) { return symbol_is(v,"true")||symbol_is(v,"false"); }
+static bool boolean(RcValue *v) { return rc_is_boolean(v); }
 static RcValue *truth(RcContext *c,bool b) {return b?rc_true(c):rc_false(c);}
 static bool integer_arg(RcValue *v,int64_t *out) {
  if(rc_type(v)!=RC_NUMBER || !rc_number_is_exact_integer(v)) return false;

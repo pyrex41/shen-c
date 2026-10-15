@@ -16,6 +16,9 @@ SHEN_C_HOME="$root" "$builder" "$work/input" "$work/app"
 cat > "$work/app/contexts.c" <<'C'
 #define SHEN_RC_NO_MAIN
 #include "app.c"
+#ifdef NDEBUG
+#undef NDEBUG
+#endif
 #include <assert.h>
 static void check(RcContext *ctx, int marker) {
     RcValue *name=rc_symbol(ctx,"*cache-marker*"), *value=rc_integer(ctx,marker);

@@ -200,7 +200,7 @@ static int atom(RcEmitFn *f,RcValue *x,int tail,const Live *after) {
   else symbol_slot(f,t,name(x));
  }else bad(p,"rc emit: unsupported atom");check(f,t);return t;
 }
-static void truth(RcEmitFn *f,int t){put(&f->code,"  if(rc_type(t[%d])!=RC_SYMBOL || (strcmp(rc_text(t[%d]),\"true\") && strcmp(rc_text(t[%d]),\"false\"))) { rc_error(ctx,\"condition is not a boolean\"); goto %s; }\n",t,t,t,f->fail);}
+static void truth(RcEmitFn *f,int t){put(&f->code,"  if(!rc_is_boolean(t[%d])) { rc_error(ctx,\"condition is not a boolean\"); goto %s; }\n",t,f->fail);}
 static int branch(RcEmitFn *f,RcValue *args,int tail,const Live *after){
  Program *p=f->p;if(count(p,args)!=3)bad(p,"rc emit: if arity");
  Live left=uses(f,at(p,args,1)),right=uses(f,at(p,args,2));merge(p,&left,after);merge(p,&right,after);
