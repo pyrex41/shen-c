@@ -28,7 +28,7 @@
 struct RcValue {
     RcType type;
     size_t refs, bytes, trial, visit_epoch;
-    bool marked;
+    bool marked, reaches_vector, cycle_source;
     RcContext *ctx;
     RcValue *prev, *next, *work;
     union {
@@ -69,7 +69,7 @@ struct RcContext {
     RcResolvedSymbols *compiled_symbols;
     RcValue *true_symbol, *false_symbol; /* Borrowed intern-table roots. */
     RcStats stats;
-    size_t collection_interval, since_collection, graph_slots, visit_epoch;
+    size_t collection_interval, since_collection, graph_slots, visit_epoch, cycle_sources;
     char *error;
     bool collecting, error_active, adaptive_collection, acyclic;
 };
@@ -191,7 +191,10 @@ static void unlink_object(RcValue *v) {
     ctx->stats.total_frees++;
     switch (v->type) {
     case RC_PAIR: ctx->graph_slots -= 2; break;
-    case RC_VECTOR: ctx->graph_slots -= v->as.vector.length; break;
+    case RC_VECTOR:
+        ctx->graph_slots -= v->as.vector.length;
+        if (v->cycle_source) ctx->cycle_sources--;
+        break;
     case RC_CLOSURE:
         ctx->graph_slots -= v->as.closure.capture_count + v->as.closure.bound_count;
         ctx->stats.live_capture_edges -= v->as.closure.capture_count;
@@ -262,22 +265,30 @@ void rc_collect(RcContext *ctx) {
     ctx->collecting = true;
     ctx->stats.collections++;
     ctx->since_collection = 0;
-    /* Residual refs after subtracting every heap edge are exactly the owned C
-     * handles and context roots. Reachability from them is the live graph.
-     * No stack addresses or payload bytes are interpreted as pointers. */
-    for (RcValue *v = ctx->objects; v; v = v->next) { v->trial = v->refs; v->marked = false; }
-    for (RcValue *v = ctx->objects; v; v = v->next) edges(v, subtract_edge, NULL);
-    RcValue *work = NULL;
-    for (RcValue *v = ctx->objects; v; v = v->next) if (v->trial) mark_edge(v, &work);
-    while (work) { RcValue *v = work; work = v->work; edges(v, mark_edge, &work); }
-    RcValue *dead = NULL;
-    for (RcValue *v = ctx->objects, *next; v; v = next) {
-        next = v->next;
-        if (!v->marked) { unlink_object(v); v->work = dead; dead = v; ctx->stats.cycle_objects_freed++; }
+    /* Only vector writes can introduce cycles. Such writes mark their source
+     * until it is freed. A cycle's closing source must still exist while that
+     * cycle exists, so zero sources proves the entire heap acyclic. Surviving
+     * rooted cycles keep their sources counted across collections. */
+    if (!ctx->cycle_sources) {
+        ctx->stats.acyclic_collections++;
+    } else {
+        /* Residual refs after subtracting every heap edge are exactly the owned C
+         * handles and context roots. Reachability from them is the live graph.
+         * No stack addresses or payload bytes are interpreted as pointers. */
+        for (RcValue *v = ctx->objects; v; v = v->next) { v->trial = v->refs; v->marked = false; }
+        for (RcValue *v = ctx->objects; v; v = v->next) edges(v, subtract_edge, NULL);
+        RcValue *work = NULL;
+        for (RcValue *v = ctx->objects; v; v = v->next) if (v->trial) mark_edge(v, &work);
+        while (work) { RcValue *v = work; work = v->work; edges(v, mark_edge, &work); }
+        RcValue *dead = NULL;
+        for (RcValue *v = ctx->objects, *next; v; v = next) {
+            next = v->next;
+            if (!v->marked) { unlink_object(v); v->work = dead; dead = v; ctx->stats.cycle_objects_freed++; }
+        }
+        /* Keep every dead object allocated until all edge classifications are done. */
+        for (RcValue *v = dead; v; v = v->work) edges(v, release_live_edge, NULL);
+        while (dead) { RcValue *next = dead->work; raw_free(dead); dead = next; }
     }
-    /* Keep every dead object allocated until all edge classifications are done. */
-    for (RcValue *v = dead; v; v = v->work) edges(v, release_live_edge, NULL);
-    while (dead) { RcValue *next = dead->work; raw_free(dead); dead = next; }
     if (ctx->adaptive_collection) {
         /* Freeze the next budget from survivors, including pointer slots in
          * large vectors. Recomputing from the current growing heap on every
@@ -447,7 +458,10 @@ bool rc_is_boolean(const RcValue *v) {
 RcValue *rc_cons(RcContext *ctx, RcValue *head, RcValue *tail) {
     if (!belongs(ctx, head) || !belongs(ctx, tail)) return rc_error(ctx, "invalid cons value/context");
     RcValue *v = allocate(ctx, RC_PAIR, 0);
-    if (v) { v->as.pair.head = rc_retain(head); v->as.pair.tail = rc_retain(tail); }
+    if (v) {
+        v->as.pair.head = rc_retain(head); v->as.pair.tail = rc_retain(tail);
+        v->reaches_vector = head->reaches_vector || tail->reaches_vector;
+    }
     return v;
 }
 RcValue *rc_cons_reuse(RcContext *ctx, RcValue *candidate, RcValue *head, RcValue *tail) {
@@ -466,6 +480,7 @@ RcValue *rc_cons_reuse(RcContext *ctx, RcValue *candidate, RcValue *head, RcValu
         rc_retain(head); rc_retain(tail);
         RcValue *old_head = candidate->as.pair.head, *old_tail = candidate->as.pair.tail;
         candidate->as.pair.head = head; candidate->as.pair.tail = tail;
+        candidate->reaches_vector = head->reaches_vector || tail->reaches_vector;
         rc_release(old_head); rc_release(old_tail);
         ctx->stats.pair_reuses++;
         return candidate;
@@ -488,6 +503,7 @@ RcValue *rc_pair_take_tail_reuse(RcContext *ctx, RcValue *candidate, RcValue **o
          * Before releasing any other edge, publish a valid pair containing nil
          * in both slots. The collector can visit it at every later safepoint. */
         candidate->as.pair.head = rc_nil(); candidate->as.pair.tail = rc_nil();
+        candidate->reaches_vector = false;
         rc_release(head);
         ctx->stats.pair_tail_transfers++;
     } else {
@@ -509,6 +525,7 @@ RcValue *rc_vector(RcContext *ctx, size_t length) {
     RcValue *v = allocate(ctx, RC_VECTOR, length * sizeof(*items));
     if (!v) { free(items); return NULL; }
     v->as.vector.items = items; v->as.vector.length = length;
+    v->reaches_vector = true;
     return v;
 }
 size_t rc_vector_length(const RcValue *v) { return v && v->type == RC_VECTOR ? v->as.vector.length : 0; }
@@ -522,13 +539,13 @@ typedef struct {
 } CycleSearch;
 static void cycle_search_edge(RcValue *v, void *data) {
     CycleSearch *search = data;
-    if (!v || v == &nil_value) return;
+    if (!v || v == &nil_value || !v->reaches_vector) return;
     if (v == search->target) { search->found = true; return; }
     if (v->visit_epoch == search->ctx->visit_epoch) return;
     v->visit_epoch = search->ctx->visit_epoch;
     v->work = search->work; search->work = v;
 }
-static bool would_create_cycle(RcContext *ctx, RcValue *target, RcValue *item) {
+static bool would_create_cycle(RcContext *ctx, RcValue *target, RcValue *item, size_t budget) {
     /* An allocation-free graph walk. The next epoch invalidates leftover work
      * marks even on an early hit, and objects remain unchanged throughout. */
     if (++ctx->visit_epoch == 0) {
@@ -539,17 +556,45 @@ static bool would_create_cycle(RcContext *ctx, RcValue *target, RcValue *item) {
     cycle_search_edge(item, &search);
     while (search.work && !search.found) {
         RcValue *v = search.work; search.work = v->work;
+        size_t width = 0;
+        switch (v->type) {
+        case RC_PAIR: width = 2; break;
+        case RC_VECTOR: width = v->as.vector.length; break;
+        case RC_CLOSURE: width = v->as.closure.capture_count + v->as.closure.bound_count; break;
+        case RC_TAIL: width = 1 + v->as.tail.argc; break;
+        default: break;
+        }
+        /* The unrestricted policy may conservatively mark a source rather
+         * than spending unbounded mutation time proving an edge harmless.
+         * Count nodes as well as slots, so scalar-heavy graphs stay bounded. */
+        if (!budget || width > budget - 1) return true;
+        budget -= width + 1;
         edges(v, cycle_search_edge, &search);
     }
     return search.found;
 }
 bool rc_vector_set(RcContext *ctx, RcValue *v, size_t i, RcValue *item) {
     if (!belongs(ctx, v) || v->type != RC_VECTOR || i >= v->as.vector.length || !belongs(ctx, item)) { rc_error(ctx, "invalid absvector assignment"); return false; }
-    if (ctx->acyclic && would_create_cycle(ctx, v, item)) {
-        rc_error(ctx, "acyclic mode rejects vector assignment that would create a cycle");
-        return false;
+    /* Immutable graph nodes conservatively record whether they reach a vector.
+     * Their flags cannot gain paths while aliased: pair rewriting requires
+     * unique ownership; pending tail rewrites remain private. Vectors always
+     * have their flag set, including before the first mutation. Thus most
+     * assignments need no walk. Unrestricted checks visit at most 256 nodes
+     * plus slots, then conservatively mark a source. A marked source stays
+     * marked until freed;
+     * removing edges may leave a harmless false positive. */
+    if (item->reaches_vector && (ctx->acyclic || !v->cycle_source) &&
+        would_create_cycle(ctx, v, item, ctx->acyclic ? SIZE_MAX : 256)) {
+        if (ctx->acyclic) {
+            rc_error(ctx, "acyclic mode rejects vector assignment that would create a cycle");
+            return false;
+        }
+        v->cycle_source = true;
+        ctx->cycle_sources++;
     }
-    RcValue *old = v->as.vector.items[i]; v->as.vector.items[i] = rc_retain(item); rc_release(old); return true;
+    RcValue *old = v->as.vector.items[i];
+    v->as.vector.items[i] = rc_retain(item);
+    rc_release(old); return true;
 }
 static RcValue *closure_create(RcContext *ctx, size_t arity, RcNative native,
                                RcNativeOwned owned_native, size_t capture_count,
@@ -563,7 +608,10 @@ static RcValue *closure_create(RcContext *ctx, size_t arity, RcNative native,
     v->as.closure.native = native; v->as.closure.arity = arity;
     v->as.closure.owned_native = owned_native;
     v->as.closure.captures = copy; v->as.closure.capture_count = capture_count;
-    for (size_t i = 0; i < capture_count; ++i) copy[i] = rc_retain(captures[i]);
+    for (size_t i = 0; i < capture_count; ++i) {
+        copy[i] = rc_retain(captures[i]);
+        v->reaches_vector |= captures[i]->reaches_vector;
+    }
     return v;
 }
 RcValue *rc_closure(RcContext *ctx, size_t arity, RcNative native,
@@ -601,6 +649,7 @@ static RcValue *partial(RcContext *ctx, RcValue *fn, size_t argc, RcValue *const
     if (!v) { free(bound); return NULL; }
     for (size_t i = 0; i < fn->as.closure.bound_count; ++i) bound[i] = rc_retain(fn->as.closure.bound[i]);
     for (size_t i = 0; i < argc; ++i) bound[fn->as.closure.bound_count + i] = rc_retain(argv[i]);
+    for (size_t i = 0; i < n; ++i) v->reaches_vector |= bound[i]->reaches_vector;
     v->as.closure.bound = bound; v->as.closure.bound_count = n;
     v->bytes += n * sizeof(*bound); ctx->stats.live_bytes += n * sizeof(*bound);
     ctx->graph_slots += n;
@@ -615,8 +664,11 @@ RcValue *rc_tailcall(RcContext *ctx, RcValue *fn, size_t argc, RcValue *const *a
     if (!v) { free(copy); return NULL; }
     if (argc && argc <= 3) copy = v->as.tail.inline_args;
     v->as.tail.function = rc_retain(fn); v->as.tail.argc = argc; v->as.tail.argv = copy;
+    v->reaches_vector = fn->reaches_vector;
     ctx->graph_slots += argc;
-    for (size_t i = 0; i < argc; ++i) copy[i] = rc_retain(argv[i]);
+    for (size_t i = 0; i < argc; ++i) {
+        copy[i] = rc_retain(argv[i]); v->reaches_vector |= argv[i]->reaches_vector;
+    }
     return v;
 }
 static void consume_arguments(size_t argc, RcValue **argv) {
@@ -643,8 +695,12 @@ RcValue *rc_tailcall_owned_args(RcContext *ctx, RcValue *fn, size_t argc, RcValu
     if (!v) { free(copy); consume_arguments(argc, argv); return NULL; }
     if (argc && argc <= 3) copy = v->as.tail.inline_args;
     v->as.tail.function = rc_retain(fn); v->as.tail.argc = argc; v->as.tail.argv = copy;
+    v->reaches_vector = fn->reaches_vector;
     ctx->graph_slots += argc;
-    for (size_t i = 0; i < argc; ++i) { copy[i] = argv[i]; argv[i] = NULL; }
+    for (size_t i = 0; i < argc; ++i) {
+        copy[i] = argv[i]; v->reaches_vector |= argv[i]->reaches_vector;
+        argv[i] = NULL;
+    }
     return v;
 }
 RcValue *rc_require_boolean(RcContext *ctx, RcValue *value) {
@@ -746,7 +802,9 @@ static RcValue *apply_request(RcContext *ctx, RcValue *request) {
         ApplyPending *p = pending; pending = p->next;
         request = p->args;
         /* Replace the dummy function edge with this owned result. */
-        request->as.tail.function = result; result = NULL;
+        request->as.tail.function = result;
+        request->reaches_vector |= result->reaches_vector;
+        result = NULL;
         free(p);
     }
 fail:

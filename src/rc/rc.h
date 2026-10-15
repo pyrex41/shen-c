@@ -37,6 +37,8 @@ typedef struct {
     size_t pair_allocations, pair_reuse_attempts, pair_reuses, pair_reuse_misses;
     size_t pair_tail_transfers, pair_tail_shares;
     size_t capture_edges_created, live_capture_edges, peak_capture_edges;
+    /* Collections that prove no cycle can exist without traversing the heap. */
+    size_t acyclic_collections;
 } RcStats;
 
 RcContext *rc_context_new(void);
