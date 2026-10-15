@@ -114,6 +114,9 @@ RcValue *rc_closure(RcContext *ctx, size_t arity, RcNative native,
 RcValue *rc_closure_owned(RcContext *ctx, size_t arity, RcNativeOwned native,
                           size_t capture_count, RcValue *const *captures);
 bool rc_closure_is_native(const RcValue *closure, RcNative native);
+/* Check borrowed call inputs before specialized dispatch; does not set errors. */
+bool rc_call_values_belong(RcContext *ctx, RcValue *function, size_t argc,
+                           RcValue *const *argv);
 RcValue *rc_capture(const RcValue *self, size_t index); /* Borrowed. */
 size_t rc_arity(const RcValue *function);
 RcValue *rc_apply(RcContext *ctx, RcValue *function, size_t argc,

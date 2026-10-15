@@ -574,6 +574,12 @@ RcValue *rc_closure_owned(RcContext *ctx, size_t arity, RcNativeOwned native,
                           size_t capture_count, RcValue *const *captures) {
     return closure_create(ctx, arity, NULL, native, capture_count, captures);
 }
+bool rc_call_values_belong(RcContext *ctx,RcValue *function,size_t argc,
+                           RcValue *const *argv) {
+    if(!ctx||!belongs(ctx,function)||(argc&&!argv))return false;
+    for(size_t i=0;i<argc;i++)if(!belongs(ctx,argv[i]))return false;
+    return true;
+}
 bool rc_closure_is_native(const RcValue *v, RcNative native) {
     return v && v->type == RC_CLOSURE && v->as.closure.native == native &&
            !v->as.closure.owned_native;

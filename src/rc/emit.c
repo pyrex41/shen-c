@@ -163,6 +163,13 @@ static void drop_dead(RcEmitFn *f,const Live *live){
 static const char *closure_api(Program *p){return p->options.conservative_ownership?"rc_closure":"rc_closure_owned";}
 static const char *call_api(RcEmitFn *f,int tail){return optimize(f)?(tail?"rc_tailcall_owned_args":"rc_apply_owned_args"):(tail?"rc_tailcall":"rc_apply");}
 static void call_argument(RcEmitFn *f,int index,int slot){argument(f,index,slot);if(optimize(f))put(&f->code,"  t[%d]=NULL;\n",slot);}
+static bool leaf_primitive(RcValue *head) {
+ static const char *names[]={"hd","tl","cons?","cons","=","number?","string?",
+  "symbol?","boolean?","integer?","variable?","absvector?","not",
+  "+","-","*","/",">","<",">=","<="};
+ for(size_t i=0;i<sizeof(names)/sizeof(*names);i++)if(named(head,names[i]))return true;
+ return false;
+}
 static int expr(RcEmitFn *,RcValue *,int,const Live *);
 static int compile(Program *,RcValue *,RcValue *,Binding *,int,int);
 static int literal(Program *,RcValue *);
@@ -276,7 +283,7 @@ static int expr(RcEmitFn *f,RcValue *x,int tail,const Live *after){
   for(int i=0;i<n;i++){functions[i]=function_head(f,first(nodes[i]),&suffix[i]);left[i]=expr(f,first(rest(nodes[i])),0,&suffix[i+1]);}
   int result=expr(f,end,0,after);
   for(int i=n-1;i>=0;i--){int next=fresh(f);call_argument(f,0,left[i]);call_argument(f,1,result);
-   put(&f->code,"  t[%d]=%s(ctx,t[%d],2,a);\n",next,call_api(f,tail&&i==0),functions[i]);drop(f,functions[i]);if(!optimize(f)){drop(f,left[i]);drop(f,result);}check(f,next);result=next;}
+   if(optimize(f))put(&f->code,"  t[%d]=rc_primitive_call_owned(ctx,t[%d],2,a,%s);\n",next,functions[i],tail&&i==0?"true":"false");else put(&f->code,"  t[%d]=%s(ctx,t[%d],2,a);\n",next,call_api(f,tail&&i==0),functions[i]);drop(f,functions[i]);if(!optimize(f)){drop(f,left[i]);drop(f,result);}check(f,next);result=next;}
   for(int i=0;i<=n;i++)clear_live(p,&suffix[i]);forget(p,suffix);forget(p,nodes);forget(p,functions);forget(p,left);drop_dead(f,after);return result;
  }
  if(special&&named(head,"lambda")){if(count(p,args)!=2||!is_symbol(first(args)))bad(p,"rc emit: lambda shape");return closure(f,first(args),second(args),0,after);}
@@ -319,7 +326,7 @@ static int expr(RcEmitFn *f,RcValue *x,int tail,const Live *after){
  else if(recycle.binding>=0){
   put(&f->code,"  { RcValue *candidate=t[%d] ? t[%d] : t[%d]; t[%d]=NULL; t[%d]=NULL; t[%d]=rc_cons_call_reuse(ctx,t[%d],candidate,t[%d],t[%d],%s); }\n",recycle.token,recycle.token,recycle.binding,recycle.token,recycle.binding,result,fn,av[0],av[1],tail?"true":"false");
   drop(f,av[0]);drop(f,av[1]);
- }else{for(int i=0;i<n;i++)call_argument(f,i,av[i]);put(&f->code,"  t[%d]=%s(ctx,t[%d],%d,%s);\n",result,call_api(f,tail),fn,n,n?"a":"NULL");if(!optimize(f))for(int i=0;i<n;i++)drop(f,av[i]);}
+ }else{for(int i=0;i<n;i++)call_argument(f,i,av[i]);if(optimize(f)&&special&&leaf_primitive(head))put(&f->code,"  t[%d]=rc_primitive_call_owned(ctx,t[%d],%d,%s,%s);\n",result,fn,n,n?"a":"NULL",tail?"true":"false");else put(&f->code,"  t[%d]=%s(ctx,t[%d],%d,%s);\n",result,call_api(f,tail),fn,n,n?"a":"NULL");if(!optimize(f))for(int i=0;i<n;i++)drop(f,av[i]);}
  if(recycle.binding>=0)f->recycle=recycle.outer;
  drop(f,fn);forget(p,av);check(f,result);drop_dead(f,after);return result;
 }

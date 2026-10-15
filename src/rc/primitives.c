@@ -203,6 +203,40 @@ static RcValue *primitive(RcContext *c,RcValue *self,size_t argc,RcValue *const 
  default:return rc_error(c,"Unknown primitive");
  }
 }
+RcValue *rc_primitive_call_owned(RcContext *c,RcValue *function,
+                                size_t argc,RcValue **args,bool tail_position) {
+ if(rc_call_values_belong(c,function,argc,args)&&rc_closure_is_native(function,primitive)) {
+  RcValue *code=rc_capture(function,0);
+  enum Op op=code?(enum Op)rc_integer_value(code):P_EXIT;
+  size_t expected=0;
+  switch(op) {
+   case P_HD:case P_TL:case P_CONSP:case P_NUMBER:case P_STRING:
+   case P_SYMBOL:case P_BOOLEAN:case P_INTEGER:case P_VARIABLE:
+   case P_VECTORP:case P_NOT: expected=1;break;
+   case P_DO:case P_CONS:case P_EQ:case P_ADD:case P_SUB:case P_MUL:case P_DIV:
+   case P_GT:case P_LT:case P_GE:case P_LE: expected=2;break;
+   default:break;
+  }
+  /* Original arity must match too: a partially applied primitive still has
+   * the same callback/opcode but must prepend its captured bound arguments. */
+  if(expected&&argc==expected&&rc_arity(function)==expected) {
+   RcValue *result=primitive(c,function,argc,args);
+   /* C callers may store managed tail requests in pairs or pass them to do.
+    * Ordinary apply must drive such a returned request, including its boolean
+    * guard. These leaf projections are pure, so defer before consuming args. */
+   if(!tail_position&&(op==P_HD||op==P_TL||op==P_DO)&&rc_type(result)==RC_TAIL) {
+    rc_release(result);return rc_apply_owned_args(c,function,argc,args);
+   }
+   for(size_t i=0;i<argc;i++){RcValue *v=args[i];args[i]=NULL;rc_release(v);}
+   if(!result)return NULL;
+   if(rc_has_error(c)){rc_release(result);return NULL;}
+   rc_safepoint(c);
+   return result;
+  }
+ }
+ return tail_position?rc_tailcall_owned_args(c,function,argc,args)
+                     :rc_apply_owned_args(c,function,argc,args);
+}
 RcValue *rc_cons_call_reuse(RcContext *c,RcValue *function,
                             RcValue *candidate,RcValue *head,RcValue *tail,
                             bool tail_position) {

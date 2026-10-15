@@ -16,6 +16,13 @@ RcValue *rc_cons_call_reuse(RcContext *ctx, RcValue *function,
 RcValue *rc_tail_call_reuse(RcContext *ctx, RcValue *function,
                             RcValue *owned_candidate,
                             RcValue **owned_reuse_out);
+/* Exact built-in leaf calls avoid a managed tail request. The selected closure
+ * is borrowed and must stay rooted across argument evaluation and this call.
+ * All argument slots are consumed on success/failure; replacements, partials,
+ * and overapplication use the ordinary stack-safe call path. */
+RcValue *rc_primitive_call_owned(RcContext *ctx, RcValue *function,
+                                size_t argc, RcValue **owned_args,
+                                bool tail_position);
 /* Shen representation for diagnostics and standalone program output. */
 bool rc_print(FILE *out, RcValue *value);
 #endif
