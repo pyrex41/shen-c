@@ -1,0 +1,86 @@
+{
+  "date": "2026-10-15",
+  "scope": "exact closure identity self-tail callback loop; focused emitted-code validation only",
+  "baseline_commit": "c0b43091fb0e07af6e31b9303b87ee315e24f136",
+  "source_sha256": {
+    "src/rc/emit.c": "ef3df97503d25e4a5920d26a2f51d8f44aaea7a3dcd51697879ff8a1f1e43398",
+    "test/rc/test_semantics.sh": "00088ea8e73a7a718e42ff293a5053161bec7fa9c34dcd086e5befb624409a55",
+    "src/rc/rc.c": "60173e2b94a5d01ab3421d407dffad4f84c1c9782b9865097258f625b99e0fef",
+    "src/rc/primitives.c": "db07db3d3fb9c71e212abdec2180085ac66d2bbd9d5318c2764845f8599b94d7"
+  },
+  "host": {
+    "system": "Darwin",
+    "machine": "arm64",
+    "compiler": "Apple clang version 21.0.0 (clang-2100.1.1.101)",
+    "sdk": "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk"
+  },
+  "sanitizers": {
+    "flags": "-O1 -g -fsanitize=address,undefined -fno-sanitize-recover=all -fno-omit-frame-pointer",
+    "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+    "UBSAN_OPTIONS": "halt_on_error=1",
+    "leak_sanitizer": "not available on Darwin"
+  },
+  "validation": [
+    {
+      "command": "test/rc/test_semantics.sh bin/rc-build",
+      "result": "PASS",
+      "cases": 72,
+      "artifact_no_boehm_audit": "PASS"
+    },
+    {
+      "command": "test/rc/test_frames.sh bin/rc-build",
+      "result": "PASS",
+      "assertions": 4,
+      "generated_c_bytes": 91150
+    },
+    {
+      "command": "test/rc/test_ownership.sh bin/rc-build",
+      "result": "PASS",
+      "differential_cases": 20,
+      "optimized_pair_reuses": 102
+    }
+  ],
+  "microbenchmark": {
+    "scope": "single emitted numeric tail recursion microbenchmark; excludes compilation; not full kernel or Boehm comparison",
+    "iterations": 500000,
+    "baseline_commit": "c0b43091fb0e07af6e31b9303b87ee315e24f136",
+    "samples_seconds": {
+      "baseline": [
+        0.2419538750036736,
+        0.23722491599619389,
+        0.22679066699492978,
+        0.23797879199992167,
+        0.2791107499942882
+      ],
+      "self_loop": [
+        0.19220299999869894,
+        0.1914807919965824,
+        0.18744049999804702,
+        0.19185537500015926,
+        0.21836870800325414
+      ]
+    },
+    "median_seconds": {
+      "baseline": 0.23797879199992167,
+      "self_loop": 0.19185537500015926
+    },
+    "speedup": 1.2404072181961237,
+    "source": "(defun count (N A) (if (= N 0) A (count (- N 1) (+ A 1))))\n(count 500000 0)\n",
+    "release_flags": "-O2",
+    "ordering": "one discarded warmup then five paired samples, alternating baseline/self_loop order",
+    "artifact_sha256": {
+      "baseline": {
+        "app.c": "453773070ef4deb0d07c1f91afc0e6d4112d6c70861cde1e8566d5d0770cbdc2",
+        "app": "026c401637a9df5353fcccfd5ff633b8745ad58c1be5995dc859435974298462"
+      },
+      "self_loop": {
+        "app.c": "1eaf22a50af12c1ded9b61ae795f0cb7df469a60cc8f89d80d68d322a60eec07",
+        "app": "e3a5e7d40a7533afeace4895ef4961d7d76b035a999aed9f8d5ea7e00db53b48"
+      }
+    }
+  },
+  "remaining": [
+    "Full kernel and canonical suite not run in this isolated lane.",
+    "No Boehm comparison or full product speedup claim."
+  ]
+}

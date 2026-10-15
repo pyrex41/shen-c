@@ -45,6 +45,7 @@ static RcValue *second(RcValue *x) { return first(rest(x)); }
 struct Recycle;
 typedef struct {
   Program *p; Buf code; Binding *bind; int nb, cap, slots, label, max_args; bool symbol_used;
+  int arity, boolean_tail; bool self_loop;
   char fail[64]; struct Recycle *recycle;
 } RcEmitFn;
 static void put(Buf *b, const char *fmt, ...) {
@@ -293,7 +294,7 @@ static int expr(RcEmitFn *f,RcValue *x,int tail,const Live *after){
  if(special&&(named(head,"and")||named(head,"or"))){
   if(count(p,args)!=2)bad(p,"rc emit: boolean form arity");Live rhs=uses(f,second(args));merge(p,&rhs,after);
   int dst=fresh(f),a=expr(f,first(args),0,&rhs);truth(f,a);put(&f->code,"  if(%src_is_true(t[%d])) {\n",named(head,"and")?"":"!",a);drop(f,a);drop_dead(f,&rhs);clear_live(p,&rhs);
-  int b=expr(f,second(args),tail,after);put(&f->code,"  t[%d]=rc_require_boolean(ctx,t[%d]);\n",b,b);check(f,b);move(f,dst,b);
+  f->boolean_tail++;int b=expr(f,second(args),tail,after);f->boolean_tail--;put(&f->code,"  t[%d]=rc_require_boolean(ctx,t[%d]);\n",b,b);check(f,b);move(f,dst,b);
   put(&f->code,"  } else {\n");move(f,dst,a);drop_dead(f,after);put(&f->code,"  }\n");return dst;
  }
  if(special&&named(head,"defun")){
@@ -322,6 +323,16 @@ static int expr(RcEmitFn *f,RcValue *x,int tail,const Live *after){
  int *av=alloc(p,(size_t)(n+1)*sizeof(*av));RcValue *q=args;
  for(int i=0;i<n;i++){Live next=sequence_live(f,rest(q),after);av[i]=expr(f,first(q),0,&next);clear_live(p,&next);q=rest(q);}
  int result=fresh(f);
+ /* Resolve the callee before argument effects, and only bypass dispatch for
+  * this exact, fully applied closure. A spelling/native-code comparison would
+  * mis-handle redefinition, captures, or a partially applied self closure.
+  * Boolean tail continuations must still pass through the runtime guard. */
+ if(optimize(f)&&tail&&!f->boolean_tail&&n==f->arity){
+  f->self_loop=true;
+  put(&f->code,"  if(t[%d]==self && rc_arity(self)==%d) {\n",fn,n);
+  for(int i=0;i<n;i++)call_argument(f,i,av[i]);
+  put(&f->code,"  goto recur;\n  }\n");
+ }
  if(project){put(&f->code,"  { RcValue *candidate=t[%d]; t[%d]=NULL; t[%d]=rc_tail_call_reuse(ctx,t[%d],candidate,&t[%d]); }\n",av[0],av[0],result,fn,project->token);}
  else if(recycle.binding>=0){
   put(&f->code,"  { RcValue *candidate=t[%d] ? t[%d] : t[%d]; t[%d]=NULL; t[%d]=NULL; t[%d]=rc_cons_call_reuse(ctx,t[%d],candidate,t[%d],t[%d],%s); }\n",recycle.token,recycle.token,recycle.binding,recycle.token,recycle.binding,result,fn,av[0],av[1],tail?"true":"false");
@@ -336,10 +347,20 @@ static void finish_function(RcEmitFn *f,int id,int arity,int r){
  symbol_frame(&p->functions,f->symbol_used);
  if(f->slots>64)put(&p->functions,"  RcValue **t=calloc(%d,sizeof(*t));\n  if(!t) return rc_error(ctx,\"native frame allocation failed\");\n  RcValue **a=t+%d; (void)a;\n",f->slots+f->max_args,f->slots);
  else put(&p->functions,"  RcValue *t[%d]={0}; RcValue *a[%d]; (void)a;\n",f->slots?f->slots:1,f->max_args?f->max_args:1);
- put(&p->functions,"%s  result=t[%d]; t[%d]=NULL;\ncleanup:\n  for(size_t i=0;i<%d;i++) if(t[i]) rc_release(t[i]);\n",f->code.p?f->code.p:"",r,r,f->slots);if(f->slots>64)put(&p->functions,"  free(t);\n");put(&p->functions,"  return result;\n}\n");
+ if(f->self_loop)put(&p->functions,"entry:;\n");
+ put(&p->functions,"%s  result=t[%d]; t[%d]=NULL;\ncleanup:\n  for(size_t i=0;i<%d;i++) if(t[i]) rc_release(t[i]);\n",f->code.p?f->code.p:"",r,r,f->slots);if(f->slots>64)put(&p->functions,"  free(t);\n");put(&p->functions,"  return result;\n");
+ if(f->self_loop){
+  /* a owns the staged arguments while the previous iteration's lexical and
+   * temporary owners are dropped. argv belongs to the active runtime call,
+   * so it is distinct from this callback's frame and scratch storage. */
+  put(&p->functions,"recur:\n  for(size_t i=0;i<%d;i++) if(t[i]) { rc_release(t[i]); t[i]=NULL; }\n",f->slots);
+  for(int i=0;i<arity;i++)put(&p->functions,"  argv[%d]=a[%d]; a[%d]=NULL;\n",i,i,i);
+  put(&p->functions,"  rc_safepoint(ctx);\n  goto entry;\n");
+ }
+ put(&p->functions,"}\n");
 }
 static int compile(Program *p,RcValue *params,RcValue *body,Binding *caps,int ncaps,int freeze){
- RcEmitFn f={0};f.p=p;f.code.owner=p;int id=p->next++,arity=freeze==1?0:(freeze==2?1:count(p,params));snprintf(f.fail,sizeof f.fail,"cleanup");
+ RcEmitFn f={0};f.p=p;f.code.owner=p;int id=p->next++,arity=freeze==1?0:(freeze==2?1:count(p,params));f.arity=arity;snprintf(f.fail,sizeof f.fail,"cleanup");
  for(int i=0;i<ncaps;i++){int s=fresh(&f);bind(&f,caps[i].name,s);put(&f.code,"  t[%d]=rc_retain(rc_capture(self,%d));\n",s,i);}
  for(int i=0;i<arity;i++,params=freeze==2?rc_nil():rest(params)){RcValue *param=freeze==2?params:first(params);if(!is_symbol(param))bad(p,"rc emit: function parameter");for(int j=ncaps;j<f.nb;j++)if(!strcmp(f.bind[j].name,name(param)))bad(p,"rc emit: duplicate function parameter");int s=fresh(&f);bind(&f,name(param),s);
   if(optimize(&f))put(&f.code,"  t[%d]=argv[%d]; argv[%d]=NULL;\n",s,i,i);else put(&f.code,"  t[%d]=rc_retain(argv[%d]);\n",s,i);}

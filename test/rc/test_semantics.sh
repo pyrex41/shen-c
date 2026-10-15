@@ -23,6 +23,12 @@ cat > "$work/input/user.kl" <<'KL'
 (defun rc-or-tail (N) (or false (if (= N 0) false (rc-or-tail (- N 1)))))
 (defun rc-bool-even (N) (if (= N 0) true (and true (rc-bool-odd (- N 1)))))
 (defun rc-bool-odd (N) (if (= N 0) false (or false (rc-bool-even (- N 1)))))
+(defun rc-swap (N X Y) (if (= N 0) (cons X (cons Y ())) (rc-swap (- N 1) Y X)))
+(defun rc-snapshot (N) (if (= N 0) 1 (rc-snapshot (let Ignored (defun rc-snapshot (N) 99) 0))))
+(defun rc-rebound (N) (if (= N 0) 1 (let Ignored (defun rc-rebound (N) 99) (rc-rebound 0))))
+(defun rc-self-error (N) (if (= N 0) (simple-error "self-loop-error") (rc-self-error (- N 1))))
+(defun rc-and-invalid (N) (and true (if (= N 0) 42 (rc-and-invalid (- N 1)))))
+(defun rc-bound (X N Ignored) (if (= N 0) (lambda Last X) ((value *rc-bound*) 0 0 99)))
 KL
 cat > "$work/cases" <<'CASES'
 lexical-function|(let F (lambda X (+ X 1)) (F 4))|5
@@ -50,6 +56,14 @@ global-self-assignment|(do (set *rc-root* (cons 42 ())) (do (set *rc-root* (valu
 global-cycle-release|(let V (absvector 1) (do (address-> V 0 V) (do (set *rc-root* V) (do (set *rc-root* ()) 42))))|42
 tail-self|(rc-count 100000 0)|100000
 tail-mutual|(rc-even 100001)|false
+tail-simultaneous-swap|(= (rc-swap 100001 1 2) (cons 2 (cons 1 ())))|true
+tail-callee-snapshot|(rc-snapshot 1)|1
+tail-snapshot-redefinition-visible|(rc-snapshot 0)|99
+tail-rebound-callee|(rc-rebound 1)|99
+tail-loop-error|(trap-error (rc-self-error 10000) (lambda E (= (error-to-string E) "self-loop-error")))|true
+tail-loop-capture-reload|(let V (absvector 1) (let X 42 (let F (lambda N (if (= N 0) X ((<-address V 0) (- N 1)))) (do (address-> V 0 F) (F 10000)))))|42
+tail-bound-overapplication|(let P (rc-bound 42) (do (set *rc-bound* P) (P 1 0)))|42
+tail-boolean-invalid|(trap-error (rc-and-invalid 10000) (lambda E true))|true
 tail-and-self|(rc-and-tail 100000)|true
 tail-or-self|(rc-or-tail 100000)|false
 tail-boolean-mutual-even|(rc-bool-even 100000)|true
