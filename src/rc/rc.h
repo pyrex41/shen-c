@@ -66,6 +66,13 @@ int64_t rc_integer_value(const RcValue *value);
 RcValue *rc_string(RcContext *ctx, const char *text);
 RcValue *rc_string_n(RcContext *ctx, const char *text, size_t length);
 RcValue *rc_symbol(RcContext *ctx, const char *name);
+/* Immutable compiled-module descriptor; descriptor and names must have static
+ * storage duration. The returned array and its symbol values are borrowed from
+ * ctx, valid until context destruction. Each context resolves each descriptor
+ * once, through the ordinary intern table. Function/global bindings remain
+ * mutable and must be resolved when used, never cached in this table. */
+typedef struct { const char *const *names; size_t count; } RcSymbolTable;
+RcValue *const *rc_symbol_table(RcContext *ctx, const RcSymbolTable *table);
 /* Text pointers and capture access are borrowed, valid while owner lives. */
 const char *rc_text(const RcValue *value);
 size_t rc_text_length(const RcValue *value);

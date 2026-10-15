@@ -36,10 +36,16 @@ struct RcValue {
 /* Three inline tail arguments fit in the pre-existing closure-sized union. */
 _Static_assert(sizeof(((RcValue *)0)->as.tail) <= sizeof(((RcValue *)0)->as.closure),
                "inline tail arguments must not enlarge RcValue");
+typedef struct RcResolvedSymbols {
+    const RcSymbolTable *table;
+    struct RcResolvedSymbols *next;
+    RcValue *values[];
+} RcResolvedSymbols;
 struct RcContext {
     RcValue *objects;
     RcValue **symbols;
     size_t symbol_capacity, symbol_count;
+    RcResolvedSymbols *compiled_symbols;
     RcStats stats;
     size_t collection_interval, since_collection, graph_slots, visit_epoch;
     char *error;
@@ -252,6 +258,11 @@ void rc_set_collection_interval(RcContext *ctx, size_t n) {
 RcStats rc_stats(const RcContext *ctx) { RcStats zero = {0}; return ctx ? ctx->stats : zero; }
 void rc_context_free(RcContext *ctx) {
     if (!ctx) return;
+    while (ctx->compiled_symbols) {
+        RcResolvedSymbols *next = ctx->compiled_symbols->next;
+        free(ctx->compiled_symbols);
+        ctx->compiled_symbols = next;
+    }
     free(ctx->symbols);
     RcValue *v = ctx->objects;
     while (v) { RcValue *next = v->next; raw_free(v); v = next; }
@@ -345,6 +356,29 @@ RcValue *rc_symbol(RcContext *ctx, const char *name) {
     v->as.text.intern_next = ctx->symbols[bucket];
     ctx->symbols[bucket] = rc_retain(v); ctx->symbol_count++;
     return v;
+}
+RcValue *const *rc_symbol_table(RcContext *ctx, const RcSymbolTable *table) {
+    if (!ctx || !table) { rc_error(ctx, "invalid compiled symbol table"); return NULL; }
+    for (RcResolvedSymbols *entry = ctx->compiled_symbols; entry; entry = entry->next)
+        if (entry->table == table) return entry->values;
+    if ((table->count && !table->names) ||
+        table->count > (SIZE_MAX - sizeof(RcResolvedSymbols)) / sizeof(RcValue *)) {
+        rc_error(ctx, "invalid compiled symbol table size"); return NULL;
+    }
+    RcResolvedSymbols *entry = malloc(sizeof(*entry) + table->count * sizeof(*entry->values));
+    if (!entry) { rc_error(ctx, "out of memory"); return NULL; }
+    for (size_t i = 0; i < table->count; ++i) {
+        RcValue *symbol = rc_symbol(ctx, table->names[i]);
+        if (!symbol) { free(entry); return NULL; }
+        /* Intern-table roots keep the array's borrowed pointers alive. This
+         * cache adds no graph edges or roots for the exact cycle collector. */
+        entry->values[i] = symbol;
+        rc_release(symbol);
+    }
+    entry->table = table;
+    entry->next = ctx->compiled_symbols;
+    ctx->compiled_symbols = entry;
+    return entry->values;
 }
 const char *rc_text(const RcValue *v) { return v && (v->type == RC_STRING || v->type == RC_SYMBOL) ? v->as.text.data : NULL; }
 size_t rc_text_length(const RcValue *v) { return v && (v->type == RC_STRING || v->type == RC_SYMBOL) ? v->as.text.length : 0; }
