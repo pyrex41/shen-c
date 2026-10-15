@@ -1,0 +1,47 @@
+{
+  "source": "${REPO}/evidence/rc/source-final-proof/working directory's spaces/source file's spaces.shen",
+  "source_sha256": "c1a75541eb32583697b774e66959c8d55a505249f363d93d7befa3730cd04966",
+  "cwd": "${REPO}/evidence/rc/source-final-proof/working directory's spaces",
+  "kernel_sha256": {
+    "shen/src/kl/sys.kl": "964156c922e844560b6675898e304317a524c0d617941730af1a32636c3d2418",
+    "shen/src/kl/writer.kl": "3894e6c7d3961d2715fcc2aa9ea7d28805790b0bbdd072966b126fc95ecaf51d",
+    "shen/src/kl/core.kl": "f2477d4151c3ecd2d76c8f2b58ec577a6dc830392e0afd342e2fdb3d1adb1a75",
+    "shen/src/kl/reader.kl": "ec5dafa613ffdff36fe5c0b98beb2381625b635e4b3db621dded01e30ebdb397",
+    "shen/src/kl/declarations.kl": "4d7c169ffba20bbbca00d2785eb498df268c0d57f3dda9ff0042ae9f5d51b9da",
+    "shen/src/kl/toplevel.kl": "eb10d13f31087ade803c0831bb2a9b7facac1040f506803313937b22fbb3f90a",
+    "shen/src/kl/macros.kl": "7b5cfd98a676e2733f5de090d19388ed9270c70ff301769b814983cb978ed7c5",
+    "shen/src/kl/load.kl": "56eba5b674e5085a09dfa38390b1e7f677496e0c601fd3ed6f482577bcf971c9",
+    "shen/src/kl/prolog.kl": "dc401f8940f7f97fbfc87157338ff8b84fd845c1101b70e6db893886aaf11c17",
+    "shen/src/kl/sequent.kl": "b1018c6d58706f78ac81cc72cf7c4712d36d1be173708ff9def26d0169ddd644",
+    "shen/src/kl/track.kl": "a7d2ad7952540fc4f022ac7ff1773477bb82977e6ff5fbde1d25c8e418b849aa",
+    "shen/src/kl/t-star.kl": "ee6e5e6e15b2224964151a6a5f6f04b121bfc957597277bc2b70141d4a812776",
+    "shen/src/kl/yacc.kl": "192880765a29ae6801ef9088a7511e4477be998e6c16ab82f3cc3a2087727f00",
+    "shen/src/kl/types.kl": "b0c8c5a2a76c9dadef7cfc5cc5db2f60c6cc7a816dd7ff5ee4a7da52db6cb531"
+  },
+  "compiler_sha256": {
+    "cli": "728f77465dfd30a5f3bd15309ab369cb22ed1f3bf39a28603a5bcc84807a90d7",
+    "builder": "697245064db9b29fa31ad265c00b2953a4a8dfce3b4e6be7e1fdba5ae7240167"
+  },
+  "conservative_ownership": false,
+  "acyclic_requested": false,
+  "source_transport": "escaped-v1",
+  "frontend": "compiled standard kernel read-file then shen.shen->kl-h; fresh bootstrap context",
+  "frontend_seconds": 1.259,
+  "build_seconds": 55.823,
+  "kl_sha256": "571cc30128724803ac345ebdc20107b920c15611a7b329fc7839faaa712f4eb8",
+  "source_events_sha256": "ecb38eb2d7d2b497160a3383c945c4630b20487b8c8f27ad6f61919083ca5682",
+  "artifact_sha256": "ee03ae9e8bb5ac5292c1a00323c30e336b18a935de23e83295c869ef08f3870c",
+  "output_sha256": {
+    "app.c": "ef3b9add7c176941758f81b56917cc3d6b9027934cd76c56b2a09c8a47e753e5",
+    "Makefile": "5a257a08ce6e6a6bc0727e767b7c9617fe65a45716f58b528883e2c401379aee",
+    "app": "ee03ae9e8bb5ac5292c1a00323c30e336b18a935de23e83295c869ef08f3870c",
+    "source.kl": "571cc30128724803ac345ebdc20107b920c15611a7b329fc7839faaa712f4eb8",
+    "source-events.kl": "ecb38eb2d7d2b497160a3383c945c4630b20487b8c8f27ad6f61919083ca5682"
+  },
+  "acyclic_forced_by_makefile": false,
+  "_publication": {
+    "raw_receipt": "evidence/rc/source-final-proof/working directory's spaces/native output/source-build.json",
+    "raw_sha256": "877ef6a4290544c7499f46f33dc5a44b7f5f1722aa9366430c17f0b806ef59f3",
+    "path_redaction": "Repository, home and temporary paths replaced; hashes describe original bytes."
+  }
+}

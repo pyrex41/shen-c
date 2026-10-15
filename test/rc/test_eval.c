@@ -89,6 +89,20 @@ int main(void) {
     for (size_t i=0;i<5;++i) { value=rc_read(ctx,&input); assert(value && rc_type(value)==RC_SYMBOL && !strcmp(rc_text(value),symbols[i])); rc_release(value); }
     value=rc_read(ctx,&input); assert(value && rc_is_nil(value)); rc_release(value);
     assert(!rc_read(ctx,&input) && !rc_has_error(ctx));
+    input="\"a\\\"\\x00\\\\\\xff\" #sym\"123\" #sym\"a b(\\\"\"";
+    value=rc_read_escaped(ctx,&input);
+    const char encoded_bytes[]={'a','"',0,'\\',(char)255};
+    assert(value && rc_type(value)==RC_STRING && rc_text_length(value)==sizeof(encoded_bytes) && !memcmp(rc_text(value),encoded_bytes,sizeof(encoded_bytes)));
+    rc_release(value);
+    value=rc_read_escaped(ctx,&input); assert(value && rc_type(value)==RC_SYMBOL && !strcmp(rc_text(value),"123")); rc_release(value);
+    value=rc_read_escaped(ctx,&input); assert(value && rc_type(value)==RC_SYMBOL && !strcmp(rc_text(value),"a b(\"")); rc_release(value);
+    assert(!rc_read_escaped(ctx,&input) && !rc_has_error(ctx));
+    input="\"bad\\q\""; assert(!rc_read_escaped(ctx,&input) && rc_has_error(ctx)); rc_clear_error(ctx);
+    input="#sym\"bad\\x00symbol\""; assert(!rc_read_escaped(ctx,&input) && rc_has_error(ctx)); rc_clear_error(ctx);
+    input="4.9406564584124654e-324"; value=rc_read(ctx,&input);
+    assert(value && rc_type(value)==RC_NUMBER && rc_number_value(value)>0 && rc_number_value(value)<1e-307);
+    rc_release(value);
+    input="1e-9999"; assert(!rc_read(ctx,&input) && rc_has_error(ctx)); rc_clear_error(ctx);
     input="(1 2"; assert(!rc_read(ctx,&input) && rc_has_error(ctx)); rc_clear_error(ctx);
     input="\"unterminated"; assert(!rc_read(ctx,&input) && rc_has_error(ctx)); rc_clear_error(ctx);
     /* A closure captures an environment containing a vector that points back

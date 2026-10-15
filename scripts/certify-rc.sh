@@ -3,8 +3,7 @@
 set -eu
 root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 cd "$root"
-builder=${RC_BUILDER:-"$root/bin/rc-build"}
-[ -x "$builder" ] || { echo 'Build bin/rc-build first with the compiler-host toolchain.' >&2; exit 2; }
+builder=${RC_BUILDER:-}
 export RC_CERTIFY_ROOT="$root" RC_CERTIFY_BUILDER="$builder"
 exec python3 - <<'PY'
 import datetime
@@ -29,19 +28,23 @@ kernel = [root / 'shen/src/kl' / (name + '.kl') for name in modules]
 (source / 'kernel.kl').write_bytes(b'\n'.join(path.read_bytes() for path in kernel))
 (source / 'user.kl').write_text('(load "runme.shen")\n')
 (source / 'rc.manifest.txt').write_text('kernel=kernel.kl\nuser=user.kl\n')
-paths = kernel + sorted((root / 'src/rc').glob('*.[ch]'))
-paths += [root / name for name in ('src/c/emit_rc.c', 'src/c/emit_rc.h', 'tools/rc-build.c',
-                                  'scripts/certify-rc.sh', 'scripts/test-rc.sh', 'test/rc/test_semantics.sh')]
+# Bind every input compiled by the host/generated application. The standalone
+# CLI main is separately built and qualified by test-rc-toolchain.sh.
+paths = kernel + sorted(p for p in (root / 'src/rc').glob('*.[ch]') if p.name != 'main.c')
+paths += [root / name for name in ('tools/rc-build.c', 'Makefile.rc',
+                                  'scripts/certify-rc.sh', 'scripts/test-rc.sh')]
 tracked = subprocess.check_output(['git', 'ls-files', '-z', 'shen/test/s42'], cwd=root)
 paths += [root / name for name in tracked.decode().split('\0') if name]
 hashes = {str(path.relative_to(root)): hashlib.sha256(path.read_bytes()).hexdigest() for path in paths}
 revision = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=root, text=True).strip()
 canonical = subprocess.run(['git', 'diff', '--quiet', revision, '--', 'shen/test/s42'], cwd=root).returncode == 0
-builder = Path(os.environ['RC_CERTIFY_BUILDER']).resolve()
+external_builder = os.environ['RC_CERTIFY_BUILDER']
+builder = Path(external_builder).resolve() if external_builder else source / 'host' / 'bin' / 'rc-build'
 record = {'source_sha256': hashes, 'scope': 'complete bundled kernel; unmodified S42 runme.shen',
           'checkout_revision': revision, 'suite_matches_revision': canonical,
-          'builder_sha256': hashlib.sha256(builder.read_bytes()).hexdigest(),
-          'builder_source_correspondence': 'not established by this script; preserve the compiler-host build log',
+          'builder_path': str(builder.relative_to(root)) if builder.is_relative_to(root) else str(builder),
+          'builder_source_correspondence': 'external binary; not established' if external_builder else 'fresh standalone build from recorded sources',
+          'host_build': 'EXTERNAL' if external_builder else 'UNKNOWN', 'compiler_audit': 'UNKNOWN',
           'cc': os.environ.get('CC', 'cc'), 'cflags': os.environ.get('CFLAGS', '-O2'),
           'asan_options': os.environ.get('ASAN_OPTIONS'), 'ubsan_options': os.environ.get('UBSAN_OPTIONS'),
           'build': 'UNKNOWN', 'suite': 'UNKNOWN', 'artifact_audit': 'UNKNOWN'}
@@ -58,6 +61,7 @@ def save():
 
 def run(label, argv, cwd, timeout, stdin=None):
     env = dict(os.environ, SHEN_C_HOME=str(root))
+    record[label + '_command'] = argv
     start = time.monotonic()
     with (evidence / (label + '.log')).open('wb') as log:
         process = subprocess.Popen(argv, cwd=cwd, env=env, stdin=stdin,
@@ -85,12 +89,26 @@ save()
 print('RC certification evidence:', evidence, flush=True)
 if not canonical:
     record['suite'] = 'FAIL'; record['reason'] = 'S42 suite differs from checkout revision'; save(); raise SystemExit(1)
-if not run('build', [os.environ['RC_CERTIFY_BUILDER'], str(source), str(output)], root,
+if not external_builder:
+    host = source / 'host'
+    command = shlex.split(os.environ.get('MAKE', 'make')) + ['-f', 'Makefile.rc',
+               'RC_BUILD=' + str(host / 'obj'), 'RC_BIN=' + str(host / 'lib'),
+               'RC_TOOL_BIN=' + str(host / 'bin'), 'RC_CFLAGS=' + record['cflags'], str(builder)]
+    if not run('host_build', command, root, float(os.environ.get('RC_BUILD_TIMEOUT', '300'))):
+        record['host_build'] = 'UNKNOWN' if 'host_build_termination' in record else 'FAIL'; save(); raise SystemExit(1)
+    record['host_build'] = 'PASS'
+record['builder_sha256'] = hashlib.sha256(builder.read_bytes()).hexdigest()
+record['compiler_audit'] = 'PASS' if run('compiler_audit', [str(root / 'scripts/test-rc.sh'), '--audit-only', str(builder)], root, 30) else 'FAIL'
+save()
+if record['compiler_audit'] != 'PASS':
+    raise SystemExit(1)
+if not run('build', [str(builder), str(source), str(output)], root,
            float(os.environ.get('RC_BUILD_TIMEOUT', '300'))):
     record['build'] = 'UNKNOWN' if 'build_termination' in record else 'FAIL'; save(); raise SystemExit(1)
 record['build'] = 'PASS'
 record['generated_sha256'] = {name: hashlib.sha256((output / name).read_bytes()).hexdigest()
                               for name in ('app.c', 'Makefile')}
+save()
 with (evidence / 'answers.txt').open('w+b') as answers:
     answers.write(b'y\n' * 1024); answers.seek(0)
     ok = run('suite', [str(output / 'app')], root / 'shen/test/s42',
@@ -107,5 +125,5 @@ record['artifact_audit'] = 'PASS' if run('audit', [str(root / 'scripts/test-rc.s
 record['source_unchanged'] = all(hashlib.sha256((root / path).read_bytes()).hexdigest() == digest for path, digest in hashes.items())
 save()
 print(json.dumps({key: value for key, value in record.items() if key != 'source_sha256'}, indent=2))
-raise SystemExit(0 if record['suite'] == record['artifact_audit'] == 'PASS' and record['source_unchanged'] else 1)
+raise SystemExit(0 if record['suite'] == record['artifact_audit'] == record['compiler_audit'] == 'PASS' and record['source_unchanged'] else 1)
 PY

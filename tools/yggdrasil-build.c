@@ -1,3 +1,4 @@
+/* Historical Boehm backend tool: no supported build target. See docs/LEGACY-BOEHM.md. */
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>

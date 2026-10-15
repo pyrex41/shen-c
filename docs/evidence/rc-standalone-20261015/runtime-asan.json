@@ -1,0 +1,181 @@
+{
+  "schema": 1,
+  "scope": "CMake default Release + fatal Apple ASan/UBSan: all seven runtime tests and standalone compiler host; full kernel/CLI excluded",
+  "initial_fresh_configure_receipt": "evidence/rc/runtime-cmake-20261015T212411Z/receipt.json",
+  "build_directory": "${TMP}/shen-rc-runtime-cmake-20261015T212411Z",
+  "source_sha256_before": {
+    "CMakeLists.txt": "c3915b24502c60326258882cae9374f7971756a588eefbb9c80d3bb137d6eee2",
+    "tools/rc-build.c": "0b3bc4244c14bf1d4f2c857f74c09b7100606172fc3535622bfaa2d3b6e5a484",
+    "src/rc/rc.c": "b5fd2a86b1db6cf2d148d34a4294bef71a4b495b84b03c26d31e960e8fa350b5",
+    "src/rc/primitives.c": "db07db3d3fb9c71e212abdec2180085ac66d2bbd9d5318c2764845f8599b94d7",
+    "src/rc/eval.c": "1fa1e61b5ebc2bb55d17b62153e8be9c55e46c0b42948fa5b497f31c5310da13",
+    "src/rc/read.c": "f61444980f2d34d3986f9640103b3478501c4d368f6c2dd5058a4b39b3143667",
+    "src/rc/emit.c": "9907a89ae098e04a7fa8bc1900e5d66ce7fc7422c59da0a1d84d146fb58da24e",
+    "src/rc/emit.h": "75b3a6779c9047f2a6278f99818d674ade518ce8102987f31c2337107c941229",
+    "src/rc/eval.h": "40840e20cb00334a7032ef11aec08ce6a0846912ae05dfb0d08e894ba7ad2e15",
+    "src/rc/primitives.h": "d3e6db49c69741c8a656822b6564c5fe8494a8ceb0813c89f75971abcb95d59d",
+    "src/rc/rc.h": "b7b44e2a8e43d019a87157564a90cbf6b926e842a2bbe6bef2c4f05236363ee3",
+    "src/rc/read.h": "71fb3e8ce757174ee47dde95f732200ae1b023c66f8164ac0a4d82ebb241fea5",
+    "test/rc/test_cycles.c": "e44dc65af160ee6ad0fc00c597fdfc3e78ffddfc28cf6cb42527152b29de5dc2",
+    "test/rc/test_primitives.c": "78b68d9f01c196ff02f068e3267d20fe16a2ed10b49fe226bc77247c9a220f5f",
+    "test/rc/test_eval.c": "57b3dba7e0fe54bc531659ea20a3d9c1df34fda889b4ce2473ecc316246c5a8a",
+    "test/rc/test_bool_tail.c": "c12069632d5a260066b549f791b6c8fddb153751bf9a2ce229189de38e3588d9",
+    "test/rc/test_collection.c": "215e51f6aade5a9211e60443bc1990fe2beb8322cd8fb093f3fa6831b2649416",
+    "test/rc/test_reuse.c": "33b2eb54689a9e2134adc816eb0effab870f6f4813d5b889389b3bf13daa329b",
+    "test/rc/test_acyclic.c": "217d1a4f6baa45b48f8dd601b7fe9990515a4e2c7f3b8890fc02aca860cead6d"
+  },
+  "source_correspondence": "UNCHANGED",
+  "environment": {
+    "ASAN_OPTIONS": "halt_on_error=1:malloc_context_size=10",
+    "UBSAN_OPTIONS": "halt_on_error=1"
+  },
+  "commands": [
+    {
+      "name": "configure",
+      "argv": [
+        "/nix/store/y134s2lnhk472l2m2lm1q07wp5pj677j-cmake-4.1.2/bin/cmake",
+        "-S",
+        ".",
+        "-B",
+        "${TMP}/shen-rc-runtime-cmake-20261015T212411Z",
+        "-G",
+        "Unix Makefiles",
+        "-DCMAKE_BUILD_TYPE=Release",
+        "-DSHEN_RC_SANITIZE=ON",
+        "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON",
+        "-DCMAKE_C_COMPILER=/Library/Developer/CommandLineTools/usr/bin/clang",
+        "-DCMAKE_OSX_SYSROOT=/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk",
+        "-DCMAKE_AR=/nix/store/0jqhv6bkz6inag7sgzzy0289sy6fvjr4-llvm-21.1.8/bin/llvm-ar",
+        "-DCMAKE_RANLIB=/nix/store/0jqhv6bkz6inag7sgzzy0289sy6fvjr4-llvm-21.1.8/bin/llvm-ranlib",
+        "-DCMAKE_C_COMPILER_AR=/nix/store/0jqhv6bkz6inag7sgzzy0289sy6fvjr4-llvm-21.1.8/bin/llvm-ar",
+        "-DCMAKE_C_COMPILER_RANLIB=/nix/store/0jqhv6bkz6inag7sgzzy0289sy6fvjr4-llvm-21.1.8/bin/llvm-ranlib",
+        "-DCMAKE_MAKE_PROGRAM=/nix/store/308q7v3aaiw4d1wjijy7xcszlgnfadb6-gnumake-4.4.1/bin/make"
+      ],
+      "log": "evidence/rc/runtime-cmake-final-20261015T212843Z/configure.log",
+      "exit_code": 0,
+      "seconds": 2.889
+    },
+    {
+      "name": "build",
+      "argv": [
+        "/nix/store/y134s2lnhk472l2m2lm1q07wp5pj677j-cmake-4.1.2/bin/cmake",
+        "--build",
+        "${TMP}/shen-rc-runtime-cmake-20261015T212411Z",
+        "--parallel",
+        "3",
+        "--target",
+        "test_rc_cycles",
+        "test_rc_primitives",
+        "test_rc_eval",
+        "test_rc_bool_tail",
+        "test_rc_collection",
+        "test_rc_reuse",
+        "test_rc_acyclic",
+        "rc-build"
+      ],
+      "log": "evidence/rc/runtime-cmake-final-20261015T212843Z/build.log",
+      "exit_code": 0,
+      "seconds": 30.698
+    },
+    {
+      "name": "ctest",
+      "argv": [
+        "/nix/store/y134s2lnhk472l2m2lm1q07wp5pj677j-cmake-4.1.2/bin/ctest",
+        "--test-dir",
+        "${TMP}/shen-rc-runtime-cmake-20261015T212411Z",
+        "--output-on-failure",
+        "--timeout",
+        "120",
+        "-j",
+        "1"
+      ],
+      "log": "evidence/rc/runtime-cmake-final-20261015T212843Z/ctest.log",
+      "exit_code": 0,
+      "seconds": 14.472
+    },
+    {
+      "name": "host-version",
+      "argv": [
+        "${TMP}/shen-rc-runtime-cmake-20261015T212411Z/rc-build",
+        "--version"
+      ],
+      "log": "evidence/rc/runtime-cmake-final-20261015T212843Z/host-version.log",
+      "exit_code": 0,
+      "seconds": 0.663
+    },
+    {
+      "name": "host-emit",
+      "argv": [
+        "${TMP}/shen-rc-runtime-cmake-20261015T212411Z/rc-build",
+        "--emit-kernel",
+        "evidence/rc/runtime-cmake-final-20261015T212843Z/host-fixture",
+        "evidence/rc/runtime-cmake-final-20261015T212843Z/host-smoke.c"
+      ],
+      "log": "evidence/rc/runtime-cmake-final-20261015T212843Z/host-emit.log",
+      "exit_code": 0,
+      "seconds": 1.795
+    },
+    {
+      "name": "host-dependencies",
+      "argv": [
+        "/nix/store/05zb83k72p9ynnvsy4rpi6x57sc052jj-cctools-1010.6/bin/otool",
+        "-L",
+        "${TMP}/shen-rc-runtime-cmake-20261015T212411Z/rc-build"
+      ],
+      "log": "evidence/rc/runtime-cmake-final-20261015T212843Z/host-dependencies.log",
+      "exit_code": 0,
+      "seconds": 0.149
+    },
+    {
+      "name": "host-undefined",
+      "argv": [
+        "/nix/store/05zb83k72p9ynnvsy4rpi6x57sc052jj-cctools-1010.6/bin/nm",
+        "-u",
+        "${TMP}/shen-rc-runtime-cmake-20261015T212411Z/rc-build"
+      ],
+      "log": "evidence/rc/runtime-cmake-final-20261015T212843Z/host-undefined.log",
+      "exit_code": 0,
+      "seconds": 0.83
+    }
+  ],
+  "status": "PASS",
+  "audit": {
+    "legacy_sources": [],
+    "boehm_dependencies_or_symbols": [],
+    "compiler_host_sha256": "184fd4e7825187a8fea306a261e63cc623a9e180018240b55eacd7bfea7cc9bd",
+    "minimal_emitted_c_sha256": "7b6c1ed807a3d640169bc2ff983795a88bcc83bcf147e13ac5340af7edefa96a",
+    "compiler_compile_command": [
+      "/Library/Developer/CommandLineTools/usr/bin/clang  -I${REPO}/src/rc -O3 -DNDEBUG -std=c17 -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk -fsanitize=address,undefined -fno-sanitize-recover=all -fno-omit-frame-pointer -g -o CMakeFiles/rc-build.dir/tools/rc-build.c.o -c ${REPO}/tools/rc-build.c"
+    ],
+    "full_kernel_or_cli_built": false
+  },
+  "source_sha256_after": {
+    "CMakeLists.txt": "c3915b24502c60326258882cae9374f7971756a588eefbb9c80d3bb137d6eee2",
+    "tools/rc-build.c": "0b3bc4244c14bf1d4f2c857f74c09b7100606172fc3535622bfaa2d3b6e5a484",
+    "src/rc/rc.c": "b5fd2a86b1db6cf2d148d34a4294bef71a4b495b84b03c26d31e960e8fa350b5",
+    "src/rc/primitives.c": "db07db3d3fb9c71e212abdec2180085ac66d2bbd9d5318c2764845f8599b94d7",
+    "src/rc/eval.c": "1fa1e61b5ebc2bb55d17b62153e8be9c55e46c0b42948fa5b497f31c5310da13",
+    "src/rc/read.c": "f61444980f2d34d3986f9640103b3478501c4d368f6c2dd5058a4b39b3143667",
+    "src/rc/emit.c": "9907a89ae098e04a7fa8bc1900e5d66ce7fc7422c59da0a1d84d146fb58da24e",
+    "src/rc/emit.h": "75b3a6779c9047f2a6278f99818d674ade518ce8102987f31c2337107c941229",
+    "src/rc/eval.h": "40840e20cb00334a7032ef11aec08ce6a0846912ae05dfb0d08e894ba7ad2e15",
+    "src/rc/primitives.h": "d3e6db49c69741c8a656822b6564c5fe8494a8ceb0813c89f75971abcb95d59d",
+    "src/rc/rc.h": "b7b44e2a8e43d019a87157564a90cbf6b926e842a2bbe6bef2c4f05236363ee3",
+    "src/rc/read.h": "71fb3e8ce757174ee47dde95f732200ae1b023c66f8164ac0a4d82ebb241fea5",
+    "test/rc/test_cycles.c": "e44dc65af160ee6ad0fc00c597fdfc3e78ffddfc28cf6cb42527152b29de5dc2",
+    "test/rc/test_primitives.c": "78b68d9f01c196ff02f068e3267d20fe16a2ed10b49fe226bc77247c9a220f5f",
+    "test/rc/test_eval.c": "57b3dba7e0fe54bc531659ea20a3d9c1df34fda889b4ce2473ecc316246c5a8a",
+    "test/rc/test_bool_tail.c": "c12069632d5a260066b549f791b6c8fddb153751bf9a2ce229189de38e3588d9",
+    "test/rc/test_collection.c": "215e51f6aade5a9211e60443bc1990fe2beb8322cd8fb093f3fa6831b2649416",
+    "test/rc/test_reuse.c": "33b2eb54689a9e2134adc816eb0effab870f6f4813d5b889389b3bf13daa329b",
+    "test/rc/test_acyclic.c": "217d1a4f6baa45b48f8dd601b7fe9990515a4e2c7f3b8890fc02aca860cead6d"
+  },
+  "changed_sources": [],
+  "test_execution_status": "PASS",
+  "_publication": {
+    "raw_receipt": "evidence/rc/runtime-cmake-final-20261015T212843Z/receipt.json",
+    "raw_sha256": "a26e2891ef3d213999abe8479449c4076c9bdbd264ec7aacb8d93fd28a281e86",
+    "path_redaction": "Repository, home and temporary paths replaced; hashes describe original bytes.",
+    "current_scope": "Seven runtime test binaries only. Runtime/test source hashes still match; emitter host fields predate final emitter changes."
+  }
+}

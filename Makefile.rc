@@ -1,50 +1,75 @@
-# Standalone runtime build: no pkg-config, Nix, or Boehm dependency.
+# Standalone compiler, CLI and runtime: no pkg-config, Nix, or Boehm dependency.
 CC ?= cc
 AR ?= ar
 RC_BUILD ?= obj/rc
 RC_BIN ?= bin/rc
-RC_CFLAGS ?= -O2 -g
-RC_CFLAGS += -std=c17 -Wall -Wextra -Wpedantic -Isrc/rc
-RC_LDFLAGS ?=
+RC_TOOL_BIN ?= bin
+RC_CFLAGS ?= $(if $(strip $(CFLAGS)),$(CFLAGS),-O2 -g)
+RC_CPPFLAGS ?= $(CPPFLAGS)
+override RC_CFLAGS += -std=c17 -Wall -Wextra -Wpedantic -Isrc/rc
+RC_LDFLAGS ?= $(LDFLAGS)
 RC_LDLIBS ?= -lm
 RC_SANITIZE ?= 0
+RC_ACYCLIC_ONLY ?= 0
+ifeq ($(RC_ACYCLIC_ONLY),1)
+override RC_CFLAGS += -DSHEN_RC_ACYCLIC_ONLY
+endif
 ifeq ($(RC_SANITIZE),1)
-RC_CFLAGS += -O1 -fsanitize=address,undefined -fno-sanitize-recover=all -fno-omit-frame-pointer
-RC_LDFLAGS += -fsanitize=address,undefined
+override RC_CFLAGS += -O1 -fsanitize=address,undefined -fno-sanitize-recover=all -fno-omit-frame-pointer
+override RC_LDFLAGS += -fsanitize=address,undefined
 endif
 RC_SOURCES := src/rc/rc.c src/rc/primitives.c src/rc/eval.c src/rc/read.c
 RC_OBJECTS := $(patsubst src/rc/%.c,$(RC_BUILD)/%.o,$(RC_SOURCES))
-RC_TESTS := test_cycles test_primitives test_eval test_bool_tail test_collection
+ifeq ($(RC_ACYCLIC_ONLY),1)
+RC_TESTS := test_acyclic
+else
+RC_TESTS := test_cycles test_primitives test_eval test_bool_tail test_collection test_reuse test_acyclic
+endif
 RC_TEST_BINS := $(addprefix $(RC_BIN)/,$(RC_TESTS))
 
-all: $(RC_BIN)/libshenrc.a
+RC_KERNEL_INPUTS := $(addprefix shen/src/kl/,$(addsuffix .kl,sys writer core reader declarations toplevel macros load prolog sequent track t-star yacc types))
 
-$(RC_BUILD) $(RC_BIN):
+all: $(RC_TOOL_BIN)/rc-build $(RC_TOOL_BIN)/shen-rc
+
+runtime: $(RC_BIN)/libshenrc.a
+
+$(sort $(RC_BUILD) $(RC_BIN) $(RC_TOOL_BIN)):
 	mkdir -p $@
 
 $(RC_BUILD)/%.o: src/rc/%.c $(wildcard src/rc/*.h) | $(RC_BUILD)
-	$(CC) $(RC_CFLAGS) -c $< -o $@
+	$(CC) $(RC_CPPFLAGS) $(RC_CFLAGS) -c $< -o $@
 
 $(RC_BIN)/libshenrc.a: $(RC_OBJECTS) | $(RC_BIN)
 	$(AR) rcs $@ $^
 
+$(RC_TOOL_BIN)/rc-build: tools/rc-build.c $(RC_BUILD)/emit.o $(RC_BIN)/libshenrc.a | $(RC_TOOL_BIN)
+	$(CC) $(RC_CPPFLAGS) $(RC_CFLAGS) tools/rc-build.c $(RC_BUILD)/emit.o $(RC_BIN)/libshenrc.a $(RC_LDFLAGS) $(RC_LDLIBS) -o $@
+
+$(RC_BUILD)/kernel.c: $(RC_TOOL_BIN)/rc-build $(RC_KERNEL_INPUTS) | $(RC_BUILD)
+	$(RC_TOOL_BIN)/rc-build --emit-kernel shen/src/kl $@
+
+$(RC_BUILD)/kernel.o: $(RC_BUILD)/kernel.c $(wildcard src/rc/*.h)
+	$(CC) $(RC_CPPFLAGS) $(RC_CFLAGS) -c $< -o $@
+
+$(RC_TOOL_BIN)/shen-rc: $(RC_BUILD)/main.o $(RC_BUILD)/kernel.o $(RC_BIN)/libshenrc.a | $(RC_TOOL_BIN)
+	$(CC) $(RC_CPPFLAGS) $(RC_CFLAGS) $^ $(RC_LDFLAGS) $(RC_LDLIBS) -o $@
+
 $(RC_BIN)/test_%: test/rc/test_%.c $(RC_BIN)/libshenrc.a
-	$(CC) $(RC_CFLAGS) $< $(RC_BIN)/libshenrc.a $(RC_LDFLAGS) $(RC_LDLIBS) -o $@
+	$(CC) $(RC_CPPFLAGS) $(RC_CFLAGS) $< $(RC_BIN)/libshenrc.a $(RC_LDFLAGS) $(RC_LDLIBS) -o $@
 
 test-binaries: $(RC_TEST_BINS)
 
 test: test-binaries
-	$(RC_BIN)/test_cycles
-	$(RC_BIN)/test_primitives
-	$(RC_BIN)/test_eval
-	$(RC_BIN)/test_bool_tail
-	$(RC_BIN)/test_collection
+	@set -e; for test in $(RC_TEST_BINS); do "$$test"; done
 
 # Separate output directories keep sanitizer objects out of release artifacts.
 sanitize:
 	$(MAKE) -f Makefile.rc RC_SANITIZE=1 RC_BUILD=obj/rc-sanitize RC_BIN=bin/rc-sanitize test
 
+acyclic:
+	$(MAKE) -f Makefile.rc RC_ACYCLIC_ONLY=1 RC_BUILD=obj/rc-acyclic RC_BIN=bin/rc-acyclic/runtime RC_TOOL_BIN=bin/rc-acyclic all test
+
 clean:
 	rm -rf $(RC_BUILD) $(RC_BIN)
 
-.PHONY: all test-binaries test sanitize clean
+.PHONY: all runtime test-binaries test sanitize acyclic clean

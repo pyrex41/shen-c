@@ -1,117 +1,158 @@
-# Reference-counted native C backend
+# Native C compiler and reference-counted runtime
 
-The experimental RC backend compiles KL definitions to C and links them to
-`src/rc`. It is separate from the existing `KLObject`/Boehm runtime. Ordinary
-generated functions execute native C; explicit `eval-kl` uses the new dynamic
-evaluator. Loading Shen source uses the compiled Shen kernel to translate source
-to KL, then evaluates that KL in the RC runtime.
+The default build is independent of Boehm. `rc-build` reads KL with the RC
+reader and emits native C functions; `shen-rc`/`shen-c` embeds the complete
+compiled S42 kernel. Explicit `eval-kl` and dynamic source loading use the
+RC evaluator. The compiler does not turn native definitions into evaluator
+wrappers.
 
 ## Build and run
 
-The compiler host uses the project's existing Nix toolchain and Boehm reader:
-
 ```sh
-nix develop -c make CC=clang bin/rc-build
-nix develop -c env SHEN_C_HOME="$PWD" bin/rc-build test/fixtures/sum bin/rc-sum
-bin/rc-sum/app
+make CC=clang
+bin/shen-c --version
+bin/shen-c eval -e '(+ 20 22)'
+bin/shen-c script program.shen
 ```
 
-The builder accepts a directory containing `kernel.kl`, `user.kl`, and an
-optional `rc.manifest.txt` or `yggdrasil.manifest.txt`. Manifest `kernel=`, repeated
-`user=`, and optional `init=` entries identify the input files and initializer.
-It emits `app.c` and a Makefile, then builds `app`. `CC` and `CFLAGS` select
-the generated application's compiler and instrumentation. `SHEN_RC_PRINT=1`
-prints user top-level results for diagnostic use.
-
-Runtime tests can build on their own with a C17 toolchain, without Boehm or
-pkg-config:
+The default Make and CMake builds perform no Boehm or pkg-config discovery.
+C17, Make, and an archiver are sufficient for the toolchain; the source compiler
+driver and validation scripts also use Python 3. Nix is optional.
 
 ```sh
-make -f Makefile.rc test
-make -f Makefile.rc sanitize
-cmake -S . -B build-rc -DSHEN_RC_ONLY=ON -DSHEN_RC_SANITIZE=ON
-cmake --build build-rc
-ctest --test-dir build-rc --output-on-failure
+cmake -S . -B build
+cmake --build build
+ctest --test-dir build --output-on-failure
 ```
 
-Generated semantic tests, large-frame regressions (Python 3 required), and
-artifact dependency checks:
+The executable contains the kernel and can run outside the source tree.
+`SHEN_RC_HOME` optionally sets a prefix for file loading. `--help` describes
+evaluation, source loading, scripts, and the REPL.
+
+## Compile Shen source
 
 ```sh
+scripts/compile-shen-rc.sh program.shen out/program
+out/program/app
+```
+
+The driver uses the standalone CLI's kernel reader/compiler to lower Shen
+source to KL, then invokes the independent native compiler. It retains the
+generated C and build inputs with a provenance record. Application top-level
+expressions execute when the generated program runs. Source files are preserved.
+
+The frontend runs the bundled reader and macro compiler in a fresh kernel
+context. An explicit metadata sidecar preserves ordered package registrations,
+definition arities and stored source, macros, datatypes, and synonyms. Auxiliary
+functions created during reading are compiled to native C. The sidecar is
+separate from ordinary program forms, so no user function name is reserved as
+a metadata sentinel. An explicit `escaped-v1` transport preserves string bytes
+and symbol identity, including atoms that cannot be written as ordinary KL
+syntax; the raw KL reader remains unchanged.
+
+Reader and macro processing occur at compile time. Compiler-generated fresh
+names may differ from an interpreted load. Explicit `load` and `eval` operations
+remain runtime operations and may require external files. The source compiler
+reports unsupported persistent reader state instead of silently dropping it.
+`SHEN_RC_CLI` and `RC_BUILDER` select explicit executables; `SHEN_C_HOME` selects
+the compiler's kernel/runtime source installation.
+
+## Compile KL directly
+
+```sh
+SHEN_C_HOME="$PWD" bin/rc-build test/fixtures/sum out/sum
+out/sum/app
+```
+
+Input directories contain `kernel.kl`, `user.kl`, and optionally
+`rc.manifest.txt` or `yggdrasil.manifest.txt`. The manifest supports `kernel=`,
+repeated `user=`, and an optional `init=` function. `rc-build` emits `app.c` and
+a Makefile and builds `app`. `CC`, `CPPFLAGS`, and `CFLAGS` select the C compiler
+and instrumentation. The kernel source installation is a build-time dependency;
+generated executables do not need it at runtime.
+
+`SHEN_RC_PRINT=1` prints user top-level expression results for diagnostics.
+`SHEN_RC_STATS=1` reports allocation, reference-count, closure-capture, and pair
+reuse counters on stderr. `--conservative-ownership` disables ownership
+optimizations for semantic and allocation comparisons.
+
+## Ownership and reuse
+
+The runtime exposes borrowed and explicitly consuming APIs. Borrowed calls
+retain their inputs as needed; owned calls transfer argument slots and clear
+the caller's slots. Returned values are owned. The header documents exceptions
+such as `rc_require_boolean`, which consumes its owned input.
+
+The emitter performs backward local liveness analysis across lexical scopes,
+branches, short-circuit conditions, and error handlers. Last uses move values;
+unused values are released. Closure captures contain lexical free variables.
+Error handler references remain live through protected expressions. Native
+functions adopt owned arguments, so unique inputs can stay unique across calls.
+
+Pair reuse is selective. Recognized cons/tail traversals retain exact primitive
+identity checks and detach unique pair storage only when the old value has no
+remaining use. Shared pairs follow an allocation path that preserves aliases.
+The runtime keeps detached storage rooted and valid through recursive calls,
+errors, and collection. This supports actual recursive list rebuilding; it is
+not generalized whole-program Perceus analysis or arbitrary allocation reuse.
+
+Large generated frames use heap slabs and share one borrowed argument buffer
+per function. Consecutive dead slots use compact cleanup loops, preserving
+release order while avoiding excessive generated C and sanitizer stack frames.
+Tail calls use the owned trampoline. Ordinary non-tail recursion
+still uses the C stack. Cleanup is explicit; no nonlocal jump crosses runtime
+ownership cleanup.
+
+## Cycles
+
+The default preserves unrestricted mutable vectors. Acyclic objects are freed
+when their count reaches zero, using iterative destruction for deep graphs.
+Unreachable cycles are reclaimed by an exact heap pass: copy counts, subtract
+internal edges, mark external roots, and reclaim unmarked graphs. The collector
+does not scan the C stack. Interned symbols and global/function bindings have
+explicit context ownership.
+
+Cycle reclamation is part of automatic memory management. The user confirmed
+that it is acceptable; the requirement is complete removal of Boehm from the
+compiler and emitted runtime. Perceus's collector-free guarantee itself applies
+to cycle-free programs; see [the paper, section 2.7.4](https://www.microsoft.com/en-us/research/uploads/prod/2021/06/perceus-pldi21.pdf).
+
+An optional restricted configuration is available:
+
+```sh
+make rc-acyclic
+bin/rc-build --acyclic input-dir out/acyclic-app
+```
+
+`SHEN_RC_ACYCLIC_ONLY` omits the cycle collector and rejects a vector write
+that would create a cycle, before changing the vector. This changes which Shen
+programs are accepted. It is not the default language compatibility mode.
+
+## Validation
+
+```sh
+make test
+make sanitize
 scripts/test-rc.sh --no-build bin/rc-build
-scripts/test-rc.sh --audit-only bin/rc-sum/app
-```
-
-The complete bundled kernel and untouched canonical S42 suite have a separate
-certification command (requires Python 3 for bounded process supervision):
-
-```sh
 scripts/certify-rc.sh
+scripts/test-rc-toolchain.sh --canonical-receipt evidence/rc/certify-TIMESTAMP/result.json
 ```
 
-It assembles all 14 portable KL modules in boot order and compiles a user form
-that loads `runme.shen`. It does not use the older shaken fixture, whose omitted
-definitions depended on legacy native overrides. The raw kernel performs its
-own top-level initialization and has no synthetic `shen.initialise` entry.
+The canonical runner rebuilds a fresh standalone compiler, audits it, compiles
+all 14 portable KL modules, and loads the unchanged S42 `runme.shen`. It requires
+134 passed / 0 failed, clean exit, unchanged source hashes, and a generated
+artifact audit. Each run records build commands, compiler flags, timings,
+source identities, and executable hashes. Build/run time limits default to
+300/600 seconds; `RC_BUILD_TIMEOUT` and `RC_SUITE_TIMEOUT` override them.
+Timeouts and output-limit interruptions remain UNKNOWN. Output is capped at
+64 MiB per supervised process.
 
-Each run writes logs and a JSON record under a fresh `evidence/rc/certify-*`
-directory. Success requires the final 134 passed / 0 failed report, successful
-process exit, a Boehm dependency/symbol audit, and unchanged source hashes.
-The record includes the checkout revision, verifies that suite files match that
-revision, and hashes the builder binary and generated C/Makefile. Source hashes
-record the current checkout; they do not prove that a custom builder binary was
-compiled from those sources. Preserve the compiler-host build log separately.
-Interrupted runs remain UNKNOWN with their termination reason.
-Build and run timeouts default to 300 and 600 seconds; override with
-`RC_BUILD_TIMEOUT` and `RC_SUITE_TIMEOUT`. Each process output is capped at
-64 MiB. The compiler binary can be selected with `RC_BUILDER`.
+The toolchain runner independently rebuilds the default toolchain with an
+unavailable pkg-config path, checks both executable names, CLI behavior, real
+Shen source compilation, native output, optimizer controls, and dependency
+audits. `--skip-canonical` explicitly selects a focused run.
 
-## Ownership and collection
-
-Public runtime inputs are borrowed and returned values are owned, except
-`rc_require_boolean`, which consumes its owned input (as declared in `rc.h`). Heap edges
-retain their targets. Assignments retain the new value before releasing the
-old value, including self-assignment. Generated functions own temporary slots,
-drop consumed expression temporaries, move final local results, and release
-remaining slots on normal, error, and tail-return paths. Large generated frames
-use a heap slab; each function reuses one borrowed argument/capture buffer to
-keep C stack use bounded by its largest call. Non-tail recursion still uses the
-C stack. Closures currently
-capture all visible local bindings conservatively.
-
-Zero reference counts trigger iterative destruction, including deep lists.
-The cycle pass copies counts, subtracts internal heap edges, marks from objects
-with residual external references, and frees unmarked graphs. It follows
-vectors, pairs, closure captures, partial arguments, and tail requests. It does
-not scan the C stack. Context-owned interned symbols and global/function slots
-are explicit roots. Interned symbols live until context teardown.
-
-Tail requests own their function and arguments before the caller cleans up.
-The trampoline handles partial and excess application. Boolean tail results
-carry validation through the trampoline; errors return through explicit paths.
-There is no `longjmp` across ownership cleanup.
-
-This is automatic memory management with cycle collection. It does not claim
-collector-free unrestricted Shen, complete Perceus precision, allocation reuse,
-or an established performance improvement over Boehm.
-
-## Compatibility boundaries
-
-- This backend produces applications, not a replacement `shen-c` CLI/REPL.
-- Global definitions execute in user source order; lexical function bindings
-  take precedence. Calls resolve their function before argument side effects.
-- Dynamic `eval-kl` starts with a global lexical environment. Some legacy
-  evaluator behavior differs from this and from its own AOT emitter.
-- Strings preserve explicit byte lengths and unsigned bytes, including NUL.
-  Byte conversion rejects out-of-range input. Integer overflow raises an error
-  instead of invoking C signed-overflow behavior.
-- Error handler values are strings. Diagnostic `rc_print` is not the Shen
-  pretty-printer; the loaded kernel supplies language printing.
-- Legacy dictionary extensions, `c-loop`, `c-recur`, `c-mcons`, native overlay
-  installation, and typecheck cache integration have not been migrated.
-- The earlier region-only/no-eval rung-2 proposal describes a different design.
-  Its acceptance obligations are not discharged by this RC backend.
-
-See [the validation record](rc-validation.md) for executed checks and remaining
-product gates. The historical default-backend results in the main README are
-not RC performance or qualification evidence.
+See [the validation record](rc-validation.md) for executed results and their
+source snapshots. Historical Boehm benchmarks are not performance measurements
+of this backend. The legacy overlay, dictionary, and typecheck-cache extension
+interfaces remain historical source, documented in [LEGACY-BOEHM.md](LEGACY-BOEHM.md).

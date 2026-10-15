@@ -1,10 +1,19 @@
 # Boehm-free Shen-C implementation
 
-Status: implementation complete for the experimental backend. The complete
-bundled S42 suite passes 134/134; validation results and remaining acceptance
-limits are recorded in `rc-validation.md`. CLI/extension migration, precise Perceus
-ownership inference, reuse optimization, and comparative performance remain
-separate work.
+Status: implementation is integrated and locally qualified on Darwin arm64.
+The experimental checkpoint `97aa8e1` passed the bundled S42 suite but still
+depended on Boehm in the compiler, used conservative ownership, and lacked a
+standalone Shen executable. The continuation replaces those components and
+adds a native Shen source compilation driver. Exact executed results are kept
+in [the validation record](rc-validation.md).
+
+Completed: independent compiler host, standalone embedded-kernel CLI, native
+Shen source driver, local ownership insertion, free-variable capture, owned
+calls, selective pair reuse, and supported build migration away from Boehm.
+The final unchanged S42 suite passed 134/0 with fatal ASan/UBSan. Fresh Make
+and CMake qualification, standalone frontend sanitizer checks, native source
+fixtures, and dependency audits passed. Nix build/install, Linux execution,
+and remote CI remain unqualified; the validation record states those limits.
 
 The current user request authorizes an implementation beyond the earlier
 documentation-only rung-2 proposal. The goal is full Shen semantics with an
@@ -21,17 +30,17 @@ automatic memory management; it is not a claim of no garbage collection.
 - A new native emitter lowers KL functions to C and inserts ownership
   operations. Runtime `eval-kl` uses a separate RC evaluator when invoked.
   Native compilation must not become a wrapper around source evaluation.
-- The compiler host may use the existing Boehm-backed KL parser. Generated
-  applications must link only the new runtime and ordinary C dependencies.
-- Existing interpreter/AOT artifacts remain available as a compatibility
-  baseline. Full compatibility is a goal, not assumed from a small fixture.
+- The compiler host uses the independent RC reader and AST. Compiler, CLI,
+  and generated applications link only the RC runtime and ordinary C dependencies.
+- Historical interpreter/AOT source remains a comparison reference; supported
+  build paths have no Boehm dependency. Compatibility requires full suite evidence.
 
 ## Team ownership
 
 | Lane | Owned paths |
 | --- | --- |
 | Runtime | `src/rc/rc.h`, `src/rc/rc.c`, heap unit tests |
-| Compiler | `src/c/emit_rc.*`, `tools/rc-build.c` |
+| Compiler | `src/rc/emit.*`, `tools/rc-build.c` |
 | Primitives | `src/rc/primitives.*`, primitive tests |
 | Dynamic evaluation | `src/rc/eval.*`, `src/rc/read.*`, evaluator tests |
 | Independent validation | cycle tests, validation scripts and inventory |
@@ -60,3 +69,28 @@ during execution as well as context teardown.
 Precise last-use insertion, reuse optimization, performance, and full-language
 coverage are separate claims. Scoped ownership alone is not full Perceus.
 Unknown or failed gates remain explicit. No publishing is requested.
+
+## Continuation after 97aa8e1
+
+1. Replace the Boehm/libshenc compiler frontend with the RC reader and AST.
+   Build and audit both compiler and emitted applications without Boehm.
+2. Insert last-use moves/drops, capture only free variables, and introduce
+   owned call boundaries so unique values can remain unique across calls.
+3. Reuse unique cons storage in actual emitted programs; measure allocations
+   and preserve aliases, errors, partial calls, and cycle safety.
+4. Produce a standalone `shen-rc` executable with the actual compiled kernel,
+   source loading, evaluation, and REPL; replace the default CLI.
+5. Run focused ownership/reuse/CLI checks, canonical unchanged S42 suite,
+   sanitizers, and dependency audits against the new source snapshot.
+
+The user explicitly confirmed that cycle reclamation is acceptable and asked
+to remove Boehm completely. Retain unrestricted Shen semantics and exact cycle
+reclamation by default. An optional acyclic-only build is supplementary, not
+a replacement for the default semantics. Published
+Perceus does not establish collector-free reclamation of arbitrary mutable
+cycles; do not claim that local liveness or reuse removes this requirement.
+
+Compiler owns the AST/frontend migration first, then hands the native emitter
+to the ownership lane. Runtime owns reuse and opt-in owned call ABI. Evaluator
+owns the CLI. Coordinator owns builds, integration, and full qualification;
+validation and review independently check executable evidence and semantics.

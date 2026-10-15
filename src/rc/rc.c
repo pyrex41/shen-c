@@ -8,7 +8,7 @@
 
 struct RcValue {
     RcType type;
-    size_t refs, bytes, trial;
+    size_t refs, bytes, trial, visit_epoch;
     bool marked;
     RcContext *ctx;
     RcValue *prev, *next, *work;
@@ -22,6 +22,7 @@ struct RcValue {
         struct { RcValue **items; size_t length; } vector;
         struct {
             RcNative native;
+            RcNativeOwned owned_native;
             size_t arity, capture_count, bound_count;
             RcValue **captures, **bound;
         } closure;
@@ -34,9 +35,9 @@ struct RcContext {
     RcValue **symbols;
     size_t symbol_capacity, symbol_count;
     RcStats stats;
-    size_t collection_interval, since_collection, graph_slots;
+    size_t collection_interval, since_collection, graph_slots, visit_epoch;
     char *error;
-    bool collecting, error_active, adaptive_collection;
+    bool collecting, error_active, adaptive_collection, acyclic;
 };
 static RcValue nil_value = {.type = RC_NIL, .refs = SIZE_MAX};
 
@@ -77,6 +78,14 @@ static RcValue *allocate(RcContext *ctx, RcType type, size_t extra) {
     ctx->stats.live_objects++;
     ctx->stats.live_bytes += v->bytes;
     ctx->stats.total_allocations++;
+    if (type == RC_PAIR) ctx->stats.pair_allocations++;
+    if (type == RC_CLOSURE) {
+        size_t captures = extra / sizeof(RcValue *);
+        ctx->stats.capture_edges_created += captures;
+        ctx->stats.live_capture_edges += captures;
+        if (ctx->stats.live_capture_edges > ctx->stats.peak_capture_edges)
+            ctx->stats.peak_capture_edges = ctx->stats.live_capture_edges;
+    }
     ctx->since_collection++;
     switch (type) {
     case RC_PAIR: ctx->graph_slots += 2; break;
@@ -88,13 +97,26 @@ static RcValue *allocate(RcContext *ctx, RcType type, size_t extra) {
     return v;
 }
 RcContext *rc_context_new(void) {
+    return rc_context_new_with_policy(RC_CYCLES_ALLOWED);
+}
+RcContext *rc_context_new_with_policy(RcCyclePolicy policy) {
+    if (policy != RC_CYCLES_ALLOWED && policy != RC_ACYCLIC_ONLY) return NULL;
     RcContext *ctx = calloc(1, sizeof(*ctx));
-    if (ctx) { ctx->collection_interval = 4096; ctx->adaptive_collection = true; }
+    if (ctx) {
+        ctx->collection_interval = 4096; ctx->adaptive_collection = true;
+#if defined(SHEN_RC_ACYCLIC_ONLY) && SHEN_RC_ACYCLIC_ONLY
+        ctx->acyclic = true;
+#else
+        ctx->acyclic = policy == RC_ACYCLIC_ONLY;
+#endif
+    }
     return ctx;
 }
+bool rc_context_is_acyclic(const RcContext *ctx) { return ctx && ctx->acyclic; }
 RcValue *rc_retain(RcValue *v) {
     if (v && v != &nil_value) {
         if (v->refs == SIZE_MAX) abort();
+        v->ctx->stats.retain_calls++;
         v->refs++;
     }
     return v;
@@ -127,7 +149,10 @@ static void unlink_object(RcValue *v) {
     switch (v->type) {
     case RC_PAIR: ctx->graph_slots -= 2; break;
     case RC_VECTOR: ctx->graph_slots -= v->as.vector.length; break;
-    case RC_CLOSURE: ctx->graph_slots -= v->as.closure.capture_count + v->as.closure.bound_count; break;
+    case RC_CLOSURE:
+        ctx->graph_slots -= v->as.closure.capture_count + v->as.closure.bound_count;
+        ctx->stats.live_capture_edges -= v->as.closure.capture_count;
+        break;
     case RC_TAIL: ctx->graph_slots -= 1 + v->as.tail.argc; break;
     default: break;
     }
@@ -147,6 +172,7 @@ static void release_edge(RcValue *v, void *data) {
     if (!v || v == &nil_value) return;
     RcValue **work = data;
     if (!v->refs) abort();
+    v->ctx->stats.release_calls++;
     if (--v->refs == 0) { v->work = *work; *work = v; }
 }
 void rc_release(RcValue *v) {
@@ -160,6 +186,7 @@ void rc_release(RcValue *v) {
         raw_free(dead);
     }
 }
+#if !defined(SHEN_RC_ACYCLIC_ONLY) || !SHEN_RC_ACYCLIC_ONLY
 static void subtract_edge(RcValue *v, void *unused) {
     (void)unused;
     if (v && v != &nil_value) { if (!v->trial) abort(); v->trial--; }
@@ -173,8 +200,12 @@ static void release_live_edge(RcValue *v, void *unused) {
     (void)unused;
     if (v && v != &nil_value && v->marked) rc_release(v);
 }
+#endif
 void rc_collect(RcContext *ctx) {
-    if (!ctx || ctx->collecting) return;
+#if defined(SHEN_RC_ACYCLIC_ONLY) && SHEN_RC_ACYCLIC_ONLY
+    (void)ctx;
+#else
+    if (!ctx || ctx->acyclic || ctx->collecting) return;
     ctx->collecting = true;
     ctx->stats.collections++;
     ctx->since_collection = 0;
@@ -204,9 +235,10 @@ void rc_collect(RcContext *ctx) {
         ctx->collection_interval = budget < 4096 ? 4096 : budget;
     }
     ctx->collecting = false;
+#endif
 }
 void rc_safepoint(RcContext *ctx) {
-    if (ctx && ctx->collection_interval && ctx->since_collection >= ctx->collection_interval) rc_collect(ctx);
+    if (ctx && !ctx->acyclic && ctx->collection_interval && ctx->since_collection >= ctx->collection_interval) rc_collect(ctx);
 }
 void rc_set_collection_interval(RcContext *ctx, size_t n) {
     if (ctx) { ctx->collection_interval = n; ctx->adaptive_collection = false; }
@@ -319,6 +351,53 @@ RcValue *rc_cons(RcContext *ctx, RcValue *head, RcValue *tail) {
     if (v) { v->as.pair.head = rc_retain(head); v->as.pair.tail = rc_retain(tail); }
     return v;
 }
+RcValue *rc_cons_reuse(RcContext *ctx, RcValue *candidate, RcValue *head, RcValue *tail) {
+    if (ctx) ctx->stats.pair_reuse_attempts++;
+    if (!belongs(ctx, head) || !belongs(ctx, tail) ||
+        (candidate && !belongs(ctx, candidate))) {
+        if (ctx) ctx->stats.pair_reuse_misses++;
+        rc_release(candidate);
+        return rc_error(ctx, "invalid cons reuse value/context");
+    }
+    if (candidate && candidate->type == RC_PAIR && candidate->refs == 1 &&
+        candidate != head && candidate != tail) {
+        /* Protect replacement children before releasing any old graph edges.
+         * The candidate stays a rooted, valid pair throughout; release never
+         * invokes collection or user code. Even borrowed old children are safe. */
+        rc_retain(head); rc_retain(tail);
+        RcValue *old_head = candidate->as.pair.head, *old_tail = candidate->as.pair.tail;
+        candidate->as.pair.head = head; candidate->as.pair.tail = tail;
+        rc_release(old_head); rc_release(old_tail);
+        ctx->stats.pair_reuses++;
+        return candidate;
+    }
+    if (ctx) ctx->stats.pair_reuse_misses++;
+    RcValue *value = rc_cons(ctx, head, tail);
+    rc_release(candidate);
+    return value;
+}
+RcValue *rc_pair_take_tail_reuse(RcContext *ctx, RcValue *candidate, RcValue **out) {
+    if (out) *out = NULL;
+    if (!out || !belongs(ctx, candidate) || candidate->type != RC_PAIR) {
+        rc_release(candidate);
+        return rc_error(ctx, "tail reuse projection expects a pair and output slot");
+    }
+    RcValue *tail = candidate->as.pair.tail;
+    if (candidate->refs == 1) {
+        RcValue *head = candidate->as.pair.head;
+        /* Ownership of the old edge moves to the C result, with no decrement.
+         * Before releasing any other edge, publish a valid pair containing nil
+         * in both slots. The collector can visit it at every later safepoint. */
+        candidate->as.pair.head = rc_nil(); candidate->as.pair.tail = rc_nil();
+        rc_release(head);
+        ctx->stats.pair_tail_transfers++;
+    } else {
+        rc_retain(tail);
+        ctx->stats.pair_tail_shares++;
+    }
+    *out = candidate;
+    return tail;
+}
 RcValue *rc_head(RcContext *ctx, RcValue *v) { return v && v->type == RC_PAIR ? rc_retain(v->as.pair.head) : rc_error(ctx, "hd expects a nonempty list"); }
 RcValue *rc_tail(RcContext *ctx, RcValue *v) { return v && v->type == RC_PAIR ? rc_retain(v->as.pair.tail) : rc_error(ctx, "tl expects a nonempty list"); }
 RcValue *rc_head_borrowed(const RcValue *v) { return v && v->type == RC_PAIR ? v->as.pair.head : NULL; }
@@ -337,22 +416,68 @@ size_t rc_vector_length(const RcValue *v) { return v && v->type == RC_VECTOR ? v
 RcValue *rc_vector_get(RcContext *ctx, RcValue *v, size_t i) {
     return v && v->type == RC_VECTOR && i < v->as.vector.length ? rc_retain(v->as.vector.items[i]) : rc_error(ctx, "absvector index out of bounds");
 }
+typedef struct {
+    RcContext *ctx;
+    RcValue *target, *work;
+    bool found;
+} CycleSearch;
+static void cycle_search_edge(RcValue *v, void *data) {
+    CycleSearch *search = data;
+    if (!v || v == &nil_value) return;
+    if (v == search->target) { search->found = true; return; }
+    if (v->visit_epoch == search->ctx->visit_epoch) return;
+    v->visit_epoch = search->ctx->visit_epoch;
+    v->work = search->work; search->work = v;
+}
+static bool would_create_cycle(RcContext *ctx, RcValue *target, RcValue *item) {
+    /* An allocation-free graph walk. The next epoch invalidates leftover work
+     * marks even on an early hit, and objects remain unchanged throughout. */
+    if (++ctx->visit_epoch == 0) {
+        for (RcValue *v = ctx->objects; v; v = v->next) v->visit_epoch = 0;
+        ctx->visit_epoch = 1;
+    }
+    CycleSearch search = {ctx, target, NULL, false};
+    cycle_search_edge(item, &search);
+    while (search.work && !search.found) {
+        RcValue *v = search.work; search.work = v->work;
+        edges(v, cycle_search_edge, &search);
+    }
+    return search.found;
+}
 bool rc_vector_set(RcContext *ctx, RcValue *v, size_t i, RcValue *item) {
     if (!belongs(ctx, v) || v->type != RC_VECTOR || i >= v->as.vector.length || !belongs(ctx, item)) { rc_error(ctx, "invalid absvector assignment"); return false; }
+    if (ctx->acyclic && would_create_cycle(ctx, v, item)) {
+        rc_error(ctx, "acyclic mode rejects vector assignment that would create a cycle");
+        return false;
+    }
     RcValue *old = v->as.vector.items[i]; v->as.vector.items[i] = rc_retain(item); rc_release(old); return true;
 }
-RcValue *rc_closure(RcContext *ctx, size_t arity, RcNative native,
-                    size_t capture_count, RcValue *const *captures) {
-    if (!native || capture_count > SIZE_MAX / sizeof(RcValue *) || (capture_count && !captures)) return rc_error(ctx, "invalid closure");
+static RcValue *closure_create(RcContext *ctx, size_t arity, RcNative native,
+                               RcNativeOwned owned_native, size_t capture_count,
+                               RcValue *const *captures) {
+    if ((!native && !owned_native) || capture_count > SIZE_MAX / sizeof(RcValue *) || (capture_count && !captures)) return rc_error(ctx, "invalid closure");
     for (size_t i = 0; i < capture_count; ++i) if (!belongs(ctx, captures[i])) return rc_error(ctx, "invalid closure capture/context");
     RcValue **copy = capture_count ? malloc(capture_count * sizeof(*copy)) : NULL;
     if (capture_count && !copy) return rc_error(ctx, "out of memory");
     RcValue *v = allocate(ctx, RC_CLOSURE, capture_count * sizeof(*copy));
     if (!v) { free(copy); return NULL; }
     v->as.closure.native = native; v->as.closure.arity = arity;
+    v->as.closure.owned_native = owned_native;
     v->as.closure.captures = copy; v->as.closure.capture_count = capture_count;
     for (size_t i = 0; i < capture_count; ++i) copy[i] = rc_retain(captures[i]);
     return v;
+}
+RcValue *rc_closure(RcContext *ctx, size_t arity, RcNative native,
+                    size_t capture_count, RcValue *const *captures) {
+    return closure_create(ctx, arity, native, NULL, capture_count, captures);
+}
+RcValue *rc_closure_owned(RcContext *ctx, size_t arity, RcNativeOwned native,
+                          size_t capture_count, RcValue *const *captures) {
+    return closure_create(ctx, arity, NULL, native, capture_count, captures);
+}
+bool rc_closure_is_native(const RcValue *v, RcNative native) {
+    return v && v->type == RC_CLOSURE && v->as.closure.native == native &&
+           !v->as.closure.owned_native;
 }
 RcValue *rc_capture(const RcValue *v, size_t i) {
     return v && v->type == RC_CLOSURE && i < v->as.closure.capture_count ? v->as.closure.captures[i] : NULL;
@@ -365,8 +490,9 @@ static RcValue *partial(RcContext *ctx, RcValue *fn, size_t argc, RcValue *const
     if (n > SIZE_MAX / sizeof(RcValue *)) return rc_error(ctx, "partial application size overflow");
     RcValue **bound = n ? malloc(n * sizeof(*bound)) : NULL;
     if (n && !bound) return rc_error(ctx, "out of memory");
-    RcValue *v = rc_closure(ctx, fn->as.closure.arity, fn->as.closure.native,
-                             fn->as.closure.capture_count, fn->as.closure.captures);
+    RcValue *v = closure_create(ctx, fn->as.closure.arity, fn->as.closure.native,
+                                fn->as.closure.owned_native,
+                                fn->as.closure.capture_count, fn->as.closure.captures);
     if (!v) { free(bound); return NULL; }
     for (size_t i = 0; i < fn->as.closure.bound_count; ++i) bound[i] = rc_retain(fn->as.closure.bound[i]);
     for (size_t i = 0; i < argc; ++i) bound[fn->as.closure.bound_count + i] = rc_retain(argv[i]);
@@ -384,6 +510,32 @@ RcValue *rc_tailcall(RcContext *ctx, RcValue *fn, size_t argc, RcValue *const *a
     if (!v) { free(copy); return NULL; }
     v->as.tail.function = rc_retain(fn); v->as.tail.argc = argc; v->as.tail.argv = copy;
     for (size_t i = 0; i < argc; ++i) copy[i] = rc_retain(argv[i]);
+    return v;
+}
+static void consume_arguments(size_t argc, RcValue **argv) {
+    if (!argv) return;
+    for (size_t i = 0; i < argc; ++i) {
+        RcValue *v = argv[i]; argv[i] = NULL; rc_release(v);
+    }
+}
+RcValue *rc_tailcall_owned_args(RcContext *ctx, RcValue *fn, size_t argc, RcValue **argv) {
+    if (!belongs(ctx, fn) || argc > SIZE_MAX / sizeof(RcValue *) || (argc && !argv)) {
+        consume_arguments(argc, argv);
+        return rc_error(ctx, "invalid owned application");
+    }
+    for (size_t i = 0; i < argc; ++i) if (!belongs(ctx, argv[i])) {
+        consume_arguments(argc, argv);
+        return rc_error(ctx, "invalid owned argument/context");
+    }
+    RcValue **copy = argc ? malloc(argc * sizeof(*copy)) : NULL;
+    if (argc && !copy) {
+        consume_arguments(argc, argv);
+        return rc_error(ctx, "out of memory");
+    }
+    RcValue *v = allocate(ctx, RC_TAIL, argc * sizeof(*copy));
+    if (!v) { free(copy); consume_arguments(argc, argv); return NULL; }
+    v->as.tail.function = rc_retain(fn); v->as.tail.argc = argc; v->as.tail.argv = copy;
+    for (size_t i = 0; i < argc; ++i) { copy[i] = argv[i]; argv[i] = NULL; }
     return v;
 }
 RcValue *rc_require_boolean(RcContext *ctx, RcValue *value) {
@@ -410,8 +562,8 @@ RcValue *rc_require_boolean(RcContext *ctx, RcValue *value) {
 /* args == NULL is a boolean continuation. Adjacent identical guards collapse,
  * so arbitrarily long chains of tail and/or calls use one pending guard. */
 typedef struct ApplyPending { RcValue *args; struct ApplyPending *next; } ApplyPending;
-RcValue *rc_apply(RcContext *ctx, RcValue *fn, size_t argc, RcValue *const *argv) {
-    RcValue *request = rc_tailcall(ctx, fn, argc, argv), *result = NULL;
+static RcValue *apply_request(RcContext *ctx, RcValue *request) {
+    RcValue *result = NULL;
     ApplyPending *pending = NULL;
     while (request) {
         if (request->as.tail.require_boolean && (!pending || pending->args)) {
@@ -445,9 +597,29 @@ RcValue *rc_apply(RcContext *ctx, RcValue *fn, size_t argc, RcValue *const *argv
             RcValue **actual = n ? malloc(n * sizeof(*actual)) : NULL;
             if (n && !actual) { rc_error(ctx, "out of memory"); rc_release(resolved); goto fail; }
             size_t bound = target->as.closure.bound_count;
-            for (size_t i = 0; i < bound; ++i) actual[i] = target->as.closure.bound[i];
-            for (size_t i = 0; i < needed; ++i) actual[bound + i] = request->as.tail.argv[i];
-            result = target->as.closure.native(ctx, target, n, actual);
+            if (target->as.closure.owned_native) {
+                /* Bound arguments remain closure-owned and are shared here.
+                 * Unbound request edges become owned C slots without changing
+                 * counts. Nil replaces transferred graph slots before callback
+                 * entry, so any callback safepoint sees a valid heap and roots. */
+                for (size_t i = 0; i < bound; ++i) actual[i] = rc_retain(target->as.closure.bound[i]);
+                for (size_t i = 0; i < needed; ++i) {
+                    if (request->refs == 1) {
+                        actual[bound + i] = request->as.tail.argv[i];
+                        request->as.tail.argv[i] = rc_nil();
+                    } else {
+                        /* Tail values may themselves be captured/shared.
+                         * Executing one must not consume its reusable args. */
+                        actual[bound + i] = rc_retain(request->as.tail.argv[i]);
+                    }
+                }
+                result = target->as.closure.owned_native(ctx, target, n, actual);
+                consume_arguments(n, actual);
+            } else {
+                for (size_t i = 0; i < bound; ++i) actual[i] = target->as.closure.bound[i];
+                for (size_t i = 0; i < needed; ++i) actual[bound + i] = request->as.tail.argv[i];
+                result = target->as.closure.native(ctx, target, n, actual);
+            }
             free(actual);
         }
         rc_release(resolved);
@@ -472,6 +644,12 @@ fail:
     rc_release(request); rc_release(result);
     while (pending) { ApplyPending *next = pending->next; rc_release(pending->args); free(pending); pending = next; }
     return NULL;
+}
+RcValue *rc_apply(RcContext *ctx, RcValue *fn, size_t argc, RcValue *const *argv) {
+    return apply_request(ctx, rc_tailcall(ctx, fn, argc, argv));
+}
+RcValue *rc_apply_owned_args(RcContext *ctx, RcValue *fn, size_t argc, RcValue **argv) {
+    return apply_request(ctx, rc_tailcall_owned_args(ctx, fn, argc, argv));
 }
 RcValue *rc_stream_with_direction(RcContext *ctx, FILE *file, bool close, bool input) {
     if (!file) return rc_error(ctx, "invalid stream");

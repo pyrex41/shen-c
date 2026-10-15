@@ -203,6 +203,29 @@ static RcValue *primitive(RcContext *c,RcValue *self,size_t argc,RcValue *const 
  default:return rc_error(c,"Unknown primitive");
  }
 }
+RcValue *rc_cons_call_reuse(RcContext *c,RcValue *function,
+                            RcValue *candidate,RcValue *head,RcValue *tail,
+                            bool tail_position) {
+ if(rc_closure_is_native(function,primitive)&&rc_arity(function)==2) {
+  RcValue *code=rc_capture(function,0);
+  if(code&&rc_integer_value(code)==P_CONS)return rc_cons_reuse(c,candidate,head,tail);
+ }
+ RcValue *args[]={head,tail};
+ RcValue *result=tail_position?rc_tailcall(c,function,2,args):rc_apply(c,function,2,args);
+ rc_release(candidate);return result;
+}
+RcValue *rc_tail_call_reuse(RcContext *c,RcValue *function,
+                            RcValue *candidate,RcValue **out) {
+ if(!out){rc_release(candidate);return rc_error(c,"Missing reuse token slot");}
+ *out=NULL;
+ if(rc_closure_is_native(function,primitive)&&rc_arity(function)==1) {
+  RcValue *code=rc_capture(function,0);
+  if(code&&rc_integer_value(code)==P_TL)return rc_pair_take_tail_reuse(c,candidate,out);
+ }
+ RcValue *result=rc_apply(c,function,1,&candidate);
+ if(result)*out=candidate;else rc_release(candidate);
+ return result;
+}
 static bool install(RcContext *c,const struct Primitive *p,size_t n) {
  for(size_t i=0;i<n;i++){
   RcValue *code=rc_integer(c,p[i].op);if(!code)return false;

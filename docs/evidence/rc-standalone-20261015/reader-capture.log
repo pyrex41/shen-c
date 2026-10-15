@@ -1,0 +1,15 @@
+CLI_SHA256=728f77465dfd30a5f3bd15309ab369cb22ed1f3bf39a28603a5bcc84807a90d7
+PASS standard package macro datatype synonym metadata
+PASS successful scalar property effects and caught failure
+PASS lossless escaped string and symbol atoms
+PASS define versus raw defun reader timing
+PASS nested eval-kl definition boundary
+PASS nested auxiliary definition boundary
+PASS actual capture hook replacement boundary
+PASS noncanonical macro callback boundary
+PASS noncanonical datatype callback boundary
+PASS persistent property address mutation is sticky
+PASS persistent closure payload boundary
+PASS persistent vector payload boundary
+PASS malformed source preserves prior outputs
+RC reader capture: PASS (13 cases)

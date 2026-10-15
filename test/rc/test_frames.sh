@@ -9,6 +9,8 @@ exec python3 - <<'PY'
 import os
 from pathlib import Path
 import resource
+import signal
+import time
 import subprocess
 import tempfile
 
@@ -30,7 +32,35 @@ with tempfile.TemporaryDirectory(prefix='shen-rc-frames.') as work:
         '(frame-rec 256)', '((frame-capture 20) 22)', '(frame-fault)', '(frame-tail 5000)',
     ]) + '\n')
     env = dict(os.environ, SHEN_C_HOME=str(root))
-    subprocess.run([os.environ['RC_FRAME_BUILDER'], str(source), str(work / 'app')], env=env, check=True, timeout=60)
+    build_timeout = int(os.environ.get('RC_FRAME_BUILD_TIMEOUT', '300'))
+    if not 1 <= build_timeout <= 1800:
+        raise SystemExit('RC_FRAME_BUILD_TIMEOUT must be within 1..1800 seconds')
+    started = time.monotonic()
+    build = subprocess.Popen([os.environ['RC_FRAME_BUILDER'], str(source), str(work / 'app')],
+                             env=env, start_new_session=True)
+    try:
+        status = build.wait(timeout=build_timeout)
+    except subprocess.TimeoutExpired:
+        # The builder forks make/compiler processes; stop the whole test group.
+        try:
+            os.killpg(build.pid, signal.SIGTERM)
+        except ProcessLookupError:
+            pass
+        try:
+            build.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            pass
+        try:
+            os.killpg(build.pid, signal.SIGKILL)
+        except ProcessLookupError:
+            pass
+        build.wait()
+        raise SystemExit('RC large frames: build UNKNOWN after %ss timeout' % build_timeout)
+    generated_size = (work / 'app/app.c').stat().st_size if (work / 'app/app.c').exists() else 0
+    print('RC large frames: generated C bytes=%d build_seconds=%.3f' %
+          (generated_size, time.monotonic()-started), flush=True)
+    if status:
+        raise SystemExit('RC large frames: builder failed with status %s' % status)
     def stack_limit():
         requested = os.environ.get('RC_FRAME_STACK_KB')
         if requested:

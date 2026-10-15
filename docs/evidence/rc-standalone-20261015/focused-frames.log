@@ -1,0 +1,4 @@
+rc-build: native defuns=4 lambdas=2 tops=4
+/Library/Developer/CommandLineTools/usr/bin/clang  -O1 -g -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk -Wall -Wextra -Werror -fsanitize=address,undefined -fno-sanitize-recover=all -fno-omit-frame-pointer -std=c17 -I'<checkout>/src/rc' app.c '<checkout>/src/rc/rc.c' '<checkout>/src/rc/primitives.c' '<checkout>/src/rc/eval.c' '<checkout>/src/rc/read.c' -lm -o app
+RC large frames: generated C bytes=84697 build_seconds=4.681
+RC large frames: recursion, captures, caught faults, and tail calls PASS

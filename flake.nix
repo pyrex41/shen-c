@@ -1,86 +1,87 @@
 {
-  description = "Shen-C development environment";
+  description = "Shen-C independent reference-counted compiler and runtime";
 
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
 
   outputs = { nixpkgs, ... }:
     let
       systems = [
-        "aarch64-darwin"
-        "x86_64-darwin"
-        "aarch64-linux"
-        "x86_64-linux"
+        "aarch64-darwin" "x86_64-darwin"
+        "aarch64-linux" "x86_64-linux"
       ];
       each = f: nixpkgs.lib.genAttrs systems (system: f nixpkgs.legacyPackages.${system});
       tools = pkgs: [
-        pkgs.clang
-        pkgs.cmake
-        pkgs.ninja
-        pkgs.gnumake
-        pkgs.pkg-config
-        pkgs.boehmgc
-        pkgs.git
+        pkgs.clang pkgs.cmake pkgs.ninja pkgs.gnumake pkgs.git pkgs.python3
       ];
       srcFor = pkgs: pkgs.lib.cleanSourceWith {
         src = ./.;
         filter = path: type:
           let base = baseNameOf path;
           in !(builtins.elem base [
-            "bin" "obj" "build" "build-ci" "evidence" ".git"
+            "bin" "obj" "build" "build-ci" "build-rc" "evidence" ".git"
           ]);
       };
-      rejectHomebrew = ''
-        pkg-config --modversion bdw-gc
-        cflags=$(pkg-config --cflags --libs bdw-gc)
-        echo "bdw-gc flags: $cflags"
-        case "$cflags" in
-          *Homebrew*|*opt/homebrew*)
-            echo "Homebrew bdw-gc is forbidden" >&2
-            exit 1
-            ;;
-        esac
+      # Installed compilation needs a C toolchain, make, the complete KL kernel,
+      # and the independent runtime sources. CLI execution needs only its binary.
+      installArtifacts = pkgs: binaries: sources: ''
+        runHook preInstall
+        mkdir -p "$out/bin" "$out/libexec/shen-c" \
+          "$out/share/shen-c/src" "$out/share/shen-c/shen/src"
+        cp ${binaries}/shen-rc "$out/bin/shen-rc"
+        cp ${binaries}/shen-rc "$out/bin/shen-c"
+        cp ${binaries}/rc-build "$out/libexec/shen-c/rc-build"
+        cp -R ${sources}/src/rc "$out/share/shen-c/src/rc"
+        cp -R ${sources}/shen/src/kl "$out/share/shen-c/shen/src/kl"
+        cp ${sources}/scripts/compile-shen-rc.sh "$out/bin/compile-shen-rc.sh"
+        makeWrapper "$out/libexec/shen-c/rc-build" "$out/bin/rc-build" \
+          --set-default SHEN_C_HOME "$out/share/shen-c" \
+          --set-default CC clang \
+          --prefix PATH : ${pkgs.lib.makeBinPath [ pkgs.clang pkgs.gnumake ]}
+        wrapProgram "$out/bin/compile-shen-rc.sh" \
+          --set-default SHEN_C_HOME "$out/share/shen-c" \
+          --set-default CC clang \
+          --prefix PATH : ${pkgs.lib.makeBinPath [ pkgs.python3 pkgs.clang pkgs.gnumake ]}
+        runHook postInstall
+      '';
+      installedSmoke = ''
+        runHook preInstallCheck
+        unset SHEN_C_HOME SHEN_RC_HOME SHEN_RC_CLI RC_BUILDER
+        "$out/bin/shen-c" --version
+        test "$("$out/bin/shen-rc" eval -e '(+ 20 22)')" = 42
+        rc_check_dir=$(mktemp -d)
+        printf '(define nix-answer X -> (+ X 1))\n(nix-answer 41)\n' > "$rc_check_dir/input.shen"
+        "$out/bin/compile-shen-rc.sh" "$rc_check_dir/input.shen" "$rc_check_dir/native"
+        SHEN_RC_PRINT=1 "$rc_check_dir/native/app" > "$rc_check_dir/result"
+        test "$(cat "$rc_check_dir/result")" = 42
+        runHook postInstallCheck
       '';
       mkShenC = pkgs: cc: pkgs.stdenv.mkDerivation {
         pname = "shen-c";
         version = "0.2.3";
         src = srcFor pkgs;
-        nativeBuildInputs = [
-          pkgs.pkg-config
-          pkgs.cmake
-          pkgs.ninja
-          pkgs.gnumake
-        ] ++ pkgs.lib.optionals (cc == "clang") [ pkgs.clang ]
+        nativeBuildInputs = [ pkgs.gnumake pkgs.python3 pkgs.makeWrapper ]
+          ++ pkgs.lib.optionals (cc == "clang") [ pkgs.clang ]
           ++ pkgs.lib.optionals (cc == "gcc") [ pkgs.gcc ];
-        buildInputs = [ pkgs.boehmgc ];
         CC = cc;
+        PKG_CONFIG = "/nonexistent/shen-rc-pkg-config";
         dontConfigure = true;
         enableParallelBuilding = true;
         buildPhase = ''
           runHook preBuild
-          ${rejectHomebrew}
-          make -j$NIX_BUILD_CORES CC=$CC
+          make -j$NIX_BUILD_CORES CC="$CC"
           runHook postBuild
         '';
         doCheck = true;
         checkPhase = ''
           runHook preCheck
-          make CC=$CC test
-          ./bin/shen-c --version
+          make CC="$CC" test
+          test/rc/test_reader_capture.sh ./bin/shen-rc
+          test "$(./bin/shen-c eval -e '(+ 20 22)')" = 42
           runHook postCheck
         '';
-        installPhase = ''
-          runHook preInstall
-          mkdir -p $out/bin $out/libexec $out/share/shen-c
-          cp bin/shen-c $out/libexec/shen-c
-          cp -R shen $out/share/shen-c/shen
-          cat > $out/bin/shen-c <<EOF
-          #!/bin/sh
-          export SHEN_C_HOME="''${SHEN_C_HOME:-$out/share/shen-c}"
-          exec $out/libexec/shen-c "\$@"
-          EOF
-          chmod +x $out/bin/shen-c
-          runHook postInstall
-        '';
+        installPhase = installArtifacts pkgs "bin" ".";
+        doInstallCheck = true;
+        installCheckPhase = installedSmoke;
       };
     in {
       packages = each (pkgs: rec {
@@ -98,30 +99,23 @@
           pname = "shen-c-cmake";
           version = "0.2.3";
           src = srcFor pkgs;
-          nativeBuildInputs = [
-            pkgs.pkg-config
-            pkgs.cmake
-            pkgs.ninja
-            pkgs.clang
-          ];
-          buildInputs = [ pkgs.boehmgc ];
+          nativeBuildInputs = [ pkgs.cmake pkgs.ninja pkgs.clang pkgs.gnumake pkgs.python3 pkgs.makeWrapper ];
+          PKG_CONFIG = "/nonexistent/shen-rc-pkg-config";
           cmakeFlags = [
             "-DCMAKE_C_COMPILER=clang"
             "-DCMAKE_BUILD_TYPE=Release"
           ];
-          preConfigure = rejectHomebrew;
           doCheck = true;
           checkPhase = ''
             runHook preCheck
-            ../bin/test_foundation
-            ../bin/test_abi
-            ../bin/shen-c --version
+            ctest --output-on-failure
+            ../test/rc/test_reader_capture.sh ./shen-rc
+            test "$(./shen-rc eval -e '(+ 20 22)')" = 42
             runHook postCheck
           '';
-          installPhase = ''
-            mkdir -p $out/bin
-            cp ../bin/shen-c $out/bin/shen-c
-          '';
+          installPhase = installArtifacts pkgs "." "..";
+          doInstallCheck = true;
+          installCheckPhase = installedSmoke;
         };
       } // pkgs.lib.optionalAttrs pkgs.stdenv.hostPlatform.isLinux {
         make-gcc = mkShenC pkgs "gcc";
@@ -130,17 +124,13 @@
       devShells = each (pkgs: {
         default = pkgs.mkShell {
           packages = tools pkgs
-            ++ nixpkgs.lib.optionals pkgs.stdenv.hostPlatform.isLinux [ pkgs.gcc ];
-          nativeBuildInputs = [ pkgs.pkg-config pkgs.cmake pkgs.ninja pkgs.gnumake ];
-          buildInputs = [ pkgs.boehmgc ];
+            ++ pkgs.lib.optionals pkgs.stdenv.hostPlatform.isLinux [ pkgs.gcc ];
           shellHook = ''
-            echo "shen-c dev shell (C17, bdw-gc via pkg-config)"
-            echo "  cc:        ''${CC:-clang}"
-            echo "  cmake:     $(cmake --version | head -n1)"
-            echo "  ninja:     $(ninja --version)"
-            echo "  pkg-config bdw-gc: $(pkg-config --modversion bdw-gc)"
+            echo "shen-c dev shell (C17, independent RC compiler and runtime)"
+            echo "  make; make test; make certify"
           '';
         };
+
       });
     };
 }

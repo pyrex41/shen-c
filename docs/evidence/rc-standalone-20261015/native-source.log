@@ -1,0 +1,6 @@
+Compiling Shen source with the standard kernel frontend...
+Emitting and compiling native C...
+Native executable: ${REPO}/evidence/rc/source-final-proof/working directory's spaces/native output/app
+RC artifact audit PASS: ${REPO}/evidence/rc/source-final-proof/working directory's spaces/native output/app
+Retained source compiler proof: ${REPO}/evidence/rc/source-final-proof
+RC Shen source compilation: package code/reflection, empty package, macros/global/property replay, datatypes, synonyms, quoted/NUL literals/reflection, numeric symbols, raw defun timing, list patterns, closures, native output, deferred top effects, and invalid-source failure PASS

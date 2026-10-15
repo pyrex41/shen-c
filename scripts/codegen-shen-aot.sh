@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Historical defun-only bootstrap helper; use compile-shen-rc.sh for applications.
 # Generate bootstrap KL (defuns only; datatype effects dropped) from .shen
 # files via a fresh kernel boot. Analog of shen-rust scripts/codegen-shen-aot.sh.
 #

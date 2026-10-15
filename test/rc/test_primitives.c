@@ -43,6 +43,13 @@ int main(void){
  RcValue *thunk=rc_closure(c,0,fallback,0,NULL),*bad=rc_integer(c,5),*orargs[]={vec,bad,thunk};
  v=call(c,"<-address/or",3,orargs);assert(v&&rc_integer_value(v)==42);rc_release(v);
  RcValue *missing=rc_symbol(c,"*missing-test*"),*varor[]={missing,thunk};v=call(c,"value/or",2,varor);assert(v&&rc_integer_value(v)==42&&!rc_has_error(c));rc_release(v);
+ RcValue *consname=rc_symbol(c,"cons"),*consfn=rc_function_get(c,consname);assert(consfn);rc_release(consname);
+ RcValue *candidate=rc_cons(c,a,rc_nil());RcValue *original=candidate;
+ v=rc_cons_call_reuse(c,consfn,candidate,b,rc_nil(),false);assert(v==original&&rc_head_borrowed(v)==b);rc_release(v);
+ candidate=rc_cons(c,a,rc_nil());RcValue *alias=rc_retain(candidate);
+ v=rc_cons_call_reuse(c,consfn,candidate,b,rc_nil(),false);assert(v&&v!=alias&&rc_head_borrowed(alias)==a);rc_release(v);rc_release(alias);rc_release(consfn);
+ RcValue *replacement=rc_closure(c,2,fallback,0,NULL);candidate=rc_cons(c,a,rc_nil());
+ v=rc_cons_call_reuse(c,replacement,candidate,b,rc_nil(),false);assert(v&&rc_integer_value(v)==42);rc_release(v);rc_release(replacement);
  FILE *file=tmpfile();assert(file);RcValue *stream=rc_stream_with_direction(c,file,true,false),*outargs[]={text,stream};
  v=call(c,"shen.write-string",2,outargs);assert(v==text);rc_release(v);rewind(file);char bytes[3];assert(fread(bytes,1,3,file)==3&&!memcmp(bytes,"a\0b",3));
  assert(!call(c,"read-byte",1,&stream)&&rc_has_error(c));rc_clear_error(c);
