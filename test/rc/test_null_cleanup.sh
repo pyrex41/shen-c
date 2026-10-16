@@ -38,5 +38,13 @@ with tempfile.TemporaryDirectory(prefix='shen-null-cleanup.') as tmp:
     subprocess.run([os.environ['RC_CLEANUP_BUILDER'],str(source),str(dest)],env=env,check=True,timeout=120)
     generated=(dest/'app.c').read_text()
     assert 'static void rc_drop_range' not in generated
+    # Compound address-taking pair reuse remains an unknown-line barrier.
+    # Its real retained range must still require the helper definition.
+    (source/'user.kl').write_text('(let A 1 (let B 2 (cons A B)))\n')
+    dest=work/'retained-range'
+    subprocess.run([os.environ['RC_CLEANUP_BUILDER'],str(source),str(dest)],env=env,check=True,timeout=120)
+    generated=(dest/'app.c').read_text()
+    assert 'static void rc_drop_range' in generated
+    assert any(line.startswith('  rc_drop_range(t,') for line in generated.splitlines())
     print('RC null cleanup: branches, traps, reuse, slot recycling, quoted cleanup syntax PASS (both modes)')
 PY

@@ -133,7 +133,7 @@ static void frame_code(Buf *out,const RcEmitFn *f) {
  const char *line=rewritten.p?rewritten.p:"";
  while(*line) {
   const char *end=strchr(line,'\n');size_t len=end?(size_t)(end-line)+1:strlen(line);
-  int a=-1,b=-1,c=-1,n=0;bool omit=false,recognized=false;
+  int a=-1,b=-1,c=-1,n=0;char label[64];bool omit=false,recognized=false;
   if((n=0,sscanf(line,"  if(t[%d]) rc_release(t[%d]); t[%d]=NULL;%n",&a,&b,&c,&n))==3&&
      a==b&&b==c&&a>=0&&a<f->frame_slots&&n==(int)(len-(end?1:0))) {
    omit=nulls[a];nulls[a]=1;recognized=true;
@@ -150,6 +150,13 @@ static void frame_code(Buf *out,const RcEmitFn *f) {
   } else if((n=0,sscanf(line,"  a[%d]=t[%d];%n",&a,&b,&n))==2&&
             n==(int)(len-(end?1:0)))recognized=true;
   else if((n=0,sscanf(line,"  if(!t[%d]) goto %*[^;];%n",&a,&n))==1&&
+          n==(int)(len-(end?1:0)))recognized=true;
+  /* Borrowed callee storage is separate from owned frame slots. */
+  else if((n=0,sscanf(line,"  borrowed_fn=NULL;%n",&n))==0&&
+          n==(int)(len-(end?1:0)))recognized=true;
+  else if((n=0,sscanf(line,"  borrowed_fn=rc_function_get_borrowed(ctx,symbols[%d]);%n",&a,&n))==1&&
+          a>=0&&n==(int)(len-(end?1:0)))recognized=true;
+  else if((n=0,sscanf(line,"  if(!borrowed_fn) goto %63[a-zA-Z0-9_];%n",label,&n))==1&&
           n==(int)(len-(end?1:0)))recognized=true;
   /* Ordinary generated RHS calls cannot write any other frame slot. Reject
    * compound statements, labels, braces and address-taking before trusting it. */
