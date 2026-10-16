@@ -28,11 +28,15 @@
 
 struct RcValue {
     RcType type;
-    size_t refs, bytes, trial, visit_epoch;
+    size_t refs, bytes;
+    /* Trial counts are consumed before work links become live. Root discovery
+     * only pushes its current object; transitive marking starts afterward. */
+    union { size_t trial; RcValue *work; };
+    size_t visit_epoch;
     bool marked, reaches_vector, cycle_source;
     uint8_t builtin_slot; /* Canonical slot + 1, zero for ordinary values. */
     RcContext *ctx;
-    RcValue *prev, *next, *work;
+    RcValue *prev, *next;
     union {
         struct { double real; int64_t integer; bool exact; } number;
         struct {
@@ -330,6 +334,9 @@ void rc_collect(RcContext *ctx) {
         for (RcValue *v = ctx->objects; v; v = v->next) { v->trial = v->refs; v->marked = false; }
         for (RcValue *v = ctx->objects; v; v = v->next) edges(v, subtract_edge, NULL);
         RcValue *work = NULL;
+        /* Each trial is read once here. mark_edge only overwrites that same
+         * object's trial with its work link; it cannot touch a later trial.
+         * Child traversal starts after this entire root-discovery loop. */
         for (RcValue *v = ctx->objects; v; v = v->next) if (v->trial) mark_edge(v, &work);
         while (work) { RcValue *v = work; work = v->work; edges(v, mark_edge, &work); }
         RcValue *dead = NULL;
