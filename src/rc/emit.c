@@ -16,7 +16,7 @@ typedef struct Program Program;
 typedef struct { Program *owner; char *p; size_t n, cap; } Buf;
 typedef struct { const char *name; int slot; } Binding;
 typedef struct Allocation { struct Allocation *prev,*next; max_align_t align; unsigned char data[]; } Allocation;
-struct Program { RcEmitOptions options; RcContext *ctx; jmp_buf failure; Allocation *allocations; Buf functions,literals,transparent_do; const char **symbols; size_t nsymbols,symbol_capacity; bool user_phase,drop_range_used,transparent_do_used; RcValue *metadata_root; int next,next_literal; long defuns, lambdas, tops; };
+struct Program { RcEmitOptions options; RcContext *ctx; jmp_buf failure; Allocation *allocations; Buf functions,literals,transparent_do; const char **symbols; size_t nsymbols,symbol_capacity; bool user_phase,drop_range_used,drop_range_emitted,transparent_do_used; RcValue *metadata_root; int next,next_literal; long defuns, lambdas, tops; };
 static _Noreturn void bad(Program *p,const char *message) { rc_error(p->ctx,"%s",message); longjmp(p->failure,1); }
 static void *resize(Program *p,void *old,size_t bytes) {
   if(bytes>SIZE_MAX-sizeof(Allocation)) bad(p,"compiler allocation overflow");
@@ -103,7 +103,7 @@ static void retire_scope(RcEmitFn *f,int mark,int result) {
 }
 /* Rewrite only C identifiers, leaving source strings (including escaped
  * quotes and text such as "t[123]") byte-for-byte intact. */
-static void frame_code(Buf *out,const RcEmitFn *f) {
+static void rewrite_frame_code(Buf *out,const RcEmitFn *f) {
   const char *s=f->code.p?f->code.p:"";size_t start=0,i=0;
   while(s[i]) {
     if(s[i]=='\"'||s[i]=='\'') {
@@ -116,6 +116,54 @@ static void frame_code(Buf *out,const RcEmitFn *f) {
     }else i++;
   }
   put(out,"%s",s+start);
+}
+/* Facts concern physical frame slots and only the exact generated forms
+ * below. Unknown lines (including every control-flow boundary or escaping
+ * slot address) discard all facts. Function calls receive values/scratch a,
+ * never the private t array, so a simple assignment invalidates its dst only. */
+static void frame_code(Buf *out,const RcEmitFn *f) {
+ Buf rewritten={.owner=f->p};rewrite_frame_code(&rewritten,f);
+ unsigned char *nulls=alloc(f->p,(size_t)(f->frame_slots?f->frame_slots:1));
+ memset(nulls,1,(size_t)f->frame_slots);
+ const char *line=rewritten.p?rewritten.p:"";
+ while(*line) {
+  const char *end=strchr(line,'\n');size_t len=end?(size_t)(end-line)+1:strlen(line);
+  int a=-1,b=-1,c=-1,n=0;bool omit=false,recognized=false;
+  if((n=0,sscanf(line,"  if(t[%d]) rc_release(t[%d]); t[%d]=NULL;%n",&a,&b,&c,&n))==3&&
+     a==b&&b==c&&a>=0&&a<f->frame_slots&&n==(int)(len-(end?1:0))) {
+   omit=nulls[a];nulls[a]=1;recognized=true;
+  } else if((n=0,sscanf(line,"  rc_drop_range(t,%d,%d);%n",&a,&b,&n))==2&&
+            a>=0&&b>=a&&b<=f->frame_slots&&n==(int)(len-(end?1:0))) {
+   omit=true;for(int k=a;k<b;k++)if(!nulls[k])omit=false;
+   for(int k=a;k<b;k++)nulls[k]=1;recognized=true;
+   if(!omit)f->p->drop_range_emitted=true;
+  } else if((n=0,sscanf(line,"  t[%d]=NULL;%n",&a,&n))==1&&a>=0&&a<f->frame_slots&&
+            n==(int)(len-(end?1:0))) {nulls[a]=1;recognized=true;}
+  else if((n=0,sscanf(line,"  t[%d]=t[%d]; t[%d]=NULL;%n",&a,&b,&c,&n))==3&&b==c&&
+          a>=0&&a<f->frame_slots&&b>=0&&b<f->frame_slots&&n==(int)(len-(end?1:0))) {
+   nulls[a]=nulls[b];nulls[b]=1;recognized=true;
+  } else if((n=0,sscanf(line,"  a[%d]=t[%d];%n",&a,&b,&n))==2&&
+            n==(int)(len-(end?1:0)))recognized=true;
+  else if((n=0,sscanf(line,"  if(!t[%d]) goto %*[^;];%n",&a,&n))==1&&
+          n==(int)(len-(end?1:0)))recognized=true;
+  /* Ordinary generated RHS calls cannot write any other frame slot. Reject
+   * compound statements, labels, braces and address-taking before trusting it. */
+  else if((n=0,sscanf(line,"  t[%d]=%n",&a,&n))==1&&a>=0&&a<f->frame_slots&&n>0) {
+   bool safe=true;char quote=0;int semicolons=0;
+   for(size_t i=(size_t)n;i<len;i++) {
+    char ch=line[i];
+    if(quote){if(ch=='\\'&&i+1<len)i++;else if(ch==quote)quote=0;}
+    else if(ch=='\"'||ch=='\'')quote=ch;
+    else if(ch==';')semicolons++;
+    else if(ch=='{'||ch=='}'||ch==':'||ch=='&')safe=false;
+   }
+   if(safe&&semicolons==1&&!quote){nulls[a]=0;recognized=true;}
+  }
+  if(!recognized)memset(nulls,0,(size_t)f->frame_slots);
+  if(!omit)put(out,"%.*s",(int)len,line);
+  line+=len;
+ }
+ discard(nulls);discard(rewritten.p);
 }
 static void drop(RcEmitFn *f,int x) { put(&f->code,"  if(t[%d]) rc_release(t[%d]); t[%d]=NULL;\n",x,x,x); }
 static void check(RcEmitFn *f,int x) { put(&f->code,"  if(!t[%d]) goto %s;\n",x,f->fail); }
@@ -560,7 +608,7 @@ bool rc_emit_program(RcContext *ctx,FILE *out,RcValue *const *kernel,size_t nker
     for(size_t i=0;i<p->nsymbols;i++){if(i)put(&names,",\n");quoted(&names,p->symbols[i]);}
     fprintf(out,"static const char *const rc_module_symbol_names[]={\n%s\n};\nstatic const RcSymbolTable rc_module_symbols={rc_module_symbol_names,%zu};\n",names.p,p->nsymbols);
   }
-  if(p->drop_range_used)fputs("static void rc_drop_range(RcValue **slots,size_t first,size_t end) {\n"
+  if(p->drop_range_emitted)fputs("static void rc_drop_range(RcValue **slots,size_t first,size_t end) {\n"
                             "  for(size_t i=first;i<end;i++) { if(slots[i]) rc_release(slots[i]); slots[i]=NULL; }\n}\n",out);
   for(int i=0;i<p->next;i++) fprintf(out,"static RcValue *rc_native_%d(RcContext*,RcValue*,size_t,RcValue *%s*);\n",i,options->conservative_ownership?"const":"");
   if(p->transparent_do_used)fprintf(out,"static bool rc_transparent_do(RcValue *fn) {\n  return rc_arity(fn)==2 && (rc_primitive_is_do(fn)%s);\n}\n",p->transparent_do.p?p->transparent_do.p:"");
