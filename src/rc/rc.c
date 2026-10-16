@@ -43,7 +43,7 @@ struct RcValue {
             char *data; size_t length; uint64_t hash;
             RcValue *intern_next, *global, *function;
         } text;
-        struct { RcValue *head, *tail; } pair;
+        struct { RcValue *head, *tail; size_t proper_length; } pair;
         struct { RcValue **items; size_t length; } vector;
         struct {
             RcValue *parent, **keys, **values; size_t count;
@@ -63,6 +63,10 @@ struct RcValue {
         } tail;
     } as;
 };
+_Static_assert(sizeof(((RcValue *)0)->as.pair)<=sizeof(((RcValue *)0)->as.closure),
+               "pair length cache must fit the existing payload union");
+_Static_assert(UINTPTR_MAX!=UINT64_MAX || sizeof(RcValue)==128,
+               "64-bit RcValue storage must remain 128 bytes");
 /* Three inline tail arguments fit in the pre-existing closure-sized union. */
 _Static_assert(sizeof(((RcValue *)0)->as.tail) <= sizeof(((RcValue *)0)->as.closure),
                "inline tail arguments must not enlarge RcValue");
@@ -622,6 +626,7 @@ RcValue *rc_cons(RcContext *ctx, RcValue *head, RcValue *tail) {
     RcValue *v = allocate(ctx, RC_PAIR, 0);
     if (v) {
         v->as.pair.head = rc_retain(head); v->as.pair.tail = rc_retain(tail);
+        v->as.pair.proper_length = 0;
         v->reaches_vector = may_reach_vector(head) || may_reach_vector(tail);
     }
     return v;
@@ -636,6 +641,7 @@ RcValue *rc_cons_owned(RcContext *ctx, RcValue *head, RcValue *tail) {
     /* Move the two owned handles into graph slots without count traffic.
      * Neither allocation nor release invokes a collection or user callback. */
     v->as.pair.head = head; v->as.pair.tail = tail;
+    v->as.pair.proper_length = 0;
     v->reaches_vector = may_reach_vector(head) || may_reach_vector(tail);
     return v;
 }
@@ -655,6 +661,7 @@ RcValue *rc_cons_reuse(RcContext *ctx, RcValue *candidate, RcValue *head, RcValu
         rc_retain(head); rc_retain(tail);
         RcValue *old_head = candidate->as.pair.head, *old_tail = candidate->as.pair.tail;
         candidate->as.pair.head = head; candidate->as.pair.tail = tail;
+        candidate->as.pair.proper_length = 0;
         candidate->reaches_vector = may_reach_vector(head) || may_reach_vector(tail);
         rc_release(old_head); rc_release(old_tail);
         ctx->stats.pair_reuses++;
@@ -678,6 +685,7 @@ RcValue *rc_pair_take_tail_reuse(RcContext *ctx, RcValue *candidate, RcValue **o
          * Before releasing any other edge, publish a valid pair containing nil
          * in both slots. The collector can visit it at every later safepoint. */
         candidate->as.pair.head = rc_nil(); candidate->as.pair.tail = rc_nil();
+        candidate->as.pair.proper_length = 0;
         candidate->reaches_vector = false;
         rc_release(head);
         ctx->stats.pair_tail_transfers++;
@@ -687,6 +695,27 @@ RcValue *rc_pair_take_tail_reuse(RcContext *ctx, RcValue *candidate, RcValue **o
     }
     *out = candidate;
     return tail;
+}
+/* Pair spines are immutable while shared. Unique reuse resets this word;
+ * an owning ancestor prevents a descendant from being independently unique.
+ * Zero is unknown, SIZE_MAX improper, SIZE_MAX-1 overflow, otherwise length.
+ * Only the requested head is cached: no allocation or tail metadata writes. */
+RcListLengthStatus rc_list_length_cached(RcValue *list,size_t *out) {
+    if(rc_is_nil(list)){*out=0;return RC_LIST_LENGTH_OK;}
+    if(rc_type(list)!=RC_PAIR)return RC_LIST_LENGTH_IMPROPER;
+    size_t n=list->as.pair.proper_length;
+    if(!n) {
+        RcValue *cursor=list;
+        while(rc_type(cursor)==RC_PAIR) {
+            if(n==SIZE_MAX-2){n=SIZE_MAX-1;break;}
+            n++;cursor=cursor->as.pair.tail;
+        }
+        if(n!=SIZE_MAX-1&&!rc_is_nil(cursor))n=SIZE_MAX;
+        list->as.pair.proper_length=n;
+    }
+    if(n==SIZE_MAX)return RC_LIST_LENGTH_IMPROPER;
+    if(n==SIZE_MAX-1)return RC_LIST_LENGTH_OVERFLOW;
+    *out=n;return RC_LIST_LENGTH_OK;
 }
 RcValue *rc_head(RcContext *ctx, RcValue *v) { return v && rc_type(v) == RC_PAIR ? rc_retain(v->as.pair.head) : rc_error(ctx, "hd expects a nonempty list"); }
 RcValue *rc_tail(RcContext *ctx, RcValue *v) { return v && rc_type(v) == RC_PAIR ? rc_retain(v->as.pair.tail) : rc_error(ctx, "tl expects a nonempty list"); }

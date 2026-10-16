@@ -42,10 +42,11 @@ static RcValue *extend(RcContext *ctx, RcValue *env, RcValue *name, RcValue *val
     return rc_env_frame(ctx,env,1,&name,&value);
 }
 static bool list_length(RcContext *ctx, RcValue *list, size_t *n) {
-    *n = 0;
-    while (rc_type(list) == RC_PAIR) { ++*n; list = rc_tail_borrowed(list); }
-    if (!rc_is_nil(list)) { rc_error(ctx,"eval-kl: improper expression list"); return false; }
-    return true;
+    RcListLengthStatus status=rc_list_length_cached(list,n);
+    if(status==RC_LIST_LENGTH_OK)return true;
+    rc_error(ctx,status==RC_LIST_LENGTH_IMPROPER ? "eval-kl: improper expression list"
+                                               : "eval-kl: expression list length overflow");
+    return false;
 }
 static RcValue *nth(RcValue *list, size_t n) {
     while (n--) list = rc_tail_borrowed(list);

@@ -16,6 +16,11 @@ bool rc_builtin_call_matches(RcContext *, RcBuiltinSlot, RcValue *, size_t,
 /* Validated exact canonical call slot, or -1. Includes every argument check;
  * callers may enter the shared private tiny body without rechecking guards. */
 int rc_builtin_call_slot(RcContext *, RcValue *, size_t, RcValue *const *);
+/* The caller roots list. Only immutable pair-spine metadata is cached; no
+ * callbacks, allocation or collection occurs. out is written only on OK. */
+typedef enum { RC_LIST_LENGTH_OK, RC_LIST_LENGTH_IMPROPER,
+               RC_LIST_LENGTH_OVERFLOW } RcListLengthStatus;
+RcListLengthStatus rc_list_length_cached(RcValue *list,size_t *out);
 /* Private interpreted callback layout: [body, environment, parameter keys...].
  * Validates context, callback identity, original arity and exact capture count.
  * The returned span is borrowed; the active runtime call must keep self rooted
