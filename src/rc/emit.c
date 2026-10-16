@@ -292,6 +292,7 @@ static const char *tiny_leaf_api(RcValue *head,int arity) {
  }
  if(arity==2) {
   if(named(head,"="))return "rc_primitive_eq_owned";
+  if(named(head,"cons"))return "rc_primitive_cons_owned";
   if(named(head,"+"))return "rc_primitive_add_owned";
   if(named(head,"-"))return "rc_primitive_sub_owned";
   if(named(head,"*"))return "rc_primitive_mul_owned";

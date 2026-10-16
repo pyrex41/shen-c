@@ -291,6 +291,18 @@ RcValue *rc_primitive_eq_owned(RcContext *c,RcValue *fn,RcValue **args,bool tail
   return primitive_call_owned_slow(c,fn,2,args,tail);
  return rc_primitive_eq_owned_validated(c,fn,args,tail);
 }
+/* The generic dispatcher has validated the canonical identity and operands.
+ * Construction consumes both slots without repeating the dispatch guard. */
+static inline __attribute__((always_inline)) RcValue *rc_primitive_cons_owned_validated(RcContext *c,RcValue *fn,RcValue **args,bool tail) {
+ (void)fn;(void)tail;
+ RcValue *head=args[0],*rest=args[1];args[0]=NULL;args[1]=NULL;
+ return leaf_finish(c,rc_cons_owned(c,head,rest));
+}
+RcValue *rc_primitive_cons_owned(RcContext *c,RcValue *fn,RcValue **args,bool tail) {
+ if(!rc_builtin_call_matches(c,RC_BUILTIN_CONS,fn,2,args))
+  return primitive_call_owned_slow(c,fn,2,args,tail);
+ return rc_primitive_cons_owned_validated(c,fn,args,tail);
+}
 #define BINARY_NUMERIC_LEAF(api,slot,op) \
 static inline __attribute__((always_inline)) RcValue *api##_validated(RcContext *c,RcValue *fn,RcValue **args,bool tail) { \
  (void)fn;(void)tail; \
@@ -315,7 +327,7 @@ BINARY_NUMERIC_LEAF(rc_primitive_le_owned,RC_BUILTIN_LE,P_LE)
 RcValue *rc_primitive_call_owned(RcContext *c,RcValue *fn,
                                 size_t argc,RcValue **args,bool tail) {
  typedef RcValue *(*BuiltinCall)(RcContext *,RcValue *,RcValue **,bool);
- _Static_assert(RC_BUILTIN_COUNT == RC_BUILTIN_LE + 1,
+ _Static_assert(RC_BUILTIN_COUNT == RC_BUILTIN_CONS + 1,
                 "extend the validated dispatch table for new canonical slots");
  static const BuiltinCall calls[RC_BUILTIN_COUNT]={
   [RC_BUILTIN_HD]=rc_primitive_hd_owned_validated,
@@ -331,7 +343,8 @@ RcValue *rc_primitive_call_owned(RcContext *c,RcValue *fn,
   [RC_BUILTIN_GT]=rc_primitive_gt_owned_validated,
   [RC_BUILTIN_LT]=rc_primitive_lt_owned_validated,
   [RC_BUILTIN_GE]=rc_primitive_ge_owned_validated,
-  [RC_BUILTIN_LE]=rc_primitive_le_owned_validated
+  [RC_BUILTIN_LE]=rc_primitive_le_owned_validated,
+  [RC_BUILTIN_CONS]=rc_primitive_cons_owned_validated
  };
  /* Failure goes straight to the slow dispatcher. Public tiny entry points do
   * the same, so rejected foreign/null arguments cannot recurse through tags. */
@@ -342,6 +355,9 @@ RcValue *rc_primitive_call_owned(RcContext *c,RcValue *fn,
 RcValue *rc_cons_call_reuse(RcContext *c,RcValue *function,
                             RcValue *candidate,RcValue *head,RcValue *tail,
                             bool tail_position) {
+ if(rc_builtin_identity_matches(c,RC_BUILTIN_CONS,function))return rc_cons_reuse(c,candidate,head,tail);
+ /* Reinstallation and equivalent original primitive snapshots retain the
+  * previous classification, reuse counters, and error behavior. */
  if(rc_closure_is_native(function,primitive)&&rc_arity(function)==2) {
   RcValue *code=rc_capture(function,0);
   if(code&&rc_integer_value(code)==P_CONS)return rc_cons_reuse(c,candidate,head,tail);
@@ -354,6 +370,7 @@ RcValue *rc_tail_call_reuse(RcContext *c,RcValue *function,
                             RcValue *candidate,RcValue **out) {
  if(!out){rc_release(candidate);return rc_error(c,"Missing reuse token slot");}
  *out=NULL;
+ if(rc_builtin_identity_matches(c,RC_BUILTIN_TL,function))return rc_pair_take_tail_reuse(c,candidate,out);
  if(rc_closure_is_native(function,primitive)&&rc_arity(function)==1) {
   RcValue *code=rc_capture(function,0);
   if(code&&rc_integer_value(code)==P_TL)return rc_pair_take_tail_reuse(c,candidate,out);
@@ -378,6 +395,7 @@ static bool install(RcContext *c,const struct Primitive *p,size_t n) {
     case P_NUMBER:rc_builtin_cache_set(c,RC_BUILTIN_NUMBERP,f);break;
     case P_STRING:rc_builtin_cache_set(c,RC_BUILTIN_STRINGP,f);break;
     case P_EQ:rc_builtin_cache_set(c,RC_BUILTIN_EQ,f);break;
+    case P_CONS:rc_builtin_cache_set(c,RC_BUILTIN_CONS,f);break;
     case P_ADD:rc_builtin_cache_set(c,RC_BUILTIN_ADD,f);break;
     case P_SUB:rc_builtin_cache_set(c,RC_BUILTIN_SUB,f);break;
     case P_MUL:rc_builtin_cache_set(c,RC_BUILTIN_MUL,f);break;

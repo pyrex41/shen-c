@@ -398,6 +398,9 @@ void rc_builtin_cache_set(RcContext *ctx, RcBuiltinSlot slot, RcValue *fn) {
     fn->builtin_slot = (uint8_t)((unsigned)slot + 1);
     rc_release(old);
 }
+bool rc_builtin_identity_matches(RcContext *ctx, RcBuiltinSlot slot, RcValue *fn) {
+    return ctx && (unsigned)slot < RC_BUILTIN_COUNT && fn && ctx->builtin_roots[slot] == fn;
+}
 bool rc_builtin_call_matches(RcContext *ctx, RcBuiltinSlot slot, RcValue *fn,
                               size_t argc, RcValue *const *argv) {
     if (!ctx || (unsigned)slot >= RC_BUILTIN_COUNT || !fn ||

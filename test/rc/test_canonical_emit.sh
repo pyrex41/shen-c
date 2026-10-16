@@ -49,8 +49,10 @@ source='''
 (+ (do (defun + (X Y) 17) 6) 3)
 (+ 6 3)
 (let + (lambda X (lambda Y X)) ((+ 42) 0))
+(pair-test (cons (do (defun cons (X Y) X) 42) ()))
+(cons 42 ())
 '''
-expected=['42','true','true','true','true','true','42','42','7','true','false','9','3','18','2','true','false','true','false','9','17','42']
+expected=['42','true','true','true','true','true','42','42','7','true','false','9','3','18','2','true','false','true','false','9','17','42','true','42']
 with tempfile.TemporaryDirectory(prefix='rc-canonical-emit.') as tmp:
     work=Path(tmp);inputs=work/'input';inputs.mkdir()
     (inputs/'kernel.kl').write_text('')
@@ -62,10 +64,10 @@ with tempfile.TemporaryDirectory(prefix='rc-canonical-emit.') as tmp:
                            env=env,capture_output=True,text=True,timeout=90)
         assert run.returncode==0,(mode,run.stdout,run.stderr)
         code=(dest/'app.c').read_text()
-        for api in ['hd','tl','consp','numberp','stringp','eq','add','sub','mul','div','gt','lt','ge','le']:
+        for api in ['hd','tl','consp','numberp','stringp','eq','add','sub','mul','div','gt','lt','ge','le','cons']:
             assert (f'rc_primitive_{api}_owned(' in code)==(mode=='optimized'),(mode,api)
         run=subprocess.run([str(dest/'app')],env=dict(env,SHEN_RC_PRINT='1'),
                            capture_output=True,text=True,timeout=30)
         assert run.returncode==0 and run.stdout.splitlines()==expected,(mode,run.stdout,run.stderr)
-print('canonical primitive emission: 14 APIs, 22 differential results, snapshots and shadows PASS')
+print('canonical primitive emission: 15 APIs, 24 differential results, snapshots and shadows PASS')
 PY

@@ -31,7 +31,7 @@ static void reject_arguments(void) {
 }
 static void tags_roots_and_reuse(void) {
  RcContext *c=rc_context_new();assert(c&&rc_install_primitives(c));
- const char *names[]={"hd","tl","cons?","number?","string?","=","+","-","*","/",">","<",">=","<="};
+ const char *names[]={"hd","tl","cons?","number?","string?","=","+","-","*","/",">","<",">=","<=","cons"};
  _Static_assert(sizeof(names)/sizeof(*names)==RC_BUILTIN_COUNT,
                 "extend the generic tag cases for new canonical slots");
  RcValue *text=rc_string(c,"held"),*pair=rc_cons(c,text,rc_nil());
@@ -77,6 +77,6 @@ static void tags_roots_and_reuse(void) {
 }
 int main(void) {
  reject_arguments();tags_roots_and_reuse();
- puts("generic builtin tags: all14 slots, foreign/null, stale roots, user/partial and pool reuse PASS");
+ puts("generic builtin tags: all15 slots, foreign/null, stale roots, user/partial and pool reuse PASS");
  return 0;
 }
