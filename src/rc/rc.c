@@ -44,6 +44,7 @@ struct RcValue {
         struct {
             RcValue *parent, **keys, **values; size_t count;
             RcValue *inline_binding[2];
+            uint8_t key_classes;
         } env;
         struct {
             RcNative native;
@@ -421,6 +422,13 @@ int rc_builtin_call_slot(RcContext *ctx, RcValue *fn, size_t argc,
     for (size_t i = 0; i < argc; ++i) if (!belongs(ctx,argv[i])) return -1;
     return (int)slot;
 }
+/* Exact coarse classes only reject impossible lexical matches. All symbols
+ * outside ASCII letters, including empty and non-ASCII names, share one class.
+ * Caller has established RC_SYMBOL before accessing the interned name bytes. */
+static uint8_t env_key_class(const RcValue *key) {
+    unsigned char first=(unsigned char)key->as.text.data[0];
+    return first>='A'&&first<='Z' ? 1u : first>='a'&&first<='z' ? 2u : 4u;
+}
 RcValue *rc_env_frame(RcContext *ctx,RcValue *parent,size_t count,
                       RcValue *const *keys,RcValue *const *values) {
     if (!ctx || !belongs(ctx,parent) || (!rc_is_nil(parent) && rc_type(parent)!=RC_ENV) ||
@@ -439,12 +447,14 @@ RcValue *rc_env_frame(RcContext *ctx,RcValue *parent,size_t count,
     /* Pooled objects contain stale union bytes. Initialize every field before
      * publishing strong edges; no constructor safepoint exposes a partial node. */
     frame->as.env.count=count;
+    frame->as.env.key_classes=rc_is_nil(parent) ? 0 : parent->as.env.key_classes;
     frame->as.env.keys=count>1 ? storage : frame->as.env.inline_binding;
     frame->as.env.values=count>1 ? storage+count : frame->as.env.inline_binding+1;
     frame->as.env.parent=rc_retain(parent);
     frame->reaches_vector=may_reach_vector(parent);
     for (size_t i=0;i<count;i++) {
         frame->as.env.keys[i]=keys[i];
+        frame->as.env.key_classes |= env_key_class(keys[i]);
         frame->as.env.values[i]=rc_retain(values[i]);
         frame->reaches_vector |= may_reach_vector(values[i]);
     }
@@ -452,7 +462,8 @@ RcValue *rc_env_frame(RcContext *ctx,RcValue *parent,size_t count,
     return frame;
 }
 RcValue *rc_env_lookup(const RcValue *environment,const RcValue *key) {
-    if (rc_type(key)!=RC_SYMBOL) return NULL;
+    if (rc_type(key)!=RC_SYMBOL || rc_type(environment)!=RC_ENV) return NULL;
+    if (!(environment->as.env.key_classes & env_key_class(key))) return NULL;
     for (const RcValue *frame=environment;rc_type(frame)==RC_ENV;frame=frame->as.env.parent)
         for (size_t i=frame->as.env.count;i>0;i--)
             if (frame->as.env.keys[i-1]==key) return frame->as.env.values[i-1];

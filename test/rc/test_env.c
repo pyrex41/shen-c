@@ -11,6 +11,31 @@
 static RcValue *captured(RcContext *ctx,RcValue *self,size_t argc,RcValue *const *args) {
     (void)ctx;(void)argc;(void)args;return rc_retain(rc_capture(self,0));
 }
+static void classes(void) {
+    RcContext *ctx=rc_context_new();assert(ctx);
+    const char *names[]={"A","Z","a","z","+","","\303\251clair"};
+    RcValue *keys[7],*values[7];
+    for(size_t i=0;i<7;i++){keys[i]=rc_symbol(ctx,names[i]);values[i]=rc_integer(ctx,(int64_t)i);assert(keys[i]&&values[i]);}
+    for(size_t turn=0;turn<100;turn++) {
+        RcValue *env=rc_nil();
+        for(size_t i=0;i<7;i++) {
+            RcValue *next=rc_env_frame(ctx,env,1,keys+i,values+i);assert(next);rc_release(env);env=next;
+            for(size_t j=0;j<7;j++)assert(rc_env_lookup(env,keys[j])==(j<=i?values[j]:NULL));
+        }
+        RcValue *shadow=rc_env_frame(ctx,env,1,keys+2,values+6);assert(shadow);
+        assert(rc_env_lookup(shadow,keys[2])==values[6]&&rc_env_lookup(env,keys[2])==values[2]);
+        for(size_t i=0;i<512;i++) {
+            RcValue *next=rc_env_frame(ctx,shadow,1,keys,values);assert(next);rc_release(shadow);shadow=next;
+        }
+        for(size_t i=0;i<7;i++)assert(rc_env_lookup(shadow,keys[i])==(i==2?values[6]:values[i]));
+        rc_release(shadow);rc_release(env);rc_collect(ctx);
+        /* A pooled frame that used to contain all classes must reset to one. */
+        env=rc_env_frame(ctx,rc_nil(),1,keys,values);assert(env);
+        assert(!rc_env_lookup(env,keys[2])&&!rc_env_lookup(env,keys[4]));rc_release(env);
+    }
+    for(size_t i=0;i<7;i++){rc_release(keys[i]);rc_release(values[i]);}
+    rc_context_free(ctx);
+}
 static void direct(void) {
     RcContext *ctx=rc_context_new(),*foreign=rc_context_new();assert(ctx&&foreign);
     RcValue *keys[10],*values[10];
@@ -60,6 +85,9 @@ static void interpreted(void) {
     eval_number(ctx,"(let X 7 (let F (freeze X) (let X 9 (F))))",7);
     eval_number(ctx,"(let X 7 (let F (lambda X (lambda Y (+ X Y))) (let X 99 ((F 20) 22))))",42);
     eval_number(ctx,"(let if (lambda X X) (if 42))",42);
+    eval_number(ctx,"(let + (lambda X (lambda Y X)) ((+ 42) 0))",42);
+    eval_number(ctx,"(let lower 42 (let Upper 0 lower))",42);
+    eval_number(ctx,"(let + 42 (let Upper 0 +))",42);
     eval_number(ctx,"(type (let X 42 X) (unbound type term))",42);
     eval_number(ctx,"(let X 40 (trap-error (let X 99 (simple-error \"inner\")) (lambda E (+ X 2))))",42);
     const char *definition="(defun ten-params (A B C D E F G H I J) (+ A J))";
@@ -85,4 +113,4 @@ static void acyclic(void) {
     RcValue *item=rc_vector_get(ctx,vector,0);assert(rc_is_nil(item));rc_release(item);
     rc_release(closure);rc_release(frame);rc_release(vector);rc_release(key);rc_context_free(ctx);
 }
-int main(void) {direct();interpreted();acyclic();puts("RC managed evaluator environments: PASS");}
+int main(void) {classes();direct();interpreted();acyclic();puts("RC managed evaluator environments: PASS");}
