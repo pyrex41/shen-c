@@ -87,8 +87,49 @@ static void inline_tail_cases(void) {
     rc_release(value);rc_collect(ctx);assert(rc_stats(ctx).live_objects==0);
     rc_context_free(ctx);
 }
+static void compiled_call_cases(void) {
+    RcContext *ctx=rc_context_new();assert(ctx);
+    rc_release(rc_true(ctx));size_t roots=rc_stats(ctx).live_objects;
+    RcValue *value=rc_cons(ctx,rc_nil(),rc_nil());
+    RcValue *owned=rc_closure_owned(ctx,1,owned_id,0,NULL);
+    RcValue *borrowed=rc_closure(ctx,1,borrowed_id,0,NULL);
+    RcValue *captured=rc_closure_owned(ctx,1,owned_id,1,&value);
+    assert(rc_compiled_call_matches(owned,owned_id,1));
+    assert(!rc_compiled_call_matches(owned,last_owned,1));
+    assert(!rc_compiled_call_matches(owned,owned_id,2));
+    assert(!rc_compiled_call_matches(borrowed,owned_id,1));
+    assert(!rc_compiled_call_matches(captured,owned_id,1));
+    RcValue *full=rc_closure_owned(ctx,2,last_owned,0,NULL);
+    RcValue *partial=rc_apply(ctx,full,1,&value);assert(partial);
+    assert(!rc_compiled_call_matches(partial,last_owned,1));
+    assert(!rc_compiled_call_matches(partial,last_owned,2));
+    RcValue *args[]={rc_retain(value)};
+    RcValue *out=owned_id(ctx,owned,1,args);
+    out=rc_compiled_call_complete(ctx,out,1,args);
+    assert(out==value&&!args[0]&&!rc_has_error(ctx));rc_release(out);
+    /* Completion must drop leftovers even when the body fails before taking
+     * arguments, or returns a value together with an active error. */
+    size_t refs=rc_refcount(value);args[0]=rc_retain(value);
+    assert(!rc_compiled_call_complete(ctx,NULL,1,args));
+    assert(!args[0]&&rc_refcount(value)==refs);
+    args[0]=rc_retain(value);rc_error(ctx,"compiled callback error");
+    assert(!rc_compiled_call_complete(ctx,rc_retain(value),1,args));
+    assert(!args[0]&&rc_refcount(value)==refs);rc_clear_error(ctx);
+    RcValue *yes=rc_true(ctx),*request=rc_tailcall(ctx,borrowed,1,&yes);
+    request=rc_require_boolean(ctx,request);args[0]=rc_retain(value);
+    out=rc_compiled_call_complete(ctx,request,1,args);
+    assert(out==yes&&!args[0]&&!rc_has_error(ctx));rc_release(out);
+    request=rc_require_boolean(ctx,rc_tailcall(ctx,borrowed,1,&value));
+    args[0]=rc_retain(value);
+    assert(!rc_compiled_call_complete(ctx,request,1,args));
+    assert(!args[0]&&rc_has_error(ctx));rc_clear_error(ctx);
+    rc_release(yes);rc_release(partial);rc_release(full);
+    rc_release(captured);rc_release(borrowed);rc_release(owned);rc_release(value);
+    rc_collect(ctx);assert(rc_stats(ctx).live_objects==roots);rc_context_free(ctx);
+}
 int main(void) {
     inline_tail_cases();
+    compiled_call_cases();
     RcContext *ctx=rc_context_new();assert(ctx);
     RcValue *value=rc_integer(ctx,42);
     RcValue *borrowed=rc_closure(ctx,1,borrowed_id,0,NULL);

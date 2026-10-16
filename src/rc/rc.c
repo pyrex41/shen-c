@@ -751,6 +751,11 @@ RcValue *rc_native_call_capture(RcContext *ctx, RcValue *fn, size_t argc,
 bool rc_closure_is_owned_native(const RcValue *v, RcNativeOwned native) {
     return v && rc_type(v) == RC_CLOSURE && v->as.closure.owned_native == native;
 }
+bool rc_compiled_call_matches(const RcValue *v, RcNativeOwned native,size_t arity) {
+    return v && rc_type(v)==RC_CLOSURE && v->as.closure.owned_native==native &&
+           !v->as.closure.native && v->as.closure.arity==arity &&
+           !v->as.closure.bound_count && !v->as.closure.capture_count;
+}
 RcValue *rc_capture(const RcValue *v, size_t i) {
     return v && rc_type(v) == RC_CLOSURE && i < v->as.closure.capture_count ? v->as.closure.captures[i] : NULL;
 }
@@ -963,6 +968,14 @@ static RcValue *apply_small(RcContext *ctx, RcValue *fn, size_t argc,
     if (rc_has_error(ctx)) { rc_release(result); return NULL; }
     rc_safepoint(ctx);
     return rc_type(result) == RC_TAIL ? apply_request(ctx, result) : result;
+}
+RcValue *rc_compiled_call_complete(RcContext *ctx,RcValue *result,
+                                    size_t argc,RcValue **argv) {
+    consume_arguments(argc,argv);
+    if (!result) return NULL;
+    if (rc_has_error(ctx)) { rc_release(result); return NULL; }
+    rc_safepoint(ctx);
+    return rc_type(result)==RC_TAIL ? apply_request(ctx,result) : result;
 }
 RcValue *rc_apply(RcContext *ctx, RcValue *fn, size_t argc, RcValue *const *argv) {
     bool handled;

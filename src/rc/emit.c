@@ -16,7 +16,9 @@ typedef struct Program Program;
 typedef struct { Program *owner; char *p; size_t n, cap; } Buf;
 typedef struct { const char *name; int slot; } Binding;
 typedef struct Allocation { struct Allocation *prev,*next; max_align_t align; unsigned char data[]; } Allocation;
-struct Program { RcEmitOptions options; RcContext *ctx; jmp_buf failure; Allocation *allocations; Buf functions,literals,transparent_do; const char **symbols; size_t nsymbols,symbol_capacity; bool user_phase,drop_range_used,drop_range_emitted,transparent_do_used; RcValue *metadata_root; int next,next_literal; long defuns, lambdas, tops; };
+typedef struct ModuleDef { size_t symbol; int id,arity; struct ModuleDef *next; } ModuleDef;
+typedef struct ModuleCall { size_t symbol; struct ModuleCall *next; } ModuleCall;
+struct Program { RcEmitOptions options; RcContext *ctx; jmp_buf failure; Allocation *allocations; Buf functions,literals,transparent_do; const char **symbols; size_t nsymbols,symbol_capacity; ModuleDef *module_defs; ModuleCall *module_calls; bool user_phase,drop_range_used,drop_range_emitted,transparent_do_used; RcValue *metadata_root; int next,next_literal; long defuns, lambdas, tops; };
 static _Noreturn void bad(Program *p,const char *message) { rc_error(p->ctx,"%s",message); longjmp(p->failure,1); }
 static void *resize(Program *p,void *old,size_t bytes) {
   if(bytes>SIZE_MAX-sizeof(Allocation)) bad(p,"compiler allocation overflow");
@@ -285,6 +287,11 @@ static void symbol_slot(RcEmitFn *f,int slot,const char *name) {
  size_t index=symbol_index(f,name);
  put(&f->code,"  t[%d]=rc_retain(symbols[%zu]);\n",slot,index);
 }
+static size_t module_call(RcEmitFn *f,const char *name){
+ size_t symbol=symbol_index(f,name);
+ for(ModuleCall *c=f->p->module_calls;c;c=c->next)if(c->symbol==symbol)return symbol;
+ ModuleCall *c=alloc(f->p,sizeof(*c));*c=(ModuleCall){symbol,f->p->module_calls};f->p->module_calls=c;return symbol;
+}
 static void symbol_frame(Buf *out,bool used) {
  if(used)put(out,"  RcValue *const *symbols=rc_symbol_table(ctx,&rc_module_symbols);\n  if(!symbols) return NULL;\n");
 }
@@ -406,6 +413,7 @@ static int expr_inner(RcEmitFn *f,RcValue *x,int tail,const Live *after){
  if(special&&named(head,"defun")){
   if(count(p,args)!=3||!is_symbol(first(args)))bad(p,"rc emit: defun shape");
   int id=compile(p,second(args),at(p,args,2),NULL,0,0),t=fresh(f),cl=fresh(f);
+  if(optimize(f)){ModuleDef *d=alloc(p,sizeof(*d));*d=(ModuleDef){symbol_index(f,name(first(args))),id,count(p,second(args)),p->module_defs};p->module_defs=d;}
   symbol_slot(f,t,name(first(args)));check(f,t);
   put(&f->code,"  t[%d]=%s(ctx,%d,rc_native_%d,0,NULL);\n",cl,closure_api(p),count(p,second(args)),id);check(f,cl);
   if(p->options.source_metadata&&p->user_phase&&x==p->metadata_root){
@@ -445,13 +453,14 @@ static int expr_inner(RcEmitFn *f,RcValue *x,int tail,const Live *after){
  else if(recycle.binding>=0){
   put(&f->code,"  { RcValue *candidate=t[%d] ? t[%d] : t[%d]; t[%d]=NULL; t[%d]=NULL; t[%d]=rc_cons_call_reuse(ctx,t[%d],candidate,t[%d],t[%d],%s); }\n",recycle.token,recycle.token,recycle.binding,recycle.token,recycle.binding,result,fn,av[0],av[1],tail==1?"true":"false");
   drop(f,av[0]);drop(f,av[1]);
- }else{for(int i=0;i<n;i++)call_argument(f,i,av[i]);if(optimize(f)&&special&&leaf_primitive(head))put(&f->code,"  t[%d]=rc_primitive_call_owned(ctx,t[%d],%d,%s,%s);\n",result,fn,n,n?"a":"NULL",tail==1?"true":"false");else put(&f->code,"  t[%d]=%s(ctx,t[%d],%d,%s);\n",result,call_api(f,tail),fn,n,n?"a":"NULL");if(!optimize(f))for(int i=0;i<n;i++)drop(f,av[i]);}
+ }else{for(int i=0;i<n;i++)call_argument(f,i,av[i]);if(optimize(f)&&special&&leaf_primitive(head))put(&f->code,"  t[%d]=rc_primitive_call_owned(ctx,t[%d],%d,%s,%s);\n",result,fn,n,n?"a":"NULL",tail==1?"true":"false");else if(optimize(f)&&special&&tail!=1)put(&f->code,"  t[%d]=rc_module_call_%zu(ctx,t[%d],%d,%s);\n",result,module_call(f,name(head)),fn,n,n?"a":"NULL");else put(&f->code,"  t[%d]=%s(ctx,t[%d],%d,%s);\n",result,call_api(f,tail),fn,n,n?"a":"NULL");if(!optimize(f))for(int i=0;i<n;i++)drop(f,av[i]);}
  if(recycle.binding>=0)f->recycle=recycle.outer;
  drop(f,fn);forget(p,av);check(f,result);drop_dead(f,after);return result;
 }
 static void finish_function(RcEmitFn *f,int id,int arity,int r){
  Program *p=f->p;
- put(&p->functions,"static RcValue *rc_native_%d(RcContext *ctx,RcValue *self,size_t argc,RcValue *%s*argv) {\n  (void)self; (void)argv;\n  if(argc!=%d) return rc_error(ctx,\"native arity mismatch\");\n  RcValue *result=NULL;\n",id,optimize(f)?"":"const ",arity);
+ if(optimize(f))put(&p->functions,"static RcValue *rc_native_body_%d(RcContext *ctx,RcValue *self,RcValue **argv) {\n  (void)self; (void)argv;\n  RcValue *result=NULL;\n",id);
+ else put(&p->functions,"static RcValue *rc_native_%d(RcContext *ctx,RcValue *self,size_t argc,RcValue *const *argv) {\n  (void)self; (void)argv;\n  if(argc!=%d) return rc_error(ctx,\"native arity mismatch\");\n  RcValue *result=NULL;\n",id,arity);
  symbol_frame(&p->functions,f->symbol_used);
  if(f->frame_slots>64)put(&p->functions,"  RcValue **t=calloc(%d,sizeof(*t));\n  if(!t) return rc_error(ctx,\"native frame allocation failed\");\n  RcValue **a=t+%d; (void)a;\n",f->frame_slots+f->max_args,f->frame_slots);
  else put(&p->functions,"  RcValue *t[%d]={0}; RcValue *a[%d]; (void)a;\n",f->frame_slots?f->frame_slots:1,f->max_args?f->max_args:1);
@@ -467,6 +476,7 @@ static void finish_function(RcEmitFn *f,int id,int arity,int r){
   put(&p->functions,"  rc_safepoint(ctx);\n  goto entry;\n");
  }
  put(&p->functions,"}\n");
+ if(optimize(f))put(&p->functions,"static RcValue *rc_native_%d(RcContext *ctx,RcValue *self,size_t argc,RcValue **argv) {\n  if(argc!=%d) return rc_error(ctx,\"native arity mismatch\");\n  return rc_native_body_%d(ctx,self,argv);\n}\n",id,arity,id);
 }
 static int compile(Program *p,RcValue *params,RcValue *body,Binding *caps,int ncaps,int freeze){
  RcEmitFn f={0};f.p=p;f.code.owner=p;int id=p->next++,arity=freeze==1?0:(freeze==2?1:count(p,params));f.arity=arity;snprintf(f.fail,sizeof f.fail,"cleanup");
@@ -611,6 +621,22 @@ bool rc_emit_program(RcContext *ctx,FILE *out,RcValue *const *kernel,size_t nker
   if(p->drop_range_emitted)fputs("static void rc_drop_range(RcValue **slots,size_t first,size_t end) {\n"
                             "  for(size_t i=first;i<end;i++) { if(slots[i]) rc_release(slots[i]); slots[i]=NULL; }\n}\n",out);
   for(int i=0;i<p->next;i++) fprintf(out,"static RcValue *rc_native_%d(RcContext*,RcValue*,size_t,RcValue *%s*);\n",i,options->conservative_ownership?"const":"");
+  if(!options->conservative_ownership){
+   for(int i=0;i<p->next;i++)fprintf(out,"static RcValue *rc_native_body_%d(RcContext*,RcValue*,RcValue**);\n",i);
+   /* The name only selects possible module callbacks. The snapshotted closure
+    * decides every call, including redefinitions during argument evaluation. */
+   for(ModuleCall *c=p->module_calls;c;c=c->next){
+    bool first=true;
+    fprintf(out,"static RcValue *rc_module_call_%zu(RcContext *ctx,RcValue *fn,size_t argc,RcValue **argv) {\n",c->symbol);
+    for(ModuleDef *d=p->module_defs;d;d=d->next)if(d->symbol==c->symbol){
+     if(first)fputs("  RcValue *result;\n",out);
+     fprintf(out,"  %sif(argc==%d && rc_compiled_call_matches(fn,rc_native_%d,%d)) result=rc_native_body_%d(ctx,fn,argv);\n",first?"":"else ",d->arity,d->id,d->arity,d->id);first=false;
+    }
+    fprintf(out,"  %sreturn rc_apply_owned_args(ctx,fn,argc,argv);\n",first?"":"else ");
+    if(!first)fputs("  return rc_compiled_call_complete(ctx,result,argc,argv);\n",out);
+    fputs("}\n",out);
+   }
+  }
   if(p->transparent_do_used)fprintf(out,"static bool rc_transparent_do(RcValue *fn) {\n  return rc_arity(fn)==2 && (rc_primitive_is_do(fn)%s);\n}\n",p->transparent_do.p?p->transparent_do.p:"");
   if(p->next_literal) metadata_helpers(out);
   if(p->literals.p) fputs(p->literals.p,out);

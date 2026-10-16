@@ -123,6 +123,12 @@ callee-before-arguments|(rc-early-callee (let Ignored (defun rc-early-callee (X)
 callee-after-redefinition|(rc-early-callee 0)|2
 indirect-callee-before-arguments|(let F rc-early-callee (F (let Ignored (defun rc-early-callee (X) 3) 0)))|2
 indirect-callee-after-redefinition|(rc-early-callee 0)|3
+module-snapshot-before-args|(let R (rc-early-callee (let Ignored (defun rc-early-callee (X) 4) 0)) R)|3
+module-snapshot-after-redefinition|(let R (rc-early-callee 0) R)|4
+module-partial-fallback|(let F (rc-curry-add 20) (let R (F 22) R))|42
+module-overapply-fallback|(let R (rc-return-add 20 22) R)|42
+module-returned-tail-guard|(trap-error (let R (rc-and-invalid 100) R) (lambda E true))|true
+module-returned-tail-result|(let R (rc-even 10000) R)|true
 indirect-undefined-before-arguments|(do (set *rc-argument-side-effect* 0) (do (trap-error (let F rc-missing (F (set *rc-argument-side-effect* 1))) (lambda E ())) (value *rc-argument-side-effect*)))|0
 CASES
 while IFS='|' read -r name expression expected; do
@@ -143,5 +149,6 @@ count=$(wc -l < "$work/expected" | tr -d ' ')
 printf 'RC emitted semantics: %s/%s cases PASS\n' "$count" "$count"
 # A tail operand under do must retain the snapshotted-do identity guard.
 grep -q '&& rc_transparent_do(t\[' "$work/app/app.c"
+grep -q 'rc_compiled_call_matches(fn,rc_native_' "$work/app/app.c"
 # Audit the actual generated executable, independently from the host compiler.
 "$root/scripts/test-rc.sh" --audit-only "$work/app/app"

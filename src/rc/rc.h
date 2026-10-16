@@ -149,6 +149,15 @@ RcValue *rc_closure_owned(RcContext *ctx, size_t arity, RcNativeOwned native,
                           size_t capture_count, RcValue *const *captures);
 bool rc_closure_is_native(const RcValue *closure, RcNative native);
 bool rc_closure_is_owned_native(const RcValue *closure, RcNativeOwned native);
+/* Internal compiler ABI: function/arguments must already be valid values of
+ * ctx; the caller owns function through completion and owns each argument.
+ * Only an exact, unbound, capture-free owned callback can use its direct body.
+ * Completion consumes every remaining argument before errors, collection or
+ * driving returned tail requests (including deferred boolean requirements). */
+bool rc_compiled_call_matches(const RcValue *function, RcNativeOwned native,
+                               size_t arity);
+RcValue *rc_compiled_call_complete(RcContext *ctx, RcValue *owned_result,
+                                    size_t argc, RcValue **owned_args);
 /* Check borrowed call inputs before specialized dispatch; does not set errors. */
 bool rc_call_values_belong(RcContext *ctx, RcValue *function, size_t argc,
                            RcValue *const *argv);
