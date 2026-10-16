@@ -46,7 +46,7 @@ else
     make -f Makefile.rc test-binaries
 fi
 bin_dir=${RC_BIN:-bin/rc}
-for test in test_cycles test_primitives test_eval test_env test_bool_tail test_apply_fast test_object_cache test_immediates test_collection test_reuse test_acyclic test_symbols test_primitive_fast test_equal; do
+for test in test_cycles test_primitives test_eval test_env test_bool_tail test_apply_fast test_object_cache test_immediates test_collection test_reuse test_acyclic test_symbols test_primitive_fast test_equal test_canonical_primitives; do
     "$bin_dir/$test"
     audit "$bin_dir/$test"
 done
@@ -65,3 +65,4 @@ audit "${1:-$root/bin/rc-build}"
 "$root/test/rc/test_builder_paths.sh" "${1:-$root/bin/rc-build}"
 "$root/test/rc/test_ownership.sh" "${1:-$root/bin/rc-build}"
 "$root/test/rc/test_primitive_fast.sh" "${1:-$root/bin/rc-build}"
+"$root/test/rc/test_canonical_emit.sh" "${1:-$root/bin/rc-build}"

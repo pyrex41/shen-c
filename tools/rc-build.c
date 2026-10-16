@@ -124,7 +124,7 @@ static bool build_app(RcContext *ctx,const char *input,const char *output,RcEmit
         "rc_escape = $(subst $(rc_space),\\$(rc_space),$(1))\n"
         "rc_quote = '$(subst ','\"'\"',$(1))'\n"
         "RC_FILES = rc.c primitives.c eval.c read.c\n"
-        "RC_HEADERS = rc.h primitives.h eval.h read.h\n"
+        "RC_HEADERS = rc.h rc_internal.h primitives.h eval.h read.h\n"
         "RC_DEPS = $(foreach file,$(RC_FILES) $(RC_HEADERS),$(call rc_escape,$(SHEN_C_HOME)/src/rc/$(file)))\n"
         "app: app.c $(RC_DEPS)\n"
         "\t$(CC) $(CPPFLAGS) $(CFLAGS) -std=c17 -I$(call rc_quote,$(SHEN_C_HOME)/src/rc) app.c $(foreach file,$(RC_FILES),$(call rc_quote,$(SHEN_C_HOME)/src/rc/$(file))) -lm -o app\n",out);

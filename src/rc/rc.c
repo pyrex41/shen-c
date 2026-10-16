@@ -1,4 +1,5 @@
 #include "rc.h"
+#include "rc_internal.h"
 
 #include <limits.h>
 #include <math.h>
@@ -74,6 +75,8 @@ struct RcContext {
     size_t symbol_capacity, symbol_count;
     RcResolvedSymbols *compiled_symbols;
     RcValue *true_symbol, *false_symbol; /* Borrowed intern-table roots. */
+    /* Owned context roots, bounded by the specialized builtin set. */
+    RcValue *builtin_roots[RC_BUILTIN_COUNT];
     RcStats stats;
     size_t collection_interval, since_collection, graph_slots, visit_epoch, cycle_sources;
     char *error;
@@ -379,6 +382,21 @@ size_t rc_refcount(const RcValue *v) { return is_immediate(v) ? SIZE_MAX : v ? v
 RcValue *rc_nil(void) { return &nil_value; }
 bool rc_is_nil(const RcValue *v) { return v == &nil_value; }
 static bool belongs(RcContext *ctx, const RcValue *v) { return v && (v == &nil_value || is_immediate(v) || v->ctx == ctx); }
+void rc_builtin_cache_set(RcContext *ctx, RcBuiltinSlot slot, RcValue *fn) {
+    /* The private installer contract guarantees the original exact builtin. */
+    if (!ctx || (unsigned)slot >= RC_BUILTIN_COUNT || !belongs(ctx,fn)) abort();
+    RcValue *old = ctx->builtin_roots[slot];
+    ctx->builtin_roots[slot] = rc_retain(fn);
+    rc_release(old);
+}
+bool rc_builtin_call_matches(RcContext *ctx, RcBuiltinSlot slot, RcValue *fn,
+                              size_t argc, RcValue *const *argv) {
+    if (!ctx || (unsigned)slot >= RC_BUILTIN_COUNT || !fn ||
+        ctx->builtin_roots[slot] != fn || argc != (slot == RC_BUILTIN_EQ ? 2u : 1u) ||
+        !argv) return false;
+    for (size_t i = 0; i < argc; ++i) if (!belongs(ctx,argv[i])) return false;
+    return true;
+}
 RcValue *rc_env_frame(RcContext *ctx,RcValue *parent,size_t count,
                       RcValue *const *keys,RcValue *const *values) {
     if (!ctx || !belongs(ctx,parent) || (!rc_is_nil(parent) && rc_type(parent)!=RC_ENV) ||

@@ -1,4 +1,5 @@
 #include "primitives.h"
+#include "rc_internal.h"
 #include <errno.h>
 #include <float.h>
 #include <inttypes.h>
@@ -251,6 +252,38 @@ RcValue *rc_primitive_call_owned(RcContext *c,RcValue *function,
  return tail_position?rc_tailcall_owned_args(c,function,argc,args)
                      :rc_apply_owned_args(c,function,argc,args);
 }
+/* Separate tiny bodies let the compiler remove opcode and arity dispatch.
+ * A canonical closure stays a context root even if its name is redefined.
+ * Reinstallation replaces that bounded root; old snapshots safely fall back. */
+static inline RcValue *leaf_finish(RcContext *c,RcValue *result) {
+ if(!result)return NULL;
+ if(rc_has_error(c)){rc_release(result);return NULL;}
+ rc_safepoint(c);return result;
+}
+#define UNARY_LEAF(api,slot,expression,projection) \
+RcValue *api(RcContext *c,RcValue *fn,RcValue **args,bool tail) { \
+ if(!rc_builtin_call_matches(c,slot,fn,1,args)) \
+  return rc_primitive_call_owned(c,fn,1,args,tail); \
+ RcValue *result=(expression); \
+ if(projection&&!tail&&rc_type(result)==RC_TAIL) { \
+  rc_release(result);return rc_apply_owned_args(c,fn,1,args); \
+ } \
+ RcValue *arg=args[0];args[0]=NULL;rc_release(arg); \
+ return leaf_finish(c,result); \
+}
+UNARY_LEAF(rc_primitive_hd_owned,RC_BUILTIN_HD,rc_head(c,args[0]),true)
+UNARY_LEAF(rc_primitive_tl_owned,RC_BUILTIN_TL,rc_tail(c,args[0]),true)
+UNARY_LEAF(rc_primitive_consp_owned,RC_BUILTIN_CONSP,truth(c,rc_type(args[0])==RC_PAIR),false)
+UNARY_LEAF(rc_primitive_numberp_owned,RC_BUILTIN_NUMBERP,truth(c,rc_type(args[0])==RC_NUMBER),false)
+UNARY_LEAF(rc_primitive_stringp_owned,RC_BUILTIN_STRINGP,truth(c,rc_type(args[0])==RC_STRING),false)
+#undef UNARY_LEAF
+RcValue *rc_primitive_eq_owned(RcContext *c,RcValue *fn,RcValue **args,bool tail) {
+ if(!rc_builtin_call_matches(c,RC_BUILTIN_EQ,fn,2,args))
+  return rc_primitive_call_owned(c,fn,2,args,tail);
+ RcValue *result=truth(c,rc_equal(args[0],args[1]));
+ RcValue *a=args[0],*b=args[1];args[0]=NULL;args[1]=NULL;
+ rc_release(a);rc_release(b);return leaf_finish(c,result);
+}
 RcValue *rc_cons_call_reuse(RcContext *c,RcValue *function,
                             RcValue *candidate,RcValue *head,RcValue *tail,
                             bool tail_position) {
@@ -281,7 +314,19 @@ static bool install(RcContext *c,const struct Primitive *p,size_t n) {
   if(p[i].op==P_TIME&&!started){rc_release(code);return false;}
   RcValue *captures[]={code,started};
   RcValue *f=rc_closure(c,p[i].arity,primitive,started?2:1,captures);rc_release(code);rc_release(started);if(!f)return false;
-  RcValue *s=rc_symbol(c,p[i].name);bool ok=s&&rc_function_set(c,s,f);rc_release(s);rc_release(f);if(!ok)return false;
+  RcValue *s=rc_symbol(c,p[i].name);bool ok=s&&rc_function_set(c,s,f);
+  if(ok) {
+   switch(p[i].op) {
+    case P_HD:rc_builtin_cache_set(c,RC_BUILTIN_HD,f);break;
+    case P_TL:rc_builtin_cache_set(c,RC_BUILTIN_TL,f);break;
+    case P_CONSP:rc_builtin_cache_set(c,RC_BUILTIN_CONSP,f);break;
+    case P_NUMBER:rc_builtin_cache_set(c,RC_BUILTIN_NUMBERP,f);break;
+    case P_STRING:rc_builtin_cache_set(c,RC_BUILTIN_STRINGP,f);break;
+    case P_EQ:rc_builtin_cache_set(c,RC_BUILTIN_EQ,f);break;
+    default:break;
+   }
+  }
+  rc_release(s);rc_release(f);if(!ok)return false;
  }return true;
 }
 bool rc_install_overwrites(RcContext *c){return install(c,overwrites,sizeof overwrites/sizeof *overwrites);}

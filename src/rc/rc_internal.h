@@ -1,0 +1,13 @@
+#ifndef SHEN_RC_INTERNAL_H
+#define SHEN_RC_INTERNAL_H
+#include "rc.h"
+/* Runtime/primitive implementation contract. The installer alone registers
+ * freshly created original builtins; this is not an embedding API. */
+typedef enum {
+ RC_BUILTIN_HD, RC_BUILTIN_TL, RC_BUILTIN_CONSP, RC_BUILTIN_NUMBERP,
+ RC_BUILTIN_STRINGP, RC_BUILTIN_EQ, RC_BUILTIN_COUNT
+} RcBuiltinSlot;
+void rc_builtin_cache_set(RcContext *, RcBuiltinSlot, RcValue *);
+bool rc_builtin_call_matches(RcContext *, RcBuiltinSlot, RcValue *, size_t,
+                              RcValue *const *);
+#endif

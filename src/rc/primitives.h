@@ -25,6 +25,15 @@ RcValue *rc_tail_call_reuse(RcContext *ctx, RcValue *function,
 RcValue *rc_primitive_call_owned(RcContext *ctx, RcValue *function,
                                 size_t argc, RcValue **owned_args,
                                 bool tail_position);
+/* Fixed-arity builtin specializations. Function remains a borrowed snapshot;
+ * argument arrays contain one owned slot (two for eq) and are consumed on
+ * every path. Identity mismatches use ordinary checked dispatch. */
+RcValue *rc_primitive_hd_owned(RcContext *,RcValue *,RcValue **,bool);
+RcValue *rc_primitive_tl_owned(RcContext *,RcValue *,RcValue **,bool);
+RcValue *rc_primitive_consp_owned(RcContext *,RcValue *,RcValue **,bool);
+RcValue *rc_primitive_numberp_owned(RcContext *,RcValue *,RcValue **,bool);
+RcValue *rc_primitive_stringp_owned(RcContext *,RcValue *,RcValue **,bool);
+RcValue *rc_primitive_eq_owned(RcContext *,RcValue *,RcValue **,bool);
 /* Shen representation for diagnostics and standalone program output. */
 bool rc_print(FILE *out, RcValue *value);
 #endif

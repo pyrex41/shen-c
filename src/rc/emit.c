@@ -269,6 +269,17 @@ static bool leaf_primitive(RcValue *head) {
  for(size_t i=0;i<sizeof(names)/sizeof(*names);i++)if(named(head,names[i]))return true;
  return false;
 }
+static const char *tiny_leaf_api(RcValue *head,int arity) {
+ if(arity==1) {
+  if(named(head,"hd"))return "rc_primitive_hd_owned";
+  if(named(head,"tl"))return "rc_primitive_tl_owned";
+  if(named(head,"cons?"))return "rc_primitive_consp_owned";
+  if(named(head,"number?"))return "rc_primitive_numberp_owned";
+  if(named(head,"string?"))return "rc_primitive_stringp_owned";
+ }
+ if(arity==2&&named(head,"="))return "rc_primitive_eq_owned";
+ return NULL;
+}
 static int expr(RcEmitFn *,RcValue *,int,const Live *);
 static int compile(Program *,RcValue *,RcValue *,Binding *,int,int);
 static int literal(Program *,RcValue *);
@@ -453,7 +464,17 @@ static int expr_inner(RcEmitFn *f,RcValue *x,int tail,const Live *after){
  else if(recycle.binding>=0){
   put(&f->code,"  { RcValue *candidate=t[%d] ? t[%d] : t[%d]; t[%d]=NULL; t[%d]=NULL; t[%d]=rc_cons_call_reuse(ctx,t[%d],candidate,t[%d],t[%d],%s); }\n",recycle.token,recycle.token,recycle.binding,recycle.token,recycle.binding,result,fn,av[0],av[1],tail==1?"true":"false");
   drop(f,av[0]);drop(f,av[1]);
- }else{for(int i=0;i<n;i++)call_argument(f,i,av[i]);if(optimize(f)&&special&&leaf_primitive(head))put(&f->code,"  t[%d]=rc_primitive_call_owned(ctx,t[%d],%d,%s,%s);\n",result,fn,n,n?"a":"NULL",tail==1?"true":"false");else if(optimize(f)&&special&&tail!=1)put(&f->code,"  t[%d]=rc_module_call_%zu(ctx,t[%d],%d,%s);\n",result,module_call(f,name(head)),fn,n,n?"a":"NULL");else put(&f->code,"  t[%d]=%s(ctx,t[%d],%d,%s);\n",result,call_api(f,tail),fn,n,n?"a":"NULL");if(!optimize(f))for(int i=0;i<n;i++)drop(f,av[i]);}
+ }else{
+  for(int i=0;i<n;i++)call_argument(f,i,av[i]);
+  if(optimize(f)&&special&&tiny_leaf_api(head,n))
+   put(&f->code,"  t[%d]=%s(ctx,t[%d],a,%s);\n",result,tiny_leaf_api(head,n),fn,tail==1?"true":"false");
+  else if(optimize(f)&&special&&leaf_primitive(head))
+   put(&f->code,"  t[%d]=rc_primitive_call_owned(ctx,t[%d],%d,%s,%s);\n",result,fn,n,n?"a":"NULL",tail==1?"true":"false");
+  else if(optimize(f)&&special&&tail!=1)
+   put(&f->code,"  t[%d]=rc_module_call_%zu(ctx,t[%d],%d,%s);\n",result,module_call(f,name(head)),fn,n,n?"a":"NULL");
+  else put(&f->code,"  t[%d]=%s(ctx,t[%d],%d,%s);\n",result,call_api(f,tail),fn,n,n?"a":"NULL");
+  if(!optimize(f))for(int i=0;i<n;i++)drop(f,av[i]);
+ }
  if(recycle.binding>=0)f->recycle=recycle.outer;
  drop(f,fn);forget(p,av);check(f,result);drop_dead(f,after);return result;
 }
