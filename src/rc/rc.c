@@ -943,53 +943,128 @@ bool rc_function_set(RcContext *ctx, RcValue *symbol, RcValue *fn) {
 typedef struct EqualPair { const RcValue *left, *right; } EqualPair;
 static bool scalar_equal(const RcValue *a, const RcValue *b) {
     if (a == b) return true;
-    if (!a || !b || rc_type(a) != rc_type(b)) return false;
-    if (rc_type(a) == RC_NUMBER) {
-        if (rc_number_is_exact_integer(a) && rc_number_is_exact_integer(b)) return rc_integer_value(a) == rc_integer_value(b);
-        if (rc_number_is_exact_integer(a) || rc_number_is_exact_integer(b)) {
-            const RcValue *i = rc_number_is_exact_integer(a) ? a : b, *d = rc_number_is_exact_integer(a) ? b : a;
+    if (!a || !b) return false;
+    /* Exact immediate handles encode the complete integer identity. */
+    if (is_immediate(a) && is_immediate(b)) return false;
+    RcType type = rc_type(a);
+    if (type != rc_type(b)) return false;
+    if (type == RC_NUMBER) {
+        bool exact_a = rc_number_is_exact_integer(a), exact_b = rc_number_is_exact_integer(b);
+        if (exact_a && exact_b) return rc_integer_value(a) == rc_integer_value(b);
+        if (exact_a || exact_b) {
+            const RcValue *i = exact_a ? a : b, *d = exact_a ? b : a;
             double n = d->as.number.real;
             return isfinite(n) && n >= -9223372036854775808.0 && n < 9223372036854775808.0 && trunc(n) == n && (int64_t)n == rc_integer_value(i);
         }
         return a->as.number.real == b->as.number.real;
     }
-    if (rc_type(a) == RC_STRING || rc_type(a) == RC_SYMBOL)
-        return a->as.text.length == b->as.text.length && !memcmp(a->as.text.data, b->as.text.data, a->as.text.length);
-    return false;
+    if (type == RC_SYMBOL) {
+        /* Within one intern table different identities imply different names.
+         * Preserve the public API's textual equality across contexts. */
+        if (a->ctx == b->ctx || a->as.text.hash != b->as.text.hash) return false;
+    } else if (type != RC_STRING) return false;
+    return a->as.text.length == b->as.text.length &&
+           !memcmp(a->as.text.data, b->as.text.data, a->as.text.length);
 }
-bool rc_equal(const RcValue *left, const RcValue *right) {
-    if (left == right || !left || !right || rc_type(left) != rc_type(right) ||
-        (rc_type(left) != RC_PAIR && rc_type(left) != RC_VECTOR)) return scalar_equal(left, right);
+static bool structural(const RcValue *a) {
+    return is_heap(a) && (a->type == RC_PAIR || a->type == RC_VECTOR);
+}
+static size_t equal_hash(EqualPair pair) {
+    uintptr_t a = (uintptr_t)pair.left >> 3, b = (uintptr_t)pair.right >> 3;
+    a ^= a >> 17; b ^= b >> 13;
+    return (size_t)((a * UINT64_C(0x9e3779b97f4a7c15)) ^ (b * UINT64_C(0xbf58476d1ce4e5b9)));
+}
+/* Only structural comparisons enter the worklist/hash set. Scalar children
+ * compare immediately; repeated graph edges never cause repeated expansion. */
+static bool graph_equal(const RcValue *left, const RcValue *right) {
     RcContext *ctx = left->ctx;
-    size_t count = 0, capacity = 32, cursor = 0;
-    EqualPair *pairs = malloc(capacity * sizeof(*pairs));
-    if (!pairs) { rc_error(ctx, "out of memory comparing values"); return false; }
-    pairs[count++] = (EqualPair){left, right};
+    EqualPair local_pairs[32], *pairs = local_pairs;
+    size_t local_seen[64] = {0}, *seen = local_seen;
+    size_t count = 1, capacity = 32, cursor = 0;
+    pairs[0] = (EqualPair){left, right};
+    seen[equal_hash(pairs[0]) & (capacity * 2 - 1)] = 1;
     bool equal = true;
     while (cursor < count && equal) {
         EqualPair p = pairs[cursor++];
         const RcValue *a = p.left, *b = p.right;
-        if (a == b) continue;
-        if (!a || !b || rc_type(a) != rc_type(b)) { equal = false; break; }
-        if (rc_type(a) != RC_PAIR && rc_type(a) != RC_VECTOR) { equal = scalar_equal(a, b); continue; }
-        size_t n = rc_type(a) == RC_PAIR ? 2 : rc_type(a) == RC_VECTOR ? a->as.vector.length : 0;
-        if ((rc_type(a) != RC_PAIR && rc_type(a) != RC_VECTOR) || (rc_type(a) == RC_VECTOR && n != b->as.vector.length)) { equal = false; break; }
-        for (size_t i = 0; i < n && equal; ++i) {
-            EqualPair child;
-            if (rc_type(a) == RC_PAIR) child = i ? (EqualPair){a->as.pair.tail, b->as.pair.tail} : (EqualPair){a->as.pair.head, b->as.pair.head};
-            else child = (EqualPair){a->as.vector.items[i], b->as.vector.items[i]};
-            bool seen = false;
-            for (size_t k = 0; k < count; ++k) if (pairs[k].left == child.left && pairs[k].right == child.right) { seen = true; break; }
-            if (seen) continue;
-            if (count == capacity) {
-                if (capacity > SIZE_MAX / 2 / sizeof(*pairs)) { rc_error(ctx, "comparison size overflow"); equal = false; break; }
-                size_t next = capacity * 2;
-                EqualPair *grown = realloc(pairs, next * sizeof(*pairs));
-                if (!grown) { rc_error(ctx, "out of memory comparing values"); equal = false; break; }
-                pairs = grown; capacity = next;
+        size_t n = a->type == RC_PAIR ? 2 : a->as.vector.length;
+        if (a->type == RC_VECTOR && n != b->as.vector.length) { equal = false; break; }
+        for (size_t i = 0; i < n; ++i) {
+            EqualPair child = a->type == RC_PAIR ?
+                (i ? (EqualPair){a->as.pair.tail,b->as.pair.tail} : (EqualPair){a->as.pair.head,b->as.pair.head}) :
+                (EqualPair){a->as.vector.items[i],b->as.vector.items[i]};
+            if (child.left == child.right) continue;
+            if (!structural(child.left) || !structural(child.right) || child.left->type != child.right->type) {
+                if (!scalar_equal(child.left, child.right)) { equal = false; break; }
+                continue;
             }
-            pairs[count++] = child;
+            size_t slot = equal_hash(child) & (capacity * 2 - 1);
+            while (seen[slot] && (pairs[seen[slot]-1].left != child.left || pairs[seen[slot]-1].right != child.right))
+                slot = (slot + 1) & (capacity * 2 - 1);
+            if (seen[slot]) continue;
+            if (count == capacity) {
+                if (capacity > SIZE_MAX / 4 / sizeof(*seen) || capacity > SIZE_MAX / 2 / sizeof(*pairs)) {
+                    rc_error(ctx, "comparison size overflow"); equal = false; break;
+                }
+                size_t next = capacity * 2;
+                EqualPair *grown = malloc(next * sizeof(*pairs));
+                size_t *buckets = calloc(next * 2, sizeof(*seen));
+                if (!grown || !buckets) {
+                    free(grown); free(buckets); rc_error(ctx, "out of memory comparing values"); equal = false; break;
+                }
+                memcpy(grown, pairs, count * sizeof(*pairs));
+                if (pairs != local_pairs) free(pairs);
+                if (seen != local_seen) free(seen);
+                pairs = grown; seen = buckets; capacity = next;
+                for (size_t k = 0; k < count; ++k) {
+                    size_t bucket = equal_hash(pairs[k]) & (capacity * 2 - 1);
+                    while (seen[bucket]) bucket = (bucket + 1) & (capacity * 2 - 1);
+                    seen[bucket] = k + 1;
+                }
+                slot = equal_hash(child) & (capacity * 2 - 1);
+                while (seen[slot]) slot = (slot + 1) & (capacity * 2 - 1);
+            }
+            pairs[count] = child; seen[slot] = ++count;
         }
     }
-    free(pairs); return equal;
+    if (pairs != local_pairs) free(pairs);
+    if (seen != local_seen) free(seen);
+    return equal;
+}
+bool rc_equal(const RcValue *left, const RcValue *right) {
+    if (left == right) return true;
+    if (!left || !right) return false;
+    RcType type = rc_type(left);
+    if (type != RC_PAIR && type != RC_VECTOR) return scalar_equal(left, right);
+    if (type != rc_type(right)) return false;
+    /* Immutable pairs cannot form a cycle without a vector. Walk flat lists
+     * without allocation; a small explicit stack also covers ordinary trees.
+     * Bound branching work to avoid exponential traversal of shared DAGs. */
+    EqualPair pending[32];
+    size_t depth = 0, branches = 0;
+    const RcValue *a = left, *b = right;
+    for (;;) {
+        if (a != b) {
+            if (!structural(a) || !structural(b) || a->type != b->type) {
+                if (!scalar_equal(a, b)) return false;
+            } else {
+                if (a->type != RC_PAIR || may_reach_vector(a) || may_reach_vector(b)) return graph_equal(left, right);
+                const RcValue *h = a->as.pair.head, *k = b->as.pair.head;
+                if (h != k) {
+                    if (structural(h) && structural(k) && h->type == k->type) {
+                        /* Identical head/tail subgraphs impose one relation,
+                         * even when the two compared DAGs have distinct nodes. */
+                        if (h == a->as.pair.tail && k == b->as.pair.tail) { a = h; b = k; continue; }
+                        if (depth == 32 || ++branches == 256) return graph_equal(left, right);
+                        pending[depth++] = (EqualPair){a->as.pair.tail,b->as.pair.tail};
+                        a = h; b = k; continue;
+                    }
+                    if (!scalar_equal(h, k)) return false;
+                }
+                a = a->as.pair.tail; b = b->as.pair.tail; continue;
+            }
+        }
+        if (!depth) return true;
+        EqualPair next = pending[--depth]; a = next.left; b = next.right;
+    }
 }
