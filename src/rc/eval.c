@@ -108,8 +108,14 @@ static RcValue *application(RcContext *ctx, RcValue *expr, RcValue *env, size_t 
     return result;
 }
 static RcValue *evaluate(RcContext *ctx, RcValue *input, RcValue *environment, bool tail) {
+    if (!input) return rc_error(ctx,"eval-kl: null expression");
+    /* Atomic lookup cannot invoke callbacks or collect. The caller keeps the
+     * expression/environment rooted until this owned result is retained. */
+    if (rc_type(input)!=RC_PAIR) {
+        RcValue *value=rc_type(input)==RC_SYMBOL ? lookup(environment,input) : NULL;
+        return rc_retain(value ? value : input);
+    }
     RcValue *expr=rc_retain(input), *env=rc_retain(environment), *result=NULL;
-    if (!input) { rc_release(env); return rc_error(ctx,"eval-kl: null expression"); }
     for (;;) {
         if (rc_type(expr)!=RC_PAIR) {
             RcValue *value=rc_type(expr)==RC_SYMBOL ? lookup(env,expr) : NULL;
