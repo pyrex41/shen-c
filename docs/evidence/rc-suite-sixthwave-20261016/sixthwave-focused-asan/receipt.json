@@ -1,0 +1,640 @@
+{
+  "source_commit": "3b055330971f1bfb83f6d597db9542564ae0f032",
+  "scope": "20 runtime executables in default and true boxed modes; no generated kernel",
+  "tests": [
+    "test_cycles",
+    "test_primitives",
+    "test_eval",
+    "test_env",
+    "test_bool_tail",
+    "test_apply_fast",
+    "test_object_cache",
+    "test_immediates",
+    "test_collection",
+    "test_reuse",
+    "test_acyclic",
+    "test_symbols",
+    "test_primitive_fast",
+    "test_equal",
+    "test_canonical_primitives",
+    "test_canonical_numeric",
+    "test_canonical_cons",
+    "test_generic_builtin_tag",
+    "test_trial_work_union",
+    "test_callee"
+  ],
+  "source_sha256_before": {
+    "CMakeLists.txt": "0fbba0e5e1fded0134102f04b50b77a3929fa13d7f1e6a4c1b6513fe090090f1",
+    "Makefile.rc": "21b4ebcebaecfb1ba7c4c9a8afdd80f9e21a6ddb436f2978dd1ce7aa43399a1b",
+    "scripts/test-rc.sh": "03a058b825192309b419e2851d0c04f8cd898db3937856eb775a948f5ce514d8",
+    "src/rc/emit.c": "fca4c14a7ba72a53d89e10d022d422ac6ba39557fc77a9f06d092d8ca51c70e5",
+    "src/rc/emit.h": "ae1946b669f771941b12a706316a28090aefd126f54cc687fa00a3b10b322a9f",
+    "src/rc/eval.c": "a9fcfc1bf0b3ba22ce6f48a998d30a88b961e1f9d385c3fc3abc41889ba5cb99",
+    "src/rc/eval.h": "40840e20cb00334a7032ef11aec08ce6a0846912ae05dfb0d08e894ba7ad2e15",
+    "src/rc/main.c": "aed4ac89c8aaf338f8519b35554effd251b04d47bbee6dbf5781343097d74275",
+    "src/rc/primitives.c": "5974e3c61c97eb124360ca1fffba68114a05e8325505b6a9390a16d30bb47b36",
+    "src/rc/primitives.h": "ab8cc324d48775dded4ca6cd49eabd1a99a93fb9ff33e96862cc5243636f0a77",
+    "src/rc/probe-lto.sh": "6aa8ded494aa9dab6fcdf2eaf8f68ba734d6bdd683f10ef3807dc0e99a4c98fb",
+    "src/rc/rc.c": "4387b730ad35446ebaa50670022067cc7584c79da99f22c9679d55cd8ac6fc8f",
+    "src/rc/rc.h": "36af5c1e0258cc1a1fde1069b64719d4971473c5344546857d6744d78c60acb3",
+    "src/rc/rc_internal.h": "bd43d65504ef750edfb1479781dbeb578e9c003874511e802c8481930389f6c4",
+    "src/rc/read.c": "f61444980f2d34d3986f9640103b3478501c4d368f6c2dd5058a4b39b3143667",
+    "src/rc/read.h": "71fb3e8ce757174ee47dde95f732200ae1b023c66f8164ac0a4d82ebb241fea5",
+    "test/rc/test_acyclic.c": "b33661118ecf5a52472895e9b8e19cc2ee6145ac72de74e0a4986f1aacc511aa",
+    "test/rc/test_apply_fast.c": "1883222490366e3c1e517cfff57d0034aa545d007b5b247450173cbb5f18b837",
+    "test/rc/test_bool_tail.c": "c12069632d5a260066b549f791b6c8fddb153751bf9a2ce229189de38e3588d9",
+    "test/rc/test_callee.c": "10235e2d20ab88ae1133e90bc65e62641ae787894e6774e7f0fefa88deb9a8ef",
+    "test/rc/test_canonical_cons.c": "a0346bd2455d07e2177d91c0c7b5fa17c15fbb2e3bef7464466c1d588460f8aa",
+    "test/rc/test_canonical_numeric.c": "a20c60eb8c159ee264f73ed9a55f4781c62515deb5d52c7ee3eaf471fe51bb8d",
+    "test/rc/test_canonical_primitives.c": "e81e6a97a3f50c84b1388d629851674330c0eabb6f431de735d2eec1a9274abf",
+    "test/rc/test_collection.c": "79633a949b97c7718b27ed69c24504649c67ff30e48c2ae839405b7f3d9bd63b",
+    "test/rc/test_cycles.c": "562ca38e0a488e369b7dc3f13eaaf92f43bfe12154fa71022dbe55e11655e490",
+    "test/rc/test_env.c": "b0215f8708d27da4e4a29db7e527a9ea3bc83d4df68a0040dc8eb7e4bf2b701a",
+    "test/rc/test_equal.c": "a77aa72b18fbd683a04c0069097c488cddbd45c79be8dd152e2eee5f9a6e3d1b",
+    "test/rc/test_eval.c": "adf5645e5ed5efdeff332a0453dcd33f98dcd10a2326b2fab1cae8418148c23f",
+    "test/rc/test_generic_builtin_tag.c": "237adef3519703b04aae76a41b5c6cc5c6482bbd391848eb32931c78ccd15629",
+    "test/rc/test_immediates.c": "2ebe38e90352fe9864832c2d46a324d2fbbab7df8f110dea00e6496a7e2f1432",
+    "test/rc/test_object_cache.c": "8b675ded44ef6aa9301afc8299abf0f1d21217a7566219bc7f26f97957d88ff5",
+    "test/rc/test_primitive_fast.c": "57037e70fb664893fff1f71669ab24f8a5065b3ff817dad3e9ee0750351857d4",
+    "test/rc/test_primitives.c": "78b68d9f01c196ff02f068e3267d20fe16a2ed10b49fe226bc77247c9a220f5f",
+    "test/rc/test_reuse.c": "a211dc08864d046fce522720f10513326be5ec226127ac97ccfabad80110bebc",
+    "test/rc/test_symbols.c": "f0185e43eb07b75df2c54114074f8bdc6d1ce179668365a87f588829c556a389",
+    "test/rc/test_trial_work_union.c": "621f0522e848ab1832af906b0a520ed4bb29d794e86b3ee1fd0d4d9acfa784a1",
+    "tools/rc-build.c": "74ed5e3695d610fd8f3b491edb1804ea756c179ec104d12c472f4f5e3e8fde28"
+  },
+  "sanitizer_environment": {
+    "ASAN_OPTIONS": "halt_on_error=1:abort_on_error=1",
+    "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+  },
+  "commands": [
+    {
+      "name": "compiler",
+      "command": [
+        "/Library/Developer/CommandLineTools/usr/bin/clang",
+        "--version"
+      ],
+      "exit_code": 0,
+      "seconds": 0.0294
+    },
+    {
+      "name": "platform",
+      "command": [
+        "uname",
+        "-a"
+      ],
+      "exit_code": 0,
+      "seconds": 0.015
+    },
+    {
+      "name": "default-macros",
+      "command": [
+        "/Library/Developer/CommandLineTools/usr/bin/clang",
+        "-isysroot",
+        "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk",
+        "-Isrc/rc",
+        "-dM",
+        "-E",
+        "-include",
+        "src/rc/rc.h",
+        "-x",
+        "c",
+        "-"
+      ],
+      "exit_code": 0,
+      "seconds": 0.0699
+    },
+    {
+      "name": "default-compile",
+      "command": [
+        "/nix/store/308q7v3aaiw4d1wjijy7xcszlgnfadb6-gnumake-4.4.1/bin/make",
+        "-f",
+        "Makefile.rc",
+        "-j2",
+        "CC=/Library/Developer/CommandLineTools/usr/bin/clang",
+        "AR=/Library/Developer/CommandLineTools/usr/bin/ar",
+        "RC_CPPFLAGS=-isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk",
+        "RC_SANITIZE=1",
+        "RC_LTO=0",
+        "RC_BUILD=<artifacts>/shen-rc-sixthwave-focused-3b055330971f/default/obj",
+        "RC_BIN=<artifacts>/shen-rc-sixthwave-focused-3b055330971f/default/bin",
+        "test-binaries"
+      ],
+      "exit_code": 0,
+      "seconds": 6.2762
+    },
+    {
+      "name": "default-test_cycles",
+      "command": [
+        "<artifacts>/shen-rc-sixthwave-focused-3b055330971f/default/bin/test_cycles"
+      ],
+      "exit_code": 0,
+      "seconds": 0.4859
+    },
+    {
+      "name": "default-test_primitives",
+      "command": [
+        "<artifacts>/shen-rc-sixthwave-focused-3b055330971f/default/bin/test_primitives"
+      ],
+      "exit_code": 0,
+      "seconds": 0.3179
+    },
+    {
+      "name": "default-test_eval",
+      "command": [
+        "<artifacts>/shen-rc-sixthwave-focused-3b055330971f/default/bin/test_eval"
+      ],
+      "exit_code": 0,
+      "seconds": 1.1801
+    },
+    {
+      "name": "default-test_env",
+      "command": [
+        "<artifacts>/shen-rc-sixthwave-focused-3b055330971f/default/bin/test_env"
+      ],
+      "exit_code": 0,
+      "seconds": 0.2703
+    },
+    {
+      "name": "default-test_bool_tail",
+      "command": [
+        "<artifacts>/shen-rc-sixthwave-focused-3b055330971f/default/bin/test_bool_tail"
+      ],
+      "exit_code": 0,
+      "seconds": 0.2788
+    },
+    {
+      "name": "default-test_apply_fast",
+      "command": [
+        "<artifacts>/shen-rc-sixthwave-focused-3b055330971f/default/bin/test_apply_fast"
+      ],
+      "exit_code": 0,
+      "seconds": 0.2468
+    },
+    {
+      "name": "default-test_object_cache",
+      "command": [
+        "<artifacts>/shen-rc-sixthwave-focused-3b055330971f/default/bin/test_object_cache"
+      ],
+      "exit_code": 0,
+      "seconds": 0.2494
+    },
+    {
+      "name": "default-test_immediates",
+      "command": [
+        "<artifacts>/shen-rc-sixthwave-focused-3b055330971f/default/bin/test_immediates"
+      ],
+      "exit_code": 0,
+      "seconds": 0.3377
+    },
+    {
+      "name": "default-test_collection",
+      "command": [
+        "<artifacts>/shen-rc-sixthwave-focused-3b055330971f/default/bin/test_collection"
+      ],
+      "exit_code": 0,
+      "seconds": 0.3719
+    },
+    {
+      "name": "default-test_reuse",
+      "command": [
+        "<artifacts>/shen-rc-sixthwave-focused-3b055330971f/default/bin/test_reuse"
+      ],
+      "exit_code": 0,
+      "seconds": 0.2572
+    },
+    {
+      "name": "default-test_acyclic",
+      "command": [
+        "<artifacts>/shen-rc-sixthwave-focused-3b055330971f/default/bin/test_acyclic"
+      ],
+      "exit_code": 0,
+      "seconds": 0.2607
+    },
+    {
+      "name": "default-test_symbols",
+      "command": [
+        "<artifacts>/shen-rc-sixthwave-focused-3b055330971f/default/bin/test_symbols"
+      ],
+      "exit_code": 0,
+      "seconds": 0.2352
+    },
+    {
+      "name": "default-test_primitive_fast",
+      "command": [
+        "<artifacts>/shen-rc-sixthwave-focused-3b055330971f/default/bin/test_primitive_fast"
+      ],
+      "exit_code": 0,
+      "seconds": 0.2173
+    },
+    {
+      "name": "default-test_equal",
+      "command": [
+        "<artifacts>/shen-rc-sixthwave-focused-3b055330971f/default/bin/test_equal"
+      ],
+      "exit_code": 0,
+      "seconds": 0.3066
+    },
+    {
+      "name": "default-test_canonical_primitives",
+      "command": [
+        "<artifacts>/shen-rc-sixthwave-focused-3b055330971f/default/bin/test_canonical_primitives"
+      ],
+      "exit_code": 0,
+      "seconds": 0.2807
+    },
+    {
+      "name": "default-test_canonical_numeric",
+      "command": [
+        "<artifacts>/shen-rc-sixthwave-focused-3b055330971f/default/bin/test_canonical_numeric"
+      ],
+      "exit_code": 0,
+      "seconds": 0.2452
+    },
+    {
+      "name": "default-test_canonical_cons",
+      "command": [
+        "<artifacts>/shen-rc-sixthwave-focused-3b055330971f/default/bin/test_canonical_cons"
+      ],
+      "exit_code": 0,
+      "seconds": 0.202
+    },
+    {
+      "name": "default-test_generic_builtin_tag",
+      "command": [
+        "<artifacts>/shen-rc-sixthwave-focused-3b055330971f/default/bin/test_generic_builtin_tag"
+      ],
+      "exit_code": 0,
+      "seconds": 0.2171
+    },
+    {
+      "name": "default-test_trial_work_union",
+      "command": [
+        "<artifacts>/shen-rc-sixthwave-focused-3b055330971f/default/bin/test_trial_work_union"
+      ],
+      "exit_code": 0,
+      "seconds": 0.2342
+    },
+    {
+      "name": "default-test_callee",
+      "command": [
+        "<artifacts>/shen-rc-sixthwave-focused-3b055330971f/default/bin/test_callee"
+      ],
+      "exit_code": 0,
+      "seconds": 0.2941
+    },
+    {
+      "name": "default-boehm-audit",
+      "command": [
+        "sh",
+        "scripts/test-rc.sh",
+        "--audit-only",
+        "<artifacts>/shen-rc-sixthwave-focused-3b055330971f/default/bin/test_cycles",
+        "<artifacts>/shen-rc-sixthwave-focused-3b055330971f/default/bin/test_primitives",
+        "<artifacts>/shen-rc-sixthwave-focused-3b055330971f/default/bin/test_eval",
+        "<artifacts>/shen-rc-sixthwave-focused-3b055330971f/default/bin/test_env",
+        "<artifacts>/shen-rc-sixthwave-focused-3b055330971f/default/bin/test_bool_tail",
+        "<artifacts>/shen-rc-sixthwave-focused-3b055330971f/default/bin/test_apply_fast",
+        "<artifacts>/shen-rc-sixthwave-focused-3b055330971f/default/bin/test_object_cache",
+        "<artifacts>/shen-rc-sixthwave-focused-3b055330971f/default/bin/test_immediates",
+        "<artifacts>/shen-rc-sixthwave-focused-3b055330971f/default/bin/test_collection",
+        "<artifacts>/shen-rc-sixthwave-focused-3b055330971f/default/bin/test_reuse",
+        "<artifacts>/shen-rc-sixthwave-focused-3b055330971f/default/bin/test_acyclic",
+        "<artifacts>/shen-rc-sixthwave-focused-3b055330971f/default/bin/test_symbols",
+        "<artifacts>/shen-rc-sixthwave-focused-3b055330971f/default/bin/test_primitive_fast",
+        "<artifacts>/shen-rc-sixthwave-focused-3b055330971f/default/bin/test_equal",
+        "<artifacts>/shen-rc-sixthwave-focused-3b055330971f/default/bin/test_canonical_primitives",
+        "<artifacts>/shen-rc-sixthwave-focused-3b055330971f/default/bin/test_canonical_numeric",
+        "<artifacts>/shen-rc-sixthwave-focused-3b055330971f/default/bin/test_canonical_cons",
+        "<artifacts>/shen-rc-sixthwave-focused-3b055330971f/default/bin/test_generic_builtin_tag",
+        "<artifacts>/shen-rc-sixthwave-focused-3b055330971f/default/bin/test_trial_work_union",
+        "<artifacts>/shen-rc-sixthwave-focused-3b055330971f/default/bin/test_callee"
+      ],
+      "exit_code": 0,
+      "seconds": 0.8024
+    },
+    {
+      "name": "boxed-macros",
+      "command": [
+        "/Library/Developer/CommandLineTools/usr/bin/clang",
+        "-isysroot",
+        "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk",
+        "-Isrc/rc",
+        "-DSHEN_RC_IMMEDIATE_INTEGERS=0",
+        "-dM",
+        "-E",
+        "-include",
+        "src/rc/rc.h",
+        "-x",
+        "c",
+        "-"
+      ],
+      "exit_code": 0,
+      "seconds": 0.0556
+    },
+    {
+      "name": "boxed-compile",
+      "command": [
+        "/nix/store/308q7v3aaiw4d1wjijy7xcszlgnfadb6-gnumake-4.4.1/bin/make",
+        "-f",
+        "Makefile.rc",
+        "-j2",
+        "CC=/Library/Developer/CommandLineTools/usr/bin/clang",
+        "AR=/Library/Developer/CommandLineTools/usr/bin/ar",
+        "RC_CPPFLAGS=-isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk -DSHEN_RC_IMMEDIATE_INTEGERS=0",
+        "RC_SANITIZE=1",
+        "RC_LTO=0",
+        "RC_BUILD=<artifacts>/shen-rc-sixthwave-focused-3b055330971f/boxed/obj",
+        "RC_BIN=<artifacts>/shen-rc-sixthwave-focused-3b055330971f/boxed/bin",
+        "test-binaries"
+      ],
+      "exit_code": 0,
+      "seconds": 6.2132
+    },
+    {
+      "name": "boxed-test_cycles",
+      "command": [
+        "<artifacts>/shen-rc-sixthwave-focused-3b055330971f/boxed/bin/test_cycles"
+      ],
+      "exit_code": 0,
+      "seconds": 0.9192
+    },
+    {
+      "name": "boxed-test_primitives",
+      "command": [
+        "<artifacts>/shen-rc-sixthwave-focused-3b055330971f/boxed/bin/test_primitives"
+      ],
+      "exit_code": 0,
+      "seconds": 0.2879
+    },
+    {
+      "name": "boxed-test_eval",
+      "command": [
+        "<artifacts>/shen-rc-sixthwave-focused-3b055330971f/boxed/bin/test_eval"
+      ],
+      "exit_code": 0,
+      "seconds": 1.3606
+    },
+    {
+      "name": "boxed-test_env",
+      "command": [
+        "<artifacts>/shen-rc-sixthwave-focused-3b055330971f/boxed/bin/test_env"
+      ],
+      "exit_code": 0,
+      "seconds": 0.2669
+    },
+    {
+      "name": "boxed-test_bool_tail",
+      "command": [
+        "<artifacts>/shen-rc-sixthwave-focused-3b055330971f/boxed/bin/test_bool_tail"
+      ],
+      "exit_code": 0,
+      "seconds": 0.2858
+    },
+    {
+      "name": "boxed-test_apply_fast",
+      "command": [
+        "<artifacts>/shen-rc-sixthwave-focused-3b055330971f/boxed/bin/test_apply_fast"
+      ],
+      "exit_code": 0,
+      "seconds": 0.2298
+    },
+    {
+      "name": "boxed-test_object_cache",
+      "command": [
+        "<artifacts>/shen-rc-sixthwave-focused-3b055330971f/boxed/bin/test_object_cache"
+      ],
+      "exit_code": 0,
+      "seconds": 0.2775
+    },
+    {
+      "name": "boxed-test_immediates",
+      "command": [
+        "<artifacts>/shen-rc-sixthwave-focused-3b055330971f/boxed/bin/test_immediates"
+      ],
+      "exit_code": 0,
+      "seconds": 0.2669
+    },
+    {
+      "name": "boxed-test_collection",
+      "command": [
+        "<artifacts>/shen-rc-sixthwave-focused-3b055330971f/boxed/bin/test_collection"
+      ],
+      "exit_code": 0,
+      "seconds": 0.3415
+    },
+    {
+      "name": "boxed-test_reuse",
+      "command": [
+        "<artifacts>/shen-rc-sixthwave-focused-3b055330971f/boxed/bin/test_reuse"
+      ],
+      "exit_code": 0,
+      "seconds": 0.3018
+    },
+    {
+      "name": "boxed-test_acyclic",
+      "command": [
+        "<artifacts>/shen-rc-sixthwave-focused-3b055330971f/boxed/bin/test_acyclic"
+      ],
+      "exit_code": 0,
+      "seconds": 0.2611
+    },
+    {
+      "name": "boxed-test_symbols",
+      "command": [
+        "<artifacts>/shen-rc-sixthwave-focused-3b055330971f/boxed/bin/test_symbols"
+      ],
+      "exit_code": 0,
+      "seconds": 0.2188
+    },
+    {
+      "name": "boxed-test_primitive_fast",
+      "command": [
+        "<artifacts>/shen-rc-sixthwave-focused-3b055330971f/boxed/bin/test_primitive_fast"
+      ],
+      "exit_code": 0,
+      "seconds": 0.2219
+    },
+    {
+      "name": "boxed-test_equal",
+      "command": [
+        "<artifacts>/shen-rc-sixthwave-focused-3b055330971f/boxed/bin/test_equal"
+      ],
+      "exit_code": 0,
+      "seconds": 0.3758
+    },
+    {
+      "name": "boxed-test_canonical_primitives",
+      "command": [
+        "<artifacts>/shen-rc-sixthwave-focused-3b055330971f/boxed/bin/test_canonical_primitives"
+      ],
+      "exit_code": 0,
+      "seconds": 0.2317
+    },
+    {
+      "name": "boxed-test_canonical_numeric",
+      "command": [
+        "<artifacts>/shen-rc-sixthwave-focused-3b055330971f/boxed/bin/test_canonical_numeric"
+      ],
+      "exit_code": 0,
+      "seconds": 0.2065
+    },
+    {
+      "name": "boxed-test_canonical_cons",
+      "command": [
+        "<artifacts>/shen-rc-sixthwave-focused-3b055330971f/boxed/bin/test_canonical_cons"
+      ],
+      "exit_code": 0,
+      "seconds": 0.2104
+    },
+    {
+      "name": "boxed-test_generic_builtin_tag",
+      "command": [
+        "<artifacts>/shen-rc-sixthwave-focused-3b055330971f/boxed/bin/test_generic_builtin_tag"
+      ],
+      "exit_code": 0,
+      "seconds": 0.2153
+    },
+    {
+      "name": "boxed-test_trial_work_union",
+      "command": [
+        "<artifacts>/shen-rc-sixthwave-focused-3b055330971f/boxed/bin/test_trial_work_union"
+      ],
+      "exit_code": 0,
+      "seconds": 0.2671
+    },
+    {
+      "name": "boxed-test_callee",
+      "command": [
+        "<artifacts>/shen-rc-sixthwave-focused-3b055330971f/boxed/bin/test_callee"
+      ],
+      "exit_code": 0,
+      "seconds": 0.2813
+    },
+    {
+      "name": "boxed-boehm-audit",
+      "command": [
+        "sh",
+        "scripts/test-rc.sh",
+        "--audit-only",
+        "<artifacts>/shen-rc-sixthwave-focused-3b055330971f/boxed/bin/test_cycles",
+        "<artifacts>/shen-rc-sixthwave-focused-3b055330971f/boxed/bin/test_primitives",
+        "<artifacts>/shen-rc-sixthwave-focused-3b055330971f/boxed/bin/test_eval",
+        "<artifacts>/shen-rc-sixthwave-focused-3b055330971f/boxed/bin/test_env",
+        "<artifacts>/shen-rc-sixthwave-focused-3b055330971f/boxed/bin/test_bool_tail",
+        "<artifacts>/shen-rc-sixthwave-focused-3b055330971f/boxed/bin/test_apply_fast",
+        "<artifacts>/shen-rc-sixthwave-focused-3b055330971f/boxed/bin/test_object_cache",
+        "<artifacts>/shen-rc-sixthwave-focused-3b055330971f/boxed/bin/test_immediates",
+        "<artifacts>/shen-rc-sixthwave-focused-3b055330971f/boxed/bin/test_collection",
+        "<artifacts>/shen-rc-sixthwave-focused-3b055330971f/boxed/bin/test_reuse",
+        "<artifacts>/shen-rc-sixthwave-focused-3b055330971f/boxed/bin/test_acyclic",
+        "<artifacts>/shen-rc-sixthwave-focused-3b055330971f/boxed/bin/test_symbols",
+        "<artifacts>/shen-rc-sixthwave-focused-3b055330971f/boxed/bin/test_primitive_fast",
+        "<artifacts>/shen-rc-sixthwave-focused-3b055330971f/boxed/bin/test_equal",
+        "<artifacts>/shen-rc-sixthwave-focused-3b055330971f/boxed/bin/test_canonical_primitives",
+        "<artifacts>/shen-rc-sixthwave-focused-3b055330971f/boxed/bin/test_canonical_numeric",
+        "<artifacts>/shen-rc-sixthwave-focused-3b055330971f/boxed/bin/test_canonical_cons",
+        "<artifacts>/shen-rc-sixthwave-focused-3b055330971f/boxed/bin/test_generic_builtin_tag",
+        "<artifacts>/shen-rc-sixthwave-focused-3b055330971f/boxed/bin/test_trial_work_union",
+        "<artifacts>/shen-rc-sixthwave-focused-3b055330971f/boxed/bin/test_callee"
+      ],
+      "exit_code": 0,
+      "seconds": 0.9103
+    }
+  ],
+  "source_sha256_after": {
+    "CMakeLists.txt": "0fbba0e5e1fded0134102f04b50b77a3929fa13d7f1e6a4c1b6513fe090090f1",
+    "Makefile.rc": "21b4ebcebaecfb1ba7c4c9a8afdd80f9e21a6ddb436f2978dd1ce7aa43399a1b",
+    "scripts/test-rc.sh": "03a058b825192309b419e2851d0c04f8cd898db3937856eb775a948f5ce514d8",
+    "src/rc/emit.c": "fca4c14a7ba72a53d89e10d022d422ac6ba39557fc77a9f06d092d8ca51c70e5",
+    "src/rc/emit.h": "ae1946b669f771941b12a706316a28090aefd126f54cc687fa00a3b10b322a9f",
+    "src/rc/eval.c": "a9fcfc1bf0b3ba22ce6f48a998d30a88b961e1f9d385c3fc3abc41889ba5cb99",
+    "src/rc/eval.h": "40840e20cb00334a7032ef11aec08ce6a0846912ae05dfb0d08e894ba7ad2e15",
+    "src/rc/main.c": "aed4ac89c8aaf338f8519b35554effd251b04d47bbee6dbf5781343097d74275",
+    "src/rc/primitives.c": "5974e3c61c97eb124360ca1fffba68114a05e8325505b6a9390a16d30bb47b36",
+    "src/rc/primitives.h": "ab8cc324d48775dded4ca6cd49eabd1a99a93fb9ff33e96862cc5243636f0a77",
+    "src/rc/probe-lto.sh": "6aa8ded494aa9dab6fcdf2eaf8f68ba734d6bdd683f10ef3807dc0e99a4c98fb",
+    "src/rc/rc.c": "4387b730ad35446ebaa50670022067cc7584c79da99f22c9679d55cd8ac6fc8f",
+    "src/rc/rc.h": "36af5c1e0258cc1a1fde1069b64719d4971473c5344546857d6744d78c60acb3",
+    "src/rc/rc_internal.h": "bd43d65504ef750edfb1479781dbeb578e9c003874511e802c8481930389f6c4",
+    "src/rc/read.c": "f61444980f2d34d3986f9640103b3478501c4d368f6c2dd5058a4b39b3143667",
+    "src/rc/read.h": "71fb3e8ce757174ee47dde95f732200ae1b023c66f8164ac0a4d82ebb241fea5",
+    "test/rc/test_acyclic.c": "b33661118ecf5a52472895e9b8e19cc2ee6145ac72de74e0a4986f1aacc511aa",
+    "test/rc/test_apply_fast.c": "1883222490366e3c1e517cfff57d0034aa545d007b5b247450173cbb5f18b837",
+    "test/rc/test_bool_tail.c": "c12069632d5a260066b549f791b6c8fddb153751bf9a2ce229189de38e3588d9",
+    "test/rc/test_callee.c": "10235e2d20ab88ae1133e90bc65e62641ae787894e6774e7f0fefa88deb9a8ef",
+    "test/rc/test_canonical_cons.c": "a0346bd2455d07e2177d91c0c7b5fa17c15fbb2e3bef7464466c1d588460f8aa",
+    "test/rc/test_canonical_numeric.c": "a20c60eb8c159ee264f73ed9a55f4781c62515deb5d52c7ee3eaf471fe51bb8d",
+    "test/rc/test_canonical_primitives.c": "e81e6a97a3f50c84b1388d629851674330c0eabb6f431de735d2eec1a9274abf",
+    "test/rc/test_collection.c": "79633a949b97c7718b27ed69c24504649c67ff30e48c2ae839405b7f3d9bd63b",
+    "test/rc/test_cycles.c": "562ca38e0a488e369b7dc3f13eaaf92f43bfe12154fa71022dbe55e11655e490",
+    "test/rc/test_env.c": "b0215f8708d27da4e4a29db7e527a9ea3bc83d4df68a0040dc8eb7e4bf2b701a",
+    "test/rc/test_equal.c": "a77aa72b18fbd683a04c0069097c488cddbd45c79be8dd152e2eee5f9a6e3d1b",
+    "test/rc/test_eval.c": "adf5645e5ed5efdeff332a0453dcd33f98dcd10a2326b2fab1cae8418148c23f",
+    "test/rc/test_generic_builtin_tag.c": "237adef3519703b04aae76a41b5c6cc5c6482bbd391848eb32931c78ccd15629",
+    "test/rc/test_immediates.c": "2ebe38e90352fe9864832c2d46a324d2fbbab7df8f110dea00e6496a7e2f1432",
+    "test/rc/test_object_cache.c": "8b675ded44ef6aa9301afc8299abf0f1d21217a7566219bc7f26f97957d88ff5",
+    "test/rc/test_primitive_fast.c": "57037e70fb664893fff1f71669ab24f8a5065b3ff817dad3e9ee0750351857d4",
+    "test/rc/test_primitives.c": "78b68d9f01c196ff02f068e3267d20fe16a2ed10b49fe226bc77247c9a220f5f",
+    "test/rc/test_reuse.c": "a211dc08864d046fce522720f10513326be5ec226127ac97ccfabad80110bebc",
+    "test/rc/test_symbols.c": "f0185e43eb07b75df2c54114074f8bdc6d1ce179668365a87f588829c556a389",
+    "test/rc/test_trial_work_union.c": "621f0522e848ab1832af906b0a520ed4bb29d794e86b3ee1fd0d4d9acfa784a1",
+    "tools/rc-build.c": "74ed5e3695d610fd8f3b491edb1804ea756c179ec104d12c472f4f5e3e8fde28"
+  },
+  "source_unchanged": true,
+  "result": "PASS",
+  "runtime_executables_per_mode": 20,
+  "total_runtime_runs": 40,
+  "test_registration_matches": [
+    "Makefile.rc",
+    "CMakeLists.txt",
+    "scripts/test-rc.sh"
+  ],
+  "binary_sha256": {
+    "default/test_cycles": "776ed5875c743be6a91d40ee3f2dbce09cf308fdda05ce37666a145ff658fcff",
+    "default/test_primitives": "b720afe54f433b7cf4804c37ef151ab428c020c3e5b4a3870c1fe8694e2f75e2",
+    "default/test_eval": "c24b4f4e6d94cb214ac475930f59831253ed1018450ff42ecdff2a339e891cdc",
+    "default/test_env": "0df964baf453e085e96d0e3d8b1389dcec92319c547400fca708899cf0bf9645",
+    "default/test_bool_tail": "eca815aa7f62b5a0189983f5b8f6518fffc68f29b09da4a395f514a28a003f3f",
+    "default/test_apply_fast": "5db8b02f43fde0786fec3a8aa97e8f49db0a763f140e0a052682da4130e89115",
+    "default/test_object_cache": "ae4c9d06dab67d472ea366e4c8d198d86e610fd8897db14a975178e420114d34",
+    "default/test_immediates": "0c7c94d0e809dafb21500ef70bc8785e858b3c4339b32a32a28eb453b917a115",
+    "default/test_collection": "24ffbecb60fe7cfd7603082c85f88d9337681109f23a7500319b28c154c77522",
+    "default/test_reuse": "970ab2a7cb74e9e7b5f5bbad4af7ceb0fa7d9ead05a4ad2e44ab9afef3adac86",
+    "default/test_acyclic": "27b31e87fc4d034f77b4507b1cbe0b11492154a29a5b729497cdf3267e4bec32",
+    "default/test_symbols": "2adc9cb2370a04f2665ce14ca66cee8899c681496815941baae97d13e6841028",
+    "default/test_primitive_fast": "78b00e8992eb009424353e954d6fbf19cbe72c939b51173131d7d6b00651db5a",
+    "default/test_equal": "44657b7cc7b613bedce41a9a2c44a02dd25240fc1313dfa577f19246713bae76",
+    "default/test_canonical_primitives": "e5f7bec096c0cd565627e3d39be8e51dee7729c7e46eb7678080816ec8e9e247",
+    "default/test_canonical_numeric": "b0ff594d4f55f89ec2d8c0bbcdeb615dc6c701998fb31508cc55b94897de9d85",
+    "default/test_canonical_cons": "69c5ba3a194417a8c4e2d9b3325ef5d97ecfe3b1832150949ffa1cd9ab5f02c5",
+    "default/test_generic_builtin_tag": "dfe94d86c9b42d6170dd6f807a1aec1c73f1d2c63bba187d2a8f62f09a0fd755",
+    "default/test_trial_work_union": "51b1b278f8b6de5ca2306e87cdaf07efebf009895bda10222243a85a0688533d",
+    "default/test_callee": "e6f2d4c19011539c327e4e997e15192bac5f4767618a5e3488a1d4400c4263a5",
+    "boxed/test_cycles": "ec1b602efeaf2b57bf871b89037108d8b7c1258741a3b31d3f111b313d28d410",
+    "boxed/test_primitives": "2df840e4351141de9e80a393edb311daed0c64a5fe1b7121a21394069c1db8e8",
+    "boxed/test_eval": "de81f2bd26724d2b9d86a8b4894612bfb4cfaa1b597e1f31e312547ea6c3a910",
+    "boxed/test_env": "c7282a3b522e4ff829d056f6ddb5ea2fa2ac7e92dd623eea88b65e00d07954da",
+    "boxed/test_bool_tail": "cfbd324308bfbcdee2c832f858be5a09fd6ec45d9b8751e4f61a7a81f2e56244",
+    "boxed/test_apply_fast": "aba985abaab07212b78db4d7aae4fc3166abe8ab839610c26dfb8d35c3910b2e",
+    "boxed/test_object_cache": "184558fc70fc95543d675ec91b695d65575b664fa856f842a32132146291b5e5",
+    "boxed/test_immediates": "bb26489100f1faccd43e5302bd4e5d57706a9404c0534fe033ffb7a275d5505d",
+    "boxed/test_collection": "8c0245c7117cf2853c29b71a09f79fd8eeb3bddd02ed243bf0e8792f78a2d9e8",
+    "boxed/test_reuse": "0bb70a74eb83621c0ba0ef2d1c42111218638b838cb93503ee81652943892f28",
+    "boxed/test_acyclic": "6e57a958b5b55d7e556446782a2dab55a00d08d0d77f3990065ca92397e290bd",
+    "boxed/test_symbols": "01d7e82bf6399529dcc139235a5276702c66bf869bebd867ff8e00a85aeda061",
+    "boxed/test_primitive_fast": "3ed1bff8b5c4cac8a11c6f9f29fb299e902d31918d925952beda07aa5fa85733",
+    "boxed/test_equal": "d9bc66822b8674db987906ecb7b47c17db574304643e2734a7ebaddeba7c0f16",
+    "boxed/test_canonical_primitives": "5de000f9cfac97b86c17e649c047e0764bf1bf3c705926975c2d475d7c5a72d8",
+    "boxed/test_canonical_numeric": "ab9b0f3d3d45d5f36cfb9f635f89bdb0ccb45469c7ca89dd3e346b4aba7e4734",
+    "boxed/test_canonical_cons": "2656185ff16a909a332514239619b353230014d15b331e57c1e875a12bbc36b6",
+    "boxed/test_generic_builtin_tag": "9d4b90923af81fd8b94fd259369ad702667752fc3ddca884b5160c4676751555",
+    "boxed/test_trial_work_union": "7eef49d0f71bf7c4c5a791dba96fd57ad519c466ffd9913c797173785ff5de09",
+    "boxed/test_callee": "a9dad7788e1318696ddd19dc2bcbfc28d16329cc70a9e3f4279f4193dc5a1465"
+  },
+  "scope_exclusions": [
+    "Generated-kernel sanitizer build",
+    "Language full suite",
+    "Emitted-source integration tests",
+    "Reader capture test (requires generated kernel CLI)"
+  ]
+}

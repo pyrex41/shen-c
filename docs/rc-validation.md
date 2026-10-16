@@ -6,7 +6,20 @@ the supported Make/CMake/Nix build. It adds local last-use ownership, free-varia
 captures, owned calls, and selective pair reuse. Exact cycle reclamation remains
 enabled for unrestricted mutable Shen values.
 
-## Current checkpoint: 2026-10-16
+## Current sixth-wave checkpoint: 2026-10-16
+
+Freeze `3b055330` passed a fresh default Release/IPO full-kernel build, 20 runtime
+tests, 13 reader cases, audits and standalone CLI checks. Focused fatal ASan/UBSan
+passed all 20 runtime tests in both default and boxed modes (40 runs). Four
+alternating release pairs all passed 134/0; paired median RC/Boehm ratios were
+1.058275 wall and 1.048450 user CPU: **5.8% and 4.8% slower; target NOT MET / OPEN**.
+Independent wall medians 15.105 / 15.155 seconds lose pair association and must
+not be read as a win. See [the sixth-wave record](performance/rc-suite-sixthwave-20261016.md).
+A full generated-kernel sanitizer suite and default Make qualification were
+**not run for this freeze**; those earlier successes belong to `8dbc9414`.
+Seventh-wave lazy-callee/direct borrowed request-argv candidates remain pending.
+
+## Historical fifth-wave checkpoint: 2026-10-16
 
 Freeze `8dbc9414` passed a fresh full fatal ASan/UBSan suite (134/0),
 19 runtime tests in default and boxed modes, nine emitted scripts, and a fresh

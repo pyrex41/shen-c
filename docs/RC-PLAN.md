@@ -194,3 +194,22 @@ See [the checkpoint](performance/rc-suite-20261016.md). Continue profiling major
 costs, preserve unrestricted exact cycle semantics and bounded storage, and
 qualify each next immutable candidate before repeated matched measurements.
 No artifacts were installed or pushed at this checkpoint. Historical evidence stays.
+
+### Sixth-wave measured checkpoint, 2026-10-16
+
+Freeze `3b055330` integrates ENV key classes, internal evaluator root borrowing,
+trial/work storage sharing, flat parameter captures and guarded pinned assoc.
+Fresh Release/IPO full-kernel qualification passed 20 runtime tests, 13 reader
+cases, audits and standalone CLI checks. Focused fatal ASan/UBSan passed 20 runtime
+executables in default and boxed modes. Eight release executions passed 134/0.
+
+Median paired RC/Boehm ratios remain 1.058275 wall / 1.048450 user CPU:
+**performance target NOT MET / OPEN**, 5.8% / 4.8% slower. Keep all four pairs;
+independent wall medians do not preserve pair association. Full generated-kernel
+ASan and default Make are not qualified for this freeze. See
+[the exact checkpoint](performance/rc-suite-sixthwave-20261016.md).
+
+Seventh-wave lazy callee and direct borrowed request-argv candidates remain
+pending. Require a new immutable artifact, focused correctness and repeated
+matched measurements before crediting a gain. No artifacts were installed or
+pushed at this checkpoint.

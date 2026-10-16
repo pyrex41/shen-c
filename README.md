@@ -19,9 +19,9 @@ Their implemented scope and evidence are described in
 [the validation record](docs/rc-validation.md).
 
 The latest four alternating full S42 pairs passed 134/0 for both implementations,
-but RC remained about 26% slower than preserved Boehm. Performance stays OPEN;
-see the [2026-10-16 checkpoint](docs/performance/rc-suite-20261016.md) for matched
-measurements and fresh sanitizer/default Make qualification.
+but RC remained 5.8% slower in paired wall time and 4.8% slower in paired user
+CPU. Performance stays OPEN; see the [sixth-wave checkpoint](docs/performance/rc-suite-sixthwave-20261016.md)
+for matched measurements and the exact correctness qualification scope.
 
 ## Build
 
