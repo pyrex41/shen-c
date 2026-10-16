@@ -116,7 +116,7 @@ with workspace as temp:
                            cwd=cwd,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True,timeout=30)
     assert alias.returncode != 0 and 'aliases compiler output' in alias.stderr and alias_source.read_text() == '42'
     external_source = cwd / 'hardlinked source.shen'; external_source.write_text('42')
-    (aliases / 'frontend.log').hardlink_to(external_source)
+    os.link(external_source, aliases / 'frontend.log')
     alias = subprocess.run([str(root / 'scripts/compile-shen-rc.sh'),str(external_source),str(aliases)],
                            cwd=cwd,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True,timeout=30)
     assert alias.returncode != 0 and 'aliases compiler output' in alias.stderr and external_source.read_text() == '42'

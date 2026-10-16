@@ -27,6 +27,8 @@ jobs:
           github_access_token: ${{ secrets.GITHUB_TOKEN }}
       - name: Independent toolchain
         run: nix develop -c env CC=${{ matrix.cc }} sh -c '$CC --version | head -n1; python3 --version'
+      - name: Pinned release validator controls
+        run: nix develop -c python3 test/rc/test_release_manifest.py
       - name: Default Make and RC unit tests
         run: |
           nix develop -c make CC=${{ matrix.cc }} -j2
@@ -40,7 +42,7 @@ jobs:
         run: nix develop -c test/rc/test_reader_capture.sh ./bin/shen-rc
       - name: Shen source compilation
         run: nix develop -c env CC=${{ matrix.cc }} test/rc/test_source_compile.sh
-      - name: Certify unchanged S42 runme.shen
+      - name: Certify pinned release runme.shen
         run: nix develop -c make CC=${{ matrix.cc }} certify
       - name: Fresh standalone toolchain acceptance
         run: |
@@ -76,5 +78,9 @@ jobs:
       - uses: cachix/install-nix-action@v31
         with:
           github_access_token: ${{ secrets.GITHUB_TOKEN }}
-      - name: RC ownership and cycle sanitizer tests
-        run: nix develop -c make CC=clang sanitize
+      - name: RC ownership and cycle sanitizer tests (default and boxed)
+        run: |
+          nix develop -c env ASAN_OPTIONS=abort_on_error=1 UBSAN_OPTIONS=halt_on_error=1 make CC=clang sanitize
+          nix develop -c env ASAN_OPTIONS=abort_on_error=1 UBSAN_OPTIONS=halt_on_error=1 make -f Makefile.rc CC=clang RC_SANITIZE=1 RC_CPPFLAGS=-DSHEN_RC_IMMEDIATE_INTEGERS=0 RC_BUILD=obj/boxed RC_BIN=bin/boxed test
+      - name: Fully instrumented generated kernel and complete suite
+        run: nix develop -c env CC=clang CFLAGS='-O1 -g -fsanitize=address,undefined -fno-sanitize-recover=all -fno-omit-frame-pointer' ASAN_OPTIONS=abort_on_error=1 UBSAN_OPTIONS=halt_on_error=1 scripts/certify-rc.sh

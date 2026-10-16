@@ -1,7 +1,7 @@
 # Shen-C
 
 A [Shen](https://shenlanguage.org/) implementation in C17, based on
-[otabat/shen-c](https://github.com/otabat/shen-c) and Mark Tarver's Shen S42
+[otabat/shen-c](https://github.com/otabat/shen-c) and Mark Tarver's Shen 43.1
 kernel. Shen provides pattern matching, macros, optional types, Prolog, and
 Shen-YACC.
 
@@ -18,7 +18,7 @@ Their implemented scope and evidence are described in
 [RC-BACKEND.md](docs/RC-BACKEND.md) and
 [the validation record](docs/rc-validation.md).
 
-The latest four alternating full S42 pairs passed 134/0 for both implementations.
+The historical four alternating full S42 pairs passed 134/0 for both implementations.
 RC remained 0.9% slower in paired wall time and 4.1% slower in paired user CPU,
 with 62.9% lower peak memory. Other host workloads affected timing; this does not
 establish parity or a speedup. Performance stays OPEN; see the
@@ -27,7 +27,7 @@ for matched measurements and the exact correctness qualification scope.
 
 ## Build
 
-A C17 compiler, Make, and an archiver are sufficient. Nix is optional.
+A C17 compiler, Make, Python 3.9 or newer, and an archiver are sufficient. Nix is optional.
 
 ```sh
 make CC=clang
@@ -78,8 +78,8 @@ scripts/certify-rc.sh
 ```
 
 The certification command rebuilds a fresh Boehm-free compiler, compiles all
-14 bundled kernel modules, runs the unchanged S42 suite, and audits both the
-compiler and generated executable. Passing requires **134 passed, 0 failed**,
+14 bundled kernel modules, runs the pinned release suite in a fresh writable directory, and audits both the
+compiler and generated executable. Passing requires **136 passed, 0 failed**, all 36 intermediate reports, and the expected redirect output,
 successful process exit, matching source hashes, and no Boehm dependencies.
 Each run has bounded execution and a separate evidence directory.
 
@@ -99,3 +99,5 @@ Historical Boehm results are described in
 Shen: Copyright 2010–2022 Mark Tarver, [BSD license](shen/LICENSE.txt).
 Shen-C: Copyright 2022 Tatsuya Tsuda and contributors,
 [MIT license](http://www.opensource.org/licenses/MIT).
+
+The [43.1 continuation](docs/qualification/shen-43.1-continuation.md) records the current upgrade, matched comparator, and acceptance gates. Release manifests live in `shen/releases/`; select one with `SHEN_RELEASE_MANIFEST` for certification and source compilation, `--manifest` for benchmarks, `RC_RELEASE_MANIFEST` for Make, or `SHEN_RELEASE_MANIFEST` for CMake. Historical S42 timings remain separate.

@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.19)
 project(shen-c LANGUAGES C)
 
 set(CMAKE_C_STANDARD 17)
@@ -51,17 +51,26 @@ foreach(_test IN LISTS RC_TEST_NAMES)
   target_link_libraries(test_rc_${_test} PRIVATE shenrc)
   add_test(NAME rc_${_test} COMMAND test_rc_${_test})
 endforeach()
+find_package(Python3 REQUIRED COMPONENTS Interpreter)
+set(SHEN_RELEASE_MANIFEST "${CMAKE_CURRENT_SOURCE_DIR}/shen/releases/s43.1.json" CACHE FILEPATH "Pinned kernel/suite release")
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${SHEN_RELEASE_MANIFEST}" scripts/release_manifest.py)
+execute_process(COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/release_manifest.py"
+  --manifest "${SHEN_RELEASE_MANIFEST}" --kernel-inputs
+  OUTPUT_VARIABLE RC_KERNEL_INPUTS_TEXT OUTPUT_STRIP_TRAILING_WHITESPACE COMMAND_ERROR_IS_FATAL ANY)
+separate_arguments(RC_KERNEL_INPUTS UNIX_COMMAND "${RC_KERNEL_INPUTS_TEXT}")
+list(TRANSFORM RC_KERNEL_INPUTS PREPEND "${CMAKE_CURRENT_SOURCE_DIR}/")
+list(GET RC_KERNEL_INPUTS 0 RC_KERNEL_FIRST)
+get_filename_component(RC_KERNEL_DIRECTORY "${RC_KERNEL_FIRST}" DIRECTORY)
+execute_process(COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/release_manifest.py"
+  --manifest "${SHEN_RELEASE_MANIFEST}" --header "${CMAKE_CURRENT_BINARY_DIR}/release.h"
+  COMMAND_ERROR_IS_FATAL ANY)
 add_executable(rc-build tools/rc-build.c src/rc/emit.c)
+target_include_directories(rc-build PRIVATE "${CMAKE_CURRENT_BINARY_DIR}")
 target_link_libraries(rc-build PRIVATE shenrc)
-set(RC_KERNEL_MODULES sys writer core reader declarations toplevel macros load prolog sequent track t-star yacc types)
-set(RC_KERNEL_INPUTS)
-foreach(_module IN LISTS RC_KERNEL_MODULES)
-  list(APPEND RC_KERNEL_INPUTS "${CMAKE_CURRENT_SOURCE_DIR}/shen/src/kl/${_module}.kl")
-endforeach()
 set(RC_KERNEL_C "${CMAKE_CURRENT_BINARY_DIR}/rc-kernel.c")
 add_custom_command(OUTPUT "${RC_KERNEL_C}"
   COMMAND $<TARGET_FILE:rc-build> --emit-kernel
-          "${CMAKE_CURRENT_SOURCE_DIR}/shen/src/kl" "${RC_KERNEL_C}"
+          "${RC_KERNEL_DIRECTORY}" "${RC_KERNEL_C}"
   DEPENDS rc-build ${RC_KERNEL_INPUTS}
   COMMENT "Compiling the complete Shen kernel with the Boehm-free compiler"
   VERBATIM)

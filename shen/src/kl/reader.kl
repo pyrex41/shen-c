@@ -32,7 +32,7 @@
 
 (defun read (V2245) (hd (shen.read-loop V2245 (shen.my-read-byte V2245) () (lambda Z2246 (shen.whitespace? Z2246)))))
 
-(defun shen.my-read-byte (V2247) (if (shen.char-stinput? V2247) (string->n (shen.read-unit-string V2247)) (read-byte V2247)))
+(defun shen.my-read-byte (V2247) (if (char-stream? V2247) (string->n (read-unit-string V2247)) (read-byte V2247)))
 
 (defun shen.read-loop (V2252 V2253 V2254 V2255) (cond ((= 94 V2253) (simple-error "read aborted")) ((= -1 V2253) (if (empty? V2254) (simple-error "error: empty stream") (compile (lambda Z2256 (shen.<s-exprs> Z2256)) V2254))) ((= 0 V2253) (shen.read-loop V2252 (shen.my-read-byte V2252) V2254 V2255)) (true (if (V2255 V2253) (let W2257 (shen.try-parse V2254) (if (shen.nothing-doing? W2257) (shen.read-loop V2252 (shen.my-read-byte V2252) (append V2254 (cons V2253 ())) V2255) (do (shen.record-it V2254) W2257))) (shen.read-loop V2252 (shen.my-read-byte V2252) (append V2254 (cons V2253 ())) V2255)))))
 

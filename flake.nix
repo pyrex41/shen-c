@@ -26,12 +26,13 @@
       installArtifacts = pkgs: binaries: sources: ''
         runHook preInstall
         mkdir -p "$out/bin" "$out/libexec/shen-c" \
-          "$out/share/shen-c/src" "$out/share/shen-c/shen/src"
+          "$out/share/shen-c/src" "$out/share/shen-c/scripts"
         cp ${binaries}/shen-rc "$out/bin/shen-rc"
         cp ${binaries}/shen-rc "$out/bin/shen-c"
         cp ${binaries}/rc-build "$out/libexec/shen-c/rc-build"
         cp -R ${sources}/src/rc "$out/share/shen-c/src/rc"
-        cp -R ${sources}/shen/src/kl "$out/share/shen-c/shen/src/kl"
+        cp -R ${sources}/shen "$out/share/shen-c/shen"
+        cp ${sources}/scripts/release_manifest.py "$out/share/shen-c/scripts/"
         cp ${sources}/scripts/compile-shen-rc.sh "$out/bin/compile-shen-rc.sh"
         makeWrapper "$out/libexec/shen-c/rc-build" "$out/bin/rc-build" \
           --set-default SHEN_C_HOME "$out/share/shen-c" \

@@ -1,52 +1,52 @@
-(defun print (V5602) (let W5603 (shen.insert V5602 "~S") (let W5604 (pr W5603 (stoutput)) V5602)))
+(defun print (V5599) (let W5600 (shen.insert V5599 "~S") (let W5601 (pr W5600 (stoutput)) V5599)))
 
-(defun pr (V5605 V5606) (if (value *hush*) V5605 (if (shen.char-stoutput? V5606) (shen.write-string V5605 V5606) (shen.write-chars V5605 V5606 (shen.string->byte V5605 0) 1))))
+(defun pr (V5602 V5603) (if (value *hush*) V5602 (if (char-stream? V5603) (write-string V5602 V5603) (shen.write-chars V5602 V5603 (shen.string->byte V5602 0) 1))))
 
-(defun shen.string->byte (V5607 V5608) (trap-error (string->n (pos V5607 V5608)) (lambda Z5609 shen.eos)))
+(defun shen.string->byte (V5604 V5605) (trap-error (string->n (pos V5604 V5605)) (lambda Z5606 shen.eos)))
 
-(defun shen.write-chars (V5610 V5611 V5612 V5613) (cond ((= shen.eos V5612) V5610) (true (shen.write-chars V5610 V5611 (do (write-byte V5612 V5611) (shen.string->byte V5610 V5613)) (+ V5613 1)))))
+(defun shen.write-chars (V5607 V5608 V5609 V5610) (cond ((= shen.eos V5609) V5607) (true (shen.write-chars V5607 V5608 (do (write-byte V5609 V5608) (shen.string->byte V5607 V5610)) (+ V5610 1)))))
 
-(defun shen.mkstr (V5614 V5615) (cond ((string? V5614) (shen.mkstr-l (shen.proc-nl V5614) V5615)) (true (shen.mkstr-r (cons shen.proc-nl (cons V5614 ())) V5615))))
+(defun shen.mkstr (V5611 V5612) (cond ((string? V5611) (shen.mkstr-l (shen.proc-nl V5611) V5612)) (true (shen.mkstr-r (cons shen.proc-nl (cons V5611 ())) V5612))))
 
-(defun shen.mkstr-l (V5620 V5621) (cond ((= () V5621) V5620) ((cons? V5621) (shen.mkstr-l (shen.insert-l (hd V5621) V5620) (tl V5621))) (true (simple-error "implementation error in shen.mkstr-l"))))
+(defun shen.mkstr-l (V5617 V5618) (cond ((= () V5618) V5617) ((cons? V5618) (shen.mkstr-l (shen.insert-l (hd V5618) V5617) (tl V5618))) (true (simple-error "implementation error in shen.mkstr-l"))))
 
-(defun shen.insert-l (V5628 V5629) (cond ((= "" V5629) "") ((and (shen.+string? V5629) (and (= "~" (hdstr V5629)) (and (shen.+string? (tlstr V5629)) (= "A" (hdstr (tlstr V5629)))))) (cons shen.app (cons V5628 (cons (tlstr (tlstr V5629)) (cons shen.a ()))))) ((and (shen.+string? V5629) (and (= "~" (hdstr V5629)) (and (shen.+string? (tlstr V5629)) (= "R" (hdstr (tlstr V5629)))))) (cons shen.app (cons V5628 (cons (tlstr (tlstr V5629)) (cons shen.r ()))))) ((and (shen.+string? V5629) (and (= "~" (hdstr V5629)) (and (shen.+string? (tlstr V5629)) (= "S" (hdstr (tlstr V5629)))))) (cons shen.app (cons V5628 (cons (tlstr (tlstr V5629)) (cons shen.s ()))))) ((shen.+string? V5629) (shen.factor-cn (cons cn (cons (hdstr V5629) (cons (shen.insert-l V5628 (tlstr V5629)) ()))))) ((and (cons? V5629) (and (= cn (hd V5629)) (and (cons? (tl V5629)) (and (cons? (tl (tl V5629))) (= () (tl (tl (tl V5629)))))))) (cons cn (cons (hd (tl V5629)) (cons (shen.insert-l V5628 (hd (tl (tl V5629)))) ())))) ((and (cons? V5629) (and (= shen.app (hd V5629)) (and (cons? (tl V5629)) (and (cons? (tl (tl V5629))) (and (cons? (tl (tl (tl V5629)))) (= () (tl (tl (tl (tl V5629)))))))))) (cons shen.app (cons (hd (tl V5629)) (cons (shen.insert-l V5628 (hd (tl (tl V5629)))) (tl (tl (tl V5629))))))) (true (simple-error "implementation error in shen.insert-l"))))
+(defun shen.insert-l (V5625 V5626) (cond ((= "" V5626) "") ((and (shen.+string? V5626) (and (= "~" (hdstr V5626)) (and (shen.+string? (tlstr V5626)) (= "A" (hdstr (tlstr V5626)))))) (cons shen.app (cons V5625 (cons (tlstr (tlstr V5626)) (cons shen.a ()))))) ((and (shen.+string? V5626) (and (= "~" (hdstr V5626)) (and (shen.+string? (tlstr V5626)) (= "R" (hdstr (tlstr V5626)))))) (cons shen.app (cons V5625 (cons (tlstr (tlstr V5626)) (cons shen.r ()))))) ((and (shen.+string? V5626) (and (= "~" (hdstr V5626)) (and (shen.+string? (tlstr V5626)) (= "S" (hdstr (tlstr V5626)))))) (cons shen.app (cons V5625 (cons (tlstr (tlstr V5626)) (cons shen.s ()))))) ((shen.+string? V5626) (shen.factor-cn (cons cn (cons (hdstr V5626) (cons (shen.insert-l V5625 (tlstr V5626)) ()))))) ((and (cons? V5626) (and (= cn (hd V5626)) (and (cons? (tl V5626)) (and (cons? (tl (tl V5626))) (= () (tl (tl (tl V5626)))))))) (cons cn (cons (hd (tl V5626)) (cons (shen.insert-l V5625 (hd (tl (tl V5626)))) ())))) ((and (cons? V5626) (and (= shen.app (hd V5626)) (and (cons? (tl V5626)) (and (cons? (tl (tl V5626))) (and (cons? (tl (tl (tl V5626)))) (= () (tl (tl (tl (tl V5626)))))))))) (cons shen.app (cons (hd (tl V5626)) (cons (shen.insert-l V5625 (hd (tl (tl V5626)))) (tl (tl (tl V5626))))))) (true (simple-error "implementation error in shen.insert-l"))))
 
-(defun shen.factor-cn (V5630) (cond ((and (cons? V5630) (and (= cn (hd V5630)) (and (cons? (tl V5630)) (and (cons? (tl (tl V5630))) (and (cons? (hd (tl (tl V5630)))) (and (= cn (hd (hd (tl (tl V5630))))) (and (cons? (tl (hd (tl (tl V5630))))) (and (cons? (tl (tl (hd (tl (tl V5630)))))) (and (= () (tl (tl (tl (hd (tl (tl V5630))))))) (and (= () (tl (tl (tl V5630)))) (and (string? (hd (tl V5630))) (string? (hd (tl (hd (tl (tl V5630))))))))))))))))) (cons cn (cons (cn (hd (tl V5630)) (hd (tl (hd (tl (tl V5630)))))) (tl (tl (hd (tl (tl V5630)))))))) (true V5630)))
+(defun shen.factor-cn (V5627) (cond ((and (cons? V5627) (and (= cn (hd V5627)) (and (cons? (tl V5627)) (and (cons? (tl (tl V5627))) (and (cons? (hd (tl (tl V5627)))) (and (= cn (hd (hd (tl (tl V5627))))) (and (cons? (tl (hd (tl (tl V5627))))) (and (cons? (tl (tl (hd (tl (tl V5627)))))) (and (= () (tl (tl (tl (hd (tl (tl V5627))))))) (and (= () (tl (tl (tl V5627)))) (and (string? (hd (tl V5627))) (string? (hd (tl (hd (tl (tl V5627))))))))))))))))) (cons cn (cons (cn (hd (tl V5627)) (hd (tl (hd (tl (tl V5627)))))) (tl (tl (hd (tl (tl V5627)))))))) (true V5627)))
 
-(defun shen.proc-nl (V5633) (cond ((= "" V5633) "") ((and (shen.+string? V5633) (and (= "~" (hdstr V5633)) (and (shen.+string? (tlstr V5633)) (= "%" (hdstr (tlstr V5633)))))) (cn (n->string 10) (shen.proc-nl (tlstr (tlstr V5633))))) ((shen.+string? V5633) (cn (hdstr V5633) (shen.proc-nl (tlstr V5633)))) (true (simple-error "implementation error in shen.proc-nl"))))
+(defun shen.proc-nl (V5630) (cond ((= "" V5630) "") ((and (shen.+string? V5630) (and (= "~" (hdstr V5630)) (and (shen.+string? (tlstr V5630)) (= "%" (hdstr (tlstr V5630)))))) (cn (n->string 10) (shen.proc-nl (tlstr (tlstr V5630))))) ((shen.+string? V5630) (cn (hdstr V5630) (shen.proc-nl (tlstr V5630)))) (true (simple-error "implementation error in shen.proc-nl"))))
 
-(defun shen.mkstr-r (V5638 V5639) (cond ((= () V5639) V5638) ((cons? V5639) (shen.mkstr-r (cons shen.insert (cons (hd V5639) (cons V5638 ()))) (tl V5639))) (true (simple-error "implementation error in shen.mkstr-r"))))
+(defun shen.mkstr-r (V5635 V5636) (cond ((= () V5636) V5635) ((cons? V5636) (shen.mkstr-r (cons shen.insert (cons (hd V5636) (cons V5635 ()))) (tl V5636))) (true (simple-error "implementation error in shen.mkstr-r"))))
 
-(defun shen.insert (V5640 V5641) (shen.insert-h V5640 V5641 ""))
+(defun shen.insert (V5637 V5638) (shen.insert-h V5637 V5638 ""))
 
-(defun shen.insert-h (V5650 V5651 V5652) (cond ((= "" V5651) V5652) ((and (shen.+string? V5651) (and (= "~" (hdstr V5651)) (and (shen.+string? (tlstr V5651)) (= "A" (hdstr (tlstr V5651)))))) (cn V5652 (shen.app V5650 (tlstr (tlstr V5651)) shen.a))) ((and (shen.+string? V5651) (and (= "~" (hdstr V5651)) (and (shen.+string? (tlstr V5651)) (= "R" (hdstr (tlstr V5651)))))) (cn V5652 (shen.app V5650 (tlstr (tlstr V5651)) shen.r))) ((and (shen.+string? V5651) (and (= "~" (hdstr V5651)) (and (shen.+string? (tlstr V5651)) (= "S" (hdstr (tlstr V5651)))))) (cn V5652 (shen.app V5650 (tlstr (tlstr V5651)) shen.s))) ((shen.+string? V5651) (shen.insert-h V5650 (tlstr V5651) (cn V5652 (hdstr V5651)))) (true (simple-error "implementation error in shen.insert-h"))))
+(defun shen.insert-h (V5647 V5648 V5649) (cond ((= "" V5648) V5649) ((and (shen.+string? V5648) (and (= "~" (hdstr V5648)) (and (shen.+string? (tlstr V5648)) (= "A" (hdstr (tlstr V5648)))))) (cn V5649 (shen.app V5647 (tlstr (tlstr V5648)) shen.a))) ((and (shen.+string? V5648) (and (= "~" (hdstr V5648)) (and (shen.+string? (tlstr V5648)) (= "R" (hdstr (tlstr V5648)))))) (cn V5649 (shen.app V5647 (tlstr (tlstr V5648)) shen.r))) ((and (shen.+string? V5648) (and (= "~" (hdstr V5648)) (and (shen.+string? (tlstr V5648)) (= "S" (hdstr (tlstr V5648)))))) (cn V5649 (shen.app V5647 (tlstr (tlstr V5648)) shen.s))) ((shen.+string? V5648) (shen.insert-h V5647 (tlstr V5648) (cn V5649 (hdstr V5648)))) (true (simple-error "implementation error in shen.insert-h"))))
 
-(defun shen.app (V5653 V5654 V5655) (cn (shen.arg->str V5653 V5655) V5654))
+(defun shen.app (V5650 V5651 V5652) (cn (shen.arg->str V5650 V5652) V5651))
 
-(defun shen.arg->str (V5659 V5660) (cond ((= V5659 (fail)) "...") ((shen.list? V5659) (shen.list->str V5659 V5660)) ((string? V5659) (shen.str->str V5659 V5660)) ((absvector? V5659) (shen.vector->str V5659 V5660)) (true (shen.atom->str V5659))))
+(defun shen.arg->str (V5656 V5657) (cond ((= V5656 (fail)) "...") ((shen.list? V5656) (shen.list->str V5656 V5657)) ((string? V5656) (shen.str->str V5656 V5657)) ((absvector? V5656) (shen.vector->str V5656 V5657)) (true (shen.atom->str V5656))))
 
-(defun shen.list->str (V5661 V5662) (cond ((= shen.r V5662) (@s "(" (@s (shen.iter-list V5661 shen.r (shen.maxseq)) ")"))) (true (@s "[" (@s (shen.iter-list V5661 V5662 (shen.maxseq)) "]")))))
+(defun shen.list->str (V5658 V5659) (cond ((= shen.r V5659) (@s "(" (@s (shen.iter-list V5658 shen.r (shen.maxseq)) ")"))) (true (@s "[" (@s (shen.iter-list V5658 V5659 (shen.maxseq)) "]")))))
 
 (defun shen.maxseq () (value *maximum-print-sequence-size*))
 
-(defun shen.iter-list (V5673 V5674 V5675) (cond ((= () V5673) "") ((= 0 V5675) "... etc") ((and (cons? V5673) (= () (tl V5673))) (shen.arg->str (hd V5673) V5674)) ((cons? V5673) (@s (shen.arg->str (hd V5673) V5674) (@s " " (shen.iter-list (tl V5673) V5674 (- V5675 1))))) (true (@s "|" (@s " " (shen.arg->str V5673 V5674))))))
+(defun shen.iter-list (V5670 V5671 V5672) (cond ((= () V5670) "") ((= 0 V5672) "... etc") ((and (cons? V5670) (= () (tl V5670))) (shen.arg->str (hd V5670) V5671)) ((cons? V5670) (@s (shen.arg->str (hd V5670) V5671) (@s " " (shen.iter-list (tl V5670) V5671 (- V5672 1))))) (true (@s "|" (@s " " (shen.arg->str V5670 V5671))))))
 
-(defun shen.str->str (V5678 V5679) (cond ((= shen.a V5679) V5678) (true (@s (n->string 34) (@s V5678 (n->string 34))))))
+(defun shen.str->str (V5675 V5676) (cond ((= shen.a V5676) V5675) (true (@s (n->string 34) (@s V5675 (n->string 34))))))
 
-(defun shen.vector->str (V5680 V5681) (if (shen.print-vector? V5680) ((fn (<-address V5680 0)) V5680) (if (vector? V5680) (@s "<" (@s (shen.iter-vector V5680 1 V5681 (shen.maxseq)) ">")) (@s "<" (@s "<" (@s (shen.iter-vector V5680 0 V5681 (shen.maxseq)) ">>"))))))
+(defun shen.vector->str (V5677 V5678) (if (shen.print-vector? V5677) ((fn (<-address V5677 0)) V5677) (if (vector? V5677) (@s "<" (@s (shen.iter-vector V5677 1 V5678 (shen.maxseq)) ">")) (@s "<" (@s "<" (@s (shen.iter-vector V5677 0 V5678 (shen.maxseq)) ">>"))))))
 
-(defun shen.print-vector? (V5682) (let W5683 (<-address V5682 0) (if (= W5683 shen.tuple) true (if (= W5683 shen.pvar) true (if (not (number? W5683)) (shen.fbound? W5683) false)))))
+(defun shen.print-vector? (V5679) (let W5680 (<-address V5679 0) (if (= W5680 shen.tuple) true (if (= W5680 shen.pvar) true (if (not (number? W5680)) (shen.fbound? W5680) false)))))
 
-(defun shen.fbound? (V5684) (not (= (arity V5684) -1)))
+(defun shen.fbound? (V5681) (not (= (arity V5681) -1)))
 
-(defun shen.tuple (V5685) (cn "(@p " (shen.app (<-address V5685 1) (cn " " (shen.app (<-address V5685 2) ")" shen.s)) shen.s)))
+(defun shen.tuple (V5682) (cn "(@p " (shen.app (<-address V5682 1) (cn " " (shen.app (<-address V5682 2) ")" shen.s)) shen.s)))
 
-(defun shen.iter-vector (V5692 V5693 V5694 V5695) (cond ((= 0 V5695) "... etc") (true (let W5696 (trap-error (<-address V5692 V5693) (lambda Z5697 shen.out-of-bounds)) (let W5698 (trap-error (<-address V5692 (+ V5693 1)) (lambda Z5699 shen.out-of-bounds)) (if (= W5696 shen.out-of-bounds) "" (if (= W5698 shen.out-of-bounds) (shen.arg->str W5696 V5694) (@s (shen.arg->str W5696 V5694) (@s " " (shen.iter-vector V5692 (+ V5693 1) V5694 (- V5695 1)))))))))))
+(defun shen.iter-vector (V5689 V5690 V5691 V5692) (cond ((= 0 V5692) "... etc") (true (let W5693 (trap-error (<-address V5689 V5690) (lambda Z5694 shen.out-of-bounds)) (let W5695 (trap-error (<-address V5689 (+ V5690 1)) (lambda Z5696 shen.out-of-bounds)) (if (= W5693 shen.out-of-bounds) "" (if (= W5695 shen.out-of-bounds) (shen.arg->str W5693 V5691) (@s (shen.arg->str W5693 V5691) (@s " " (shen.iter-vector V5689 (+ V5690 1) V5691 (- V5692 1)))))))))))
 
-(defun shen.atom->str (V5700) (trap-error (str V5700) (lambda Z5701 (shen.funexstring))))
+(defun shen.atom->str (V5697) (trap-error (str V5697) (lambda Z5698 (shen.funexstring))))
 
 (defun shen.funexstring () (@s "" (@s "f" (@s "u" (@s "n" (@s "e" (@s (shen.arg->str (gensym (intern "x")) shen.a) "")))))))
 
-(defun shen.list? (V5702) (or (empty? V5702) (cons? V5702)))
+(defun shen.list? (V5699) (or (empty? V5699) (cons? V5699)))
 

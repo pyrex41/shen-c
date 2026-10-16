@@ -9,7 +9,7 @@ import os,re,subprocess,tempfile
 from pathlib import Path
 root=Path(os.environ['RC_ASSOC_ROOT'])
 # Preserve the entire pinned AST, including its literal newline error suffix.
-kernel=(root/'shen/src/kl/sys.kl').read_text()
+kernel=(root/'shen/releases/s42/kl/sys.kl').read_text()
 start=kernel.index('(defun assoc ');end=kernel.index('\n\n',start)
 original=kernel[start:end]
 cases=[

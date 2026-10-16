@@ -29,8 +29,10 @@ cli = Path(os.environ.get('SHEN_RC_CLI', prefix / 'bin/shen-rc')).resolve()
 builder = Path(os.environ.get('RC_BUILDER', prefix / 'bin/rc-build')).resolve()
 source = args.source.resolve()
 output = args.output.resolve()
-modules = 'sys writer core reader declarations toplevel macros load prolog sequent track t-star yacc types'.split()
-kernel = [home / 'shen/src/kl' / (name + '.kl') for name in modules]
+sys.path.insert(0, str(home / 'scripts'))
+from release_manifest import load_release
+release = load_release(Path(os.environ.get('SHEN_RELEASE_MANIFEST', home / 'shen/releases/s43.1.json')), home)
+kernel = [home / release['kernel_directory'] / (name + '.kl') for name in release['modules']]
 
 def digest(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
@@ -78,7 +80,7 @@ try:
     output.mkdir(exist_ok=True)
     original_hash = digest(source)
     env = dict(os.environ, SHEN_C_HOME=str(home))
-    record = {'source': str(source), 'source_sha256': original_hash, 'cwd': str(Path.cwd()),
+    record = {'release_manifest_sha256': digest(release['_path']), 'kernel_version': release['kernel_version'], 'source': str(source), 'source_sha256': original_hash, 'cwd': str(Path.cwd()),
               'kernel_sha256': {str(path.relative_to(home)): digest(path) for path in kernel},
               'compiler_sha256': {'cli': digest(cli), 'builder': digest(builder)},
               'conservative_ownership': args.conservative_ownership, 'acyclic_requested': args.acyclic,

@@ -56,7 +56,16 @@ RC_TESTS := test_cycles test_primitives test_eval test_env test_bool_tail test_a
 endif
 RC_TEST_BINS := $(addprefix $(RC_BIN)/,$(RC_TESTS))
 
-RC_KERNEL_INPUTS := $(addprefix shen/src/kl/,$(addsuffix .kl,sys writer core reader declarations toplevel macros load prolog sequent track t-star yacc types))
+RC_RELEASE_MANIFEST ?= shen/releases/s43.1.json
+RC_KERNEL_INPUTS := $(shell python3 scripts/release_manifest.py --manifest $(RC_RELEASE_MANIFEST) --kernel-inputs)
+ifeq ($(strip $(RC_KERNEL_INPUTS)),)
+$(error Release manifest validation failed)
+endif
+RC_KERNEL_DIR := $(patsubst %/,%,$(dir $(firstword $(RC_KERNEL_INPUTS))))
+
+$(RC_BUILD)/release.h: $(RC_RELEASE_MANIFEST) scripts/release_manifest.py $(RC_KERNEL_INPUTS) | $(RC_BUILD)
+	python3 scripts/release_manifest.py --manifest $(RC_RELEASE_MANIFEST) --header $@
+
 
 all: $(RC_TOOL_BIN)/rc-build $(RC_TOOL_BIN)/shen-rc
 
@@ -71,11 +80,11 @@ $(RC_BUILD)/%.o: src/rc/%.c $(wildcard src/rc/*.h) | $(RC_BUILD)
 $(RC_BIN)/libshenrc.a: $(RC_OBJECTS) | $(RC_BIN)
 	$(AR) rcs $@ $^
 
-$(RC_TOOL_BIN)/rc-build: tools/rc-build.c $(RC_BUILD)/emit.o $(RC_BIN)/libshenrc.a | $(RC_TOOL_BIN)
-	$(CC) $(RC_CPPFLAGS) $(RC_CFLAGS) tools/rc-build.c $(RC_BUILD)/emit.o $(RC_BIN)/libshenrc.a $(RC_LDFLAGS) $(RC_LDLIBS) -o $@
+$(RC_TOOL_BIN)/rc-build: tools/rc-build.c $(RC_BUILD)/release.h $(RC_BUILD)/emit.o $(RC_BIN)/libshenrc.a | $(RC_TOOL_BIN)
+	$(CC) $(RC_CPPFLAGS) $(RC_CFLAGS) -I$(RC_BUILD) tools/rc-build.c $(RC_BUILD)/emit.o $(RC_BIN)/libshenrc.a $(RC_LDFLAGS) $(RC_LDLIBS) -o $@
 
 $(RC_BUILD)/kernel.c: $(RC_TOOL_BIN)/rc-build $(RC_KERNEL_INPUTS) | $(RC_BUILD)
-	$(RC_TOOL_BIN)/rc-build --emit-kernel shen/src/kl $@
+	$(RC_TOOL_BIN)/rc-build --emit-kernel $(RC_KERNEL_DIR) $@
 
 $(RC_BUILD)/kernel.o: $(RC_BUILD)/kernel.c $(wildcard src/rc/*.h)
 	$(CC) $(RC_CPPFLAGS) $(RC_CFLAGS) -c $< -o $@

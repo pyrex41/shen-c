@@ -21,6 +21,8 @@ root = Path(os.environ['RC_TOOLCHAIN_ROOT']).resolve()
 sys.dont_write_bytecode = True
 sys.path.insert(0, str(root / 'scripts'))
 from rc_native_evidence import native_definition_evidence
+from release_manifest import load_release, digest as release_digest
+release = load_release(Path(os.environ.get('SHEN_RELEASE_MANIFEST', root / 'shen/releases/s43.1.json')))
 parser = argparse.ArgumentParser(prog='scripts/test-rc-toolchain.sh', description='Fresh standalone RC toolchain acceptance; never runs canonical suite itself.')
 parser.add_argument('--out', type=Path, help='New evidence directory; must not already exist.')
 parser.add_argument('--gc-negative-control', type=Path, default=Path(os.environ['RC_GC_NEGATIVE']) if os.environ.get('RC_GC_NEGATIVE') else None,
@@ -185,7 +187,7 @@ try:
     empty = out / 'empty-cwd'
     empty.mkdir()
     cli_case('version-flag', ['--version'], contains='Shen-C RC')
-    cli_case('kernel-version', ['eval', '-e', '(version)'], '42')
+    cli_case('kernel-version', ['eval', '-e', '(version)'], release['kernel_version'])
     cli_case('arithmetic', ['eval', '-e', '(+ 20 22)'], '42')
     cli_case('strings', ['eval', '-e', '(= (@s "foo" "bar") "foobar")'], 'true')
     cli_case('string-tail', ['eval', '-e', '(= (tlstr "hello") "ello")'], 'true')
@@ -330,9 +332,9 @@ try:
             check(canonical.get(field) == 'PASS', 'canonical %s gate passed' % field)
         check(all(canonical.get(stage + '_exit') == 0 for stage in ('host_build', 'compiler_audit', 'build', 'suite', 'audit')),
               'canonical host, compiler audit, app build, suite, and app audit all exited zero')
-        check(canonical.get('suite_exit') == 0 and canonical.get('suite_matches_revision') is True and
-              canonical.get('source_unchanged') is True and canonical.get('last_passed') == 'passed ... 134' and
-              canonical.get('last_failed') == 'failed ... 0', 'canonical unchanged suite completed 134/0 at exit zero')
+        check(canonical.get('suite_exit') == 0 and canonical.get('suite_matches_manifest') is True and
+              canonical.get('source_unchanged') is True and canonical.get('release_manifest_sha256') == release_digest(release['_path']) and canonical.get('suite_validation', {}).get('status') == 'PASS' and canonical.get('last_passed') == 'passed ... ' + str(release['expected_tests']) and
+              canonical.get('last_failed') == 'failed ... 0', 'canonical pinned suite completed all assertions at exit zero')
         canonical_sources = canonical.get('source_sha256', {})
         for path, expected_hash in canonical_sources.items():
             check((root / path).is_file() and digest(root / path) == expected_hash,

@@ -8,6 +8,7 @@
 #include <sys/wait.h>
 #include <unistd.h>
 #include "emit.h"
+#include "release.h"
 
 /* Standalone compiler host: RcValue reader and native emitter only. */
 static void path(char *out,size_t cap,const char *dir,const char *file) {
@@ -60,7 +61,7 @@ static bool emit_path(RcContext *ctx,const char *filename,RcValue **kernel,size_
   return true;
 }
 static bool kernel_only(RcContext *ctx,const char *directory,const char *output,RcEmitOptions *options) {
-  static const char *modules[]={"sys","writer","core","reader","declarations","toplevel","macros","load","prolog","sequent","track","t-star","yacc","types"};
+  static const char *modules[]=SHEN_KERNEL_MODULES;
   RcValue **forms=NULL; size_t n=0; bool ok=false; char filename[4096],name[64];
   for(size_t i=0;i<sizeof(modules)/sizeof(*modules);i++) {
     snprintf(name,sizeof(name),"%s.kl",modules[i]); path(filename,sizeof(filename),directory,name);

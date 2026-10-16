@@ -1,13 +1,13 @@
-(defun declare (V5507 V5508) (let W5509 (shen.rectify-type V5508) (let W5510 (((((lambda Z5511 (lambda Z5512 (lambda Z5513 (lambda Z5514 (do (shen.incinfs) (shen.variancy (receive (shen.deref V5507 Z5511)) (receive (shen.deref W5509 Z5511)) Z5511 Z5512 Z5513 Z5514)))))) (shen.prolog-vector)) (@v true (@v 0 (vector 0)))) 0) (freeze true)) (let W5515 (eval-kl (shen.prolog-abstraction V5508)) (let W5516 (set shen.*sigf* (shen.assoc-> V5507 W5515 (value shen.*sigf*))) V5507)))))
+(defun declare (V5504 V5505) (let W5506 (shen.rectify-type V5505) (let W5507 (((((lambda Z5508 (lambda Z5509 (lambda Z5510 (lambda Z5511 (do (shen.incinfs) (shen.variancy (receive (shen.deref V5504 Z5508)) (receive (shen.deref W5506 Z5508)) Z5508 Z5509 Z5510 Z5511)))))) (shen.prolog-vector)) (@v true (@v 0 (vector 0)))) 0) (freeze true)) (let W5512 (eval-kl (shen.prolog-abstraction V5505)) (let W5513 (set shen.*sigf* (shen.assoc-> V5504 W5512 (value shen.*sigf*))) V5504)))))
 
-(defun shen.variancy (V5517 V5518 V5519 V5520 V5521 V5522) (let W5523 (+ V5521 1) (let W5524 (if (shen.unlocked? V5520) (let W5525 (shen.lazyderef V5518 V5519) (let W5526 (lambda Z5527 (let W5528 (shen.newpv V5519) (shen.gc V5519 (do (shen.incinfs) (when (= (arity (shen.deref V5517 V5519)) 0) V5519 V5520 W5523 (freeze (shen.cut V5519 V5520 W5523 (freeze (shen.system-S-h (cons fn (cons V5517 ())) W5528 () V5519 V5520 W5523 (freeze (shen.variants? V5517 Z5527 W5528 V5519 V5520 W5523 V5522))))))))))) (if (cons? W5525) (let W5529 (shen.lazyderef (hd W5525) V5519) (let W5530 (freeze (let W5531 (shen.lazyderef (tl W5525) V5519) (let W5532 (lambda Z5533 (W5526 Z5533)) (if (cons? W5531) (let W5534 (hd W5531) (let W5535 (shen.lazyderef (tl W5531) V5519) (let W5536 (freeze (W5532 W5534)) (if (= W5535 ()) (thaw W5536) (if (shen.pvar? W5535) (shen.bind! W5535 () V5519 W5536) false))))) (if (shen.pvar? W5531) (let W5537 (shen.newpv V5519) (shen.gc V5519 (shen.bind! W5531 (cons W5537 ()) V5519 (freeze (W5532 W5537))))) false))))) (if (= W5529 -->) (thaw W5530) (if (shen.pvar? W5529) (shen.bind! W5529 --> V5519 W5530) false)))) (if (shen.pvar? W5525) (let W5538 (shen.newpv V5519) (shen.gc V5519 (shen.bind! W5525 (cons --> (cons W5538 ())) V5519 (freeze (W5526 W5538))))) false)))) false) (if (= W5524 false) (let W5539 (if (shen.unlocked? V5520) (let W5540 (shen.newpv V5519) (shen.gc V5519 (do (shen.incinfs) (shen.system-S-h (cons fn (cons V5517 ())) W5540 () V5519 V5520 W5523 (freeze (shen.variants? V5517 W5540 V5518 V5519 V5520 W5523 V5522)))))) false) (if (= W5539 false) (shen.unlock V5520 W5523) W5539)) W5524))))
+(defun shen.variancy (V5514 V5515 V5516 V5517 V5518 V5519) (let W5520 (+ V5518 1) (let W5521 (if (shen.unlocked? V5517) (let W5522 (shen.lazyderef V5515 V5516) (let W5523 (lambda Z5524 (let W5525 (shen.newpv V5516) (shen.gc V5516 (do (shen.incinfs) (when (= (arity (shen.deref V5514 V5516)) 0) V5516 V5517 W5520 (freeze (shen.cut V5516 V5517 W5520 (freeze (shen.system-S-h (cons fn (cons V5514 ())) W5525 () V5516 V5517 W5520 (freeze (shen.variants? V5514 Z5524 W5525 V5516 V5517 W5520 V5519))))))))))) (if (cons? W5522) (let W5526 (shen.lazyderef (hd W5522) V5516) (let W5527 (freeze (let W5528 (shen.lazyderef (tl W5522) V5516) (let W5529 (lambda Z5530 (W5523 Z5530)) (if (cons? W5528) (let W5531 (hd W5528) (let W5532 (shen.lazyderef (tl W5528) V5516) (let W5533 (freeze (W5529 W5531)) (if (= W5532 ()) (thaw W5533) (if (shen.pvar? W5532) (shen.bind! W5532 () V5516 W5533) false))))) (if (shen.pvar? W5528) (let W5534 (shen.newpv V5516) (shen.gc V5516 (shen.bind! W5528 (cons W5534 ()) V5516 (freeze (W5529 W5534))))) false))))) (if (= W5526 -->) (thaw W5527) (if (shen.pvar? W5526) (shen.bind! W5526 --> V5516 W5527) false)))) (if (shen.pvar? W5522) (let W5535 (shen.newpv V5516) (shen.gc V5516 (shen.bind! W5522 (cons --> (cons W5535 ())) V5516 (freeze (W5523 W5535))))) false)))) false) (if (= W5521 false) (let W5536 (if (shen.unlocked? V5517) (let W5537 (shen.newpv V5516) (shen.gc V5516 (do (shen.incinfs) (shen.system-S-h (cons fn (cons V5514 ())) W5537 () V5516 V5517 W5520 (freeze (shen.variants? V5514 W5537 V5515 V5516 V5517 W5520 V5519)))))) false) (if (= W5536 false) (shen.unlock V5517 W5520) W5536)) W5521))))
 
-(defun shen.variants? (V5541 V5542 V5543 V5544 V5545 V5546 V5547) (let W5548 (if (shen.unlocked? V5545) (do (shen.incinfs) (is! V5542 V5543 V5544 V5545 V5546 V5547)) false) (if (= W5548 false) (if (shen.unlocked? V5545) (let W5549 (shen.newpv V5544) (shen.gc V5544 (do (shen.incinfs) (is W5549 (pr (cn "warning: changing the type of " (shen.app (shen.deref V5541 V5544) " may create errors
-" shen.a)) (stoutput)) V5544 V5545 V5546 V5547)))) false) W5548)))
+(defun shen.variants? (V5538 V5539 V5540 V5541 V5542 V5543 V5544) (let W5545 (if (shen.unlocked? V5542) (do (shen.incinfs) (is! V5539 V5540 V5541 V5542 V5543 V5544)) false) (if (= W5545 false) (if (shen.unlocked? V5542) (let W5546 (shen.newpv V5541) (shen.gc V5541 (do (shen.incinfs) (is W5546 (pr (cn "warning: changing the type of " (shen.app (shen.deref V5538 V5541) " may create errors
+" shen.a)) (stoutput)) V5541 V5542 V5543 V5544)))) false) W5545)))
 
-(defun shen.prolog-abstraction (V5550) (let W5551 (gensym B) (let W5552 (gensym L) (let W5553 (gensym Key) (let W5554 (gensym C) (let W5555 (gensym V) (let W5556 (shen.extract-vars V5550) (cons lambda (cons W5555 (cons (cons lambda (cons W5551 (cons (cons lambda (cons W5552 (cons (cons lambda (cons W5553 (cons (cons lambda (cons W5554 (cons (shen.stpart W5556 (cons is! (cons W5555 (cons (shen.rcons_form V5550) (cons W5551 (cons W5552 (cons W5553 (cons W5554 ()))))))) W5551) ()))) ()))) ()))) ()))) ()))))))))))
+(defun shen.prolog-abstraction (V5547) (let W5548 (gensym B) (let W5549 (gensym L) (let W5550 (gensym Key) (let W5551 (gensym C) (let W5552 (gensym V) (let W5553 (shen.extract-vars V5547) (cons lambda (cons W5552 (cons (cons lambda (cons W5548 (cons (cons lambda (cons W5549 (cons (cons lambda (cons W5550 (cons (cons lambda (cons W5551 (cons (shen.stpart W5553 (cons is! (cons W5552 (cons (shen.rcons_form V5547) (cons W5548 (cons W5549 (cons W5550 (cons W5551 ()))))))) W5548) ()))) ()))) ()))) ()))) ()))))))))))
 
-(defun shen.demod (V5557) V5557)
+(defun shen.demod (V5554) V5554)
 
 (declare abort (cons --> (cons A ())))
 
@@ -42,6 +42,8 @@
 (declare close (cons (cons stream (cons A ())) (cons --> (cons (cons list (cons B ())) ()))))
 
 (declare cn (cons string (cons --> (cons (cons string (cons --> (cons string ()))) ()))))
+
+(declare char-stream? (cons (cons stream (cons A ())) (cons --> (cons boolean ()))))
 
 (declare compile (cons (cons (cons list (cons A ())) (cons --> (cons (cons str (cons (cons list (cons A ())) (cons B ()))) ()))) (cons --> (cons (cons (cons list (cons A ())) (cons --> (cons B ()))) ()))))
 
@@ -215,6 +217,8 @@
 
 (declare read (cons (cons stream (cons in ())) (cons --> (cons unit ()))))
 
+(declare read-unit-string (cons (cons stream (cons in ())) (cons --> (cons string ()))))
+
 (declare read-byte (cons (cons stream (cons in ())) (cons --> (cons number ()))))
 
 (declare read-file-as-bytelist (cons string (cons --> (cons (cons list (cons number ())) ()))))
@@ -308,6 +312,8 @@
 (declare write-to-file (cons string (cons --> (cons (cons A (cons --> (cons A ()))) ()))))
 
 (declare write-byte (cons number (cons --> (cons (cons (cons stream (cons out ())) (cons --> (cons number ()))) ()))))
+
+(declare write-string (cons string (cons --> (cons (cons (cons stream (cons out ())) (cons --> (cons string ()))) ()))))
 
 (declare y-or-n? (cons string (cons --> (cons boolean ()))))
 
