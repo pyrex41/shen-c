@@ -180,3 +180,17 @@ run the unchanged full suite, and run four alternating serial release pairs
 with all team compilation stopped. Require an actual repeated improvement,
 then refresh the validation record, install the qualified local artifacts,
 and retain the precise evidence and platform limits. No publishing requested.
+
+### Repeated full-suite checkpoint, 2026-10-16
+
+The combined `8dbc9414` candidate passed fresh full ASan/UBSan 134/0,
+19 runtime tests in default/boxed modes, nine emitted scripts, and default Make
+134/0 plus native-source proof. Four alternating release pairs all favored
+Boehm: RC median 20.425 s wall / 19.530 s CPU versus 16.460 s / 15.615 s,
+with median paired ratios 1.2643 and 1.2592. **Faster-than-Boehm target NOT MET;
+performance remains OPEN.** Earlier single-pair near-parity is not a win.
+
+See [the checkpoint](performance/rc-suite-20261016.md). Continue profiling major
+costs, preserve unrestricted exact cycle semantics and bounded storage, and
+qualify each next immutable candidate before repeated matched measurements.
+No artifacts were installed or pushed at this checkpoint. Historical evidence stays.

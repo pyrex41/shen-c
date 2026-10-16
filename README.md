@@ -18,9 +18,10 @@ Their implemented scope and evidence are described in
 [RC-BACKEND.md](docs/RC-BACKEND.md) and
 [the validation record](docs/rc-validation.md).
 
-Release performance still trails the preserved Boehm implementation on the
-full S42 suite. See the [matched timings](docs/rc-validation.md#release-performance)
-for measured results; the Boehm-free migration is not a demonstrated speedup.
+The latest four alternating full S42 pairs passed 134/0 for both implementations,
+but RC remained about 26% slower than preserved Boehm. Performance stays OPEN;
+see the [2026-10-16 checkpoint](docs/performance/rc-suite-20261016.md) for matched
+measurements and fresh sanitizer/default Make qualification.
 
 ## Build
 

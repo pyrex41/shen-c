@@ -6,7 +6,21 @@ the supported Make/CMake/Nix build. It adds local last-use ownership, free-varia
 captures, owned calls, and selective pair reuse. Exact cycle reclamation remains
 enabled for unrestricted mutable Shen values.
 
-## Release performance
+## Current checkpoint: 2026-10-16
+
+Freeze `8dbc9414` passed a fresh full fatal ASan/UBSan suite (134/0),
+19 runtime tests in default and boxed modes, nine emitted scripts, and a fresh
+default Make full-suite/native-source proof. Performance remains **OPEN**:
+RC was slower in all four alternating release pairs. Medians were 20.425 s wall /
+19.530 s user CPU versus Boehm 16.460 s / 15.615 s; median paired ratios were
+1.2643 wall and 1.2592 CPU. See the [current campaign record](performance/rc-suite-20261016.md)
+for exact artifacts, source hashes, instructions, RSS and scope. Unsupported
+host leak detection remains unqualified. No current installation/push is claimed.
+
+The sections below preserve earlier checkpoints. Their “current” wording refers
+to those historical snapshots, not this qualified freeze.
+
+## Historical release performance, 2026-10-15
 
 Performance remains **OPEN**. Correctness qualification did not establish a
 speedup. The previously reported 752.389-second execution used ASan/UBSan;
