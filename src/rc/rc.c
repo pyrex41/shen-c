@@ -436,17 +436,16 @@ static uint8_t env_key_class(const RcValue *key) {
     unsigned char first=(unsigned char)key->as.text.data[0];
     return first>='A'&&first<='Z' ? 1u : first>='a'&&first<='z' ? 2u : 4u;
 }
-RcValue *rc_env_frame(RcContext *ctx,RcValue *parent,size_t count,
-                      RcValue *const *keys,RcValue *const *values) {
-    if (!ctx || !belongs(ctx,parent) || (!rc_is_nil(parent) && rc_type(parent)!=RC_ENV) ||
-        (count && (!keys || !values))) return rc_error(ctx,"invalid evaluator frame");
-    if (count > SIZE_MAX / 2 / sizeof(RcValue *)) return rc_error(ctx,"evaluator frame size overflow");
-    for (size_t i=0;i<count;i++) {
-        if (!belongs(ctx,keys[i]) || rc_type(keys[i])!=RC_SYMBOL || !belongs(ctx,values[i]))
-            return rc_error(ctx,"invalid evaluator frame binding/context");
-    }
+static bool env_storage_bytes(RcContext *ctx,size_t count,size_t *bytes) {
+    if (count>SIZE_MAX/2/sizeof(RcValue *)) { rc_error(ctx,"evaluator frame size overflow");return false; }
+    *bytes=count>1 ? 2*count*sizeof(RcValue *) : 0;return true;
+}
+/* Inputs and storage width have been validated by the public API or proven by
+ * the private interpreted-call contract. Both paths construct identical graph
+ * nodes, initialize pooled storage, and retain the same parent/value edges. */
+static RcValue *env_frame_construct(RcContext *ctx,RcValue *parent,size_t count,
+                                    RcValue *const *keys,RcValue *const *values,size_t bytes) {
     if (!count) return rc_retain(parent);
-    size_t bytes=count>1 ? 2*count*sizeof(RcValue *) : 0;
     RcValue **storage=bytes ? malloc(bytes) : NULL;
     if (bytes && !storage) return rc_error(ctx,"out of memory constructing evaluator frame");
     RcValue *frame=allocate(ctx,RC_ENV,bytes);
@@ -467,6 +466,17 @@ RcValue *rc_env_frame(RcContext *ctx,RcValue *parent,size_t count,
     }
     ctx->graph_slots += 1 + count;
     return frame;
+}
+RcValue *rc_env_frame(RcContext *ctx,RcValue *parent,size_t count,
+                      RcValue *const *keys,RcValue *const *values) {
+    if (!ctx || !belongs(ctx,parent) || (!rc_is_nil(parent) && rc_type(parent)!=RC_ENV) ||
+        (count && (!keys || !values))) return rc_error(ctx,"invalid evaluator frame");
+    size_t bytes;if(!env_storage_bytes(ctx,count,&bytes))return NULL;
+    for (size_t i=0;i<count;i++) {
+        if (!belongs(ctx,keys[i]) || rc_type(keys[i])!=RC_SYMBOL || !belongs(ctx,values[i]))
+            return rc_error(ctx,"invalid evaluator frame binding/context");
+    }
+    return env_frame_construct(ctx,parent,count,keys,values,bytes);
 }
 RcValue *rc_env_lookup(const RcValue *environment,const RcValue *key) {
     if (rc_type(key)!=RC_SYMBOL || rc_type(environment)!=RC_ENV) return NULL;
@@ -827,6 +837,17 @@ RcValue *const *rc_eval_captures(RcContext *ctx,RcValue *self,RcNative callback,
         rc_error(ctx,"eval-kl: invalid interpreted closure captures");return NULL;
     }
     return self->as.closure.captures;
+}
+RcValue *rc_eval_env_frame(RcContext *ctx,RcValue *self,RcNative callback,size_t arity,
+                           RcValue *const *argv,RcValue **body) {
+    if(body)*body=NULL;
+    if(!body||(arity&&!argv))return rc_error(ctx,"eval-kl: invalid interpreted frame inputs");
+    RcValue *const *captures=rc_eval_captures(ctx,self,callback,arity);
+    if(!captures)return NULL;
+    size_t bytes;if(!env_storage_bytes(ctx,arity,&bytes))return NULL;
+    RcValue *env=env_frame_construct(ctx,captures[1],arity,captures+2,argv,bytes);
+    if(env)*body=captures[0];
+    return env;
 }
 size_t rc_arity(const RcValue *v) {
     return v && rc_type(v) == RC_CLOSURE ? v->as.closure.arity - v->as.closure.bound_count : 0;

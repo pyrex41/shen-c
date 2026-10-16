@@ -21,4 +21,11 @@ int rc_builtin_call_slot(RcContext *, RcValue *, size_t, RcValue *const *);
  * The returned span is borrowed; the active runtime call must keep self rooted
  * until callback return. Partial closures preserve the original capture shape. */
 RcValue *const *rc_eval_captures(RcContext *, RcValue *, RcNative, size_t arity);
+/* Only dynamic_call may use this trusted entry: make_function has validated
+ * immutable parameter keys/captured parent, and runtime dispatch has checked
+ * every argv value against ctx. Still checks the exact callback/capture layout
+ * and storage multiplication bounds. Returns owned ENV and borrowed body while
+ * the active self remains rooted. The public rc_env_frame keeps all validation. */
+RcValue *rc_eval_env_frame(RcContext *, RcValue *, RcNative, size_t arity,
+                           RcValue *const *argv, RcValue **body);
 #endif

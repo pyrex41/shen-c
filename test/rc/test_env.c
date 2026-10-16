@@ -61,6 +61,7 @@ static void direct(void) {
     assert(!bad&&rc_has_error(ctx));rc_clear_error(ctx);
     bad=rc_env_frame(ctx,rc_nil(),1,keys,&wrong);assert(!bad&&rc_has_error(ctx));rc_clear_error(ctx);
     bad=rc_env_frame(ctx,values[0],1,keys,values);assert(!bad&&rc_has_error(ctx));rc_clear_error(ctx);
+    bad=rc_env_frame(ctx,rc_nil(),1,values,values);assert(!bad&&rc_has_error(ctx));rc_clear_error(ctx);
     bad=rc_env_frame(ctx,rc_nil(),SIZE_MAX,keys,values);assert(!bad&&rc_has_error(ctx));rc_clear_error(ctx);
     rc_release(wrong);rc_context_free(foreign);
     for(size_t turn=0;turn<100;turn++) {
@@ -158,12 +159,21 @@ static void capture_span_guards(void) {
     RcValue *key=rc_symbol(ctx,"span-key"),*caps[]={rc_nil(),rc_nil(),key};assert(key);
     RcValue *fn=rc_closure(ctx,1,captured,3,caps);assert(fn);
     RcValue *const *span=rc_eval_captures(ctx,fn,captured,1);assert(span&&span[2]==key);
+    RcValue *argument=rc_integer(ctx,42),*body=NULL;
+    RcValue *frame=rc_eval_env_frame(ctx,fn,captured,1,&argument,&body);assert(frame&&rc_env_lookup(frame,key)==argument&&rc_is_nil(body));rc_release(frame);
+    assert(!rc_eval_env_frame(foreign,fn,captured,1,&argument,&body)&&!body&&rc_has_error(foreign));rc_clear_error(foreign);
+    assert(!rc_eval_env_frame(ctx,fn,NULL,1,&argument,&body)&&!body&&rc_has_error(ctx));rc_clear_error(ctx);
+    assert(!rc_eval_env_frame(ctx,fn,captured,0,NULL,&body)&&!body&&rc_has_error(ctx));rc_clear_error(ctx);
+    assert(!rc_eval_env_frame(ctx,fn,captured,SIZE_MAX,&argument,&body)&&!body&&rc_has_error(ctx));rc_clear_error(ctx);
+    assert(!rc_eval_env_frame(ctx,fn,captured,1,NULL,&body)&&!body&&rc_has_error(ctx));rc_clear_error(ctx);
+    assert(!rc_eval_env_frame(ctx,fn,captured,1,&argument,NULL)&&rc_has_error(ctx));rc_clear_error(ctx);
     assert(!rc_eval_captures(foreign,fn,captured,1)&&rc_has_error(foreign));rc_clear_error(foreign);
     assert(!rc_eval_captures(ctx,fn,NULL,1)&&rc_has_error(ctx));rc_clear_error(ctx);
     assert(!rc_eval_captures(ctx,fn,captured,0)&&rc_has_error(ctx));rc_clear_error(ctx);
     assert(!rc_eval_captures(ctx,fn,captured,SIZE_MAX)&&rc_has_error(ctx));rc_clear_error(ctx);
     rc_release(fn);fn=rc_closure(ctx,1,captured,2,caps);assert(fn);
     assert(!rc_eval_captures(ctx,fn,captured,1)&&rc_has_error(ctx));rc_clear_error(ctx);
-    rc_release(fn);rc_release(key);rc_context_free(foreign);rc_context_free(ctx);
+    assert(!rc_eval_env_frame(ctx,fn,captured,1,&argument,&body)&&!body&&rc_has_error(ctx));rc_clear_error(ctx);
+    rc_release(argument);rc_release(fn);rc_release(key);rc_context_free(foreign);rc_context_free(ctx);
 }
 int main(void) {classes();direct();interpreted();acyclic();flattened_parameters();capture_span_guards();puts("RC managed evaluator environments: PASS");}

@@ -60,11 +60,10 @@ static bool parameters(RcContext *ctx, RcValue *params, size_t *arity) {
     return true;
 }
 static RcValue *dynamic_call(RcContext *ctx, RcValue *self, size_t argc, RcValue *const *argv) {
-    RcValue *const *captures=rc_eval_captures(ctx,self,dynamic_call,argc);
-    if(!captures)return NULL;
-    RcValue *env=rc_env_frame(ctx,captures[1],argc,captures+2,argv);
+    RcValue *body=NULL;
+    RcValue *env=rc_eval_env_frame(ctx,self,dynamic_call,argc,argv,&body);
     if(!env)return NULL;
-    RcValue *result=evaluate(ctx,captures[0],env,true);
+    RcValue *result=evaluate(ctx,body,env,true);
     rc_release(env);
     return result;
 }
