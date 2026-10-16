@@ -208,6 +208,11 @@ static RcValue *primitive_op(RcContext *c,RcValue *self,enum Op op,
 static RcValue *primitive(RcContext *c,RcValue *self,size_t argc,RcValue *const *v) {
  return primitive_op(c,self,(enum Op)rc_integer_value(rc_capture(self,0)),argc,v);
 }
+bool rc_primitive_is_do(const RcValue *function) {
+ RcValue *code=rc_capture(function,0);
+ return rc_closure_is_native(function,primitive)&&rc_arity(function)==2&&
+        code&&rc_integer_value(code)==P_DO;
+}
 RcValue *rc_primitive_call_owned(RcContext *c,RcValue *function,
                                 size_t argc,RcValue **args,bool tail_position) {
  RcValue *code=rc_native_call_capture(c,function,argc,args,primitive);

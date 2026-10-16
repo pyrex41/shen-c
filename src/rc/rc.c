@@ -698,6 +698,9 @@ RcValue *rc_native_call_capture(RcContext *ctx, RcValue *fn, size_t argc,
     for (size_t i = 0; i < argc; ++i) if (!belongs(ctx, argv[i])) return NULL;
     return fn->as.closure.captures[0];
 }
+bool rc_closure_is_owned_native(const RcValue *v, RcNativeOwned native) {
+    return v && rc_type(v) == RC_CLOSURE && v->as.closure.owned_native == native;
+}
 RcValue *rc_capture(const RcValue *v, size_t i) {
     return v && rc_type(v) == RC_CLOSURE && i < v->as.closure.capture_count ? v->as.closure.captures[i] : NULL;
 }

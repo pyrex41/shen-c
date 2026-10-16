@@ -16,7 +16,7 @@ typedef struct Program Program;
 typedef struct { Program *owner; char *p; size_t n, cap; } Buf;
 typedef struct { const char *name; int slot; } Binding;
 typedef struct Allocation { struct Allocation *prev,*next; max_align_t align; unsigned char data[]; } Allocation;
-struct Program { RcEmitOptions options; RcContext *ctx; jmp_buf failure; Allocation *allocations; Buf functions,literals; const char **symbols; size_t nsymbols,symbol_capacity; bool user_phase,drop_range_used; RcValue *metadata_root; int next,next_literal; long defuns, lambdas, tops; };
+struct Program { RcEmitOptions options; RcContext *ctx; jmp_buf failure; Allocation *allocations; Buf functions,literals,transparent_do; const char **symbols; size_t nsymbols,symbol_capacity; bool user_phase,drop_range_used,transparent_do_used; RcValue *metadata_root; int next,next_literal; long defuns, lambdas, tops; };
 static _Noreturn void bad(Program *p,const char *message) { rc_error(p->ctx,"%s",message); longjmp(p->failure,1); }
 static void *resize(Program *p,void *old,size_t bytes) {
   if(bytes>SIZE_MAX-sizeof(Allocation)) bad(p,"compiler allocation overflow");
@@ -43,9 +43,11 @@ static RcValue *first(RcValue *x) { return rc_head_borrowed(x); }
 static RcValue *rest(RcValue *x) { return rc_tail_borrowed(x); }
 static RcValue *second(RcValue *x) { return first(rest(x)); }
 struct Recycle;
+typedef struct DoGuard { int slot; struct DoGuard *outer; } DoGuard;
 typedef struct {
   Program *p; Buf code; Binding *bind; int nb, cap, slots, label, max_args; bool symbol_used;
   int arity, boolean_tail; bool self_loop;
+  DoGuard *do_guard;
   int *physical,*free_slots,slot_cap,frame_slots,nfree; unsigned char *active;
   char fail[64]; struct Recycle *recycle;
 } RcEmitFn;
@@ -206,7 +208,9 @@ static void drop_dead(RcEmitFn *f,const Live *live){
  if(first>=0)dead_range(f,first,end);
 }
 static const char *closure_api(Program *p){return p->options.conservative_ownership?"rc_closure":"rc_closure_owned";}
-static const char *call_api(RcEmitFn *f,int tail){return optimize(f)?(tail?"rc_tailcall_owned_args":"rc_apply_owned_args"):(tail?"rc_tailcall":"rc_apply");}
+/* Mode 2 only permits guarded self recursion through pending transparent do
+ * calls. Its ordinary fallback must finish before invoking those do calls. */
+static const char *call_api(RcEmitFn *f,int tail){return optimize(f)?(tail==1?"rc_tailcall_owned_args":"rc_apply_owned_args"):(tail==1?"rc_tailcall":"rc_apply");}
 static void call_argument(RcEmitFn *f,int index,int slot){argument(f,index,slot);if(optimize(f))put(&f->code,"  t[%d]=NULL;\n",slot);}
 static bool leaf_primitive(RcValue *head) {
  static const char *names[]={"hd","tl","cons?","cons","=","number?","string?",
@@ -330,9 +334,15 @@ static int expr_inner(RcEmitFn *f,RcValue *x,int tail,const Live *after){
   suffix[n]=uses(f,end);merge(p,&suffix[n],after);
   for(int i=n-1;i>=0;i--){suffix[i]=copy_live(p,&suffix[i+1]);if(optimize(f))scan(f,first(rest(nodes[i])),NULL,&suffix[i]);}
   for(int i=0;i<n;i++){functions[i]=function_head(f,first(nodes[i]),&suffix[i]);left[i]=expr(f,first(rest(nodes[i])),0,&suffix[i+1]);}
-  int result=expr(f,end,0,after);
+  DoGuard *saved=f->do_guard,*guards=NULL;
+  if(optimize(f)&&tail){
+   guards=alloc(p,(size_t)n*sizeof(*guards));
+   for(int i=0;i<n;i++){guards[i]=(DoGuard){functions[i],f->do_guard};f->do_guard=&guards[i];}
+   p->transparent_do_used=true;
+  }
+  int result=expr(f,end,guards?2:0,after);f->do_guard=saved;forget(p,guards);
   for(int i=n-1;i>=0;i--){int next=fresh(f);call_argument(f,0,left[i]);call_argument(f,1,result);
-   if(optimize(f))put(&f->code,"  t[%d]=rc_primitive_call_owned(ctx,t[%d],2,a,%s);\n",next,functions[i],tail&&i==0?"true":"false");else put(&f->code,"  t[%d]=%s(ctx,t[%d],2,a);\n",next,call_api(f,tail&&i==0),functions[i]);drop(f,functions[i]);if(!optimize(f)){drop(f,left[i]);drop(f,result);}check(f,next);result=next;}
+   if(optimize(f))put(&f->code,"  t[%d]=rc_primitive_call_owned(ctx,t[%d],2,a,%s);\n",next,functions[i],tail==1&&i==0?"true":"false");else put(&f->code,"  t[%d]=%s(ctx,t[%d],2,a);\n",next,call_api(f,tail==1&&i==0),functions[i]);drop(f,functions[i]);if(!optimize(f)){drop(f,left[i]);drop(f,result);}check(f,next);result=next;}
   for(int i=0;i<=n;i++)clear_live(p,&suffix[i]);forget(p,suffix);forget(p,nodes);forget(p,functions);forget(p,left);drop_dead(f,after);return result;
  }
  if(special&&named(head,"lambda")){if(count(p,args)!=2||!is_symbol(first(args)))bad(p,"rc emit: lambda shape");return closure(f,first(args),second(args),0,after);}
@@ -377,15 +387,17 @@ static int expr_inner(RcEmitFn *f,RcValue *x,int tail,const Live *after){
   * Boolean tail continuations must still pass through the runtime guard. */
  if(optimize(f)&&tail&&!f->boolean_tail&&n==f->arity){
   f->self_loop=true;
-  put(&f->code,"  if(t[%d]==self && rc_arity(self)==%d) {\n",fn,n);
+  put(&f->code,"  if(t[%d]==self && rc_arity(self)==%d",fn,n);
+  if(tail==2)for(DoGuard *g=f->do_guard;g;g=g->outer)put(&f->code," && rc_transparent_do(t[%d])",g->slot);
+  put(&f->code,") {\n");
   for(int i=0;i<n;i++)call_argument(f,i,av[i]);
   put(&f->code,"  goto recur;\n  }\n");
  }
  if(project){put(&f->code,"  { RcValue *candidate=t[%d]; t[%d]=NULL; t[%d]=rc_tail_call_reuse(ctx,t[%d],candidate,&t[%d]); }\n",av[0],av[0],result,fn,project->token);}
  else if(recycle.binding>=0){
-  put(&f->code,"  { RcValue *candidate=t[%d] ? t[%d] : t[%d]; t[%d]=NULL; t[%d]=NULL; t[%d]=rc_cons_call_reuse(ctx,t[%d],candidate,t[%d],t[%d],%s); }\n",recycle.token,recycle.token,recycle.binding,recycle.token,recycle.binding,result,fn,av[0],av[1],tail?"true":"false");
+  put(&f->code,"  { RcValue *candidate=t[%d] ? t[%d] : t[%d]; t[%d]=NULL; t[%d]=NULL; t[%d]=rc_cons_call_reuse(ctx,t[%d],candidate,t[%d],t[%d],%s); }\n",recycle.token,recycle.token,recycle.binding,recycle.token,recycle.binding,result,fn,av[0],av[1],tail==1?"true":"false");
   drop(f,av[0]);drop(f,av[1]);
- }else{for(int i=0;i<n;i++)call_argument(f,i,av[i]);if(optimize(f)&&special&&leaf_primitive(head))put(&f->code,"  t[%d]=rc_primitive_call_owned(ctx,t[%d],%d,%s,%s);\n",result,fn,n,n?"a":"NULL",tail?"true":"false");else put(&f->code,"  t[%d]=%s(ctx,t[%d],%d,%s);\n",result,call_api(f,tail),fn,n,n?"a":"NULL");if(!optimize(f))for(int i=0;i<n;i++)drop(f,av[i]);}
+ }else{for(int i=0;i<n;i++)call_argument(f,i,av[i]);if(optimize(f)&&special&&leaf_primitive(head))put(&f->code,"  t[%d]=rc_primitive_call_owned(ctx,t[%d],%d,%s,%s);\n",result,fn,n,n?"a":"NULL",tail==1?"true":"false");else put(&f->code,"  t[%d]=%s(ctx,t[%d],%d,%s);\n",result,call_api(f,tail),fn,n,n?"a":"NULL");if(!optimize(f))for(int i=0;i<n;i++)drop(f,av[i]);}
  if(recycle.binding>=0)f->recycle=recycle.outer;
  drop(f,fn);forget(p,av);check(f,result);drop_dead(f,after);return result;
 }
@@ -410,6 +422,10 @@ static void finish_function(RcEmitFn *f,int id,int arity,int r){
 }
 static int compile(Program *p,RcValue *params,RcValue *body,Binding *caps,int ncaps,int freeze){
  RcEmitFn f={0};f.p=p;f.code.owner=p;int id=p->next++,arity=freeze==1?0:(freeze==2?1:count(p,params));f.arity=arity;snprintf(f.fail,sizeof f.fail,"cleanup");
+ /* Certify the exact effect-free identity body, independent of its name.
+  * The generated guard also rejects bound/partially applied closures. */
+ if(optimize(&f)&&!ncaps&&!freeze&&arity==2&&is_symbol(body)&&is_symbol(first(params))&&is_symbol(second(params))&&!strcmp(name(body),name(second(params)))&&strcmp(name(first(params)),name(second(params))))
+  put(&p->transparent_do," || rc_closure_is_owned_native(fn,rc_native_%d)",id);
  for(int i=0;i<ncaps;i++){int s=fresh(&f);bind(&f,caps[i].name,s);put(&f.code,"  t[%d]=rc_retain(rc_capture(self,%d));\n",s,i);}
  for(int i=0;i<arity;i++,params=freeze==2?rc_nil():rest(params)){RcValue *param=freeze==2?params:first(params);if(!is_symbol(param))bad(p,"rc emit: function parameter");for(int j=ncaps;j<f.nb;j++)if(!strcmp(f.bind[j].name,name(param)))bad(p,"rc emit: duplicate function parameter");int s=fresh(&f);bind(&f,name(param),s);
   if(optimize(&f))put(&f.code,"  t[%d]=argv[%d]; argv[%d]=NULL;\n",s,i,i);else put(&f.code,"  t[%d]=rc_retain(argv[%d]);\n",s,i);}
@@ -512,7 +528,7 @@ bool rc_emit_program(RcContext *ctx,FILE *out,RcValue *const *kernel,size_t nker
   if(report) *report=(RcEmitReport){0};
   Program *p=calloc(1,sizeof(*p));
   if(!p) { rc_error(ctx,"compiler out of memory"); return false; }
-  p->options=*options; p->ctx=ctx; p->functions.owner=p; p->literals.owner=p;
+  p->options=*options; p->ctx=ctx; p->functions.owner=p; p->literals.owner=p; p->transparent_do.owner=p;
   if(setjmp(p->failure)) { clear_arena(p); free(p); return false; }
   Buf installs={.owner=p},kt={.owner=p},ut={.owner=p},events={.owner=p};
   if(options->source_events&&!options->source_metadata)bad(p,"source reader events require source metadata mode");
@@ -547,6 +563,7 @@ bool rc_emit_program(RcContext *ctx,FILE *out,RcValue *const *kernel,size_t nker
   if(p->drop_range_used)fputs("static void rc_drop_range(RcValue **slots,size_t first,size_t end) {\n"
                             "  for(size_t i=first;i<end;i++) { if(slots[i]) rc_release(slots[i]); slots[i]=NULL; }\n}\n",out);
   for(int i=0;i<p->next;i++) fprintf(out,"static RcValue *rc_native_%d(RcContext*,RcValue*,size_t,RcValue *%s*);\n",i,options->conservative_ownership?"const":"");
+  if(p->transparent_do_used)fprintf(out,"static bool rc_transparent_do(RcValue *fn) {\n  return rc_arity(fn)==2 && (rc_primitive_is_do(fn)%s);\n}\n",p->transparent_do.p?p->transparent_do.p:"");
   if(p->next_literal) metadata_helpers(out);
   if(p->literals.p) fputs(p->literals.p,out);
   if(p->functions.p) fputs(p->functions.p,out);

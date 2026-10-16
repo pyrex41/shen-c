@@ -140,6 +140,7 @@ RcValue *rc_closure(RcContext *ctx, size_t arity, RcNative native,
 RcValue *rc_closure_owned(RcContext *ctx, size_t arity, RcNativeOwned native,
                           size_t capture_count, RcValue *const *captures);
 bool rc_closure_is_native(const RcValue *closure, RcNative native);
+bool rc_closure_is_owned_native(const RcValue *closure, RcNativeOwned native);
 /* Check borrowed call inputs before specialized dispatch; does not set errors. */
 bool rc_call_values_belong(RcContext *ctx, RcValue *function, size_t argc,
                            RcValue *const *argv);

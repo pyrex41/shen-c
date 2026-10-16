@@ -5,6 +5,8 @@
  * rc_install_eval. Reinstall port hooks after loading kernel definitions. */
 bool rc_install_primitives(RcContext *ctx);
 bool rc_install_overwrites(RcContext *ctx);
+/* Exact, unbound built-in do returns its second argument unchanged. */
+bool rc_primitive_is_do(const RcValue *function);
 /* Consumes candidate on every path. The snapshotted callee is checked before
  * reusing a cell; redefined/partial cons functions keep ordinary call semantics.
  * head/tail/function are borrowed. A fallback tail call stays stack safe. */

@@ -29,6 +29,11 @@ cat > "$work/input/user.kl" <<'KL'
 (defun rc-self-error (N) (if (= N 0) (simple-error "self-loop-error") (rc-self-error (- N 1))))
 (defun rc-and-invalid (N) (and true (if (= N 0) 42 (rc-and-invalid (- N 1)))))
 (defun rc-bound (X N Ignored) (if (= N 0) (lambda Last X) ((value *rc-bound*) 0 0 99)))
+(defun rc-do-count (N A) (if (= N 0) A (do (set *rc-do-last* N) (rc-do-count (- N 1) (+ A 1)))))
+(defun rc-do-nested (N) (if (= N 0) 42 (do 1 (do 2 (rc-do-nested (- N 1))))))
+(defun rc-do-snapshot (N) (if (= N 0) 42 (do 99 (rc-do-snapshot (let Ignored (defun do (X Y) X) 0)))))
+(defun rc-do-invalid (N) (and true (if (= N 0) 42 (do 0 (rc-do-invalid (- N 1))))))
+(defun rc-do-error (N) (if (= N 0) (simple-error "do-loop-error") (do 0 (rc-do-error (- N 1)))))
 KL
 cat > "$work/cases" <<'CASES'
 lexical-function|(let F (lambda X (+ X 1)) (F 4))|5
@@ -96,6 +101,16 @@ top-first-call|(rc-source-order)|1
 top-second-definition|(defun rc-source-order () 2)|@definition
 top-second-call|(rc-source-order)|2
 do-partial-application|((do 1) 2)|2
+do-tail-builtin|(rc-do-count 100000 0)|100000
+do-tail-left-effect|(value *rc-do-last*)|1
+do-tail-nested|(rc-do-nested 100000)|42
+do-tail-boolean-error|(trap-error (rc-do-invalid 100) (lambda E true))|true
+do-tail-recursive-error|(trap-error (rc-do-error 10000) (lambda E (= (error-to-string E) "do-loop-error")))|true
+do-tail-snapshot|(rc-do-snapshot 1)|42
+do-tail-redefined-fallback|(rc-do-count 3 0)|3
+do-tail-native-identity-restore|(defun do (X Y) Y)|@definition
+do-tail-native-identity|(rc-do-count 100000 0)|100000
+do-tail-native-nested|(rc-do-nested 100000)|42
 do-first-definition|(defun do (X Y) X)|@definition
 do-redefined-first|(do 10 20)|10
 do-standard-definition|(defun do (X Y) Y)|@definition
@@ -126,5 +141,7 @@ if ! diff -u "$work/expected" "$work/actual"; then
 fi
 count=$(wc -l < "$work/expected" | tr -d ' ')
 printf 'RC emitted semantics: %s/%s cases PASS\n' "$count" "$count"
+# A tail operand under do must retain the snapshotted-do identity guard.
+grep -q '&& rc_transparent_do(t\[' "$work/app/app.c"
 # Audit the actual generated executable, independently from the host compiler.
 "$root/scripts/test-rc.sh" --audit-only "$work/app/app"
