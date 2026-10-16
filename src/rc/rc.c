@@ -507,6 +507,19 @@ RcValue *rc_cons(RcContext *ctx, RcValue *head, RcValue *tail) {
     }
     return v;
 }
+RcValue *rc_cons_owned(RcContext *ctx, RcValue *head, RcValue *tail) {
+    if (!belongs(ctx, head) || !belongs(ctx, tail)) {
+        rc_release(head); rc_release(tail);
+        return rc_error(ctx, "invalid owned cons value/context");
+    }
+    RcValue *v = allocate(ctx, RC_PAIR, 0);
+    if (!v) { rc_release(head); rc_release(tail); return NULL; }
+    /* Move the two owned handles into graph slots without count traffic.
+     * Neither allocation nor release invokes a collection or user callback. */
+    v->as.pair.head = head; v->as.pair.tail = tail;
+    v->reaches_vector = may_reach_vector(head) || may_reach_vector(tail);
+    return v;
+}
 RcValue *rc_cons_reuse(RcContext *ctx, RcValue *candidate, RcValue *head, RcValue *tail) {
     if (ctx) ctx->stats.pair_reuse_attempts++;
     if (!belongs(ctx, head) || !belongs(ctx, tail) ||
@@ -675,6 +688,15 @@ bool rc_call_values_belong(RcContext *ctx,RcValue *function,size_t argc,
 bool rc_closure_is_native(const RcValue *v, RcNative native) {
     return v && rc_type(v) == RC_CLOSURE && v->as.closure.native == native &&
            !v->as.closure.owned_native;
+}
+RcValue *rc_native_call_capture(RcContext *ctx, RcValue *fn, size_t argc,
+                                 RcValue *const *argv, RcNative native) {
+    if (!ctx || !belongs(ctx, fn) || rc_type(fn) != RC_CLOSURE ||
+        fn->as.closure.native != native || fn->as.closure.owned_native ||
+        fn->as.closure.bound_count || fn->as.closure.arity != argc ||
+        !fn->as.closure.capture_count || (argc && !argv)) return NULL;
+    for (size_t i = 0; i < argc; ++i) if (!belongs(ctx, argv[i])) return NULL;
+    return fn->as.closure.captures[0];
 }
 RcValue *rc_capture(const RcValue *v, size_t i) {
     return v && rc_type(v) == RC_CLOSURE && i < v->as.closure.capture_count ? v->as.closure.captures[i] : NULL;

@@ -110,6 +110,9 @@ bool rc_is_true(const RcValue *value);
 bool rc_is_false(const RcValue *value);
 bool rc_is_boolean(const RcValue *value);
 RcValue *rc_cons(RcContext *ctx, RcValue *head, RcValue *tail);
+/* Consumes one owned reference per child on every path. Success transfers
+ * those references directly into the pair's edges; children may alias. */
+RcValue *rc_cons_owned(RcContext *ctx, RcValue *owned_head, RcValue *owned_tail);
 /* Consumes candidate, including on failure. head/tail remain borrowed. A unique
  * pair is recycled; shared/nonpair candidates allocate a fresh pair. Direct
  * head/tail aliases of candidate also allocate, preserving the original value.
@@ -140,6 +143,11 @@ bool rc_closure_is_native(const RcValue *closure, RcNative native);
 /* Check borrowed call inputs before specialized dispatch; does not set errors. */
 bool rc_call_values_belong(RcContext *ctx, RcValue *function, size_t argc,
                            RcValue *const *argv);
+/* Borrowed first capture for an exact, unbound borrowed-native closure with
+ * the specified callback and valid same-context call inputs. NULL means use
+ * ordinary dispatch. Does not consume values, call callbacks, or set errors. */
+RcValue *rc_native_call_capture(RcContext *ctx, RcValue *function, size_t argc,
+                                 RcValue *const *argv, RcNative native);
 RcValue *rc_capture(const RcValue *self, size_t index); /* Borrowed. */
 size_t rc_arity(const RcValue *function);
 RcValue *rc_apply(RcContext *ctx, RcValue *function, size_t argc,

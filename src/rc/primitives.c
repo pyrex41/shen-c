@@ -81,9 +81,10 @@ static RcValue *atom_string(RcContext *c,RcValue *v) {
 }
 static RcValue *numeric(RcContext *c,enum Op op,RcValue *a,RcValue *b) {
  if(rc_type(a)!=RC_NUMBER||rc_type(b)!=RC_NUMBER)return rc_error(c,"Arithmetic requires numbers");
- double x=rc_number_value(a), y=rc_number_value(b);
  bool ints=rc_number_is_exact_integer(a)&&rc_number_is_exact_integer(b);
- int64_t i=0,j=0,k=0; if(ints){i=rc_integer_value(a);j=rc_integer_value(b);}
+ int64_t i=0,j=0,k=0; double x=0,y=0;
+ if(ints){i=rc_integer_value(a);j=rc_integer_value(b);}
+ else {x=rc_number_value(a);y=rc_number_value(b);}
  switch(op){
  case P_GT:return truth(c,ints?i>j:x>y);case P_LT:return truth(c,ints?i<j:x<y);
  case P_GE:return truth(c,ints?i>=j:x>=y);case P_LE:return truth(c,ints?i<=j:x<=y);
@@ -91,8 +92,9 @@ static RcValue *numeric(RcContext *c,enum Op op,RcValue *a,RcValue *b) {
  case P_SUB:if(ints){if(__builtin_sub_overflow(i,j,&k))return rc_error(c,"Integer overflow");return rc_integer(c,k);}return rc_number(c,x-y);
  case P_MUL:if(ints){if(__builtin_mul_overflow(i,j,&k))return rc_error(c,"Integer overflow");return rc_integer(c,k);}return rc_number(c,x*y);
  case P_DIV:
-  if(y==0)return rc_error(c,"Division by zero");
+  if(ints?j==0:y==0)return rc_error(c,"Division by zero");
   if(ints){if(i==INT64_MIN&&j==-1)return rc_error(c,"Integer overflow");if(i%j==0)return rc_integer(c,i/j);}
+  if(ints){x=(double)i;y=(double)j;}
   return rc_number(c,x/y);
  default:return rc_error(c,"Unknown arithmetic operation");
  }
@@ -118,8 +120,8 @@ static RcValue *write_string(RcContext *c,RcValue *text,RcValue *stream) {
  if((n&&fwrite(rc_text(text),1,n,f)!=n)||fflush(f))return rc_error(c,"Failed to write stream");
  return rc_retain(text);
 }
-static RcValue *primitive(RcContext *c,RcValue *self,size_t argc,RcValue *const *v) {
- (void)argc;enum Op op=(enum Op)rc_integer_value(rc_capture(self,0));
+static RcValue *primitive_op(RcContext *c,RcValue *self,enum Op op,
+                              size_t argc,RcValue *const *v) {
  RcValue *a=argc?v[0]:NULL,*b=argc>1?v[1]:NULL;int64_t i;
  if(op>=P_ADD&&op<=P_LE)return numeric(c,op,a,b);
  switch(op){
@@ -203,11 +205,14 @@ static RcValue *primitive(RcContext *c,RcValue *self,size_t argc,RcValue *const 
  default:return rc_error(c,"Unknown primitive");
  }
 }
+static RcValue *primitive(RcContext *c,RcValue *self,size_t argc,RcValue *const *v) {
+ return primitive_op(c,self,(enum Op)rc_integer_value(rc_capture(self,0)),argc,v);
+}
 RcValue *rc_primitive_call_owned(RcContext *c,RcValue *function,
                                 size_t argc,RcValue **args,bool tail_position) {
- if(rc_call_values_belong(c,function,argc,args)&&rc_closure_is_native(function,primitive)) {
-  RcValue *code=rc_capture(function,0);
-  enum Op op=code?(enum Op)rc_integer_value(code):P_EXIT;
+ RcValue *code=rc_native_call_capture(c,function,argc,args,primitive);
+ if(code) {
+  enum Op op=(enum Op)rc_integer_value(code);
   size_t expected=0;
   switch(op) {
    case P_HD:case P_TL:case P_CONSP:case P_NUMBER:case P_STRING:
@@ -219,8 +224,12 @@ RcValue *rc_primitive_call_owned(RcContext *c,RcValue *function,
   }
   /* Original arity must match too: a partially applied primitive still has
    * the same callback/opcode but must prepend its captured bound arguments. */
-  if(expected&&argc==expected&&rc_arity(function)==expected) {
-   RcValue *result=primitive(c,function,argc,args);
+  if(expected&&argc==expected) {
+   RcValue *result;
+   if(op==P_CONS) {
+    RcValue *head=args[0],*tail=args[1];args[0]=NULL;args[1]=NULL;
+    result=rc_cons_owned(c,head,tail);
+   } else result=primitive_op(c,function,op,argc,args);
    /* C callers may store managed tail requests in pairs or pass them to do.
     * Ordinary apply must drive such a returned request, including its boolean
     * guard. These leaf projections are pure, so defer before consuming args. */
