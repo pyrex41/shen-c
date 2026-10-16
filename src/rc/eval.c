@@ -31,6 +31,13 @@ static bool boolean(RcValue *v) { return rc_is_boolean(v); }
 static RcValue *lookup(RcValue *env, RcValue *name) {
     return rc_env_lookup(env,name);
 }
+/* The caller has excluded pair evaluation. Atomic values cannot execute
+ * callbacks; retain the lexical value or literal before its owner can leave. */
+static inline RcValue *atomic_value(RcContext *ctx, RcValue *input, RcValue *env) {
+    if (!input) return rc_error(ctx,"eval-kl: null expression");
+    RcValue *value=rc_type(input)==RC_SYMBOL ? lookup(env,input) : NULL;
+    return rc_retain(value ? value : input);
+}
 static RcValue *extend(RcContext *ctx, RcValue *env, RcValue *name, RcValue *value) {
     return rc_env_frame(ctx,env,1,&name,&value);
 }
@@ -94,13 +101,17 @@ static RcValue *application(RcContext *ctx, RcValue *expr, RcValue *env, size_t 
         function=resolved;
         if (!function) return NULL;
     }
-    RcValue *small[8]={0};
+    /* Partial cleanup reads only assigned slots; complete dispatch initializes
+     * all argc entries. Keep the heap allocation path unchanged. */
+    RcValue *small[8];
     RcValue **argv=argc<=8 ? small : calloc(argc,sizeof(*argv));
     if (!argv) { rc_release(function); return rc_error(ctx,"eval-kl: out of memory"); }
     RcValue *rest=rc_tail_borrowed(expr), *result=NULL;
     size_t i=0;
     for (; i<argc; ++i,rest=rc_tail_borrowed(rest)) {
-        argv[i]=evaluate(ctx,rc_head_borrowed(rest),env,false);
+        RcValue *argument=rc_head_borrowed(rest);
+        argv[i]=rc_type(argument)==RC_PAIR ? evaluate(ctx,argument,env,false)
+            : atomic_value(ctx,argument,env);
         if (!argv[i]) break;
     }
     if (i==argc) result=rc_primitive_call_owned(ctx,function,argc,argv,tail);
@@ -112,10 +123,7 @@ static RcValue *evaluate(RcContext *ctx, RcValue *input, RcValue *environment, b
     if (!input) return rc_error(ctx,"eval-kl: null expression");
     /* Atomic lookup cannot invoke callbacks or collect. The caller keeps the
      * expression/environment rooted until this owned result is retained. */
-    if (rc_type(input)!=RC_PAIR) {
-        RcValue *value=rc_type(input)==RC_SYMBOL ? lookup(environment,input) : NULL;
-        return rc_retain(value ? value : input);
-    }
+    if (rc_type(input)!=RC_PAIR) return atomic_value(ctx,input,environment);
     /* The public entry owns input once; dynamic calls own their captured body
      * through the active closure. Recursive callers keep the same AST root
      * alive. All loop transitions select immutable descendants of that root.
@@ -124,8 +132,7 @@ static RcValue *evaluate(RcContext *ctx, RcValue *input, RcValue *environment, b
     bool owned_env=false;
     for (;;) {
         if (rc_type(expr)!=RC_PAIR) {
-            RcValue *value=rc_type(expr)==RC_SYMBOL ? lookup(env,expr) : NULL;
-            result=rc_retain(value ? value : expr); break;
+            result=atomic_value(ctx,expr,env); break;
         }
         RcValue *head=rc_head_borrowed(expr), *args=rc_tail_borrowed(expr);
         size_t n;

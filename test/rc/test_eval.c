@@ -67,10 +67,53 @@ static void borrowed_roots(RcContext *ctx) {
     rc_collect(ctx);RcValue *out=rc_apply(ctx,value,0,NULL);assert(out&&rc_integer_value(out)==42);
     rc_release(out);rc_release(value);
 }
+static RcValue *callee_new(RcContext *ctx,RcValue *self,size_t argc,RcValue *const *args) {
+    (void)self;(void)args;assert(argc==2);return rc_integer(ctx,99);
+}
+static RcValue *callee_self_replacing(RcContext *ctx,RcValue *self,size_t argc,RcValue *const *args) {
+    (void)args;assert(argc==2);
+    RcValue *symbol=rc_symbol(ctx,"atomic-self-callee"),*fn=rc_closure(ctx,2,callee_new,0,NULL);
+    assert(symbol&&fn&&rc_function_set(ctx,symbol,fn));rc_release(symbol);rc_release(fn);
+    rc_collect(ctx); /* The active call must keep the old self/captures alive. */
+    return rc_retain(rc_capture(self,0));
+}
+static void lazy_callee(RcContext *ctx) {
+    RcValue *symbol=rc_symbol(ctx,"atomic-self-callee"),*marker=rc_string(ctx,"old capture");
+    RcValue *fn=rc_closure(ctx,2,callee_self_replacing,1,&marker);
+    assert(symbol&&marker&&fn&&rc_function_set(ctx,symbol,fn));rc_release(symbol);rc_release(marker);rc_release(fn);
+    RcValue *value=run(ctx,"(atomic-self-callee 1 2)");
+    assert(rc_type(value)==RC_STRING&&!strcmp(rc_text(value),"old capture"));rc_release(value);
+    number(ctx,"(atomic-self-callee 1 2)",99);
+    value=run(ctx,"(defun lazy-chosen (A B C) A)");rc_release(value);
+    number(ctx,"(lazy-chosen (let Ignored (defun lazy-chosen (A B C) 99) 42) 1 2)",42);
+    number(ctx,"(lazy-chosen 0 1 2)",99);
+    value=run(ctx,"(defun lazy-chosen (A B C) A)");rc_release(value);
+    number(ctx,"(lazy-chosen 42 1 (let Ignored (defun lazy-chosen (A B C) 99) 2))",42);
+    value=run(ctx,"(defun lazy-chosen (A B C) A)");rc_release(value);
+    number(ctx,"(let Alias lazy-chosen (Alias 42 1 (let Ignored (defun lazy-chosen (A B C) 99) 2)))",42);
+    value=run(ctx,"(defun lazy-chosen (A B C) A)");rc_release(value);
+    number(ctx,"((if true lazy-chosen missing-lazy) 42 1 (let Ignored (defun lazy-chosen (A B C) 99) 2))",42);
+    number(ctx,"(trap-error (lazy-chosen 42 1 (simple-error \"late argument\")) (lambda E 42))",42);
+    value=run(ctx,"(defun lazy-tail (A) (atomic-self-callee A 2))");rc_release(value);
+    /* The pending tail request must keep its function rooted after
+     * application cleanup and replacement of the only symbol binding. */
+    symbol=rc_symbol(ctx,"atomic-self-callee");marker=rc_string(ctx,"tail capture");
+    fn=rc_closure(ctx,2,callee_self_replacing,1,&marker);
+    assert(symbol&&marker&&fn&&rc_function_set(ctx,symbol,fn));rc_release(symbol);rc_release(marker);rc_release(fn);
+    value=run(ctx,"(lazy-tail 1)");
+    assert(rc_type(value)==RC_STRING&&!strcmp(rc_text(value),"tail capture"));rc_release(value);
+    number(ctx,"(lazy-tail 1)",99);
+    value=run(ctx,"(defun lazy-invalid-bool (A) (and true (atomic-self-callee A 2)))");rc_release(value);
+    fails(ctx,"(lazy-invalid-bool 1)","boolean");
+    number(ctx,"(trap-error (lazy-invalid-bool 1) (lambda E 42))",42);
+    /* Failure before the first assigned slot must not inspect stack garbage. */
+    number(ctx,"(trap-error (lazy-chosen (simple-error \"first argument\") 1 2) (lambda E 42))",42);
+}
 int main(void) {
     RcContext *ctx=rc_context_new(); assert(ctx);
     assert(rc_install_primitives(ctx) && rc_install_eval(ctx));
     borrowed_roots(ctx);
+    lazy_callee(ctx);
     number(ctx,"(let X 7 ((lambda Y (+ X Y)) 3))",10);
     number(ctx,"(let X 7 (let F (freeze X) (let X 9 (F))))",7);
     number(ctx,"(let F (lambda X (lambda Y (+ X Y))) ((F 3) 4))",7);
