@@ -1,0 +1,28 @@
+{
+  "cases": [
+    {
+      "label": "identitytail",
+      "argv": [
+        "<build>/shen-rc",
+        "script",
+        "runme.shen"
+      ],
+      "env": {}
+    },
+    {
+      "label": "boehm",
+      "argv": [
+        "<boehm-checkout>/bin/shen-c",
+        "script",
+        "runme.shen"
+      ],
+      "env": {
+        "DYLD_LIBRARY_PATH": "/nix/store/8i56a458i5chq614wjnqwiya5fih7nyk-boehm-gc-8.2.12/lib"
+      },
+      "dependency_sha256": {
+        "/nix/store/8i56a458i5chq614wjnqwiya5fih7nyk-boehm-gc-8.2.12/lib/libgc.1.dylib": "2bc9e33340793f29e695c07ba82f6d2ef33770a81bda96789fc95a32da4acff9"
+      }
+    }
+  ],
+  "repetitions": 4
+}

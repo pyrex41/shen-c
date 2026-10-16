@@ -1,0 +1,17 @@
+{
+  "source_freeze": "fd1fd1e2ea2c6d311137e022aa8bfa67bd50c09f",
+  "suite": "eight executions134/0",
+  "target": "NOT MET; all four RC pairs slower",
+  "paired_ratios": {
+    "wall": 1.0747753267973856,
+    "user_cpu": 1.0702497005598732,
+    "instructions": 1.1223703868141306,
+    "maximum_rss": 0.37750640228275456
+  },
+  "focused_sanitizers": "21 default +21 boxed runtime executables PASS; no generated kernel",
+  "receipt_mutation": {
+    "before_sha256": "9b4105b5970b2c139d16559d70cb5ffa710bff97a57baec613ab82a71cf50383",
+    "after_sha256": "467c58eaa27be0a61e371a30419596c4359d0af423af910f3a3813fdac72515a",
+    "cause": "Owner reports post-PASS metadata finalization adding IPO verification, assoc occurrence count and compile-commands hash; about0.2s read/hash/copy overlapped timing. No build/test overlap owner-attested. Original receipt bytes unavailable for independent byte diff. Source/artifacts independently verified unchanged."
+  }
+}

@@ -1,8 +1,10 @@
 # Certified identity tail forwarding in the interpreter
 
-Base: `fd1fd1e2`. This candidate has focused runtime/emitter and microbenchmark
-evidence. No full-kernel build or 134-case language-suite run was performed in
-this lane; integrated performance remains unmeasured.
+Base: `fd1fd1e2`. The original candidate lane produced the focused runtime/emitter
+and microbenchmark evidence below. Subsequent full-kernel release qualification
+and eight 134-case suite executions passed at `cf8a36fb`; see the
+[full-suite checkpoint](rc-suite-identity-tail-20261016.md). Performance remains
+OPEN; the microbenchmark improvements below do not establish a suite speedup.
 
 ## Certificate and dispatch
 

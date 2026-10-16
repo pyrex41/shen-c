@@ -1,0 +1,662 @@
+{
+  "source_commit": "fd1fd1e2ea2c6d311137e022aa8bfa67bd50c09f",
+  "scope": "21 runtime executables in default and true boxed modes; no generated kernel",
+  "tests": [
+    "test_cycles",
+    "test_primitives",
+    "test_eval",
+    "test_env",
+    "test_bool_tail",
+    "test_apply_fast",
+    "test_object_cache",
+    "test_immediates",
+    "test_collection",
+    "test_reuse",
+    "test_acyclic",
+    "test_symbols",
+    "test_primitive_fast",
+    "test_equal",
+    "test_canonical_primitives",
+    "test_canonical_numeric",
+    "test_canonical_cons",
+    "test_generic_builtin_tag",
+    "test_trial_work_union",
+    "test_callee",
+    "test_list_length"
+  ],
+  "test_registration_matches": [
+    "Makefile.rc",
+    "CMakeLists.txt",
+    "scripts/test-rc.sh"
+  ],
+  "source_sha256_before": {
+    "CMakeLists.txt": "8ff72b0bbb92d63d88af5c8991d331481fc649c87156220c9c9b811c3f4bfdca",
+    "Makefile.rc": "ba59e5bddbbd868e5c4f7c799ae4ac222b85975bcacf946f656586bdafcfd602",
+    "scripts/test-rc.sh": "1b7b9ab3e5f962deebca55840eeb70a1a74d1c23bbcbb7f91ded3733680a5275",
+    "src/rc/emit.c": "fca4c14a7ba72a53d89e10d022d422ac6ba39557fc77a9f06d092d8ca51c70e5",
+    "src/rc/emit.h": "ae1946b669f771941b12a706316a28090aefd126f54cc687fa00a3b10b322a9f",
+    "src/rc/eval.c": "cae0d2b2b2a38861350b7d13e47af8fd611fa0321fdb6ee3bac2af76d3cc8eb2",
+    "src/rc/eval.h": "40840e20cb00334a7032ef11aec08ce6a0846912ae05dfb0d08e894ba7ad2e15",
+    "src/rc/main.c": "aed4ac89c8aaf338f8519b35554effd251b04d47bbee6dbf5781343097d74275",
+    "src/rc/primitives.c": "5974e3c61c97eb124360ca1fffba68114a05e8325505b6a9390a16d30bb47b36",
+    "src/rc/primitives.h": "ab8cc324d48775dded4ca6cd49eabd1a99a93fb9ff33e96862cc5243636f0a77",
+    "src/rc/probe-lto.sh": "6aa8ded494aa9dab6fcdf2eaf8f68ba734d6bdd683f10ef3807dc0e99a4c98fb",
+    "src/rc/rc.c": "c13d575eeaf35a672e5b99a428e84697edb5077591dc709213f30ff694e44e57",
+    "src/rc/rc.h": "36af5c1e0258cc1a1fde1069b64719d4971473c5344546857d6744d78c60acb3",
+    "src/rc/rc_internal.h": "200ed1ed15945a10f504d692d85c8740dc733bbc200da6b2ccd721e947853e76",
+    "src/rc/read.c": "f61444980f2d34d3986f9640103b3478501c4d368f6c2dd5058a4b39b3143667",
+    "src/rc/read.h": "71fb3e8ce757174ee47dde95f732200ae1b023c66f8164ac0a4d82ebb241fea5",
+    "test/rc/test_acyclic.c": "b33661118ecf5a52472895e9b8e19cc2ee6145ac72de74e0a4986f1aacc511aa",
+    "test/rc/test_apply_fast.c": "deb586e9fef7ce5487f7997872d63415b63cef9eafde7b1b258a10a6989ac2b1",
+    "test/rc/test_bool_tail.c": "c12069632d5a260066b549f791b6c8fddb153751bf9a2ce229189de38e3588d9",
+    "test/rc/test_callee.c": "10235e2d20ab88ae1133e90bc65e62641ae787894e6774e7f0fefa88deb9a8ef",
+    "test/rc/test_canonical_cons.c": "a0346bd2455d07e2177d91c0c7b5fa17c15fbb2e3bef7464466c1d588460f8aa",
+    "test/rc/test_canonical_numeric.c": "a20c60eb8c159ee264f73ed9a55f4781c62515deb5d52c7ee3eaf471fe51bb8d",
+    "test/rc/test_canonical_primitives.c": "e81e6a97a3f50c84b1388d629851674330c0eabb6f431de735d2eec1a9274abf",
+    "test/rc/test_collection.c": "79633a949b97c7718b27ed69c24504649c67ff30e48c2ae839405b7f3d9bd63b",
+    "test/rc/test_cycles.c": "562ca38e0a488e369b7dc3f13eaaf92f43bfe12154fa71022dbe55e11655e490",
+    "test/rc/test_env.c": "ff507e2406a5522643c05e2818211f105cd6591e236e8b6bd5dcbc6e67b9d1a2",
+    "test/rc/test_equal.c": "a77aa72b18fbd683a04c0069097c488cddbd45c79be8dd152e2eee5f9a6e3d1b",
+    "test/rc/test_eval.c": "2cb190e5b8af9ed8e46f7a8251f092fea18d89233364bd400b7cbe12dc81508d",
+    "test/rc/test_generic_builtin_tag.c": "237adef3519703b04aae76a41b5c6cc5c6482bbd391848eb32931c78ccd15629",
+    "test/rc/test_immediates.c": "2ebe38e90352fe9864832c2d46a324d2fbbab7df8f110dea00e6496a7e2f1432",
+    "test/rc/test_list_length.c": "2e2b95393631164c28be0e1d6e1a4e4537bd909db4283cd5a67cdc998ba992fa",
+    "test/rc/test_object_cache.c": "8b675ded44ef6aa9301afc8299abf0f1d21217a7566219bc7f26f97957d88ff5",
+    "test/rc/test_primitive_fast.c": "57037e70fb664893fff1f71669ab24f8a5065b3ff817dad3e9ee0750351857d4",
+    "test/rc/test_primitives.c": "78b68d9f01c196ff02f068e3267d20fe16a2ed10b49fe226bc77247c9a220f5f",
+    "test/rc/test_reuse.c": "a211dc08864d046fce522720f10513326be5ec226127ac97ccfabad80110bebc",
+    "test/rc/test_symbols.c": "f0185e43eb07b75df2c54114074f8bdc6d1ce179668365a87f588829c556a389",
+    "test/rc/test_trial_work_union.c": "621f0522e848ab1832af906b0a520ed4bb29d794e86b3ee1fd0d4d9acfa784a1",
+    "tools/rc-build.c": "74ed5e3695d610fd8f3b491edb1804ea756c179ec104d12c472f4f5e3e8fde28"
+  },
+  "sanitizer_environment": {
+    "ASAN_OPTIONS": "halt_on_error=1:abort_on_error=1",
+    "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+  },
+  "commands": [
+    {
+      "name": "compiler",
+      "command": [
+        "/Library/Developer/CommandLineTools/usr/bin/clang",
+        "--version"
+      ],
+      "exit_code": 0,
+      "seconds": 0.0155
+    },
+    {
+      "name": "platform",
+      "command": [
+        "uname",
+        "-a"
+      ],
+      "exit_code": 0,
+      "seconds": 0.0144
+    },
+    {
+      "name": "default-macros",
+      "command": [
+        "/Library/Developer/CommandLineTools/usr/bin/clang",
+        "-isysroot",
+        "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk",
+        "-Isrc/rc",
+        "-dM",
+        "-E",
+        "-include",
+        "src/rc/rc.h",
+        "-x",
+        "c",
+        "-"
+      ],
+      "exit_code": 0,
+      "seconds": 0.6012
+    },
+    {
+      "name": "default-compile",
+      "command": [
+        "/nix/store/308q7v3aaiw4d1wjijy7xcszlgnfadb6-gnumake-4.4.1/bin/make",
+        "-f",
+        "Makefile.rc",
+        "-j2",
+        "CC=/Library/Developer/CommandLineTools/usr/bin/clang",
+        "AR=/Library/Developer/CommandLineTools/usr/bin/ar",
+        "RC_CPPFLAGS=-isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk",
+        "RC_SANITIZE=1",
+        "RC_LTO=0",
+        "RC_BUILD=<artifacts>/shen-rc-seventhwave-focused-fd1fd1e2ea2c/default/obj",
+        "RC_BIN=<artifacts>/shen-rc-seventhwave-focused-fd1fd1e2ea2c/default/bin",
+        "test-binaries"
+      ],
+      "exit_code": 0,
+      "seconds": 5.1724
+    },
+    {
+      "name": "default-test_cycles",
+      "command": [
+        "<artifacts>/shen-rc-seventhwave-focused-fd1fd1e2ea2c/default/bin/test_cycles"
+      ],
+      "exit_code": 0,
+      "seconds": 0.766
+    },
+    {
+      "name": "default-test_primitives",
+      "command": [
+        "<artifacts>/shen-rc-seventhwave-focused-fd1fd1e2ea2c/default/bin/test_primitives"
+      ],
+      "exit_code": 0,
+      "seconds": 0.4556
+    },
+    {
+      "name": "default-test_eval",
+      "command": [
+        "<artifacts>/shen-rc-seventhwave-focused-fd1fd1e2ea2c/default/bin/test_eval"
+      ],
+      "exit_code": 0,
+      "seconds": 0.9944
+    },
+    {
+      "name": "default-test_env",
+      "command": [
+        "<artifacts>/shen-rc-seventhwave-focused-fd1fd1e2ea2c/default/bin/test_env"
+      ],
+      "exit_code": 0,
+      "seconds": 0.3026
+    },
+    {
+      "name": "default-test_bool_tail",
+      "command": [
+        "<artifacts>/shen-rc-seventhwave-focused-fd1fd1e2ea2c/default/bin/test_bool_tail"
+      ],
+      "exit_code": 0,
+      "seconds": 0.3156
+    },
+    {
+      "name": "default-test_apply_fast",
+      "command": [
+        "<artifacts>/shen-rc-seventhwave-focused-fd1fd1e2ea2c/default/bin/test_apply_fast"
+      ],
+      "exit_code": 0,
+      "seconds": 0.2463
+    },
+    {
+      "name": "default-test_object_cache",
+      "command": [
+        "<artifacts>/shen-rc-seventhwave-focused-fd1fd1e2ea2c/default/bin/test_object_cache"
+      ],
+      "exit_code": 0,
+      "seconds": 0.2276
+    },
+    {
+      "name": "default-test_immediates",
+      "command": [
+        "<artifacts>/shen-rc-seventhwave-focused-fd1fd1e2ea2c/default/bin/test_immediates"
+      ],
+      "exit_code": 0,
+      "seconds": 0.2524
+    },
+    {
+      "name": "default-test_collection",
+      "command": [
+        "<artifacts>/shen-rc-seventhwave-focused-fd1fd1e2ea2c/default/bin/test_collection"
+      ],
+      "exit_code": 0,
+      "seconds": 0.3148
+    },
+    {
+      "name": "default-test_reuse",
+      "command": [
+        "<artifacts>/shen-rc-seventhwave-focused-fd1fd1e2ea2c/default/bin/test_reuse"
+      ],
+      "exit_code": 0,
+      "seconds": 0.2687
+    },
+    {
+      "name": "default-test_acyclic",
+      "command": [
+        "<artifacts>/shen-rc-seventhwave-focused-fd1fd1e2ea2c/default/bin/test_acyclic"
+      ],
+      "exit_code": 0,
+      "seconds": 0.2748
+    },
+    {
+      "name": "default-test_symbols",
+      "command": [
+        "<artifacts>/shen-rc-seventhwave-focused-fd1fd1e2ea2c/default/bin/test_symbols"
+      ],
+      "exit_code": 0,
+      "seconds": 0.2298
+    },
+    {
+      "name": "default-test_primitive_fast",
+      "command": [
+        "<artifacts>/shen-rc-seventhwave-focused-fd1fd1e2ea2c/default/bin/test_primitive_fast"
+      ],
+      "exit_code": 0,
+      "seconds": 0.2399
+    },
+    {
+      "name": "default-test_equal",
+      "command": [
+        "<artifacts>/shen-rc-seventhwave-focused-fd1fd1e2ea2c/default/bin/test_equal"
+      ],
+      "exit_code": 0,
+      "seconds": 0.2943
+    },
+    {
+      "name": "default-test_canonical_primitives",
+      "command": [
+        "<artifacts>/shen-rc-seventhwave-focused-fd1fd1e2ea2c/default/bin/test_canonical_primitives"
+      ],
+      "exit_code": 0,
+      "seconds": 0.2408
+    },
+    {
+      "name": "default-test_canonical_numeric",
+      "command": [
+        "<artifacts>/shen-rc-seventhwave-focused-fd1fd1e2ea2c/default/bin/test_canonical_numeric"
+      ],
+      "exit_code": 0,
+      "seconds": 0.2545
+    },
+    {
+      "name": "default-test_canonical_cons",
+      "command": [
+        "<artifacts>/shen-rc-seventhwave-focused-fd1fd1e2ea2c/default/bin/test_canonical_cons"
+      ],
+      "exit_code": 0,
+      "seconds": 0.2608
+    },
+    {
+      "name": "default-test_generic_builtin_tag",
+      "command": [
+        "<artifacts>/shen-rc-seventhwave-focused-fd1fd1e2ea2c/default/bin/test_generic_builtin_tag"
+      ],
+      "exit_code": 0,
+      "seconds": 0.2668
+    },
+    {
+      "name": "default-test_trial_work_union",
+      "command": [
+        "<artifacts>/shen-rc-seventhwave-focused-fd1fd1e2ea2c/default/bin/test_trial_work_union"
+      ],
+      "exit_code": 0,
+      "seconds": 0.351
+    },
+    {
+      "name": "default-test_callee",
+      "command": [
+        "<artifacts>/shen-rc-seventhwave-focused-fd1fd1e2ea2c/default/bin/test_callee"
+      ],
+      "exit_code": 0,
+      "seconds": 0.2279
+    },
+    {
+      "name": "default-test_list_length",
+      "command": [
+        "<artifacts>/shen-rc-seventhwave-focused-fd1fd1e2ea2c/default/bin/test_list_length"
+      ],
+      "exit_code": 0,
+      "seconds": 0.2364
+    },
+    {
+      "name": "default-boehm-audit",
+      "command": [
+        "sh",
+        "scripts/test-rc.sh",
+        "--audit-only",
+        "<artifacts>/shen-rc-seventhwave-focused-fd1fd1e2ea2c/default/bin/test_cycles",
+        "<artifacts>/shen-rc-seventhwave-focused-fd1fd1e2ea2c/default/bin/test_primitives",
+        "<artifacts>/shen-rc-seventhwave-focused-fd1fd1e2ea2c/default/bin/test_eval",
+        "<artifacts>/shen-rc-seventhwave-focused-fd1fd1e2ea2c/default/bin/test_env",
+        "<artifacts>/shen-rc-seventhwave-focused-fd1fd1e2ea2c/default/bin/test_bool_tail",
+        "<artifacts>/shen-rc-seventhwave-focused-fd1fd1e2ea2c/default/bin/test_apply_fast",
+        "<artifacts>/shen-rc-seventhwave-focused-fd1fd1e2ea2c/default/bin/test_object_cache",
+        "<artifacts>/shen-rc-seventhwave-focused-fd1fd1e2ea2c/default/bin/test_immediates",
+        "<artifacts>/shen-rc-seventhwave-focused-fd1fd1e2ea2c/default/bin/test_collection",
+        "<artifacts>/shen-rc-seventhwave-focused-fd1fd1e2ea2c/default/bin/test_reuse",
+        "<artifacts>/shen-rc-seventhwave-focused-fd1fd1e2ea2c/default/bin/test_acyclic",
+        "<artifacts>/shen-rc-seventhwave-focused-fd1fd1e2ea2c/default/bin/test_symbols",
+        "<artifacts>/shen-rc-seventhwave-focused-fd1fd1e2ea2c/default/bin/test_primitive_fast",
+        "<artifacts>/shen-rc-seventhwave-focused-fd1fd1e2ea2c/default/bin/test_equal",
+        "<artifacts>/shen-rc-seventhwave-focused-fd1fd1e2ea2c/default/bin/test_canonical_primitives",
+        "<artifacts>/shen-rc-seventhwave-focused-fd1fd1e2ea2c/default/bin/test_canonical_numeric",
+        "<artifacts>/shen-rc-seventhwave-focused-fd1fd1e2ea2c/default/bin/test_canonical_cons",
+        "<artifacts>/shen-rc-seventhwave-focused-fd1fd1e2ea2c/default/bin/test_generic_builtin_tag",
+        "<artifacts>/shen-rc-seventhwave-focused-fd1fd1e2ea2c/default/bin/test_trial_work_union",
+        "<artifacts>/shen-rc-seventhwave-focused-fd1fd1e2ea2c/default/bin/test_callee",
+        "<artifacts>/shen-rc-seventhwave-focused-fd1fd1e2ea2c/default/bin/test_list_length"
+      ],
+      "exit_code": 0,
+      "seconds": 2.2849
+    },
+    {
+      "name": "boxed-macros",
+      "command": [
+        "/Library/Developer/CommandLineTools/usr/bin/clang",
+        "-isysroot",
+        "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk",
+        "-Isrc/rc",
+        "-DSHEN_RC_IMMEDIATE_INTEGERS=0",
+        "-dM",
+        "-E",
+        "-include",
+        "src/rc/rc.h",
+        "-x",
+        "c",
+        "-"
+      ],
+      "exit_code": 0,
+      "seconds": 0.0682
+    },
+    {
+      "name": "boxed-compile",
+      "command": [
+        "/nix/store/308q7v3aaiw4d1wjijy7xcszlgnfadb6-gnumake-4.4.1/bin/make",
+        "-f",
+        "Makefile.rc",
+        "-j2",
+        "CC=/Library/Developer/CommandLineTools/usr/bin/clang",
+        "AR=/Library/Developer/CommandLineTools/usr/bin/ar",
+        "RC_CPPFLAGS=-isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk -DSHEN_RC_IMMEDIATE_INTEGERS=0",
+        "RC_SANITIZE=1",
+        "RC_LTO=0",
+        "RC_BUILD=<artifacts>/shen-rc-seventhwave-focused-fd1fd1e2ea2c/boxed/obj",
+        "RC_BIN=<artifacts>/shen-rc-seventhwave-focused-fd1fd1e2ea2c/boxed/bin",
+        "test-binaries"
+      ],
+      "exit_code": 0,
+      "seconds": 7.8834
+    },
+    {
+      "name": "boxed-test_cycles",
+      "command": [
+        "<artifacts>/shen-rc-seventhwave-focused-fd1fd1e2ea2c/boxed/bin/test_cycles"
+      ],
+      "exit_code": 0,
+      "seconds": 0.5317
+    },
+    {
+      "name": "boxed-test_primitives",
+      "command": [
+        "<artifacts>/shen-rc-seventhwave-focused-fd1fd1e2ea2c/boxed/bin/test_primitives"
+      ],
+      "exit_code": 0,
+      "seconds": 0.258
+    },
+    {
+      "name": "boxed-test_eval",
+      "command": [
+        "<artifacts>/shen-rc-seventhwave-focused-fd1fd1e2ea2c/boxed/bin/test_eval"
+      ],
+      "exit_code": 0,
+      "seconds": 1.02
+    },
+    {
+      "name": "boxed-test_env",
+      "command": [
+        "<artifacts>/shen-rc-seventhwave-focused-fd1fd1e2ea2c/boxed/bin/test_env"
+      ],
+      "exit_code": 0,
+      "seconds": 0.2302
+    },
+    {
+      "name": "boxed-test_bool_tail",
+      "command": [
+        "<artifacts>/shen-rc-seventhwave-focused-fd1fd1e2ea2c/boxed/bin/test_bool_tail"
+      ],
+      "exit_code": 0,
+      "seconds": 0.2557
+    },
+    {
+      "name": "boxed-test_apply_fast",
+      "command": [
+        "<artifacts>/shen-rc-seventhwave-focused-fd1fd1e2ea2c/boxed/bin/test_apply_fast"
+      ],
+      "exit_code": 0,
+      "seconds": 0.2256
+    },
+    {
+      "name": "boxed-test_object_cache",
+      "command": [
+        "<artifacts>/shen-rc-seventhwave-focused-fd1fd1e2ea2c/boxed/bin/test_object_cache"
+      ],
+      "exit_code": 0,
+      "seconds": 0.2078
+    },
+    {
+      "name": "boxed-test_immediates",
+      "command": [
+        "<artifacts>/shen-rc-seventhwave-focused-fd1fd1e2ea2c/boxed/bin/test_immediates"
+      ],
+      "exit_code": 0,
+      "seconds": 0.2314
+    },
+    {
+      "name": "boxed-test_collection",
+      "command": [
+        "<artifacts>/shen-rc-seventhwave-focused-fd1fd1e2ea2c/boxed/bin/test_collection"
+      ],
+      "exit_code": 0,
+      "seconds": 0.3119
+    },
+    {
+      "name": "boxed-test_reuse",
+      "command": [
+        "<artifacts>/shen-rc-seventhwave-focused-fd1fd1e2ea2c/boxed/bin/test_reuse"
+      ],
+      "exit_code": 0,
+      "seconds": 0.286
+    },
+    {
+      "name": "boxed-test_acyclic",
+      "command": [
+        "<artifacts>/shen-rc-seventhwave-focused-fd1fd1e2ea2c/boxed/bin/test_acyclic"
+      ],
+      "exit_code": 0,
+      "seconds": 0.2751
+    },
+    {
+      "name": "boxed-test_symbols",
+      "command": [
+        "<artifacts>/shen-rc-seventhwave-focused-fd1fd1e2ea2c/boxed/bin/test_symbols"
+      ],
+      "exit_code": 0,
+      "seconds": 0.2103
+    },
+    {
+      "name": "boxed-test_primitive_fast",
+      "command": [
+        "<artifacts>/shen-rc-seventhwave-focused-fd1fd1e2ea2c/boxed/bin/test_primitive_fast"
+      ],
+      "exit_code": 0,
+      "seconds": 0.2544
+    },
+    {
+      "name": "boxed-test_equal",
+      "command": [
+        "<artifacts>/shen-rc-seventhwave-focused-fd1fd1e2ea2c/boxed/bin/test_equal"
+      ],
+      "exit_code": 0,
+      "seconds": 0.3531
+    },
+    {
+      "name": "boxed-test_canonical_primitives",
+      "command": [
+        "<artifacts>/shen-rc-seventhwave-focused-fd1fd1e2ea2c/boxed/bin/test_canonical_primitives"
+      ],
+      "exit_code": 0,
+      "seconds": 0.4956
+    },
+    {
+      "name": "boxed-test_canonical_numeric",
+      "command": [
+        "<artifacts>/shen-rc-seventhwave-focused-fd1fd1e2ea2c/boxed/bin/test_canonical_numeric"
+      ],
+      "exit_code": 0,
+      "seconds": 0.383
+    },
+    {
+      "name": "boxed-test_canonical_cons",
+      "command": [
+        "<artifacts>/shen-rc-seventhwave-focused-fd1fd1e2ea2c/boxed/bin/test_canonical_cons"
+      ],
+      "exit_code": 0,
+      "seconds": 0.2558
+    },
+    {
+      "name": "boxed-test_generic_builtin_tag",
+      "command": [
+        "<artifacts>/shen-rc-seventhwave-focused-fd1fd1e2ea2c/boxed/bin/test_generic_builtin_tag"
+      ],
+      "exit_code": 0,
+      "seconds": 0.2258
+    },
+    {
+      "name": "boxed-test_trial_work_union",
+      "command": [
+        "<artifacts>/shen-rc-seventhwave-focused-fd1fd1e2ea2c/boxed/bin/test_trial_work_union"
+      ],
+      "exit_code": 0,
+      "seconds": 0.2907
+    },
+    {
+      "name": "boxed-test_callee",
+      "command": [
+        "<artifacts>/shen-rc-seventhwave-focused-fd1fd1e2ea2c/boxed/bin/test_callee"
+      ],
+      "exit_code": 0,
+      "seconds": 0.2183
+    },
+    {
+      "name": "boxed-test_list_length",
+      "command": [
+        "<artifacts>/shen-rc-seventhwave-focused-fd1fd1e2ea2c/boxed/bin/test_list_length"
+      ],
+      "exit_code": 0,
+      "seconds": 0.263
+    },
+    {
+      "name": "boxed-boehm-audit",
+      "command": [
+        "sh",
+        "scripts/test-rc.sh",
+        "--audit-only",
+        "<artifacts>/shen-rc-seventhwave-focused-fd1fd1e2ea2c/boxed/bin/test_cycles",
+        "<artifacts>/shen-rc-seventhwave-focused-fd1fd1e2ea2c/boxed/bin/test_primitives",
+        "<artifacts>/shen-rc-seventhwave-focused-fd1fd1e2ea2c/boxed/bin/test_eval",
+        "<artifacts>/shen-rc-seventhwave-focused-fd1fd1e2ea2c/boxed/bin/test_env",
+        "<artifacts>/shen-rc-seventhwave-focused-fd1fd1e2ea2c/boxed/bin/test_bool_tail",
+        "<artifacts>/shen-rc-seventhwave-focused-fd1fd1e2ea2c/boxed/bin/test_apply_fast",
+        "<artifacts>/shen-rc-seventhwave-focused-fd1fd1e2ea2c/boxed/bin/test_object_cache",
+        "<artifacts>/shen-rc-seventhwave-focused-fd1fd1e2ea2c/boxed/bin/test_immediates",
+        "<artifacts>/shen-rc-seventhwave-focused-fd1fd1e2ea2c/boxed/bin/test_collection",
+        "<artifacts>/shen-rc-seventhwave-focused-fd1fd1e2ea2c/boxed/bin/test_reuse",
+        "<artifacts>/shen-rc-seventhwave-focused-fd1fd1e2ea2c/boxed/bin/test_acyclic",
+        "<artifacts>/shen-rc-seventhwave-focused-fd1fd1e2ea2c/boxed/bin/test_symbols",
+        "<artifacts>/shen-rc-seventhwave-focused-fd1fd1e2ea2c/boxed/bin/test_primitive_fast",
+        "<artifacts>/shen-rc-seventhwave-focused-fd1fd1e2ea2c/boxed/bin/test_equal",
+        "<artifacts>/shen-rc-seventhwave-focused-fd1fd1e2ea2c/boxed/bin/test_canonical_primitives",
+        "<artifacts>/shen-rc-seventhwave-focused-fd1fd1e2ea2c/boxed/bin/test_canonical_numeric",
+        "<artifacts>/shen-rc-seventhwave-focused-fd1fd1e2ea2c/boxed/bin/test_canonical_cons",
+        "<artifacts>/shen-rc-seventhwave-focused-fd1fd1e2ea2c/boxed/bin/test_generic_builtin_tag",
+        "<artifacts>/shen-rc-seventhwave-focused-fd1fd1e2ea2c/boxed/bin/test_trial_work_union",
+        "<artifacts>/shen-rc-seventhwave-focused-fd1fd1e2ea2c/boxed/bin/test_callee",
+        "<artifacts>/shen-rc-seventhwave-focused-fd1fd1e2ea2c/boxed/bin/test_list_length"
+      ],
+      "exit_code": 0,
+      "seconds": 1.4371
+    }
+  ],
+  "binary_sha256": {
+    "default/test_cycles": "4df41ad15e9d284ec87eb57025f16e602b5c99dbae02dc087346f0c31e91b496",
+    "default/test_primitives": "7881691c2f2b161dfc807c5d3da25d28e5188d204cb0cb1a0c5412a8fdf7d279",
+    "default/test_eval": "373aa1619883885ed765092bc7314340b25a362515c1a83aeb98c616caaeaed4",
+    "default/test_env": "a7b0c2ea4d65e09b3de297adf7cb4083a4120195f974b48d05022c67cc17990e",
+    "default/test_bool_tail": "566f9e13652b1c4ced52a191ac08db290fd0c1c26b0cb9426d242b114b18dc11",
+    "default/test_apply_fast": "5e6bc96e9a8fb0596ae018d3148bfebff239b4869c41a07f538ae0cc99ff8c7c",
+    "default/test_object_cache": "93bf18a3030f91d457e500e3a10958ac095a0190e8edf88e58965f987bf016a2",
+    "default/test_immediates": "af4319083c73d478b1cafe556b7ef37731f08090ab6e75297f8689d12c5b93b2",
+    "default/test_collection": "4912a8e60d4c2aee14b5855eb03b249485b06ebc40ce77fab8da4cb96f1e45b4",
+    "default/test_reuse": "459b9bd83253273a91eeba8505bbee0106b9b9b8b963a7bd90795b1aa7108983",
+    "default/test_acyclic": "fa71af5fae9248a4f70d9dfba4f2df9adbd7e0173a010861bb3b281be6f9ac64",
+    "default/test_symbols": "ea9fdd4c416ffbe67aed1a00187d4b5ee76de51e97cd1a01c2836b6ff9a98f29",
+    "default/test_primitive_fast": "82c277f59d3dcde70417f22826336f4a1f4937b2de1dd3038f5800e17a87262f",
+    "default/test_equal": "cbef1ade6e05d85648d91d91429e6befae913506c08c79259ef5e7ea92998775",
+    "default/test_canonical_primitives": "8ef47287820931d92a30a0ef9f66d2a74da18a8010778c0947811af8d4eafec1",
+    "default/test_canonical_numeric": "c3b6a5d8942c5a0cd46152bc5397af159de149d0db773921dbe5d93123ab5b72",
+    "default/test_canonical_cons": "aa08443e94ba734858bf8f14d9c572a5d2d18a7df68d80653a4bdc3ce944c9a6",
+    "default/test_generic_builtin_tag": "a60c58c52229538d9de81a6dea9726266cc32f834aa0428bdd1f5014bf5bf4ae",
+    "default/test_trial_work_union": "079f34b533392ccf62b67b55a6095d21c64837eab07aaddedbbf0818396ee064",
+    "default/test_callee": "d3401309bf05dc154d22115d14418871e4284cd017ef9332ea9746c27d6513eb",
+    "default/test_list_length": "4939c4e2de27c57228a671331e152c4ef4755c56dbcec997335f346b4630e951",
+    "boxed/test_cycles": "3bcc2ec6048b25952054e8171dafc72495601f88f1e39aad79b8e3e904eba15f",
+    "boxed/test_primitives": "73a78ce0a1ff5cf93476e8fb50317f74abb6ac28067c730bc317b9c17f7e55cb",
+    "boxed/test_eval": "353e51a5eee75f8cc53592fd78da59a7e038aed65d40c5619246e094e72ee8e2",
+    "boxed/test_env": "14a1f5846b57f0540297707e6d2cd595df9dd3a7fe2f5ff3e8e74a5af26a436b",
+    "boxed/test_bool_tail": "30142c02a7cd8eacda8201390342fe25e0b36a82ff5db1aa6d8aaf65e5b0b1ab",
+    "boxed/test_apply_fast": "ba8b45a0a09476dcbc488e3596c8beb6667fbd1b8504f8114394a385343e6162",
+    "boxed/test_object_cache": "130876096ee3de45fc4c9695544b44714a96a2dcedbad3873d91b47dd3965176",
+    "boxed/test_immediates": "c1faa40ae31fc7dbd68bb099d2c75f4b26d65c5e132cb7fb3c01552ef720224b",
+    "boxed/test_collection": "19bcf871f1660987ad6efd2e402684d464dce70af884b1aa42ac2c6d2942cc2c",
+    "boxed/test_reuse": "5cd89ab62446dd4bc4dc31053e34e6ec2f9e91c6956766cdaff099fe63b0e8f2",
+    "boxed/test_acyclic": "56c7ff01bd4b4708e09bf240a4d650ea23b6fa0184a0146856aae532b2c9ccba",
+    "boxed/test_symbols": "b936f28508a74726c1ac1a70b7b4bdddb919d61fed7eb99d5f312169116b8deb",
+    "boxed/test_primitive_fast": "8876db628c2a582f83d5054fe6ac73c23b12223234766a6e2d1ed7a51706cb1b",
+    "boxed/test_equal": "d014df00a615d4df7a1c8a98ac91e4b32dbb7a6dfb46a2d1aec54e411117fdb0",
+    "boxed/test_canonical_primitives": "230d4a43c0fea0413d9fde7778069e5b643da13c6e7d71160c11484c6f0b696e",
+    "boxed/test_canonical_numeric": "5faf7a0e9a6a7b633397308227ada1d7d64727dedf689466a85e7b3c470b0b4b",
+    "boxed/test_canonical_cons": "d4f14def04bf611ca7d312190540923710ed91aade563841a557817539a7ca02",
+    "boxed/test_generic_builtin_tag": "e49ead6209f177e5995aa48f1b573bb962923ce8bd5a95942e693d25e943dfcc",
+    "boxed/test_trial_work_union": "5ee444a9f00c159e3a32b7f0b3cac3dc58f84b3da8637caac24ab10d9eb7b0c0",
+    "boxed/test_callee": "518ed62b1c481646911c122106f6a7916ed0f31df6dc92d272c340f518a87ade",
+    "boxed/test_list_length": "a7b579bfb38300b99d54a75c31b1587d0c1cef9f736403e88ddb7e7a95c36fe1"
+  },
+  "scope_exclusions": [
+    "Generated-kernel sanitizer build",
+    "Language full suite",
+    "Emitted-source integration tests"
+  ],
+  "source_sha256_after": {
+    "CMakeLists.txt": "8ff72b0bbb92d63d88af5c8991d331481fc649c87156220c9c9b811c3f4bfdca",
+    "Makefile.rc": "ba59e5bddbbd868e5c4f7c799ae4ac222b85975bcacf946f656586bdafcfd602",
+    "scripts/test-rc.sh": "1b7b9ab3e5f962deebca55840eeb70a1a74d1c23bbcbb7f91ded3733680a5275",
+    "src/rc/emit.c": "fca4c14a7ba72a53d89e10d022d422ac6ba39557fc77a9f06d092d8ca51c70e5",
+    "src/rc/emit.h": "ae1946b669f771941b12a706316a28090aefd126f54cc687fa00a3b10b322a9f",
+    "src/rc/eval.c": "cae0d2b2b2a38861350b7d13e47af8fd611fa0321fdb6ee3bac2af76d3cc8eb2",
+    "src/rc/eval.h": "40840e20cb00334a7032ef11aec08ce6a0846912ae05dfb0d08e894ba7ad2e15",
+    "src/rc/main.c": "aed4ac89c8aaf338f8519b35554effd251b04d47bbee6dbf5781343097d74275",
+    "src/rc/primitives.c": "5974e3c61c97eb124360ca1fffba68114a05e8325505b6a9390a16d30bb47b36",
+    "src/rc/primitives.h": "ab8cc324d48775dded4ca6cd49eabd1a99a93fb9ff33e96862cc5243636f0a77",
+    "src/rc/probe-lto.sh": "6aa8ded494aa9dab6fcdf2eaf8f68ba734d6bdd683f10ef3807dc0e99a4c98fb",
+    "src/rc/rc.c": "c13d575eeaf35a672e5b99a428e84697edb5077591dc709213f30ff694e44e57",
+    "src/rc/rc.h": "36af5c1e0258cc1a1fde1069b64719d4971473c5344546857d6744d78c60acb3",
+    "src/rc/rc_internal.h": "200ed1ed15945a10f504d692d85c8740dc733bbc200da6b2ccd721e947853e76",
+    "src/rc/read.c": "f61444980f2d34d3986f9640103b3478501c4d368f6c2dd5058a4b39b3143667",
+    "src/rc/read.h": "71fb3e8ce757174ee47dde95f732200ae1b023c66f8164ac0a4d82ebb241fea5",
+    "test/rc/test_acyclic.c": "b33661118ecf5a52472895e9b8e19cc2ee6145ac72de74e0a4986f1aacc511aa",
+    "test/rc/test_apply_fast.c": "deb586e9fef7ce5487f7997872d63415b63cef9eafde7b1b258a10a6989ac2b1",
+    "test/rc/test_bool_tail.c": "c12069632d5a260066b549f791b6c8fddb153751bf9a2ce229189de38e3588d9",
+    "test/rc/test_callee.c": "10235e2d20ab88ae1133e90bc65e62641ae787894e6774e7f0fefa88deb9a8ef",
+    "test/rc/test_canonical_cons.c": "a0346bd2455d07e2177d91c0c7b5fa17c15fbb2e3bef7464466c1d588460f8aa",
+    "test/rc/test_canonical_numeric.c": "a20c60eb8c159ee264f73ed9a55f4781c62515deb5d52c7ee3eaf471fe51bb8d",
+    "test/rc/test_canonical_primitives.c": "e81e6a97a3f50c84b1388d629851674330c0eabb6f431de735d2eec1a9274abf",
+    "test/rc/test_collection.c": "79633a949b97c7718b27ed69c24504649c67ff30e48c2ae839405b7f3d9bd63b",
+    "test/rc/test_cycles.c": "562ca38e0a488e369b7dc3f13eaaf92f43bfe12154fa71022dbe55e11655e490",
+    "test/rc/test_env.c": "ff507e2406a5522643c05e2818211f105cd6591e236e8b6bd5dcbc6e67b9d1a2",
+    "test/rc/test_equal.c": "a77aa72b18fbd683a04c0069097c488cddbd45c79be8dd152e2eee5f9a6e3d1b",
+    "test/rc/test_eval.c": "2cb190e5b8af9ed8e46f7a8251f092fea18d89233364bd400b7cbe12dc81508d",
+    "test/rc/test_generic_builtin_tag.c": "237adef3519703b04aae76a41b5c6cc5c6482bbd391848eb32931c78ccd15629",
+    "test/rc/test_immediates.c": "2ebe38e90352fe9864832c2d46a324d2fbbab7df8f110dea00e6496a7e2f1432",
+    "test/rc/test_list_length.c": "2e2b95393631164c28be0e1d6e1a4e4537bd909db4283cd5a67cdc998ba992fa",
+    "test/rc/test_object_cache.c": "8b675ded44ef6aa9301afc8299abf0f1d21217a7566219bc7f26f97957d88ff5",
+    "test/rc/test_primitive_fast.c": "57037e70fb664893fff1f71669ab24f8a5065b3ff817dad3e9ee0750351857d4",
+    "test/rc/test_primitives.c": "78b68d9f01c196ff02f068e3267d20fe16a2ed10b49fe226bc77247c9a220f5f",
+    "test/rc/test_reuse.c": "a211dc08864d046fce522720f10513326be5ec226127ac97ccfabad80110bebc",
+    "test/rc/test_symbols.c": "f0185e43eb07b75df2c54114074f8bdc6d1ce179668365a87f588829c556a389",
+    "test/rc/test_trial_work_union.c": "621f0522e848ab1832af906b0a520ed4bb29d794e86b3ee1fd0d4d9acfa784a1",
+    "tools/rc-build.c": "74ed5e3695d610fd8f3b491edb1804ea756c179ec104d12c472f4f5e3e8fde28"
+  },
+  "source_unchanged": true,
+  "result": "PASS",
+  "runtime_executables_per_mode": 21,
+  "total_runtime_runs": 42
+}

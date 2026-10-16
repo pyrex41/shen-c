@@ -213,3 +213,33 @@ Seventh-wave lazy callee and direct borrowed request-argv candidates remain
 pending. Require a new immutable artifact, focused correctness and repeated
 matched measurements before crediting a gain. No artifacts were installed or
 pushed at this checkpoint.
+
+### Seventh-wave repeated checkpoint, 2026-10-16
+
+Freeze `fd1fd1e2` passed focused fatal ASan/UBSan for 21 runtime executables in
+default/boxed modes (42 runs), and fresh default Release/IPO full-kernel checks.
+All eight alternating suite executions passed 134/0, but every pair favored
+Boehm: median paired wall ratio 1.074775 and CPU 1.070250. **Target NOT MET / OPEN**,
+7.5% / 7.0% slower despite 62.2% lower paired maximum RSS. Preserve the
+[sixth-wave history](performance/rc-suite-sixthwave-20261016.md) and
+[current seventh-wave evidence](performance/rc-suite-seventhwave-20261016.md).
+No full generated-kernel sanitizer suite or default Make result is credited to
+this freeze. Build-receipt mutation is documented separately from immutable
+source/artifact checks; preserve that boundary in any performance claim.
+No artifacts were installed or pushed at this checkpoint.
+
+### Identity-tail publication checkpoint, 2026-10-16
+
+Integrated the independently reviewed `cf8a36fb` candidate after a fresh default
+Release ThinLTO full-kernel build, 22 runtime checks and eight full S42 runs all
+passed (134/0 each). Paired median RC/Boehm ratios: wall 1.008508, user CPU
+1.041059, instructions 1.125760, peak RSS 0.371238. Host contention was observed;
+**performance remains OPEN / target NOT MET**. See the
+[checkpoint and provenance](performance/rc-suite-identity-tail-20261016.md).
+Full generated-kernel sanitizer and fresh default Make qualification remain
+uncredited for this source freeze. Existing focused sanitizer results cover
+44 runtime executions and 56 emitted comparisons.
+
+The separate interpreted self-loop experiment remains deferred: its owned-list
+control raised peak RSS 87.7% by retaining original arguments. It is not part of
+the default branch. No installed binaries were replaced for publication.

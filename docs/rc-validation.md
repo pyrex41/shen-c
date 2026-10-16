@@ -6,7 +6,35 @@ the supported Make/CMake/Nix build. It adds local last-use ownership, free-varia
 captures, owned calls, and selective pair reuse. Exact cycle reclamation remains
 enabled for unrestricted mutable Shen values.
 
-## Current sixth-wave checkpoint: 2026-10-16
+## Current identity-tail checkpoint: 2026-10-16
+
+Freeze `cf8a36fb` passed a fresh default Release ThinLTO full-kernel build,
+22/22 release runtime checks, artifact audits, reader capture and empty-directory
+checks. All eight matched release suite executions passed 134/0. Median paired
+RC/Boehm ratios were 1.008508 wall and 1.041059 user CPU; peak RSS was 62.9% lower.
+**Performance target NOT MET / OPEN.** Unrelated host workloads affected timing;
+no parity, speedup or isolated before/after optimization claim is established.
+Sources, artifacts, dependencies, input, harness and frozen build receipt stayed
+unchanged. See [the full record](performance/rc-suite-identity-tail-20261016.md).
+
+The candidate's focused fatal ASan/UBSan matrix passed 22 runtime executables in
+default and boxed modes (44 runs), plus 56 emitted comparisons. No full generated
+kernel sanitizer suite or default Make qualification is credited to this freeze.
+The latest full generated-kernel sanitizer suite remains fifth-wave `8dbc9414`.
+
+## Historical seventh-wave checkpoint: 2026-10-16
+
+Freeze `fd1fd1e2` passed a fresh default Release/IPO full-kernel build and focused
+fatal ASan/UBSan: 21 runtime executables in default and true boxed modes (42 runs).
+All eight matched release executions passed 134/0; RC was slower in every pair.
+Median paired RC/Boehm ratios were 1.074775 wall and 1.070250 user CPU:
+**7.5% and 7.0% slower; performance target NOT MET / OPEN**. Paired maximum RSS
+was 62.2% lower. See [the seventh-wave record](performance/rc-suite-seventhwave-20261016.md)
+for exact source/artifact hashes and the build-receipt mutation boundary.
+No full generated-kernel sanitizer suite or default Make qualification is claimed
+for this freeze; the latest full sanitizer suite belongs to fifth-wave `8dbc9414`.
+
+## Historical sixth-wave checkpoint: 2026-10-16
 
 Freeze `3b055330` passed a fresh default Release/IPO full-kernel build, 20 runtime
 tests, 13 reader cases, audits and standalone CLI checks. Focused fatal ASan/UBSan
