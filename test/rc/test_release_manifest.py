@@ -24,3 +24,19 @@ with tempfile.TemporaryDirectory() as tmp:
     (work/'runme.shen').write_text('changed')
     assert validate_suite(r,text,work)['status']=='FAIL'
 print('Pinned release and adversarial suite validator controls PASS')
+
+import importlib.util
+spec=importlib.util.spec_from_file_location('benchmark_rc',Path(__file__).resolve().parents[2]/'scripts/benchmark-rc.py')
+module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
+acceptance=module.acceptance
+runs=[]
+for i in range(1,11):
+    for label,user,rss in [('rc',3.5,30),('boehm',4,70)]:
+        runs.append({'label':label,'repetition':i,'status':'PASS','user_seconds':user,'wall_seconds':4,'max_rss_bytes':rss})
+config={'repetitions':10,'rc_baseline_rss_bytes':30}
+assert acceptance(runs,config)['status']=='PASS'
+assert acceptance(runs[:-1],config)['status']=='OPEN'
+for r in runs:
+    if r['label']=='rc' and r['repetition']>5:r['user_seconds']=3.8
+assert acceptance(runs,config)['status']=='OPEN' # one batch above .90
+print('Two-batch performance gate controls PASS')

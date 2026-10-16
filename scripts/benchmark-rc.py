@@ -62,11 +62,11 @@ def acceptance(runs, config):
         med={k:statistics.median(p[k] for p in pairs[start:start+5]) for k in pairs[0]}
         batches.append(med)
     wins=sum(p['user_seconds']<1 for p in pairs)
-    rc_rss=statistics.median(r['max_rss_bytes'] for r in runs if r['label']==rc)
+    rc_rss=max(r['max_rss_bytes'] for r in runs if r['label']==rc)
     passed=(all(b['user_seconds']<=.9 and b['wall_seconds']<=1.03 and b['max_rss_bytes']<1 for b in batches)
-            and wins>=8 and rc_rss<=1.05*baseline)
+            and wins>=8 and rc_rss<=1.05*baseline and all(p['max_rss_bytes']<1 for p in pairs))
     return {'status':'PASS' if passed else 'OPEN','batches':batches,'cpu_wins':wins,
-            'paired_ratios':pairs,'rc_median_rss_vs_baseline':rc_rss/baseline}
+            'paired_ratios':pairs,'rc_max_rss_vs_baseline':rc_rss/baseline}
 
 
 def main():

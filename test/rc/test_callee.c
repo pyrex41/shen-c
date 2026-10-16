@@ -1,4 +1,6 @@
 #include "primitives.h"
+#include "eval.h"
+#include "read.h"
 #ifdef NDEBUG
 #undef NDEBUG
 #endif
@@ -13,6 +15,24 @@ static RcValue *self_replacing(RcContext *c,RcValue *self,size_t n,RcValue **arg
  assert(symbol&&next&&rc_function_set(c,symbol,next));rc_release(symbol);rc_release(next);
  rc_collect(c); /* Old binding is gone; dispatcher must still root self. */
  return rc_retain(rc_capture(self,0));
+}
+static void interpreted_snapshots(void) {
+ RcContext *c=rc_context_new();assert(c&&rc_install_primitives(c)&&rc_install_eval(c));
+ const char *cases[]={
+  "(do (defun picked (X) 42) (picked (do (defun picked (X) 99) (shen.gc))))",
+  "(do (defun picked (X) 42) (let F picked (F (do (defun picked (X) 99) (shen.gc)))))",
+  "(do (defun picked (X) 42) ((if true picked picked) (do (defun picked (X) 99) (shen.gc))))",
+  "(do (defun picked (X) (do (defun picked (X) 99) (do (shen.gc) 42))) (picked 0))",
+  "(let F (lambda X (do (shen.gc) X)) (F 42))",
+  "(trap-error (missing-callee (simple-error \"argument ran\")) (lambda E (if (= (error-to-string E) \"undefined function missing-callee\") 42 0)))",
+  "(do (defun picked (X) X) (trap-error (picked (simple-error \"argument failed\")) (lambda E (do (shen.gc) 42))))"
+ };
+ for(size_t i=0;i<sizeof(cases)/sizeof(*cases);i++) {
+  const char *source=cases[i];RcValue *form=rc_read(c,&source);assert(form);
+  RcValue *value=rc_eval(c,form);assert(value&&!rc_has_error(c)&&rc_integer_value(value)==42);
+  rc_release(value);rc_release(form);rc_collect(c);
+ }
+ rc_context_free(c);
 }
 int main(void) {
  RcContext *c=rc_context_new();assert(c&&rc_install_primitives(c));
@@ -33,5 +53,6 @@ int main(void) {
  RcContext *other=rc_context_new();assert(other);
  assert(!rc_function_get_borrowed(other,symbol)&&rc_has_error(other));rc_clear_error(other);
  rc_release(missing);rc_release(symbol);rc_context_free(c);rc_context_free(other);
+ interpreted_snapshots();
  puts("RC borrowed callees: PASS");
 }

@@ -9,7 +9,7 @@ import os,re,subprocess,tempfile
 from pathlib import Path
 root=Path(os.environ['RC_ASSOC_ROOT'])
 # Preserve the entire pinned AST, including its literal newline error suffix.
-kernel=(root/'shen/releases/s42/kl/sys.kl').read_text()
+kernel=(Path(os.environ.get('RC_ASSOC_KERNEL',root/'shen/src/kl/sys.kl'))).read_text()
 start=kernel.index('(defun assoc ');end=kernel.index('\n\n',start)
 original=kernel[start:end]
 cases=[
@@ -37,7 +37,7 @@ with tempfile.TemporaryDirectory(prefix='shen-rc-assoc.') as tmp:
  work=Path(tmp);env=dict(os.environ,SHEN_C_HOME=str(root),SHEN_RC_PRINT='1')
  for name,expression in cases:
   outputs=[]
-  for mode,definition in [('guarded',original),('control',original.replace('V3546','Key').replace('V3547','Pool'))]:
+  for mode,definition in [('guarded',original),('control',original.replace('V3546','Key').replace('V3547','Pool').replace('V3543','Key').replace('V3544','Pool'))]:
    inp=work/(name+'-'+mode);inp.mkdir();(inp/'kernel.kl').write_text('');(inp/'user.kl').write_text(definition+'\n'+expression+'\n');dest=work/(name+'-'+mode+'-app')
    p=subprocess.run([os.environ['RC_ASSOC_BUILDER'],str(inp),str(dest)],env=env,capture_output=True,text=True,timeout=90)
    assert p.returncode==0,(name,mode,p.stdout,p.stderr)
@@ -48,7 +48,7 @@ with tempfile.TemporaryDirectory(prefix='shen-rc-assoc.') as tmp:
  # A partial closure can itself be installed as assoc. Its remaining arity is
  # one: recursion in the original body then overapplies that partial binding.
  outputs=[]
- for mode,definition in [('guarded',original),('control',original.replace('V3546','Key').replace('V3547','Pool'))]:
+ for mode,definition in [('guarded',original),('control',original.replace('V3546','Key').replace('V3547','Pool').replace('V3543','Key').replace('V3544','Pool'))]:
   inp=work/('partial-'+mode);inp.mkdir();(inp/'kernel.kl').write_text(definition);(inp/'user.kl').write_text('');dest=work/('partial-'+mode+'-app')
   subprocess.run([os.environ['RC_ASSOC_BUILDER'],str(inp),str(dest)],env=env,capture_output=True,text=True,check=True,timeout=90)
   (dest/'partial.c').write_text(r'''#define SHEN_RC_NO_MAIN

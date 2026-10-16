@@ -82,5 +82,9 @@ jobs:
         run: |
           nix develop -c env ASAN_OPTIONS=abort_on_error=1 UBSAN_OPTIONS=halt_on_error=1 make CC=clang sanitize
           nix develop -c env ASAN_OPTIONS=abort_on_error=1 UBSAN_OPTIONS=halt_on_error=1 make -f Makefile.rc CC=clang RC_SANITIZE=1 RC_CPPFLAGS=-DSHEN_RC_IMMEDIATE_INTEGERS=0 RC_BUILD=obj/boxed RC_BIN=bin/boxed test
+      - name: Emitted sanitizer ownership and semantic controls
+        run: |
+          nix develop -c make -f Makefile.rc CC=clang RC_SANITIZE=1 RC_BUILD=obj/rc-sanitize RC_BIN=bin/rc-sanitize RC_TOOL_BIN=bin/sanitize bin/sanitize/rc-build
+          nix develop -c env CC=clang CFLAGS='-O1 -g -fsanitize=address,undefined -fno-sanitize-recover=all -fno-omit-frame-pointer' RC_BIN=bin/rc-sanitize ASAN_OPTIONS=abort_on_error=1 UBSAN_OPTIONS=halt_on_error=1 scripts/test-rc.sh --no-build bin/sanitize/rc-build
       - name: Fully instrumented generated kernel and complete suite
         run: nix develop -c env CC=clang CFLAGS='-O1 -g -fsanitize=address,undefined -fno-sanitize-recover=all -fno-omit-frame-pointer' ASAN_OPTIONS=abort_on_error=1 UBSAN_OPTIONS=halt_on_error=1 scripts/certify-rc.sh

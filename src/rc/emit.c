@@ -525,8 +525,13 @@ static int expr_inner(RcEmitFn *f,RcValue *x,int tail,const Live *after){
 /* Only this complete pinned kernel definition is eligible. No spelling-only
  * replacement: modified source, parameters, error text or clauses stay native. */
 static bool exact_assoc(RcEmitFn *f,RcValue *params,RcValue *body) {
- if(!optimize(f)||count(f->p,params)!=2||!named(first(params),"V3546")||!named(second(params),"V3547"))return false;
+ if(!optimize(f)||count(f->p,params)!=2)return false;
+ bool s42=named(first(params),"V3546")&&named(second(params),"V3547");
+ bool s43=named(first(params),"V3543")&&named(second(params),"V3544");
+ if(!s42&&!s43)return false;
  const char *text="(defun assoc (V3546 V3547) (cond ((= () V3547) ()) ((and (cons? V3547) (and (cons? (hd V3547)) (= V3546 (hd (hd V3547))))) (hd V3547)) ((cons? V3547) (assoc V3546 (tl V3547))) (true (simple-error \"attempt to search a non-list with assoc\n\"))))";
+ const char *text43="(defun assoc (V3543 V3544) (cond ((= () V3544) ()) ((and (cons? V3544) (and (cons? (hd V3544)) (= V3543 (hd (hd V3544))))) (hd V3544)) ((cons? V3544) (assoc V3543 (tl V3544))) (true (simple-error \"attempt to search a non-list with assoc\n\"))))";
+ if(s43)text=text43;
  RcValue *expected=rc_read(f->p->ctx,&text);
  if(!expected)bad(f->p,"assoc template read failed");
  bool equal=rc_equal(body,at(f->p,rest(expected),2));rc_release(expected);

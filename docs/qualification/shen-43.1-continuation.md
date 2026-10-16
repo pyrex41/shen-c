@@ -82,3 +82,39 @@ python3 scripts/benchmark-rc.py --config evidence/rc/baseline-config.json --out 
 
 Boehm build log records the exact historical Make command and Nix include/library
 paths. Linux, installed Nix qualification, and remote CI remain UNKNOWN here.
+
+## Checkpoint 2: measured candidates
+
+The retained change recognizes the complete byte-equivalent 43.1 `assoc` AST
+with V3543/V3544, alongside the historical S42 V3546/V3547 template. It retains
+all runtime dependency/identity guards. Other fresh names or modified clauses
+use the generic native body. Both template versions pass 22 differential cases
+plus partial-closure controls: snapshots, every dependency redefinition, aliases,
+malformed inputs, error handling and cyclic equality.
+
+Three alternating pairs against rebuilt Boehm all passed 136/0. Paired median
+user-CPU ratio was 1.0331 (OPEN); retired instructions were about 121.026 billion
+versus baseline 123.928 billion, a 2.34% reduction. Host load varied substantially;
+these batches do not establish a causal CPU speedup. A premature measurement
+started before linking completed and is marked DISCARDED with every sample kept.
+
+Two further bounded candidates were implemented, tested, measured, and rejected:
+
+- Evaluator callee borrowing through atomic arguments, with promotion before
+  computed argument effects: snapshot/redefinition/GC/error-order controls passed,
+  but instructions increased about 0.27% versus the assoc candidate. Reverted.
+- Compiler summaries borrowing lexical arguments proven live after exact canonical
+  primitive calls: 2,039 emitted sites; fatal sanitizer runtime checks, 87 emitted
+  semantic cases, ownership and canonical/redefinition controls passed. Instructions
+  decreased only about 0.4% versus assoc. A matched comparison against the retained
+  assoc binary gave CPU ratios 1.07143, 1.00242, 0.99629 (median 1.00242), with no
+  repeatable speedup. Reverted the private API, emitter path and associated API test.
+
+Rejected source snapshots and every measurement remain in the published evidence.
+The useful interpreter snapshot/error-order regression tests remain. Exact cycle
+collection remains enabled and object caches remain bounded. The deferred
+interpreted self-loop experiment was not revived. Next measured cost is still
+interpreter application/evaluation and call/frame/edge work; a larger ownership
+change needs a demonstrated whole-suite gain before integration.
+
+Final-candidate qualification and ten performance pairs follow this source freeze.

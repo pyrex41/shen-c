@@ -1,4 +1,5 @@
 # Standalone compiler, CLI and runtime: no pkg-config, Nix, or Boehm dependency.
+.DEFAULT_GOAL := all
 CC ?= cc
 AR ?= ar
 RC_BUILD ?= obj/rc
@@ -63,7 +64,7 @@ $(error Release manifest validation failed)
 endif
 RC_KERNEL_DIR := $(patsubst %/,%,$(dir $(firstword $(RC_KERNEL_INPUTS))))
 
-$(RC_BUILD)/release.h: $(RC_RELEASE_MANIFEST) scripts/release_manifest.py $(RC_KERNEL_INPUTS) | $(RC_BUILD)
+$(RC_BUILD)/release.h: FORCE_RELEASE $(RC_RELEASE_MANIFEST) scripts/release_manifest.py $(RC_KERNEL_INPUTS) | $(RC_BUILD)
 	python3 scripts/release_manifest.py --manifest $(RC_RELEASE_MANIFEST) --header $@
 
 
@@ -111,3 +112,8 @@ clean:
 	rm -rf $(RC_BUILD) $(RC_BIN)
 
 .PHONY: all runtime test-binaries test sanitize acyclic clean
+
+# Recheck release selection even when switching to an older manifest. The
+# generator preserves mtime when content is unchanged.
+FORCE_RELEASE:
+.PHONY: FORCE_RELEASE

@@ -109,7 +109,10 @@ def main():
     parser.add_argument('--header',type=Path)
     args=parser.parse_args(); release=load_release(args.manifest)
     if args.header:
-        args.header.parent.mkdir(parents=True,exist_ok=True);args.header.write_text(header(release))
+        args.header.parent.mkdir(parents=True,exist_ok=True)
+        content=header(release)
+        if not args.header.exists() or args.header.read_text()!=content:
+            args.header.write_text(content)
     elif args.kernel_inputs:
         print(' '.join(release['kernel_directory']+'/'+m+'.kl' for m in release['modules']))
     else:
