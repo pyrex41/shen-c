@@ -819,6 +819,15 @@ bool rc_compiled_call_matches(const RcValue *v, RcNativeOwned native,size_t arit
 RcValue *rc_capture(const RcValue *v, size_t i) {
     return v && rc_type(v) == RC_CLOSURE && i < v->as.closure.capture_count ? v->as.closure.captures[i] : NULL;
 }
+RcValue *const *rc_eval_captures(RcContext *ctx,RcValue *self,RcNative callback,size_t arity) {
+    if (!ctx || !belongs(ctx,self) || rc_type(self)!=RC_CLOSURE ||
+        self->as.closure.native!=callback || self->as.closure.owned_native ||
+        self->as.closure.arity!=arity || arity>SIZE_MAX-2 ||
+        self->as.closure.capture_count!=arity+2) {
+        rc_error(ctx,"eval-kl: invalid interpreted closure captures");return NULL;
+    }
+    return self->as.closure.captures;
+}
 size_t rc_arity(const RcValue *v) {
     return v && rc_type(v) == RC_CLOSURE ? v->as.closure.arity - v->as.closure.bound_count : 0;
 }

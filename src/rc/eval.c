@@ -1,5 +1,6 @@
 #include "eval.h"
 #include "primitives.h"
+#include "rc_internal.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -59,25 +60,26 @@ static bool parameters(RcContext *ctx, RcValue *params, size_t *arity) {
     return true;
 }
 static RcValue *dynamic_call(RcContext *ctx, RcValue *self, size_t argc, RcValue *const *argv) {
-    RcValue *params=rc_capture(self,0), *small_keys[8];
-    if(argc>SIZE_MAX/sizeof(RcValue *))return rc_error(ctx,"eval-kl: parameter frame too large");
-    RcValue **keys=argc<=8 ? small_keys : malloc(argc*sizeof(*keys));
-    if(!keys)return rc_error(ctx,"eval-kl: out of memory constructing parameter frame");
-    for (size_t i=0; i<argc; ++i) {
-        keys[i]=rc_head_borrowed(params);params=rc_tail_borrowed(params);
-    }
-    RcValue *env=rc_env_frame(ctx,rc_capture(self,2),argc,keys,argv);
-    if(keys!=small_keys)free(keys);
+    RcValue *const *captures=rc_eval_captures(ctx,self,dynamic_call,argc);
+    if(!captures)return NULL;
+    RcValue *env=rc_env_frame(ctx,captures[1],argc,captures+2,argv);
     if(!env)return NULL;
-    RcValue *result=evaluate(ctx,rc_capture(self,1),env,true);
+    RcValue *result=evaluate(ctx,captures[0],env,true);
     rc_release(env);
     return result;
 }
 static RcValue *make_function(RcContext *ctx, RcValue *params, RcValue *body, RcValue *env) {
     size_t arity;
     if (!parameters(ctx,params,&arity)) return NULL;
-    RcValue *captures[]={params,body,env};
-    return rc_closure(ctx,arity,dynamic_call,3,captures);
+    if(arity>SIZE_MAX/sizeof(RcValue *)-2)return rc_error(ctx,"eval-kl: parameter capture size overflow");
+    RcValue *small[10];size_t count=arity+2;
+    RcValue **captures=arity<=8 ? small : malloc(count*sizeof(*captures));
+    if(!captures)return rc_error(ctx,"eval-kl: out of memory constructing parameter captures");
+    captures[0]=body;captures[1]=env;
+    for(size_t i=0;i<arity;i++,params=rc_tail_borrowed(params))captures[i+2]=rc_head_borrowed(params);
+    RcValue *function=rc_closure(ctx,arity,dynamic_call,count,captures);
+    if(captures!=small)free(captures);
+    return function;
 }
 static RcValue *application(RcContext *ctx, RcValue *expr, RcValue *env, size_t argc, bool tail, RcValue *lexical_head) {
     RcValue *head=rc_head_borrowed(expr);

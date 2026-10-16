@@ -16,4 +16,9 @@ bool rc_builtin_call_matches(RcContext *, RcBuiltinSlot, RcValue *, size_t,
 /* Validated exact canonical call slot, or -1. Includes every argument check;
  * callers may enter the shared private tiny body without rechecking guards. */
 int rc_builtin_call_slot(RcContext *, RcValue *, size_t, RcValue *const *);
+/* Private interpreted callback layout: [body, environment, parameter keys...].
+ * Validates context, callback identity, original arity and exact capture count.
+ * The returned span is borrowed; the active runtime call must keep self rooted
+ * until callback return. Partial closures preserve the original capture shape. */
+RcValue *const *rc_eval_captures(RcContext *, RcValue *, RcNative, size_t arity);
 #endif
