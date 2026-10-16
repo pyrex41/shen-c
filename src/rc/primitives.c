@@ -319,6 +319,7 @@ static bool print_value(FILE *f,RcValue *v,unsigned depth) {
  case RC_CLOSURE:return fprintf(f,"#<Function {%p}>",(void*)v)>=0;
  case RC_STREAM:return fprintf(f,"#<Stream {%p} %s>",(void*)v,rc_stream_is_input(v)?"in":"out")>=0;
  case RC_TAIL:return fputs("#<tail-call>",f)>=0;
+ case RC_ENV:return fputs("#<internal-environment>",f)>=0;
  }
  return false;
 }

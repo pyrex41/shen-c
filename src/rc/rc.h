@@ -30,7 +30,7 @@ typedef struct RcValue RcValue;
 typedef enum { RC_CYCLES_ALLOWED, RC_ACYCLIC_ONLY } RcCyclePolicy;
 typedef enum {
     RC_NIL, RC_NUMBER, RC_STRING, RC_SYMBOL, RC_PAIR, RC_VECTOR,
-    RC_CLOSURE, RC_STREAM, RC_TAIL
+    RC_CLOSURE, RC_STREAM, RC_TAIL, RC_ENV
 } RcType;
 typedef RcValue *(*RcNative)(RcContext *, RcValue *self, size_t argc,
                              RcValue *const *argv);
@@ -81,6 +81,14 @@ RcType rc_type(const RcValue *value);
 size_t rc_refcount(const RcValue *value);
 RcValue *rc_nil(void); /* Immortal singleton; release is harmless. */
 bool rc_is_nil(const RcValue *value);
+/* Internal evaluator frames: immutable managed graph nodes, never exposed as
+ * language values. parent is nil or a frame; keys must be same-context interned
+ * symbols. Inputs borrowed, result owned; zero bindings retains parent. Keys
+ * borrow context intern roots, while parent and every value are strong edges.
+ * Lookup returns a borrowed value, newest frame/binding first, NULL if absent. */
+RcValue *rc_env_frame(RcContext *ctx, RcValue *parent, size_t count,
+                      RcValue *const *keys, RcValue *const *values);
+RcValue *rc_env_lookup(const RcValue *environment, const RcValue *key);
 
 RcValue *rc_number(RcContext *ctx, double value);
 /* On supported targets [-2^62, 2^62-1] is immediate; full int64_t values

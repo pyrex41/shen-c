@@ -40,6 +40,10 @@ struct RcValue {
         struct { RcValue *head, *tail; } pair;
         struct { RcValue **items; size_t length; } vector;
         struct {
+            RcValue *parent, **keys, **values; size_t count;
+            RcValue *inline_binding[2];
+        } env;
+        struct {
             RcNative native;
             RcNativeOwned owned_native;
             size_t arity, capture_count, bound_count;
@@ -55,6 +59,8 @@ struct RcValue {
 /* Three inline tail arguments fit in the pre-existing closure-sized union. */
 _Static_assert(sizeof(((RcValue *)0)->as.tail) <= sizeof(((RcValue *)0)->as.closure),
                "inline tail arguments must not enlarge RcValue");
+_Static_assert(sizeof(((RcValue *)0)->as.env) <= sizeof(((RcValue *)0)->as.closure),
+               "inline environment binding must not enlarge RcValue");
 typedef struct RcResolvedSymbols {
     const RcSymbolTable *table;
     struct RcResolvedSymbols *next;
@@ -200,6 +206,10 @@ static void edges(RcValue *v, EdgeFn fn, void *data) {
     case RC_VECTOR:
         for (size_t i = 0; i < v->as.vector.length; ++i) fn(v->as.vector.items[i], data);
         break;
+    case RC_ENV:
+        fn(v->as.env.parent,data);
+        for (size_t i = 0; i < v->as.env.count; ++i) fn(v->as.env.values[i],data);
+        break;
     case RC_CLOSURE:
         for (size_t i = 0; i < v->as.closure.capture_count; ++i) fn(v->as.closure.captures[i], data);
         for (size_t i = 0; i < v->as.closure.bound_count; ++i) fn(v->as.closure.bound[i], data);
@@ -224,6 +234,7 @@ static void unlink_object(RcValue *v) {
         ctx->graph_slots -= v->as.vector.length;
         if (v->cycle_source) ctx->cycle_sources--;
         break;
+    case RC_ENV: ctx->graph_slots -= 1 + v->as.env.count; break;
     case RC_CLOSURE:
         ctx->graph_slots -= v->as.closure.capture_count + v->as.closure.bound_count;
         ctx->stats.live_capture_edges -= v->as.closure.capture_count;
@@ -236,6 +247,7 @@ static void raw_free(RcValue *v) {
     switch (rc_type(v)) {
     case RC_STRING: case RC_SYMBOL: free(v->as.text.data); break;
     case RC_VECTOR: free(v->as.vector.items); break;
+    case RC_ENV: if (v->as.env.count > 1) free(v->as.env.keys); break;
     case RC_CLOSURE: free(v->as.closure.captures); free(v->as.closure.bound); break;
     case RC_TAIL: if (v->as.tail.argv != v->as.tail.inline_args) free(v->as.tail.argv); break;
     case RC_STREAM: if (v->as.stream.file && v->as.stream.close) fclose(v->as.stream.file); break;
@@ -367,6 +379,43 @@ size_t rc_refcount(const RcValue *v) { return is_immediate(v) ? SIZE_MAX : v ? v
 RcValue *rc_nil(void) { return &nil_value; }
 bool rc_is_nil(const RcValue *v) { return v == &nil_value; }
 static bool belongs(RcContext *ctx, const RcValue *v) { return v && (v == &nil_value || is_immediate(v) || v->ctx == ctx); }
+RcValue *rc_env_frame(RcContext *ctx,RcValue *parent,size_t count,
+                      RcValue *const *keys,RcValue *const *values) {
+    if (!ctx || !belongs(ctx,parent) || (!rc_is_nil(parent) && rc_type(parent)!=RC_ENV) ||
+        (count && (!keys || !values))) return rc_error(ctx,"invalid evaluator frame");
+    if (count > SIZE_MAX / 2 / sizeof(RcValue *)) return rc_error(ctx,"evaluator frame size overflow");
+    for (size_t i=0;i<count;i++) {
+        if (!belongs(ctx,keys[i]) || rc_type(keys[i])!=RC_SYMBOL || !belongs(ctx,values[i]))
+            return rc_error(ctx,"invalid evaluator frame binding/context");
+    }
+    if (!count) return rc_retain(parent);
+    size_t bytes=count>1 ? 2*count*sizeof(RcValue *) : 0;
+    RcValue **storage=bytes ? malloc(bytes) : NULL;
+    if (bytes && !storage) return rc_error(ctx,"out of memory constructing evaluator frame");
+    RcValue *frame=allocate(ctx,RC_ENV,bytes);
+    if (!frame) { free(storage); return NULL; }
+    /* Pooled objects contain stale union bytes. Initialize every field before
+     * publishing strong edges; no constructor safepoint exposes a partial node. */
+    frame->as.env.count=count;
+    frame->as.env.keys=count>1 ? storage : frame->as.env.inline_binding;
+    frame->as.env.values=count>1 ? storage+count : frame->as.env.inline_binding+1;
+    frame->as.env.parent=rc_retain(parent);
+    frame->reaches_vector=may_reach_vector(parent);
+    for (size_t i=0;i<count;i++) {
+        frame->as.env.keys[i]=keys[i];
+        frame->as.env.values[i]=rc_retain(values[i]);
+        frame->reaches_vector |= may_reach_vector(values[i]);
+    }
+    ctx->graph_slots += 1 + count;
+    return frame;
+}
+RcValue *rc_env_lookup(const RcValue *environment,const RcValue *key) {
+    if (rc_type(key)!=RC_SYMBOL) return NULL;
+    for (const RcValue *frame=environment;rc_type(frame)==RC_ENV;frame=frame->as.env.parent)
+        for (size_t i=frame->as.env.count;i>0;i--)
+            if (frame->as.env.keys[i-1]==key) return frame->as.env.values[i-1];
+    return NULL;
+}
 RcValue *rc_number(RcContext *ctx, double n) {
     RcValue *v = allocate(ctx, RC_NUMBER, 0);
     if (v) { v->as.number.real = n; v->as.number.exact = false; }
@@ -617,6 +666,7 @@ static bool would_create_cycle(RcContext *ctx, RcValue *target, RcValue *item, s
         case RC_PAIR: width = 2; break;
         case RC_VECTOR: width = v->as.vector.length; break;
         case RC_CLOSURE: width = v->as.closure.capture_count + v->as.closure.bound_count; break;
+        case RC_ENV: width = 1 + v->as.env.count; break;
         case RC_TAIL: width = 1 + v->as.tail.argc; break;
         default: break;
         }

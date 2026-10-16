@@ -3,8 +3,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-/* An environment is a list of (symbol . value) pairs. Keeping it in ordinary
- * RC values gives closures the same ownership and cycle handling as user data. */
+/* Immutable managed frames keep closure captures in the collector graph.
+ * Function parameters share one frame; each let adds one inline binding. */
 static RcValue *evaluate(RcContext *, RcValue *, RcValue *, bool);
 typedef enum { F_CALL, F_IF, F_LET, F_COND, F_AND, F_OR, F_LAMBDA,
     F_FREEZE, F_DEFUN, F_TRAP, F_TYPE, F_QUOTE } Form;
@@ -28,20 +28,10 @@ static Form form_of(RcValue *head) {
 }
 static bool boolean(RcValue *v) { return rc_is_boolean(v); }
 static RcValue *lookup(RcValue *env, RcValue *name) {
-    while (rc_type(env) == RC_PAIR) {
-        RcValue *binding = rc_head_borrowed(env);
-        if (rc_head_borrowed(binding)==name)
-            return rc_tail_borrowed(binding);
-        env = rc_tail_borrowed(env);
-    }
-    return NULL;
+    return rc_env_lookup(env,name);
 }
 static RcValue *extend(RcContext *ctx, RcValue *env, RcValue *name, RcValue *value) {
-    RcValue *binding = rc_cons(ctx,name,value);
-    if (!binding) return NULL;
-    RcValue *result = rc_cons(ctx,binding,env);
-    rc_release(binding);
-    return result;
+    return rc_env_frame(ctx,env,1,&name,&value);
 }
 static bool list_length(RcContext *ctx, RcValue *list, size_t *n) {
     *n = 0;
@@ -69,13 +59,16 @@ static bool parameters(RcContext *ctx, RcValue *params, size_t *arity) {
     return true;
 }
 static RcValue *dynamic_call(RcContext *ctx, RcValue *self, size_t argc, RcValue *const *argv) {
-    RcValue *params=rc_capture(self,0), *env=rc_retain(rc_capture(self,2));
+    RcValue *params=rc_capture(self,0), *small_keys[8];
+    if(argc>SIZE_MAX/sizeof(RcValue *))return rc_error(ctx,"eval-kl: parameter frame too large");
+    RcValue **keys=argc<=8 ? small_keys : malloc(argc*sizeof(*keys));
+    if(!keys)return rc_error(ctx,"eval-kl: out of memory constructing parameter frame");
     for (size_t i=0; i<argc; ++i) {
-        RcValue *next=extend(ctx,env,rc_head_borrowed(params),argv[i]);
-        rc_release(env);
-        if (!next) return NULL;
-        env=next; params=rc_tail_borrowed(params);
+        keys[i]=rc_head_borrowed(params);params=rc_tail_borrowed(params);
     }
+    RcValue *env=rc_env_frame(ctx,rc_capture(self,2),argc,keys,argv);
+    if(keys!=small_keys)free(keys);
+    if(!env)return NULL;
     RcValue *result=evaluate(ctx,rc_capture(self,1),env,true);
     rc_release(env);
     return result;
