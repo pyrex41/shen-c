@@ -1,18 +1,36 @@
 #include "eval.h"
+#include "primitives.h"
 #include <stdlib.h>
 #include <string.h>
 
 /* An environment is a list of (symbol . value) pairs. Keeping it in ordinary
  * RC values gives closures the same ownership and cycle handling as user data. */
 static RcValue *evaluate(RcContext *, RcValue *, RcValue *, bool);
-static bool named(RcValue *v, const char *name) {
-    return rc_type(v) == RC_SYMBOL && strcmp(rc_text(v), name) == 0;
+typedef enum { F_CALL, F_IF, F_LET, F_COND, F_AND, F_OR, F_LAMBDA,
+    F_FREEZE, F_DEFUN, F_TRAP, F_TYPE, F_QUOTE } Form;
+/* Classify once per expression. Symbols are interned, while this text dispatch
+ * also avoids installing or retaining compiler-only special-form constants. */
+static Form form_of(RcValue *head) {
+    if(rc_type(head)!=RC_SYMBOL)return F_CALL;
+    const char *s=rc_text(head);
+    switch(*s) {
+    case 'i':if(!strcmp(s,"if"))return F_IF;break;
+    case 'l':if(!strcmp(s,"let"))return F_LET;if(!strcmp(s,"lambda"))return F_LAMBDA;break;
+    case 'c':if(!strcmp(s,"cond"))return F_COND;if(!strcmp(s,"c-quote"))return F_QUOTE;break;
+    case 'a':if(!strcmp(s,"and"))return F_AND;break;
+    case 'o':if(!strcmp(s,"or"))return F_OR;break;
+    case 'f':if(!strcmp(s,"freeze"))return F_FREEZE;break;
+    case 'd':if(!strcmp(s,"defun"))return F_DEFUN;break;
+    case 't':if(!strcmp(s,"trap-error"))return F_TRAP;if(!strcmp(s,"type"))return F_TYPE;break;
+    case 'q':if(!strcmp(s,"quote"))return F_QUOTE;break;
+    }
+    return F_CALL;
 }
 static bool boolean(RcValue *v) { return rc_is_boolean(v); }
 static RcValue *lookup(RcValue *env, RcValue *name) {
     while (rc_type(env) == RC_PAIR) {
         RcValue *binding = rc_head_borrowed(env);
-        if (rc_equal(rc_head_borrowed(binding), name))
+        if (rc_head_borrowed(binding)==name)
             return rc_tail_borrowed(binding);
         env = rc_tail_borrowed(env);
     }
@@ -46,7 +64,7 @@ static bool parameters(RcContext *ctx, RcValue *params, size_t *arity) {
         RcValue *name=rc_head_borrowed(p);
         if (rc_type(name)!=RC_SYMBOL) { rc_error(ctx,"eval-kl: parameter must be a symbol"); return false; }
         for (RcValue *q=rc_tail_borrowed(p); !rc_is_nil(q); q=rc_tail_borrowed(q))
-            if (rc_equal(name,rc_head_borrowed(q))) { rc_error(ctx,"eval-kl: duplicate parameter %s",rc_text(name)); return false; }
+            if (name==rc_head_borrowed(q)) { rc_error(ctx,"eval-kl: duplicate parameter %s",rc_text(name)); return false; }
     }
     return true;
 }
@@ -68,10 +86,11 @@ static RcValue *make_function(RcContext *ctx, RcValue *params, RcValue *body, Rc
     RcValue *captures[]={params,body,env};
     return rc_closure(ctx,arity,dynamic_call,3,captures);
 }
-static RcValue *application(RcContext *ctx, RcValue *expr, RcValue *env, size_t argc, bool tail) {
-    RcValue *head=rc_head_borrowed(expr), *function=NULL;
-    if (rc_type(head)==RC_SYMBOL && !lookup(env,head)) function=rc_function_lookup(ctx,head);
-    if (!function) function=evaluate(ctx,head,env,false);
+static RcValue *application(RcContext *ctx, RcValue *expr, RcValue *env, size_t argc, bool tail, RcValue *lexical_head) {
+    RcValue *head=rc_head_borrowed(expr);
+    RcValue *function=lexical_head ? rc_retain(lexical_head)
+        : rc_type(head)==RC_SYMBOL ? rc_function_get(ctx,head)
+        : evaluate(ctx,head,env,false);
     if (!function) return NULL;
     /* Function position may evaluate to a symbol via a lexical alias or an
      * arbitrary expression. Snapshot its definition before argument effects. */
@@ -81,17 +100,18 @@ static RcValue *application(RcContext *ctx, RcValue *expr, RcValue *env, size_t 
         function=resolved;
         if (!function) return NULL;
     }
-    RcValue **argv=argc ? calloc(argc,sizeof(*argv)) : NULL;
-    if (argc && !argv) { rc_release(function); return rc_error(ctx,"eval-kl: out of memory"); }
+    RcValue *small[8]={0};
+    RcValue **argv=argc<=8 ? small : calloc(argc,sizeof(*argv));
+    if (!argv) { rc_release(function); return rc_error(ctx,"eval-kl: out of memory"); }
     RcValue *rest=rc_tail_borrowed(expr), *result=NULL;
     size_t i=0;
     for (; i<argc; ++i,rest=rc_tail_borrowed(rest)) {
         argv[i]=evaluate(ctx,rc_head_borrowed(rest),env,false);
         if (!argv[i]) break;
     }
-    if (i==argc) result=tail ? rc_tailcall(ctx,function,argc,argv) : rc_apply(ctx,function,argc,argv);
+    if (i==argc) result=rc_primitive_call_owned(ctx,function,argc,argv,tail);
     for (size_t j=0; j<i; ++j) rc_release(argv[j]);
-    free(argv); rc_release(function);
+    if(argv!=small)free(argv); rc_release(function);
     return result;
 }
 static RcValue *evaluate(RcContext *ctx, RcValue *input, RcValue *environment, bool tail) {
@@ -105,10 +125,12 @@ static RcValue *evaluate(RcContext *ctx, RcValue *input, RcValue *environment, b
         RcValue *head=rc_head_borrowed(expr), *args=rc_tail_borrowed(expr);
         size_t n;
         if (!list_length(ctx,args,&n)) break;
-        if (rc_type(head)==RC_SYMBOL && lookup(env,head)) {
-            result=application(ctx,expr,env,n,tail); break;
+        RcValue *lexical_head=rc_type(head)==RC_SYMBOL ? lookup(env,head) : NULL;
+        if (lexical_head) {
+            result=application(ctx,expr,env,n,tail,lexical_head); break;
         }
-        if (named(head,"if")) {
+        Form form=form_of(head);
+        if (form==F_IF) {
             if (!count_is(ctx,n,3,"if")) break;
             RcValue *test=evaluate(ctx,nth(args,0),env,false);
             if (!test) break;
@@ -116,7 +138,7 @@ static RcValue *evaluate(RcContext *ctx, RcValue *input, RcValue *environment, b
             if (!valid) { rc_error(ctx,"eval-kl: if test must be boolean"); break; }
             RcValue *next=rc_retain(nth(args,yes ? 1 : 2)); rc_release(expr); expr=next; continue;
         }
-        if (named(head,"let")) {
+        if (form==F_LET) {
             if (!count_is(ctx,n,3,"let")) break;
             RcValue *name=nth(args,0);
             if (rc_type(name)!=RC_SYMBOL) { rc_error(ctx,"eval-kl: let binder must be a symbol"); break; }
@@ -127,7 +149,7 @@ static RcValue *evaluate(RcContext *ctx, RcValue *input, RcValue *environment, b
             RcValue *next=rc_retain(nth(args,2));
             rc_release(expr); expr=next; rc_release(env); env=next_env; continue;
         }
-        if (named(head,"cond")) {
+        if (form==F_COND) {
             RcValue *next=NULL;
             for (RcValue *cases=args; !rc_is_nil(cases); cases=rc_tail_borrowed(cases)) {
                 RcValue *clause=rc_head_borrowed(cases); size_t count;
@@ -141,8 +163,8 @@ static RcValue *evaluate(RcContext *ctx, RcValue *input, RcValue *environment, b
             if (!next) { if (!rc_has_error(ctx)) rc_error(ctx,"eval-kl: no true cond case"); break; }
             rc_release(expr); expr=next; continue;
         }
-        if (named(head,"and") || named(head,"or")) {
-            bool is_and=named(head,"and");
+        if (form==F_AND || form==F_OR) {
+            bool is_and=form==F_AND;
             if (!count_is(ctx,n,2,is_and ? "and" : "or")) break;
             RcValue *first=evaluate(ctx,nth(args,0),env,false);
             if (!first) break;
@@ -152,8 +174,8 @@ static RcValue *evaluate(RcContext *ctx, RcValue *input, RcValue *environment, b
             result=rc_require_boolean(ctx,evaluate(ctx,nth(args,1),env,tail));
             break;
         }
-        if (named(head,"lambda") || named(head,"freeze")) {
-            bool freeze=named(head,"freeze");
+        if (form==F_LAMBDA || form==F_FREEZE) {
+            bool freeze=form==F_FREEZE;
             if (!count_is(ctx,n,freeze ? 1 : 2,freeze ? "freeze" : "lambda")) break;
             RcValue *params=rc_nil();
             if (!freeze) {
@@ -164,7 +186,7 @@ static RcValue *evaluate(RcContext *ctx, RcValue *input, RcValue *environment, b
             result=make_function(ctx,params,nth(args,freeze ? 0 : 1),env);
             rc_release(params); break;
         }
-        if (named(head,"defun")) {
+        if (form==F_DEFUN) {
             if (!count_is(ctx,n,3,"defun")) break;
             RcValue *name=nth(args,0);
             if (rc_type(name)!=RC_SYMBOL) { rc_error(ctx,"eval-kl: defun name must be a symbol"); break; }
@@ -173,7 +195,7 @@ static RcValue *evaluate(RcContext *ctx, RcValue *input, RcValue *environment, b
             if (rc_function_set(ctx,name,fn)) result=rc_retain(name);
             rc_release(fn); break;
         }
-        if (named(head,"trap-error")) {
+        if (form==F_TRAP) {
             if (!count_is(ctx,n,2,"trap-error")) break;
             result=evaluate(ctx,nth(args,0),env,false);
             if (result) break;
@@ -184,19 +206,22 @@ static RcValue *evaluate(RcContext *ctx, RcValue *input, RcValue *environment, b
             if (handler) { result=tail ? rc_tailcall(ctx,handler,1,&error) : rc_apply(ctx,handler,1,&error); rc_release(handler); }
             rc_release(error); break;
         }
-        if (named(head,"type")) {
+        if (form==F_TYPE) {
             if (!count_is(ctx,n,2,"type")) break;
             RcValue *next=rc_retain(nth(args,0)); rc_release(expr); expr=next; continue;
         }
-        if (named(head,"c-quote") || named(head,"quote")) {
+        if (form==F_QUOTE) {
             if (!count_is(ctx,n,1,rc_text(head))) break;
             result=rc_retain(nth(args,0)); break;
         }
-        result=application(ctx,expr,env,n,tail); break;
+        result=application(ctx,expr,env,n,tail,NULL); break;
     }
     rc_release(expr); rc_release(env); return result;
 }
 RcValue *rc_eval(RcContext *ctx, RcValue *expression) {
+    /* All environment binders and expression symbols then share one intern table,
+     * so lexical lookup can compare symbol identity without structural equality. */
+    if(!rc_call_values_belong(ctx,expression,0,NULL))return rc_error(ctx,"eval-kl: invalid expression/context");
     return evaluate(ctx,expression,rc_nil(),false);
 }
 static RcValue *eval_native(RcContext *ctx, RcValue *self, size_t argc, RcValue *const *argv) {

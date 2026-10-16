@@ -123,6 +123,19 @@ int main(void) {
         rc_collect(ctx); assert(rc_stats(ctx).live_objects==baseline);
     }
     rc_release(error_form);
+    /* Stack argv, heap argv fallback, lexical snapshots and early failure. */
+    number(ctx,"(let if (lambda X (+ X 1)) (if 41))",42);
+    number(ctx,"(let Alias + (Alias (let Ignored (defun + (X Y) 99) 20) 22))",42);
+    number(ctx,"(+ 20 22)",99);
+    assert(rc_install_primitives(ctx));
+    number(ctx,"(do (defun many (A B C D E F G H I J) (+ A J)) (many 20 0 0 0 0 0 0 0 0 22))",42);
+    number(ctx,"(trap-error (many 1 2 (simple-error \"argv fault\") 4 5 6 7 8 9 10) (lambda E 42))",42);
+    number(ctx,"(do (set *eval-arg-effect* 0) (do (trap-error (missing-before-args (set *eval-arg-effect* 1)) (lambda E 42)) (value *eval-arg-effect*)))",0);
+    RcContext *foreign_ctx=rc_context_new(); assert(foreign_ctx);
+    const char *foreign_input="(let X 42 X)";
+    RcValue *foreign_form=rc_read(foreign_ctx,&foreign_input);assert(foreign_form);
+    assert(!rc_eval(ctx,foreign_form)&&rc_has_error(ctx));rc_clear_error(ctx);
+    rc_release(foreign_form);rc_context_free(foreign_ctx);
     rc_collect(ctx); rc_context_free(ctx);
     puts("RC evaluator: PASS");
     return 0;
