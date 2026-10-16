@@ -155,3 +155,28 @@ objects. Each change requires independent review and focused correctness
 evidence before integration, followed by a fresh combined build and suite.
 Native list overwrites that bypass helper redefinition are deferred and must
 not count toward the unchanged-semantics performance target.
+
+### Near-parity checkpoint, 2026-10-16
+
+At `e28bee9`, a fresh default-IPO release build passed 17 runtime tests,
+13 reader cases, three dependency audits, and three standalone CLI checks.
+The fourth serial exploratory pair passed the unchanged suite 134/0 for
+both implementations: RC 21.17 s wall / 19.72 s user CPU, preserved Boehm
+21.65 s / 19.28 s. This single wall-time advantage does not establish the
+performance target: RC still used 2.3% more user CPU and host scheduling
+differed. Evidence: `evidence/rc/perf-fourthwave-20261016/result.json`.
+
+The combined focused fatal ASan/UBSan run passed all 17 runtime binaries in
+default and boxed modes, 87 emitted semantics cases, and 20 ownership cases.
+A structural cleanup assertion caught lost NULL facts after borrowed-callee
+statements; `79c490f` recognizes only those three exact statements and restores
+the original assertion unchanged, with an additional retained-helper control.
+The raw failed run remains preserved with its correction.
+
+Remaining bounded candidates are generic canonical builtin dispatch and cons
+classification/reuse. They remain isolated until reviewed and measured. Then
+freeze the combined source, build a fresh release CLI and fatal sanitizer CLI,
+run the unchanged full suite, and run four alternating serial release pairs
+with all team compilation stopped. Require an actual repeated improvement,
+then refresh the validation record, install the qualified local artifacts,
+and retain the precise evidence and platform limits. No publishing requested.
