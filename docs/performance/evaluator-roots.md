@@ -44,3 +44,46 @@ results.
 Reproduce with `test/rc/bench_eval.c`, linking separately against each runtime;
 arguments are `lookup-upper 2000000`, `lookup-lower 2000000`, `eval-upper 30000`,
 and `eval-lower 30000`.
+
+## Borrow internal evaluation roots
+
+The public `rc_eval` boundary validates context exactly as before and retains a
+pair input once through the full call. Atomic inputs keep their existing owned
+result path. Dynamic calls keep their body strongly rooted through the active
+closure and own their parameter environment until evaluation returns.
+
+Internal recursive evaluation borrows the same immutable AST graph and incoming
+environment. Every loop transition selects a descendant of that graph. Legal pair
+reuse cannot mutate an AST pair while its rooted parent or active closure still
+owns it. Vectors remain shared values; no mutable data is copied or memoized.
+
+A let-created environment is locally owned, tracked by one flag. Its constructor
+acquires the parent edge before the previous local owner is released. Incoming
+borrowed environments are never released here. Atomic results, quotes, and
+returned closure captures acquire ownership before local environment cleanup.
+Function snapshots, argument order, special-form shadows, tail guards, error
+messages, and public context checks remain unchanged.
+
+Independent source review cleared this ownership proof and actual implementation.
+Fatal ASan/UBSan evaluator and managed-environment suites passed in default and
+boxed modes, including existing cycle reclamation and repeated error cleanup.
+New tests remove the sole external AST owner inside a collecting callback, on
+both successful and trapped paths; replace the executing dynamic function then
+collect and continue its old body; and apply an escaped let closure after the
+public AST root has been released.
+
+### Incremental instruction measurements
+
+The same balanced three-run method compares actual base, filter-only, and filter
+plus internal borrowing executables:
+
+| Interpreted 16-let loop, 30K calls | Base | Filter only | Filter + borrowing |
+| --- | ---: | ---: | ---: |
+| Uppercase binders | 1,374,807,007 | 1,097,178,573 | 1,011,295,590 |
+| Lowercase binders | 1,371,585,504 | 1,424,312,213 | 1,339,600,810 |
+
+Internal borrowing reduces instructions by a further 7.83% and 5.95% respectively.
+Combined reductions against the base are 26.44% and 2.33%. Retains fall from
+6,180,639 to 3,090,633 and releases from 6,720,510 to 3,630,504; managed allocations
+remain 540,374 in both cases. These focused results do not establish integrated
+language-suite performance.

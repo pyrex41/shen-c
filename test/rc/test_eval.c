@@ -30,9 +30,47 @@ static void fails(RcContext *ctx,const char *source,const char *message) {
     assert(strstr(rc_error_message(ctx),message));
     rc_clear_error(ctx);
 }
+/* Model a legal callback removing the external owner of a borrowed public
+ * input. rc_eval's boundary root must protect every remaining AST descendant. */
+static RcValue *external_input;
+static RcValue *drop_external_input(RcContext *ctx,RcValue *self,size_t argc,RcValue *const *args) {
+    (void)self;(void)args;assert(argc==0&&external_input);
+    rc_release(external_input);external_input=NULL;rc_collect(ctx);return rc_nil();
+}
+static RcValue *new_self(RcContext *ctx,RcValue *self,size_t argc,RcValue *const *args) {
+    (void)self;(void)args;assert(argc==1);return rc_integer(ctx,99);
+}
+static RcValue *replace_eval_self(RcContext *ctx,RcValue *self,size_t argc,RcValue *const *args) {
+    (void)self;(void)args;assert(argc==0);
+    RcValue *symbol=rc_symbol(ctx,"old-eval-self"),*fn=rc_closure(ctx,1,new_self,0,NULL);
+    assert(symbol&&fn&&rc_function_set(ctx,symbol,fn));rc_release(symbol);rc_release(fn);
+    rc_collect(ctx);return rc_nil();
+}
+static void install_callback(RcContext *ctx,const char *name,RcNative native) {
+    RcValue *symbol=rc_symbol(ctx,name),*fn=rc_closure(ctx,0,native,0,NULL);
+    assert(symbol&&fn&&rc_function_set(ctx,symbol,fn));rc_release(symbol);rc_release(fn);
+}
+static void borrowed_roots(RcContext *ctx) {
+    install_callback(ctx,"drop-eval-input",drop_external_input);
+    install_callback(ctx,"replace-eval-self",replace_eval_self);
+    const char *forms[]={
+        "(do (drop-eval-input) (let X 40 (+ X 2)))",
+        "(trap-error (do (drop-eval-input) (simple-error \"caught\")) (lambda E (let X 40 (+ X 2))))"
+    };
+    for(size_t i=0;i<sizeof(forms)/sizeof(*forms);i++) {
+        const char *source=forms[i];external_input=rc_read(ctx,&source);assert(external_input);
+        RcValue *out=rc_eval(ctx,external_input);assert(!external_input&&out&&rc_integer_value(out)==42);rc_release(out);
+    }
+    RcValue *value=run(ctx,"(defun old-eval-self (X) (do (replace-eval-self) (let Y (+ X 2) Y)))");rc_release(value);
+    number(ctx,"(old-eval-self 40)",42);number(ctx,"(old-eval-self 0)",99);
+    value=run(ctx,"(let X 40 (let Y 2 (freeze (+ X Y))))");assert(rc_type(value)==RC_CLOSURE);
+    rc_collect(ctx);RcValue *out=rc_apply(ctx,value,0,NULL);assert(out&&rc_integer_value(out)==42);
+    rc_release(out);rc_release(value);
+}
 int main(void) {
     RcContext *ctx=rc_context_new(); assert(ctx);
     assert(rc_install_primitives(ctx) && rc_install_eval(ctx));
+    borrowed_roots(ctx);
     number(ctx,"(let X 7 ((lambda Y (+ X Y)) 3))",10);
     number(ctx,"(let X 7 (let F (freeze X) (let X 9 (F))))",7);
     number(ctx,"(let F (lambda X (lambda Y (+ X Y))) ((F 3) 4))",7);

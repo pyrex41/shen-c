@@ -115,7 +115,12 @@ static RcValue *evaluate(RcContext *ctx, RcValue *input, RcValue *environment, b
         RcValue *value=rc_type(input)==RC_SYMBOL ? lookup(environment,input) : NULL;
         return rc_retain(value ? value : input);
     }
-    RcValue *expr=rc_retain(input), *env=rc_retain(environment), *result=NULL;
+    /* The public entry owns input once; dynamic calls own their captured body
+     * through the active closure. Recursive callers keep the same AST root
+     * alive. All loop transitions select immutable descendants of that root.
+     * Only let-created frames introduce a local environment owner. */
+    RcValue *expr=input, *env=environment, *result=NULL;
+    bool owned_env=false;
     for (;;) {
         if (rc_type(expr)!=RC_PAIR) {
             RcValue *value=rc_type(expr)==RC_SYMBOL ? lookup(env,expr) : NULL;
@@ -135,7 +140,7 @@ static RcValue *evaluate(RcContext *ctx, RcValue *input, RcValue *environment, b
             if (!test) break;
             bool yes=rc_is_true(test), valid=boolean(test); rc_release(test);
             if (!valid) { rc_error(ctx,"eval-kl: if test must be boolean"); break; }
-            RcValue *next=rc_retain(nth(args,yes ? 1 : 2)); rc_release(expr); expr=next; continue;
+            expr=nth(args,yes ? 1 : 2); continue;
         }
         if (form==F_LET) {
             if (!count_is(ctx,n,3,"let")) break;
@@ -145,8 +150,12 @@ static RcValue *evaluate(RcContext *ctx, RcValue *input, RcValue *environment, b
             if (!value) break;
             RcValue *next_env=extend(ctx,env,name,value); rc_release(value);
             if (!next_env) break;
-            RcValue *next=rc_retain(nth(args,2));
-            rc_release(expr); expr=next; rc_release(env); env=next_env; continue;
+            expr=nth(args,2);
+            /* next_env has acquired its parent edge before the old local
+             * owner is dropped; a borrowed incoming environment stays rooted
+             * by the caller and must never be released here. */
+            if (owned_env) rc_release(env);
+            env=next_env; owned_env=true; continue;
         }
         if (form==F_COND) {
             RcValue *next=NULL;
@@ -157,10 +166,10 @@ static RcValue *evaluate(RcContext *ctx, RcValue *input, RcValue *environment, b
                 if (!test) break;
                 bool yes=rc_is_true(test), valid=boolean(test); rc_release(test);
                 if (!valid) { rc_error(ctx,"eval-kl: cond test must be boolean"); break; }
-                if (yes) { next=rc_retain(nth(clause,1)); break; }
+                if (yes) { next=nth(clause,1); break; }
             }
             if (!next) { if (!rc_has_error(ctx)) rc_error(ctx,"eval-kl: no true cond case"); break; }
-            rc_release(expr); expr=next; continue;
+            expr=next; continue;
         }
         if (form==F_AND || form==F_OR) {
             bool is_and=form==F_AND;
@@ -207,7 +216,7 @@ static RcValue *evaluate(RcContext *ctx, RcValue *input, RcValue *environment, b
         }
         if (form==F_TYPE) {
             if (!count_is(ctx,n,2,"type")) break;
-            RcValue *next=rc_retain(nth(args,0)); rc_release(expr); expr=next; continue;
+            expr=nth(args,0); continue;
         }
         if (form==F_QUOTE) {
             if (!count_is(ctx,n,1,rc_text(head))) break;
@@ -215,13 +224,21 @@ static RcValue *evaluate(RcContext *ctx, RcValue *input, RcValue *environment, b
         }
         result=application(ctx,expr,env,n,tail,NULL); break;
     }
-    rc_release(expr); rc_release(env); return result;
+    if (owned_env) rc_release(env);
+    return result;
 }
 RcValue *rc_eval(RcContext *ctx, RcValue *expression) {
     /* All environment binders and expression symbols then share one intern table,
      * so lexical lookup can compare symbol identity without structural equality. */
     if(!rc_call_values_belong(ctx,expression,0,NULL))return rc_error(ctx,"eval-kl: invalid expression/context");
-    return evaluate(ctx,expression,rc_nil(),false);
+    /* Public borrowed inputs may lose an external owner during a callback.
+     * Keep a pair root across the complete evaluation; atoms cannot invoke
+     * callbacks and keep the allocation-free owned-result path above. */
+    if (rc_type(expression)!=RC_PAIR) return evaluate(ctx,expression,rc_nil(),false);
+    RcValue *root=rc_retain(expression);
+    RcValue *result=evaluate(ctx,root,rc_nil(),false);
+    rc_release(root);
+    return result;
 }
 static RcValue *eval_native(RcContext *ctx, RcValue *self, size_t argc, RcValue *const *argv) {
     (void)self; (void)argc; return rc_eval(ctx,argv[0]);
