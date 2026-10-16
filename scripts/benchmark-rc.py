@@ -120,9 +120,9 @@ def main():
         temporary.replace(out / 'result.json')
     base_env = dict(os.environ)
     for key in list(base_env):
-        if key.startswith(('SHEN_', 'RC_', 'DYLD_')) or key in ('ASAN_OPTIONS', 'UBSAN_OPTIONS'):
+        if key.startswith(('SHEN_', 'RC_', 'DYLD_', 'GC_')) or key in ('ASAN_OPTIONS', 'UBSAN_OPTIONS', 'CPUPROFILE', 'CPUPROFILESIGNAL'):
             base_env.pop(key, None)
-    record['removed_environment_prefixes'] = ['SHEN_', 'RC_', 'DYLD_', 'ASAN_OPTIONS', 'UBSAN_OPTIONS']
+    record['removed_environment_prefixes'] = ['SHEN_', 'RC_', 'DYLD_', 'GC_', 'ASAN_OPTIONS', 'UBSAN_OPTIONS', 'CPUPROFILE', 'CPUPROFILESIGNAL']
     save()
     for repetition in range(repetitions):
         order = cases if repetition % 2 == 0 else list(reversed(cases))

@@ -152,7 +152,7 @@ try:
     record['compiler_version'] = (compiler_version + compiler_errors)[:8192]
     save()
     scanner_control = out / 'auditor-control.c'
-    scanner_control.write_text('int GC_auditor_control = 1; int main(void) { return GC_auditor_control - 1; }\n')
+    scanner_control.write_text('__attribute__((used)) volatile int GC_auditor_control = 1; int main(void) { return GC_auditor_control - 1; }\n')
     scanner_binary = out / 'auditor-control'
     run('build-auditor-control', shlex.split(base_env.get('CC', 'cc')) + shlex.split(base_env.get('CFLAGS', '-O2')) +
         [scanner_control, '-o', scanner_binary], timeout=60)

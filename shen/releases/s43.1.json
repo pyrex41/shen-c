@@ -266,7 +266,11 @@
     "shen/src/shen/track.shen": "fec366e60a115adc0ccfc60971fd57f6fff6bb0684162816b90da399998ace42",
     "shen/src/shen/types.shen": "99286d5392551c5dad0f3a654eeb8beb6b1bb3b780fd728f41ec42f2300b5d9a",
     "shen/src/shen/writer.shen": "2ddfda5306c65cdfbcd354f1228704e9f0ecc19e12723cdef8fbd9c326ef3d8c",
-    "shen/src/shen/yacc.shen": "427546fd5177cb837de61b1be368cc00972d44af7a9e689b68a655ae2a3b1aef"
+    "shen/src/shen/yacc.shen": "427546fd5177cb837de61b1be368cc00972d44af7a9e689b68a655ae2a3b1aef",
+    "shen/releases/s43.1/reference-primitives/char-stream.lsp": "56f3bf0878ce4841b28ac76043e2d8bd83455003c8fea9fe1846272ee8cab03e",
+    "shen/releases/s43.1/reference-primitives/read-unit-string.lsp": "4212cdfd31c5e29767d5a1e8ddf614a6a90bb47aaba423bff6e7f2ad89defb06",
+    "shen/releases/s43.1/reference-primitives/write-string.lsp": "20a3cac7c6433d1dd680961699d5d0b86fa04f4319f15f1f6af2afe6c89e0a4c",
+    "shen/releases/s43.1/reference-primitives/LICENSE": "9ea6a79fa0aad8bb3c018bb099832f997e1ccfdb5433a0a75b50269062b29211"
   },
   "expected_outputs": {
     "test.txt": {

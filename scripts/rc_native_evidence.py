@@ -102,10 +102,15 @@ def native_definition_evidence(source, symbol=None):
                 if registered is None:
                     raise ValueError('unknown generated symbol registration')
                 closure = re.fullmatch(r'rc_closure(?:_owned)?\(ctx,(\d+),(rc_native_\d+),\d+,[^;]+\)', slots.get(setter[2], ''))
-                if not closure:
+                identity = re.fullmatch(r'rc_closure_return_second(?:_owned)?\(ctx,(rc_native_\d+),\d+,[^;]+\)', slots.get(setter[2], ''))
+                if closure:
+                    target, target_arity = closure[2], int(closure[1])
+                elif identity:
+                    target, target_arity = identity[1], 2
+                else:
                     raise ValueError('unknown callback registration for ' + registered)
                 if registered == symbol:
-                    registrations.append((closure[2], int(closure[1])))
+                    registrations.append((target, target_arity))
         if len(registrations) != 1:
             raise ValueError('registration must identify exactly one callback for ' + symbol)
         callback, arity = registrations[0]

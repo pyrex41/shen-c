@@ -49,6 +49,7 @@
         unset SHEN_C_HOME SHEN_RC_HOME SHEN_RC_CLI RC_BUILDER
         "$out/bin/shen-c" --version
         test "$("$out/bin/shen-rc" eval -e '(+ 20 22)')" = 42
+        python3 -c 'import subprocess,sys; p=subprocess.run([sys.argv[1],"repl"],input=b"[314159 271828]",capture_output=True,timeout=15); assert p.returncode==0 and b"[314159 271828]" in p.stdout and not p.stderr' "$out/bin/shen-rc"
         rc_check_dir=$(mktemp -d)
         printf '(define nix-answer X -> (+ X 1))\n(nix-answer 41)\n' > "$rc_check_dir/input.shen"
         "$out/bin/compile-shen-rc.sh" "$rc_check_dir/input.shen" "$rc_check_dir/native"

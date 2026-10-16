@@ -1,0 +1,40 @@
+diff --git a/src/c/overwrite.c b/src/c/overwrite.c
+index 2eb132d..ad0cf4c 100644
+--- a/src/c/overwrite.c
++++ b/src/c/overwrite.c
+@@ -1982,8 +1982,35 @@ static inline void register_primitive_kl_function_pr (void)
+   set_kl_symbol_function(intern_overwrite_symbol("pr"), function_object);
+ }
+
++/* 43.1 public stream primitive names. This backend has byte streams. */
++static KLObject* primitive_function_char_stream_p_43
++(KLObject* fn, Vector* args, Environment* fe, Environment* ve)
++{
++  KLObject** objects = get_kl_function_arguments_with_count_check(fn, args);
++  if (!is_kl_stream(objects[0])) throw_kl_exception("char-stream? expects a stream");
++  return get_false_boolean_object();
++}
++static KLObject* primitive_function_read_unit_string_43
++(KLObject* fn, Vector* args, Environment* fe, Environment* ve)
++{
++  KLObject** objects = get_kl_function_arguments_with_count_check(fn, args);
++  KLObject* stream = objects[0];
++  if (!is_kl_stream(stream) || !get_kl_stream_file(stream) ||
++      get_kl_stream_stream_type(stream) != KL_STREAM_TYPE_IN)
++    throw_kl_exception("read-unit-string requires open input stream");
++  int byte = fgetc(get_kl_stream_file(stream));
++  if (byte == EOF) throw_kl_exception("read-unit-string: end of stream");
++  char* unit = malloc(2); unit[0] = (char)(unsigned char)byte; unit[1] = 0;
++  return create_kl_string(unit);
++}
+ void register_overwrite_writer_primitive_kl_functions (void)
+ {
++  set_kl_symbol_function(intern_overwrite_symbol("char-stream?"),
++    create_primitive_kl_function(1, &primitive_function_char_stream_p_43));
++  set_kl_symbol_function(intern_overwrite_symbol("read-unit-string"),
++    create_primitive_kl_function(1, &primitive_function_read_unit_string_43));
++  set_kl_symbol_function(intern_overwrite_symbol("write-string"),
++    create_primitive_kl_function(2, &primitive_function_shen_write_string));
+   register_primitive_kl_function_shen_arg_to_str();
+   register_primitive_kl_function_shen_char_stoutput_p();
+   register_primitive_kl_function_shen_char_stinput_p();

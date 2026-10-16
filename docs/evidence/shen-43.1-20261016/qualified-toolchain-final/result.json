@@ -1,0 +1,1402 @@
+{
+  "started_utc": "2026-10-16T22:02:10.852395+00:00",
+  "scope": "fresh standalone compiler and CLI; native ownership optimizer acceptance",
+  "status": "PASS",
+  "canonical": "PASS",
+  "evidence": "<RC_WORKTREE>/evidence/rc/qualified-toolchain-final",
+  "checks": [
+    "auditor symbol control rejected (not a runtime collector test)",
+    "optional actual GC compiler negative control exists",
+    "actual GC-linked executable rejected by artifact audit",
+    "fresh host produced by recorded build command",
+    "fresh-compiler-audit has no Boehm global symbols or direct linked dependency",
+    "fresh CLI produced from same isolated build graph",
+    "default build creates shen-c compatibility executable matching standalone CLI",
+    "fresh-cli-audit has no Boehm global symbols or direct linked dependency",
+    "CLI version-flag has no diagnostic",
+    "CLI version-flag result is present",
+    "CLI kernel-version has no diagnostic",
+    "CLI kernel-version exact result",
+    "CLI arithmetic has no diagnostic",
+    "CLI arithmetic exact result",
+    "CLI strings has no diagnostic",
+    "CLI strings exact result",
+    "CLI string-tail has no diagnostic",
+    "CLI string-tail exact result",
+    "CLI mutable-self-cycle has no diagnostic",
+    "CLI mutable-self-cycle exact result",
+    "CLI trap has no diagnostic",
+    "CLI trap exact result",
+    "CLI quiet has no diagnostic",
+    "CLI quiet exact result",
+    "CLI multiple-forms has no diagnostic",
+    "CLI multiple-forms exact result",
+    "CLI eof has no diagnostic",
+    "CLI list-without-final-newline has no diagnostic",
+    "CLI list-without-final-newline result is present",
+    "CLI expression-without-final-newline has no diagnostic",
+    "CLI expression-without-final-newline result is present",
+    "CLI missing-eval-option-argument fails observably",
+    "CLI unhandled-error fails observably",
+    "CLI missing-file fails observably",
+    "CLI stream-write has no diagnostic",
+    "CLI stream-write exact result",
+    "CLI stream contains exact written bytes",
+    "CLI script-argv has no diagnostic",
+    "CLI script-argv result is present",
+    "CLI load-file has no diagnostic",
+    "real Shen compilation retains generated KL",
+    "Shen pattern-matching source application selected native C body has value operations and no direct source-evaluator forwarding",
+    "Shen dynamic function source application selected native C body has value operations and no direct source-evaluator forwarding",
+    "shen-source-app-audit has no Boehm global symbols or direct linked dependency",
+    "Shen source application has no runtime diagnostics",
+    "real Shen pattern cases and dynamic function lookup produce exact results 0/7/12/42/42",
+    "Shen frontend receipt identifies the fresh CLI and compiler binaries",
+    "Shen frontend receipt matches actual source, KL, and executable bytes",
+    "Shen frontend receipt identifies escaped-v1 transport and actual reader event bytes",
+    "Shen frontend receipt binds every required compiler output",
+    "Shen receipt output uses a local artifact filename: app.c",
+    "Shen receipt output hash matches: app.c",
+    "Shen receipt output uses a local artifact filename: Makefile",
+    "Shen receipt output hash matches: Makefile",
+    "Shen receipt output uses a local artifact filename: app",
+    "Shen receipt output hash matches: app",
+    "Shen receipt output uses a local artifact filename: source.kl",
+    "Shen receipt output hash matches: source.kl",
+    "Shen receipt output uses a local artifact filename: source-events.kl",
+    "Shen receipt output hash matches: source-events.kl",
+    "unique-100 conservative selected native C body has value operations and no direct source-evaluator forwarding",
+    "unique-100-conservative-audit has no Boehm global symbols or direct linked dependency",
+    "unique-100 conservative exact functional result",
+    "unique-100 conservative has no runtime diagnostic beyond stats",
+    "unique-100 conservative emits one real-runtime stats record",
+    "unique-100 conservative stats contain required integer counters",
+    "unique-100 optimized selected native C body has value operations and no direct source-evaluator forwarding",
+    "unique-100-optimized-audit has no Boehm global symbols or direct linked dependency",
+    "unique-100 optimized exact functional result",
+    "unique-100 optimized has no runtime diagnostic beyond stats",
+    "unique-100 optimized emits one real-runtime stats record",
+    "unique-100 optimized stats contain required integer counters",
+    "unique-1000 conservative selected native C body has value operations and no direct source-evaluator forwarding",
+    "unique-1000-conservative-audit has no Boehm global symbols or direct linked dependency",
+    "unique-1000 conservative exact functional result",
+    "unique-1000 conservative has no runtime diagnostic beyond stats",
+    "unique-1000 conservative emits one real-runtime stats record",
+    "unique-1000 conservative stats contain required integer counters",
+    "unique-1000 optimized selected native C body has value operations and no direct source-evaluator forwarding",
+    "unique-1000-optimized-audit has no Boehm global symbols or direct linked dependency",
+    "unique-1000 optimized exact functional result",
+    "unique-1000 optimized has no runtime diagnostic beyond stats",
+    "unique-1000 optimized emits one real-runtime stats record",
+    "unique-1000 optimized stats contain required integer counters",
+    "aliased-1000 conservative selected native C body has value operations and no direct source-evaluator forwarding",
+    "aliased-1000-conservative-audit has no Boehm global symbols or direct linked dependency",
+    "aliased-1000 conservative exact functional result",
+    "aliased-1000 conservative has no runtime diagnostic beyond stats",
+    "aliased-1000 conservative emits one real-runtime stats record",
+    "aliased-1000 conservative stats contain required integer counters",
+    "aliased-1000 optimized selected native C body has value operations and no direct source-evaluator forwarding",
+    "aliased-1000-optimized-audit has no Boehm global symbols or direct linked dependency",
+    "aliased-1000 optimized exact functional result",
+    "aliased-1000 optimized has no runtime diagnostic beyond stats",
+    "aliased-1000 optimized emits one real-runtime stats record",
+    "aliased-1000 optimized stats contain required integer counters",
+    "capture conservative selected native C body has value operations and no direct source-evaluator forwarding",
+    "capture-conservative-audit has no Boehm global symbols or direct linked dependency",
+    "capture conservative exact functional result",
+    "capture conservative has no runtime diagnostic beyond stats",
+    "capture conservative emits one real-runtime stats record",
+    "capture conservative stats contain required integer counters",
+    "capture optimized selected native C body has value operations and no direct source-evaluator forwarding",
+    "capture-optimized-audit has no Boehm global symbols or direct linked dependency",
+    "capture optimized exact functional result",
+    "capture optimized has no runtime diagnostic beyond stats",
+    "capture optimized emits one real-runtime stats record",
+    "capture optimized stats contain required integer counters",
+    "last-use conservative selected native C body has value operations and no direct source-evaluator forwarding",
+    "last-use-conservative-audit has no Boehm global symbols or direct linked dependency",
+    "last-use conservative exact functional result",
+    "last-use conservative has no runtime diagnostic beyond stats",
+    "last-use conservative emits one real-runtime stats record",
+    "last-use conservative stats contain required integer counters",
+    "last-use optimized selected native C body has value operations and no direct source-evaluator forwarding",
+    "last-use-optimized-audit has no Boehm global symbols or direct linked dependency",
+    "last-use optimized exact functional result",
+    "last-use optimized has no runtime diagnostic beyond stats",
+    "last-use optimized emits one real-runtime stats record",
+    "last-use optimized stats contain required integer counters",
+    "conservative unique-100 is an actual reuse-off control",
+    "unique-100 reuses at least one real pair per element",
+    "unique-100 avoids at least one allocation per element",
+    "conservative unique-1000 is an actual reuse-off control",
+    "unique-1000 reuses at least one real pair per element",
+    "unique-1000 avoids at least one allocation per element",
+    "retained alias prevents destructive pair reuse",
+    "aliased program exercises checked reuse fallback",
+    "free-variable analysis creates fewer actual closure capture edges",
+    "last-use release removes at least 1000 objects from overlapping list lifetimes",
+    "canonical host_build gate passed",
+    "canonical compiler_audit gate passed",
+    "canonical build gate passed",
+    "canonical suite gate passed",
+    "canonical artifact_audit gate passed",
+    "canonical host, compiler audit, app build, suite, and app audit all exited zero",
+    "canonical pinned suite completed all assertions at exit zero",
+    "canonical source still matches: shen/src/kl/sys.kl",
+    "canonical source still matches: shen/src/kl/writer.kl",
+    "canonical source still matches: shen/src/kl/core.kl",
+    "canonical source still matches: shen/src/kl/reader.kl",
+    "canonical source still matches: shen/src/kl/declarations.kl",
+    "canonical source still matches: shen/src/kl/toplevel.kl",
+    "canonical source still matches: shen/src/kl/macros.kl",
+    "canonical source still matches: shen/src/kl/load.kl",
+    "canonical source still matches: shen/src/kl/prolog.kl",
+    "canonical source still matches: shen/src/kl/sequent.kl",
+    "canonical source still matches: shen/src/kl/track.kl",
+    "canonical source still matches: shen/src/kl/t-star.kl",
+    "canonical source still matches: shen/src/kl/yacc.kl",
+    "canonical source still matches: shen/src/kl/types.kl",
+    "canonical source still matches: src/rc/emit.c",
+    "canonical source still matches: src/rc/emit.h",
+    "canonical source still matches: src/rc/eval.c",
+    "canonical source still matches: src/rc/eval.h",
+    "canonical source still matches: src/rc/primitives.c",
+    "canonical source still matches: src/rc/primitives.h",
+    "canonical source still matches: src/rc/rc.c",
+    "canonical source still matches: src/rc/rc.h",
+    "canonical source still matches: src/rc/rc_internal.h",
+    "canonical source still matches: src/rc/read.c",
+    "canonical source still matches: src/rc/read.h",
+    "canonical source still matches: tools/rc-build.c",
+    "canonical source still matches: Makefile.rc",
+    "canonical source still matches: scripts/certify-rc.sh",
+    "canonical source still matches: scripts/test-rc.sh",
+    "canonical source still matches: shen/releases/s43.1.json",
+    "canonical source still matches: scripts/release_manifest.py",
+    "canonical source still matches: shen/test/s43.1/README",
+    "canonical source still matches: shen/test/s43.1/binary.shen",
+    "canonical source still matches: shen/test/s43.1/bubble version 1.shen",
+    "canonical source still matches: shen/test/s43.1/bubble version 2.shen",
+    "canonical source still matches: shen/test/s43.1/c-minus.shen",
+    "canonical source still matches: shen/test/s43.1/calculator.shen",
+    "canonical source still matches: shen/test/s43.1/call.shen",
+    "canonical source still matches: shen/test/s43.1/cartprod.shen",
+    "canonical source still matches: shen/test/s43.1/change.shen",
+    "canonical source still matches: shen/test/s43.1/classes-defaults.shen",
+    "canonical source still matches: shen/test/s43.1/classes-inheritance.shen",
+    "canonical source still matches: shen/test/s43.1/classes-typed.shen",
+    "canonical source still matches: shen/test/s43.1/classes-untyped.shen",
+    "canonical source still matches: shen/test/s43.1/cut.shen",
+    "canonical source still matches: shen/test/s43.1/depth.shen",
+    "canonical source still matches: shen/test/s43.1/einsteins-riddle.shen",
+    "canonical source still matches: shen/test/s43.1/findall.shen",
+    "canonical source still matches: shen/test/s43.1/fork.shen",
+    "canonical source still matches: shen/test/s43.1/harness.shen",
+    "canonical source still matches: shen/test/s43.1/interpreter.shen",
+    "canonical source still matches: shen/test/s43.1/kerneltests.shen",
+    "canonical source still matches: shen/test/s43.1/lisp.shen",
+    "canonical source still matches: shen/test/s43.1/metaprog.shen",
+    "canonical source still matches: shen/test/s43.1/minim.shen",
+    "canonical source still matches: shen/test/s43.1/montague.shen",
+    "canonical source still matches: shen/test/s43.1/mutual.shen",
+    "canonical source still matches: shen/test/s43.1/n queens-axioms.shen",
+    "canonical source still matches: shen/test/s43.1/n queens-r.shen",
+    "canonical source still matches: shen/test/s43.1/n queens.axioms",
+    "canonical source still matches: shen/test/s43.1/n queens.kl",
+    "canonical source still matches: shen/test/s43.1/n queens.shen",
+    "canonical source still matches: shen/test/s43.1/nreverseprolog.shen",
+    "canonical source still matches: shen/test/s43.1/parseprolog.shen",
+    "canonical source still matches: shen/test/s43.1/parser.shen",
+    "canonical source still matches: shen/test/s43.1/parsetest.shen",
+    "canonical source still matches: shen/test/s43.1/powerset.shen",
+    "canonical source still matches: shen/test/s43.1/prime.shen",
+    "canonical source still matches: shen/test/s43.1/prolog.shen",
+    "canonical source still matches: shen/test/s43.1/prologinterp.shen",
+    "canonical source still matches: shen/test/s43.1/proof assistant.shen",
+    "canonical source still matches: shen/test/s43.1/propcalcprolog.shen",
+    "canonical source still matches: shen/test/s43.1/proplog version 1.shen",
+    "canonical source still matches: shen/test/s43.1/proplog version 2.shen",
+    "canonical source still matches: shen/test/s43.1/qmachine.shen",
+    "canonical source still matches: shen/test/s43.1/redirect.shen",
+    "canonical source still matches: shen/test/s43.1/runme.shen",
+    "canonical source still matches: shen/test/s43.1/search.shen",
+    "canonical source still matches: shen/test/s43.1/secd1.shen",
+    "canonical source still matches: shen/test/s43.1/semantic net.shen",
+    "canonical source still matches: shen/test/s43.1/spreadsheet.shen",
+    "canonical source still matches: shen/test/s43.1/stack.shen",
+    "canonical source still matches: shen/test/s43.1/streams.shen",
+    "canonical source still matches: shen/test/s43.1/strings.shen",
+    "canonical source still matches: shen/test/s43.1/structures-typed.shen",
+    "canonical source still matches: shen/test/s43.1/structures-untyped.shen",
+    "canonical source still matches: shen/test/s43.1/tableauprolog.shen",
+    "canonical source still matches: shen/test/s43.1/test.txt",
+    "canonical source still matches: shen/test/s43.1/totalprolog.shen",
+    "canonical source still matches: shen/test/s43.1/unification.shen",
+    "canonical source still matches: shen/test/s43.1/yacc.shen",
+    "canonical receipt binds all current compiler/runtime core sources",
+    "canonical fresh host binary still matches receipt",
+    "canonical-host-audit has no Boehm global symbols or direct linked dependency",
+    "canonical build command identifies its retained output directory",
+    "canonical build command uses the retained audited compiler host",
+    "canonical suite command executes the retained build output app",
+    "canonical retained artifact matches receipt: app",
+    "canonical receipt binds generated app.c and Makefile",
+    "canonical generated artifact uses a local filename: app.c",
+    "canonical retained artifact matches receipt: app.c",
+    "canonical generated artifact uses a local filename: Makefile",
+    "canonical retained artifact matches receipt: Makefile",
+    "canonical-app-audit has no Boehm global symbols or direct linked dependency",
+    "compiler/runtime/kernel sources unchanged throughout fresh acceptance run"
+  ],
+  "cflags": "-O3 -g -flto=thin",
+  "pkg_config": "/nonexistent/rc-toolchain-pkg-config",
+  "commands": [
+    {
+      "label": "01-native-evidence-controls",
+      "command": [
+        "/Library/Developer/CommandLineTools/usr/bin/python3",
+        "<RC_WORKTREE>/test/rc/test_native_evidence.py"
+      ],
+      "exit": 0,
+      "seconds": 0.053,
+      "stdout": "01-native-evidence-controls.out",
+      "stderr": "01-native-evidence-controls.err"
+    },
+    {
+      "label": "02-checkout-revision",
+      "command": [
+        "git",
+        "rev-parse",
+        "HEAD"
+      ],
+      "exit": 0,
+      "seconds": 0.054,
+      "stdout": "02-checkout-revision.out",
+      "stderr": "02-checkout-revision.err"
+    },
+    {
+      "label": "03-compiler-version",
+      "command": [
+        "cc",
+        "--version"
+      ],
+      "exit": 0,
+      "seconds": 0.062,
+      "stdout": "03-compiler-version.out",
+      "stderr": "03-compiler-version.err"
+    },
+    {
+      "label": "04-build-auditor-control",
+      "command": [
+        "cc",
+        "-O3",
+        "-g",
+        "-flto=thin",
+        "<RC_WORKTREE>/evidence/rc/qualified-toolchain-final/auditor-control.c",
+        "-o",
+        "<RC_WORKTREE>/evidence/rc/qualified-toolchain-final/auditor-control"
+      ],
+      "exit": 0,
+      "seconds": 0.108,
+      "stdout": "04-build-auditor-control.out",
+      "stderr": "04-build-auditor-control.err"
+    },
+    {
+      "label": "05-auditor-negative-control",
+      "command": [
+        "<RC_WORKTREE>/scripts/test-rc.sh",
+        "--audit-only",
+        "<RC_WORKTREE>/evidence/rc/qualified-toolchain-final/auditor-control"
+      ],
+      "exit": 1,
+      "seconds": 0.056,
+      "stdout": "05-auditor-negative-control.out",
+      "stderr": "05-auditor-negative-control.err"
+    },
+    {
+      "label": "06-actual-gc-negative-control",
+      "command": [
+        "<RC_WORKTREE>/scripts/test-rc.sh",
+        "--audit-only",
+        "<BOEHM_WORKTREE>/bin/shen-c"
+      ],
+      "exit": 1,
+      "seconds": 0.057,
+      "stdout": "06-actual-gc-negative-control.out",
+      "stderr": "06-actual-gc-negative-control.err"
+    },
+    {
+      "label": "07-fresh-host-build",
+      "command": [
+        "make",
+        "RC_BUILD=<RC_WORKTREE>/evidence/rc/qualified-toolchain-final/fresh/obj",
+        "RC_BIN=<RC_WORKTREE>/evidence/rc/qualified-toolchain-final/fresh/runtime",
+        "RC_TOOL_BIN=<RC_WORKTREE>/evidence/rc/qualified-toolchain-final/fresh/bin",
+        "<RC_WORKTREE>/evidence/rc/qualified-toolchain-final/fresh/bin/rc-build"
+      ],
+      "exit": 0,
+      "seconds": 1.093,
+      "stdout": "07-fresh-host-build.out",
+      "stderr": "07-fresh-host-build.err"
+    },
+    {
+      "label": "08-fresh-compiler-audit",
+      "command": [
+        "<RC_WORKTREE>/scripts/test-rc.sh",
+        "--audit-only",
+        "<RC_WORKTREE>/evidence/rc/qualified-toolchain-final/fresh/bin/rc-build"
+      ],
+      "exit": 0,
+      "seconds": 0.056,
+      "stdout": "08-fresh-compiler-audit.out",
+      "stderr": "08-fresh-compiler-audit.err"
+    },
+    {
+      "label": "09-fresh-default-build",
+      "command": [
+        "make",
+        "RC_BUILD=<RC_WORKTREE>/evidence/rc/qualified-toolchain-final/fresh/obj",
+        "RC_BIN=<RC_WORKTREE>/evidence/rc/qualified-toolchain-final/fresh/runtime",
+        "RC_TOOL_BIN=<RC_WORKTREE>/evidence/rc/qualified-toolchain-final/fresh/bin"
+      ],
+      "exit": 0,
+      "seconds": 44.499,
+      "stdout": "09-fresh-default-build.out",
+      "stderr": "09-fresh-default-build.err"
+    },
+    {
+      "label": "10-fresh-cli-audit",
+      "command": [
+        "<RC_WORKTREE>/scripts/test-rc.sh",
+        "--audit-only",
+        "<RC_WORKTREE>/evidence/rc/qualified-toolchain-final/fresh/bin/shen-rc"
+      ],
+      "exit": 0,
+      "seconds": 0.058,
+      "stdout": "10-fresh-cli-audit.out",
+      "stderr": "10-fresh-cli-audit.err"
+    },
+    {
+      "label": "11-cli-version-flag",
+      "command": [
+        "<RC_WORKTREE>/evidence/rc/qualified-toolchain-final/fresh/bin/shen-rc",
+        "--version"
+      ],
+      "exit": 0,
+      "seconds": 0.233,
+      "stdout": "11-cli-version-flag.out",
+      "stderr": "11-cli-version-flag.err"
+    },
+    {
+      "label": "12-cli-kernel-version",
+      "command": [
+        "<RC_WORKTREE>/evidence/rc/qualified-toolchain-final/fresh/bin/shen-rc",
+        "eval",
+        "-e",
+        "(version)"
+      ],
+      "exit": 0,
+      "seconds": 0.055,
+      "stdout": "12-cli-kernel-version.out",
+      "stderr": "12-cli-kernel-version.err"
+    },
+    {
+      "label": "13-cli-arithmetic",
+      "command": [
+        "<RC_WORKTREE>/evidence/rc/qualified-toolchain-final/fresh/bin/shen-rc",
+        "eval",
+        "-e",
+        "(+ 20 22)"
+      ],
+      "exit": 0,
+      "seconds": 0.061,
+      "stdout": "13-cli-arithmetic.out",
+      "stderr": "13-cli-arithmetic.err"
+    },
+    {
+      "label": "14-cli-strings",
+      "command": [
+        "<RC_WORKTREE>/evidence/rc/qualified-toolchain-final/fresh/bin/shen-rc",
+        "eval",
+        "-e",
+        "(= (@s \"foo\" \"bar\") \"foobar\")"
+      ],
+      "exit": 0,
+      "seconds": 0.063,
+      "stdout": "14-cli-strings.out",
+      "stderr": "14-cli-strings.err"
+    },
+    {
+      "label": "15-cli-string-tail",
+      "command": [
+        "<RC_WORKTREE>/evidence/rc/qualified-toolchain-final/fresh/bin/shen-rc",
+        "eval",
+        "-e",
+        "(= (tlstr \"hello\") \"ello\")"
+      ],
+      "exit": 0,
+      "seconds": 0.062,
+      "stdout": "15-cli-string-tail.out",
+      "stderr": "15-cli-string-tail.err"
+    },
+    {
+      "label": "16-cli-mutable-self-cycle",
+      "command": [
+        "<RC_WORKTREE>/evidence/rc/qualified-toolchain-final/fresh/bin/shen-rc",
+        "eval",
+        "-e",
+        "(let V (absvector 1) (do (address-> V 0 V) (= V (<-address V 0))))"
+      ],
+      "exit": 0,
+      "seconds": 0.063,
+      "stdout": "16-cli-mutable-self-cycle.out",
+      "stderr": "16-cli-mutable-self-cycle.err"
+    },
+    {
+      "label": "17-cli-trap",
+      "command": [
+        "<RC_WORKTREE>/evidence/rc/qualified-toolchain-final/fresh/bin/shen-rc",
+        "eval",
+        "-e",
+        "(trap-error (simple-error \"boom\") (lambda E (= (error-to-string E) \"boom\")))"
+      ],
+      "exit": 0,
+      "seconds": 0.063,
+      "stdout": "17-cli-trap.out",
+      "stderr": "17-cli-trap.err"
+    },
+    {
+      "label": "18-cli-quiet",
+      "command": [
+        "<RC_WORKTREE>/evidence/rc/qualified-toolchain-final/fresh/bin/shen-rc",
+        "eval",
+        "-q",
+        "-e",
+        "(+ 20 22)"
+      ],
+      "exit": 0,
+      "seconds": 0.063,
+      "stdout": "18-cli-quiet.out",
+      "stderr": "18-cli-quiet.err"
+    },
+    {
+      "label": "19-cli-multiple-forms",
+      "command": [
+        "<RC_WORKTREE>/evidence/rc/qualified-toolchain-final/fresh/bin/shen-rc",
+        "eval",
+        "-e",
+        "(+ 1 1) (+ 20 22)"
+      ],
+      "exit": 0,
+      "seconds": 0.062,
+      "stdout": "19-cli-multiple-forms.out",
+      "stderr": "19-cli-multiple-forms.err"
+    },
+    {
+      "label": "20-cli-eof",
+      "command": [
+        "<RC_WORKTREE>/evidence/rc/qualified-toolchain-final/fresh/bin/shen-rc",
+        "repl"
+      ],
+      "exit": 0,
+      "seconds": 0.063,
+      "stdout": "20-cli-eof.out",
+      "stderr": "20-cli-eof.err"
+    },
+    {
+      "label": "21-cli-list-without-final-newline",
+      "command": [
+        "<RC_WORKTREE>/evidence/rc/qualified-toolchain-final/fresh/bin/shen-rc",
+        "repl"
+      ],
+      "exit": 0,
+      "seconds": 0.062,
+      "stdout": "21-cli-list-without-final-newline.out",
+      "stderr": "21-cli-list-without-final-newline.err"
+    },
+    {
+      "label": "22-cli-expression-without-final-newline",
+      "command": [
+        "<RC_WORKTREE>/evidence/rc/qualified-toolchain-final/fresh/bin/shen-rc",
+        "repl"
+      ],
+      "exit": 0,
+      "seconds": 0.061,
+      "stdout": "22-cli-expression-without-final-newline.out",
+      "stderr": "22-cli-expression-without-final-newline.err"
+    },
+    {
+      "label": "23-cli-missing-eval-option-argument",
+      "command": [
+        "<RC_WORKTREE>/evidence/rc/qualified-toolchain-final/fresh/bin/shen-rc",
+        "eval",
+        "-e"
+      ],
+      "exit": 2,
+      "seconds": 0.058,
+      "stdout": "23-cli-missing-eval-option-argument.out",
+      "stderr": "23-cli-missing-eval-option-argument.err"
+    },
+    {
+      "label": "24-cli-unhandled-error",
+      "command": [
+        "<RC_WORKTREE>/evidence/rc/qualified-toolchain-final/fresh/bin/shen-rc",
+        "eval",
+        "-e",
+        "(simple-error \"toolchain-unhandled\")"
+      ],
+      "exit": 1,
+      "seconds": 0.064,
+      "stdout": "24-cli-unhandled-error.out",
+      "stderr": "24-cli-unhandled-error.err"
+    },
+    {
+      "label": "25-cli-missing-file",
+      "command": [
+        "<RC_WORKTREE>/evidence/rc/qualified-toolchain-final/fresh/bin/shen-rc",
+        "script",
+        "<RC_WORKTREE>/evidence/rc/qualified-toolchain-final/empty-cwd/missing.shen"
+      ],
+      "exit": 1,
+      "seconds": 0.052,
+      "stdout": "25-cli-missing-file.out",
+      "stderr": "25-cli-missing-file.err"
+    },
+    {
+      "label": "26-cli-stream-write",
+      "command": [
+        "<RC_WORKTREE>/evidence/rc/qualified-toolchain-final/fresh/bin/shen-rc",
+        "eval",
+        "-q",
+        "-e",
+        "(let S (open \"<RC_WORKTREE>/evidence/rc/qualified-toolchain-final/empty-cwd/written.txt\" out) (do (pr \"toolchain-stream\" S) (close S)))"
+      ],
+      "exit": 0,
+      "seconds": 0.057,
+      "stdout": "26-cli-stream-write.out",
+      "stderr": "26-cli-stream-write.err"
+    },
+    {
+      "label": "27-cli-script-argv",
+      "command": [
+        "<RC_WORKTREE>/evidence/rc/qualified-toolchain-final/fresh/bin/shen-rc",
+        "script",
+        "<RC_WORKTREE>/evidence/rc/qualified-toolchain-final/empty-cwd/script with spaces.shen",
+        "argument-marker"
+      ],
+      "exit": 0,
+      "seconds": 0.062,
+      "stdout": "27-cli-script-argv.out",
+      "stderr": "27-cli-script-argv.err"
+    },
+    {
+      "label": "28-cli-load-file",
+      "command": [
+        "<RC_WORKTREE>/evidence/rc/qualified-toolchain-final/fresh/bin/shen-rc",
+        "eval",
+        "-q",
+        "-l",
+        "<RC_WORKTREE>/evidence/rc/qualified-toolchain-final/empty-cwd/loaded.shen",
+        "-e",
+        "(if (= (value *toolchain-loaded*) 42) true (simple-error \"load failed\"))"
+      ],
+      "exit": 0,
+      "seconds": 0.054,
+      "stdout": "28-cli-load-file.out",
+      "stderr": "28-cli-load-file.err"
+    },
+    {
+      "label": "29-shen-to-native-build",
+      "command": [
+        "<RC_WORKTREE>/scripts/compile-shen-rc.sh",
+        "<RC_WORKTREE>/evidence/rc/qualified-toolchain-final/pattern-sum.shen",
+        "<RC_WORKTREE>/evidence/rc/qualified-toolchain-final/native-shen"
+      ],
+      "exit": 0,
+      "seconds": 45.099,
+      "stdout": "29-shen-to-native-build.out",
+      "stderr": "29-shen-to-native-build.err"
+    },
+    {
+      "label": "30-shen-source-app-audit",
+      "command": [
+        "<RC_WORKTREE>/scripts/test-rc.sh",
+        "--audit-only",
+        "<RC_WORKTREE>/evidence/rc/qualified-toolchain-final/native-shen/app"
+      ],
+      "exit": 0,
+      "seconds": 0.056,
+      "stdout": "30-shen-source-app-audit.out",
+      "stderr": "30-shen-source-app-audit.err"
+    },
+    {
+      "label": "31-shen-to-native-run",
+      "command": [
+        "<RC_WORKTREE>/evidence/rc/qualified-toolchain-final/native-shen/app"
+      ],
+      "exit": 0,
+      "seconds": 0.271,
+      "stdout": "31-shen-to-native-run.out",
+      "stderr": "31-shen-to-native-run.err"
+    },
+    {
+      "label": "32-unique-100-conservative-build",
+      "command": [
+        "<RC_WORKTREE>/evidence/rc/qualified-toolchain-final/fresh/bin/rc-build",
+        "--conservative-ownership",
+        "<RC_WORKTREE>/evidence/rc/qualified-toolchain-final/native-unique-100-conservative/input",
+        "<RC_WORKTREE>/evidence/rc/qualified-toolchain-final/native-unique-100-conservative/app"
+      ],
+      "exit": 0,
+      "seconds": 0.742,
+      "stdout": "32-unique-100-conservative-build.out",
+      "stderr": "32-unique-100-conservative-build.err"
+    },
+    {
+      "label": "33-unique-100-conservative-audit",
+      "command": [
+        "<RC_WORKTREE>/scripts/test-rc.sh",
+        "--audit-only",
+        "<RC_WORKTREE>/evidence/rc/qualified-toolchain-final/native-unique-100-conservative/app/app"
+      ],
+      "exit": 0,
+      "seconds": 0.056,
+      "stdout": "33-unique-100-conservative-audit.out",
+      "stderr": "33-unique-100-conservative-audit.err"
+    },
+    {
+      "label": "34-unique-100-conservative-run",
+      "command": [
+        "<RC_WORKTREE>/evidence/rc/qualified-toolchain-final/native-unique-100-conservative/app/app"
+      ],
+      "exit": 0,
+      "seconds": 0.121,
+      "stdout": "34-unique-100-conservative-run.out",
+      "stderr": "34-unique-100-conservative-run.err"
+    },
+    {
+      "label": "35-unique-100-optimized-build",
+      "command": [
+        "<RC_WORKTREE>/evidence/rc/qualified-toolchain-final/fresh/bin/rc-build",
+        "<RC_WORKTREE>/evidence/rc/qualified-toolchain-final/native-unique-100-optimized/input",
+        "<RC_WORKTREE>/evidence/rc/qualified-toolchain-final/native-unique-100-optimized/app"
+      ],
+      "exit": 0,
+      "seconds": 0.551,
+      "stdout": "35-unique-100-optimized-build.out",
+      "stderr": "35-unique-100-optimized-build.err"
+    },
+    {
+      "label": "36-unique-100-optimized-audit",
+      "command": [
+        "<RC_WORKTREE>/scripts/test-rc.sh",
+        "--audit-only",
+        "<RC_WORKTREE>/evidence/rc/qualified-toolchain-final/native-unique-100-optimized/app/app"
+      ],
+      "exit": 0,
+      "seconds": 0.055,
+      "stdout": "36-unique-100-optimized-audit.out",
+      "stderr": "36-unique-100-optimized-audit.err"
+    },
+    {
+      "label": "37-unique-100-optimized-run",
+      "command": [
+        "<RC_WORKTREE>/evidence/rc/qualified-toolchain-final/native-unique-100-optimized/app/app"
+      ],
+      "exit": 0,
+      "seconds": 0.116,
+      "stdout": "37-unique-100-optimized-run.out",
+      "stderr": "37-unique-100-optimized-run.err"
+    },
+    {
+      "label": "38-unique-1000-conservative-build",
+      "command": [
+        "<RC_WORKTREE>/evidence/rc/qualified-toolchain-final/fresh/bin/rc-build",
+        "--conservative-ownership",
+        "<RC_WORKTREE>/evidence/rc/qualified-toolchain-final/native-unique-1000-conservative/input",
+        "<RC_WORKTREE>/evidence/rc/qualified-toolchain-final/native-unique-1000-conservative/app"
+      ],
+      "exit": 0,
+      "seconds": 0.572,
+      "stdout": "38-unique-1000-conservative-build.out",
+      "stderr": "38-unique-1000-conservative-build.err"
+    },
+    {
+      "label": "39-unique-1000-conservative-audit",
+      "command": [
+        "<RC_WORKTREE>/scripts/test-rc.sh",
+        "--audit-only",
+        "<RC_WORKTREE>/evidence/rc/qualified-toolchain-final/native-unique-1000-conservative/app/app"
+      ],
+      "exit": 0,
+      "seconds": 0.061,
+      "stdout": "39-unique-1000-conservative-audit.out",
+      "stderr": "39-unique-1000-conservative-audit.err"
+    },
+    {
+      "label": "40-unique-1000-conservative-run",
+      "command": [
+        "<RC_WORKTREE>/evidence/rc/qualified-toolchain-final/native-unique-1000-conservative/app/app"
+      ],
+      "exit": 0,
+      "seconds": 0.114,
+      "stdout": "40-unique-1000-conservative-run.out",
+      "stderr": "40-unique-1000-conservative-run.err"
+    },
+    {
+      "label": "41-unique-1000-optimized-build",
+      "command": [
+        "<RC_WORKTREE>/evidence/rc/qualified-toolchain-final/fresh/bin/rc-build",
+        "<RC_WORKTREE>/evidence/rc/qualified-toolchain-final/native-unique-1000-optimized/input",
+        "<RC_WORKTREE>/evidence/rc/qualified-toolchain-final/native-unique-1000-optimized/app"
+      ],
+      "exit": 0,
+      "seconds": 0.551,
+      "stdout": "41-unique-1000-optimized-build.out",
+      "stderr": "41-unique-1000-optimized-build.err"
+    },
+    {
+      "label": "42-unique-1000-optimized-audit",
+      "command": [
+        "<RC_WORKTREE>/scripts/test-rc.sh",
+        "--audit-only",
+        "<RC_WORKTREE>/evidence/rc/qualified-toolchain-final/native-unique-1000-optimized/app/app"
+      ],
+      "exit": 0,
+      "seconds": 0.277,
+      "stdout": "42-unique-1000-optimized-audit.out",
+      "stderr": "42-unique-1000-optimized-audit.err"
+    },
+    {
+      "label": "43-unique-1000-optimized-run",
+      "command": [
+        "<RC_WORKTREE>/evidence/rc/qualified-toolchain-final/native-unique-1000-optimized/app/app"
+      ],
+      "exit": 0,
+      "seconds": 0.114,
+      "stdout": "43-unique-1000-optimized-run.out",
+      "stderr": "43-unique-1000-optimized-run.err"
+    },
+    {
+      "label": "44-aliased-1000-conservative-build",
+      "command": [
+        "<RC_WORKTREE>/evidence/rc/qualified-toolchain-final/fresh/bin/rc-build",
+        "--conservative-ownership",
+        "<RC_WORKTREE>/evidence/rc/qualified-toolchain-final/native-aliased-1000-conservative/input",
+        "<RC_WORKTREE>/evidence/rc/qualified-toolchain-final/native-aliased-1000-conservative/app"
+      ],
+      "exit": 0,
+      "seconds": 0.552,
+      "stdout": "44-aliased-1000-conservative-build.out",
+      "stderr": "44-aliased-1000-conservative-build.err"
+    },
+    {
+      "label": "45-aliased-1000-conservative-audit",
+      "command": [
+        "<RC_WORKTREE>/scripts/test-rc.sh",
+        "--audit-only",
+        "<RC_WORKTREE>/evidence/rc/qualified-toolchain-final/native-aliased-1000-conservative/app/app"
+      ],
+      "exit": 0,
+      "seconds": 0.054,
+      "stdout": "45-aliased-1000-conservative-audit.out",
+      "stderr": "45-aliased-1000-conservative-audit.err"
+    },
+    {
+      "label": "46-aliased-1000-conservative-run",
+      "command": [
+        "<RC_WORKTREE>/evidence/rc/qualified-toolchain-final/native-aliased-1000-conservative/app/app"
+      ],
+      "exit": 0,
+      "seconds": 0.114,
+      "stdout": "46-aliased-1000-conservative-run.out",
+      "stderr": "46-aliased-1000-conservative-run.err"
+    },
+    {
+      "label": "47-aliased-1000-optimized-build",
+      "command": [
+        "<RC_WORKTREE>/evidence/rc/qualified-toolchain-final/fresh/bin/rc-build",
+        "<RC_WORKTREE>/evidence/rc/qualified-toolchain-final/native-aliased-1000-optimized/input",
+        "<RC_WORKTREE>/evidence/rc/qualified-toolchain-final/native-aliased-1000-optimized/app"
+      ],
+      "exit": 0,
+      "seconds": 0.758,
+      "stdout": "47-aliased-1000-optimized-build.out",
+      "stderr": "47-aliased-1000-optimized-build.err"
+    },
+    {
+      "label": "48-aliased-1000-optimized-audit",
+      "command": [
+        "<RC_WORKTREE>/scripts/test-rc.sh",
+        "--audit-only",
+        "<RC_WORKTREE>/evidence/rc/qualified-toolchain-final/native-aliased-1000-optimized/app/app"
+      ],
+      "exit": 0,
+      "seconds": 0.062,
+      "stdout": "48-aliased-1000-optimized-audit.out",
+      "stderr": "48-aliased-1000-optimized-audit.err"
+    },
+    {
+      "label": "49-aliased-1000-optimized-run",
+      "command": [
+        "<RC_WORKTREE>/evidence/rc/qualified-toolchain-final/native-aliased-1000-optimized/app/app"
+      ],
+      "exit": 0,
+      "seconds": 0.113,
+      "stdout": "49-aliased-1000-optimized-run.out",
+      "stderr": "49-aliased-1000-optimized-run.err"
+    },
+    {
+      "label": "50-capture-conservative-build",
+      "command": [
+        "<RC_WORKTREE>/evidence/rc/qualified-toolchain-final/fresh/bin/rc-build",
+        "--conservative-ownership",
+        "<RC_WORKTREE>/evidence/rc/qualified-toolchain-final/native-capture-conservative/input",
+        "<RC_WORKTREE>/evidence/rc/qualified-toolchain-final/native-capture-conservative/app"
+      ],
+      "exit": 0,
+      "seconds": 0.57,
+      "stdout": "50-capture-conservative-build.out",
+      "stderr": "50-capture-conservative-build.err"
+    },
+    {
+      "label": "51-capture-conservative-audit",
+      "command": [
+        "<RC_WORKTREE>/scripts/test-rc.sh",
+        "--audit-only",
+        "<RC_WORKTREE>/evidence/rc/qualified-toolchain-final/native-capture-conservative/app/app"
+      ],
+      "exit": 0,
+      "seconds": 0.062,
+      "stdout": "51-capture-conservative-audit.out",
+      "stderr": "51-capture-conservative-audit.err"
+    },
+    {
+      "label": "52-capture-conservative-run",
+      "command": [
+        "<RC_WORKTREE>/evidence/rc/qualified-toolchain-final/native-capture-conservative/app/app"
+      ],
+      "exit": 0,
+      "seconds": 0.113,
+      "stdout": "52-capture-conservative-run.out",
+      "stderr": "52-capture-conservative-run.err"
+    },
+    {
+      "label": "53-capture-optimized-build",
+      "command": [
+        "<RC_WORKTREE>/evidence/rc/qualified-toolchain-final/fresh/bin/rc-build",
+        "<RC_WORKTREE>/evidence/rc/qualified-toolchain-final/native-capture-optimized/input",
+        "<RC_WORKTREE>/evidence/rc/qualified-toolchain-final/native-capture-optimized/app"
+      ],
+      "exit": 0,
+      "seconds": 0.575,
+      "stdout": "53-capture-optimized-build.out",
+      "stderr": "53-capture-optimized-build.err"
+    },
+    {
+      "label": "54-capture-optimized-audit",
+      "command": [
+        "<RC_WORKTREE>/scripts/test-rc.sh",
+        "--audit-only",
+        "<RC_WORKTREE>/evidence/rc/qualified-toolchain-final/native-capture-optimized/app/app"
+      ],
+      "exit": 0,
+      "seconds": 0.055,
+      "stdout": "54-capture-optimized-audit.out",
+      "stderr": "54-capture-optimized-audit.err"
+    },
+    {
+      "label": "55-capture-optimized-run",
+      "command": [
+        "<RC_WORKTREE>/evidence/rc/qualified-toolchain-final/native-capture-optimized/app/app"
+      ],
+      "exit": 0,
+      "seconds": 0.117,
+      "stdout": "55-capture-optimized-run.out",
+      "stderr": "55-capture-optimized-run.err"
+    },
+    {
+      "label": "56-last-use-conservative-build",
+      "command": [
+        "<RC_WORKTREE>/evidence/rc/qualified-toolchain-final/fresh/bin/rc-build",
+        "--conservative-ownership",
+        "<RC_WORKTREE>/evidence/rc/qualified-toolchain-final/native-last-use-conservative/input",
+        "<RC_WORKTREE>/evidence/rc/qualified-toolchain-final/native-last-use-conservative/app"
+      ],
+      "exit": 0,
+      "seconds": 0.565,
+      "stdout": "56-last-use-conservative-build.out",
+      "stderr": "56-last-use-conservative-build.err"
+    },
+    {
+      "label": "57-last-use-conservative-audit",
+      "command": [
+        "<RC_WORKTREE>/scripts/test-rc.sh",
+        "--audit-only",
+        "<RC_WORKTREE>/evidence/rc/qualified-toolchain-final/native-last-use-conservative/app/app"
+      ],
+      "exit": 0,
+      "seconds": 0.056,
+      "stdout": "57-last-use-conservative-audit.out",
+      "stderr": "57-last-use-conservative-audit.err"
+    },
+    {
+      "label": "58-last-use-conservative-run",
+      "command": [
+        "<RC_WORKTREE>/evidence/rc/qualified-toolchain-final/native-last-use-conservative/app/app"
+      ],
+      "exit": 0,
+      "seconds": 0.12,
+      "stdout": "58-last-use-conservative-run.out",
+      "stderr": "58-last-use-conservative-run.err"
+    },
+    {
+      "label": "59-last-use-optimized-build",
+      "command": [
+        "<RC_WORKTREE>/evidence/rc/qualified-toolchain-final/fresh/bin/rc-build",
+        "<RC_WORKTREE>/evidence/rc/qualified-toolchain-final/native-last-use-optimized/input",
+        "<RC_WORKTREE>/evidence/rc/qualified-toolchain-final/native-last-use-optimized/app"
+      ],
+      "exit": 0,
+      "seconds": 0.575,
+      "stdout": "59-last-use-optimized-build.out",
+      "stderr": "59-last-use-optimized-build.err"
+    },
+    {
+      "label": "60-last-use-optimized-audit",
+      "command": [
+        "<RC_WORKTREE>/scripts/test-rc.sh",
+        "--audit-only",
+        "<RC_WORKTREE>/evidence/rc/qualified-toolchain-final/native-last-use-optimized/app/app"
+      ],
+      "exit": 0,
+      "seconds": 0.055,
+      "stdout": "60-last-use-optimized-audit.out",
+      "stderr": "60-last-use-optimized-audit.err"
+    },
+    {
+      "label": "61-last-use-optimized-run",
+      "command": [
+        "<RC_WORKTREE>/evidence/rc/qualified-toolchain-final/native-last-use-optimized/app/app"
+      ],
+      "exit": 0,
+      "seconds": 0.116,
+      "stdout": "61-last-use-optimized-run.out",
+      "stderr": "61-last-use-optimized-run.err"
+    },
+    {
+      "label": "62-canonical-host-audit",
+      "command": [
+        "<RC_WORKTREE>/scripts/test-rc.sh",
+        "--audit-only",
+        "<RC_WORKTREE>/obj/rc-certify-20261016T215755.221415Z/host/bin/rc-build"
+      ],
+      "exit": 0,
+      "seconds": 0.054,
+      "stdout": "62-canonical-host-audit.out",
+      "stderr": "62-canonical-host-audit.err"
+    },
+    {
+      "label": "63-canonical-app-audit",
+      "command": [
+        "<RC_WORKTREE>/scripts/test-rc.sh",
+        "--audit-only",
+        "<RC_WORKTREE>/bin/rc-certify-20261016T215755.221415Z/app"
+      ],
+      "exit": 0,
+      "seconds": 0.059,
+      "stdout": "63-canonical-app-audit.out",
+      "stderr": "63-canonical-app-audit.err"
+    }
+  ],
+  "source_sha256": {
+    "src/rc/emit.c": "b8705439e0bbd60cc6fd3f57456351f461b973935b903761c2f4fc9cb12de05a",
+    "src/rc/emit.h": "ae1946b669f771941b12a706316a28090aefd126f54cc687fa00a3b10b322a9f",
+    "src/rc/eval.c": "177229776becca7592459e2ee9625a97bf16cc8fc5feaffabbd3e9c5e455c3dd",
+    "src/rc/eval.h": "40840e20cb00334a7032ef11aec08ce6a0846912ae05dfb0d08e894ba7ad2e15",
+    "src/rc/main.c": "aed4ac89c8aaf338f8519b35554effd251b04d47bbee6dbf5781343097d74275",
+    "src/rc/primitives.c": "3e51bcb2083475e2d07d6cb0ce1b08f9d7a7ee524e74779be2c4a7781f65efc5",
+    "src/rc/primitives.h": "ab8cc324d48775dded4ca6cd49eabd1a99a93fb9ff33e96862cc5243636f0a77",
+    "src/rc/rc.c": "e5d89b2abe397320ba0b2e77afda975f2189af84589bc9daf7da952c155103bf",
+    "src/rc/rc.h": "b77320047d47b013b5064b44d749e80fab11319769145d9e6a676371d9990aec",
+    "src/rc/rc_internal.h": "da618b5f1687911ae775d983fc115007d81e039c8a19b3fcab92c09e9282e438",
+    "src/rc/read.c": "f61444980f2d34d3986f9640103b3478501c4d368f6c2dd5058a4b39b3143667",
+    "src/rc/read.h": "71fb3e8ce757174ee47dde95f732200ae1b023c66f8164ac0a4d82ebb241fea5",
+    "tools/rc-build.c": "66a45cff04708b3a9284a8e07e671f20a1d46da62876ad26adf056d18b7695ca",
+    "Makefile": "dee2ce14e25085f082df7541e5b13185a34d6aaac17a9b7531a59f300d287b33",
+    "Makefile.rc": "2c9ced49d12c113f8b1e2c9dc1bc1f8cada892210d524f8a3275df4a29a60aaa",
+    "scripts/compile-shen-rc.sh": "b09346f06e816cc71d7500637ac105be0e6758bf39c5bb3a4787201aa34cbb36",
+    "scripts/test-rc.sh": "186f2235e766461d2f7a55e4027c84d1834d9a880627ce63f337144e6cbd06b6",
+    "scripts/test-rc-toolchain.sh": "5ac6027395143c98f720d20344bd292607289f3edec00e0b5b421b155e15b5b1",
+    "scripts/rc_native_evidence.py": "fa75f42a7921dbebd20aaf6752c04dcdfd7e08455261a88178be1e1601792810",
+    "test/rc/test_native_evidence.py": "792d25508638badb7e7fedf022425b2e50fe6c2cd189ae0e619431e9c5336202",
+    "shen/src/kl/backend.kl": "8782659640718da06da3e5ee32babfa6036d2d5c1af17d563e20d4db27b13da2",
+    "shen/src/kl/core.kl": "f2477d4151c3ecd2d76c8f2b58ec577a6dc830392e0afd342e2fdb3d1adb1a75",
+    "shen/src/kl/declarations.kl": "fa1f04b92a61167971b3b58a3785b05b79be984f123bb43b4bd03388ee29f5b7",
+    "shen/src/kl/load.kl": "56eba5b674e5085a09dfa38390b1e7f677496e0c601fd3ed6f482577bcf971c9",
+    "shen/src/kl/macros.kl": "617c70c191f07c054e6fc597006477bc57519944c0e27956336e4d72e3e8a2af",
+    "shen/src/kl/prolog.kl": "dc401f8940f7f97fbfc87157338ff8b84fd845c1101b70e6db893886aaf11c17",
+    "shen/src/kl/reader.kl": "97f008caaf51072851cc730620d9bdd816bfd1be70cb22fd502a6b3cb000b269",
+    "shen/src/kl/sequent.kl": "b1018c6d58706f78ac81cc72cf7c4712d36d1be173708ff9def26d0169ddd644",
+    "shen/src/kl/sys.kl": "97412f6584716e2418aea326c1ecf0456a77a205504d078d26936cd5b9370412",
+    "shen/src/kl/t-star.kl": "546928d3435934091fc6df6274a6c9d58ece7297c868fbe55ebe328be360159a",
+    "shen/src/kl/toplevel.kl": "7c0dae226e3fa6a9ca53bd44729774a5f6a8025f2d7fcb43a58ae0e7a2bc46c2",
+    "shen/src/kl/track.kl": "6130a32d6e5c7afed98f20dfbc68eaf7f68c6e2e714114852514d4f604c8ff3f",
+    "shen/src/kl/types.kl": "8b6db3592b829f08a0f35367733adf7c2e686220be699a16b392b4cce4a77c3c",
+    "shen/src/kl/writer.kl": "a1da3d9a287d0d4d78f87517ff11b2ca7690a01bf412dd72178f29ef6e7a4a0d",
+    "shen/src/kl/yacc.kl": "192880765a29ae6801ef9088a7511e4477be998e6c16ab82f3cc3a2087727f00"
+  },
+  "checkout_revision": "827a62826e4297d7ecd6e582642e747b349fa96c",
+  "compiler_version": "Apple clang version 21.0.0 (clang-2100.3.34.2)\nTarget: arm64-apple-darwin27.0.0\nThread model: posix\nInstalledDir: /Library/Developer/CommandLineTools/usr/bin\n",
+  "gc_negative_control_sha256": "c3673fd327c8c74e0485d013fb9f48f004583fa31dcdfe9f7bbcb1db3db11f3b",
+  "host_build": "PASS",
+  "fresh_builder": "<RC_WORKTREE>/evidence/rc/qualified-toolchain-final/fresh/bin/rc-build",
+  "builder_sha256": "c9d8709a3a35d3759eb7d11ea5039307839301a5e526b17ec4eb97c896ff516a",
+  "compiler_audit": "PASS",
+  "cli_build": "PASS",
+  "default_make_without_pkg_config": "PASS",
+  "cli_sha256": "74547a123a1edc904f7b24f8c395a178170acc2525c7b784119f651b96fb09ca",
+  "cli_smoke": "PASS",
+  "native_definition_evidence": {
+    "toolchain-sum": {
+      "callback": "rc_native_1869",
+      "body": "rc_native_body_1869",
+      "body_sha256": "78bae27a5bee20623e18f5e2db975e967ea3e8bd20021be6d17ea9b43489ef79"
+    },
+    "toolchain-invoke": {
+      "callback": "rc_native_1871",
+      "body": "rc_native_body_1871",
+      "body_sha256": "af3e1613f46d80cb7b05377ccc0e33488ff4836873dd3b864d7d50fd22b8e94e"
+    }
+  },
+  "shen_pipeline": {
+    "status": "PASS",
+    "native_scope": "registered toolchain-sum and toolchain-invoke callback bodies",
+    "input_sha256": "e960d0b574234dd7506ec5134423a7118cfcffbbbea7006224ce7938d5f15f9c",
+    "kl_sha256": "1dd74ae44cb50add33119690c25a4005eea22df8e9d8071d6172f79ddc125b93",
+    "events_sha256": "64b47cf42dcea04c11a730e705a23154e0042c47f886f8164bc404e9e1081e40",
+    "c_sha256": "9e544e059463713e94ae231283ca62046e72184f767e965f2a543115f220c5a2",
+    "artifact_sha256": "bb06c2089dfa767bf0a6de0d9ce44a6105a5298cf0b4ee20fe2da82e6e766639",
+    "frontend_receipt": {
+      "release_manifest_sha256": "c20ce7e0c5f98b3d427ce6db4045b6a9ac335f5d7cfd592333baee7061f69f46",
+      "kernel_version": "43.1",
+      "source": "<RC_WORKTREE>/evidence/rc/qualified-toolchain-final/pattern-sum.shen",
+      "source_sha256": "e960d0b574234dd7506ec5134423a7118cfcffbbbea7006224ce7938d5f15f9c",
+      "cwd": "<RC_WORKTREE>",
+      "kernel_sha256": {
+        "shen/src/kl/sys.kl": "97412f6584716e2418aea326c1ecf0456a77a205504d078d26936cd5b9370412",
+        "shen/src/kl/writer.kl": "a1da3d9a287d0d4d78f87517ff11b2ca7690a01bf412dd72178f29ef6e7a4a0d",
+        "shen/src/kl/core.kl": "f2477d4151c3ecd2d76c8f2b58ec577a6dc830392e0afd342e2fdb3d1adb1a75",
+        "shen/src/kl/reader.kl": "97f008caaf51072851cc730620d9bdd816bfd1be70cb22fd502a6b3cb000b269",
+        "shen/src/kl/declarations.kl": "fa1f04b92a61167971b3b58a3785b05b79be984f123bb43b4bd03388ee29f5b7",
+        "shen/src/kl/toplevel.kl": "7c0dae226e3fa6a9ca53bd44729774a5f6a8025f2d7fcb43a58ae0e7a2bc46c2",
+        "shen/src/kl/macros.kl": "617c70c191f07c054e6fc597006477bc57519944c0e27956336e4d72e3e8a2af",
+        "shen/src/kl/load.kl": "56eba5b674e5085a09dfa38390b1e7f677496e0c601fd3ed6f482577bcf971c9",
+        "shen/src/kl/prolog.kl": "dc401f8940f7f97fbfc87157338ff8b84fd845c1101b70e6db893886aaf11c17",
+        "shen/src/kl/sequent.kl": "b1018c6d58706f78ac81cc72cf7c4712d36d1be173708ff9def26d0169ddd644",
+        "shen/src/kl/track.kl": "6130a32d6e5c7afed98f20dfbc68eaf7f68c6e2e714114852514d4f604c8ff3f",
+        "shen/src/kl/t-star.kl": "546928d3435934091fc6df6274a6c9d58ece7297c868fbe55ebe328be360159a",
+        "shen/src/kl/yacc.kl": "192880765a29ae6801ef9088a7511e4477be998e6c16ab82f3cc3a2087727f00",
+        "shen/src/kl/types.kl": "8b6db3592b829f08a0f35367733adf7c2e686220be699a16b392b4cce4a77c3c"
+      },
+      "compiler_sha256": {
+        "cli": "74547a123a1edc904f7b24f8c395a178170acc2525c7b784119f651b96fb09ca",
+        "builder": "c9d8709a3a35d3759eb7d11ea5039307839301a5e526b17ec4eb97c896ff516a"
+      },
+      "conservative_ownership": false,
+      "acyclic_requested": false,
+      "source_transport": "escaped-v1",
+      "frontend": "compiled standard kernel read-file then shen.shen->kl-h; fresh bootstrap context",
+      "frontend_seconds": 0.111,
+      "build_seconds": 44.867,
+      "kl_sha256": "1dd74ae44cb50add33119690c25a4005eea22df8e9d8071d6172f79ddc125b93",
+      "source_events_sha256": "64b47cf42dcea04c11a730e705a23154e0042c47f886f8164bc404e9e1081e40",
+      "artifact_sha256": "bb06c2089dfa767bf0a6de0d9ce44a6105a5298cf0b4ee20fe2da82e6e766639",
+      "output_sha256": {
+        "app.c": "9e544e059463713e94ae231283ca62046e72184f767e965f2a543115f220c5a2",
+        "Makefile": "c8c2a6e708f3360f187abaadd454c223cc68b2a7f4339ee1262474af3041cd4d",
+        "app": "bb06c2089dfa767bf0a6de0d9ce44a6105a5298cf0b4ee20fe2da82e6e766639",
+        "source.kl": "1dd74ae44cb50add33119690c25a4005eea22df8e9d8071d6172f79ddc125b93",
+        "source-events.kl": "64b47cf42dcea04c11a730e705a23154e0042c47f886f8164bc404e9e1081e40"
+      },
+      "acyclic_forced_by_makefile": false
+    }
+  },
+  "native_measurements": {
+    "unique-100": {
+      "conservative": {
+        "live_objects": 148,
+        "live_bytes": 20108,
+        "peak_objects": 350,
+        "retain_calls": 10137,
+        "release_calls": 10839,
+        "pair_allocations": 200,
+        "pair_reuse_attempts": 0,
+        "pair_reuses": 0,
+        "pair_reuse_misses": 0,
+        "pair_tail_transfers": 0,
+        "pair_tail_shares": 0,
+        "capture_edges_created": 69,
+        "live_capture_edges": 57,
+        "peak_capture_edges": 58,
+        "cached_objects": 202,
+        "cached_bytes": 25856,
+        "peak_cached_bytes": 25856,
+        "system_allocations": 350,
+        "system_frees": 0,
+        "collections": 0,
+        "acyclic_collections": 0,
+        "cycle_objects_freed": 0,
+        "artifact_sha256": "051c11fcad48c1839709de764154ec6c5e96e4d919b4875e0de9b7beee4354d5",
+        "source_sha256": "aa79064b1f51d243c4699f49c0531626162f772b44001870c18166b8d5a92a1f"
+      },
+      "optimized": {
+        "live_objects": 148,
+        "live_bytes": 20108,
+        "peak_objects": 251,
+        "retain_calls": 3320,
+        "release_calls": 3520,
+        "pair_allocations": 100,
+        "pair_reuse_attempts": 200,
+        "pair_reuses": 100,
+        "pair_reuse_misses": 100,
+        "pair_tail_transfers": 100,
+        "pair_tail_shares": 0,
+        "capture_edges_created": 69,
+        "live_capture_edges": 57,
+        "peak_capture_edges": 58,
+        "cached_objects": 103,
+        "cached_bytes": 13184,
+        "peak_cached_bytes": 13184,
+        "system_allocations": 251,
+        "system_frees": 0,
+        "collections": 0,
+        "acyclic_collections": 0,
+        "cycle_objects_freed": 0,
+        "artifact_sha256": "def2e89dee8645c9104849488381f6a11c50372c2acc448d82b5c118660fa634",
+        "source_sha256": "3cd89a9dac6b29deb8206afb12d456662df9c2ba423a15469e424d0c0dc17357"
+      }
+    },
+    "unique-1000": {
+      "conservative": {
+        "live_objects": 148,
+        "live_bytes": 20108,
+        "peak_objects": 2150,
+        "retain_calls": 99237,
+        "release_calls": 106239,
+        "pair_allocations": 2000,
+        "pair_reuse_attempts": 0,
+        "pair_reuses": 0,
+        "pair_reuse_misses": 0,
+        "pair_tail_transfers": 0,
+        "pair_tail_shares": 0,
+        "capture_edges_created": 69,
+        "live_capture_edges": 57,
+        "peak_capture_edges": 58,
+        "cached_objects": 1024,
+        "cached_bytes": 131072,
+        "peak_cached_bytes": 131072,
+        "system_allocations": 2150,
+        "system_frees": 978,
+        "collections": 1,
+        "acyclic_collections": 1,
+        "cycle_objects_freed": 0,
+        "artifact_sha256": "e54145b4a37b943af7ddec3699e6231b7b2e7330e6fef07cf2e832ddb1015c2d",
+        "source_sha256": "3e67d2d91a6cda0c467856bb8d7840123292f02712af368f72527e1fae9cb4a4"
+      },
+      "optimized": {
+        "live_objects": 148,
+        "live_bytes": 20108,
+        "peak_objects": 1151,
+        "retain_calls": 31220,
+        "release_calls": 33220,
+        "pair_allocations": 1000,
+        "pair_reuse_attempts": 2000,
+        "pair_reuses": 1000,
+        "pair_reuse_misses": 1000,
+        "pair_tail_transfers": 1000,
+        "pair_tail_shares": 0,
+        "capture_edges_created": 69,
+        "live_capture_edges": 57,
+        "peak_capture_edges": 58,
+        "cached_objects": 1003,
+        "cached_bytes": 128384,
+        "peak_cached_bytes": 128384,
+        "system_allocations": 1151,
+        "system_frees": 0,
+        "collections": 0,
+        "acyclic_collections": 0,
+        "cycle_objects_freed": 0,
+        "artifact_sha256": "3a85b18cdc9df2be7a0cff97c6a78eed12cef16b2f2a944a4445d937e0d187d4",
+        "source_sha256": "87c14d48977fcfea51c00f87d44f106a04b9d5d76b0a5d283bcee10557cb654c"
+      }
+    },
+    "aliased-1000": {
+      "conservative": {
+        "live_objects": 148,
+        "live_bytes": 20108,
+        "peak_objects": 2151,
+        "retain_calls": 91230,
+        "release_calls": 97233,
+        "pair_allocations": 2000,
+        "pair_reuse_attempts": 0,
+        "pair_reuses": 0,
+        "pair_reuse_misses": 0,
+        "pair_tail_transfers": 0,
+        "pair_tail_shares": 0,
+        "capture_edges_created": 69,
+        "live_capture_edges": 57,
+        "peak_capture_edges": 58,
+        "cached_objects": 1024,
+        "cached_bytes": 131072,
+        "peak_cached_bytes": 131072,
+        "system_allocations": 2151,
+        "system_frees": 979,
+        "collections": 1,
+        "acyclic_collections": 1,
+        "cycle_objects_freed": 0,
+        "artifact_sha256": "98bab379562a78d64a2430bfa1fcde954acb1f440e5605a5d1bc6df9403ffb59",
+        "source_sha256": "5c3ec47d60897cbc925727cd0fd989de302344450dfd3b5bdb3206056760a912"
+      },
+      "optimized": {
+        "live_objects": 148,
+        "live_bytes": 20108,
+        "peak_objects": 2149,
+        "retain_calls": 31215,
+        "release_calls": 35216,
+        "pair_allocations": 2000,
+        "pair_reuse_attempts": 2000,
+        "pair_reuses": 0,
+        "pair_reuse_misses": 2000,
+        "pair_tail_transfers": 0,
+        "pair_tail_shares": 1000,
+        "capture_edges_created": 69,
+        "live_capture_edges": 57,
+        "peak_capture_edges": 58,
+        "cached_objects": 1024,
+        "cached_bytes": 131072,
+        "peak_cached_bytes": 131072,
+        "system_allocations": 2149,
+        "system_frees": 977,
+        "collections": 1,
+        "acyclic_collections": 1,
+        "cycle_objects_freed": 0,
+        "artifact_sha256": "114f130a569c2b01798add8ef8bc3b38c07916ee6d90227b13b5ef4ced585aab",
+        "source_sha256": "9c4abfff95c384c377700a3c73177816bcf94ea3ced129027db95b49f4985ff3"
+      }
+    },
+    "capture": {
+      "conservative": {
+        "live_objects": 150,
+        "live_bytes": 20377,
+        "peak_objects": 1153,
+        "retain_calls": 11223,
+        "release_calls": 13226,
+        "pair_allocations": 1000,
+        "pair_reuse_attempts": 0,
+        "pair_reuses": 0,
+        "pair_reuse_misses": 0,
+        "pair_tail_transfers": 0,
+        "pair_tail_shares": 0,
+        "capture_edges_created": 71,
+        "live_capture_edges": 57,
+        "peak_capture_edges": 59,
+        "cached_objects": 1003,
+        "cached_bytes": 128384,
+        "peak_cached_bytes": 128384,
+        "system_allocations": 1153,
+        "system_frees": 0,
+        "collections": 0,
+        "acyclic_collections": 0,
+        "cycle_objects_freed": 0,
+        "artifact_sha256": "3f57a5852947cdb5da057687e1401a0ae138af7c7d9a149f1bb37453a8cf4f08",
+        "source_sha256": "1a9e2cbca5a14e8e21616e4a2a86ff16a0e9c9d6e0d007faa8ef6e9a6d361f26"
+      },
+      "optimized": {
+        "live_objects": 150,
+        "live_bytes": 20377,
+        "peak_objects": 1151,
+        "retain_calls": 4215,
+        "release_calls": 5218,
+        "pair_allocations": 1000,
+        "pair_reuse_attempts": 1000,
+        "pair_reuses": 0,
+        "pair_reuse_misses": 1000,
+        "pair_tail_transfers": 0,
+        "pair_tail_shares": 0,
+        "capture_edges_created": 70,
+        "live_capture_edges": 57,
+        "peak_capture_edges": 58,
+        "cached_objects": 1001,
+        "cached_bytes": 128128,
+        "peak_cached_bytes": 128128,
+        "system_allocations": 1151,
+        "system_frees": 0,
+        "collections": 0,
+        "acyclic_collections": 0,
+        "cycle_objects_freed": 0,
+        "artifact_sha256": "a8658561219a8aed0a805800edb6f3c174ecc13816373a3538ce9c420a158be7",
+        "source_sha256": "a2ae313733d79042197e3cfd67ba7c491e7d7ef51faf4eebf4701f51632a8b27"
+      }
+    },
+    "last-use": {
+      "conservative": {
+        "live_objects": 150,
+        "live_bytes": 20372,
+        "peak_objects": 2153,
+        "retain_calls": 22232,
+        "release_calls": 26235,
+        "pair_allocations": 2000,
+        "pair_reuse_attempts": 0,
+        "pair_reuses": 0,
+        "pair_reuse_misses": 0,
+        "pair_tail_transfers": 0,
+        "pair_tail_shares": 0,
+        "capture_edges_created": 69,
+        "live_capture_edges": 57,
+        "peak_capture_edges": 58,
+        "cached_objects": 1024,
+        "cached_bytes": 131072,
+        "peak_cached_bytes": 131072,
+        "system_allocations": 2153,
+        "system_frees": 979,
+        "collections": 1,
+        "acyclic_collections": 1,
+        "cycle_objects_freed": 0,
+        "artifact_sha256": "e162238b9224661dc9302d585321de0b3b6fda24877f4b397340912670f3ef23",
+        "source_sha256": "baf1a0fed4734f6d29dff37030bed9be054576f7511f4e80e22951553e1eba6c"
+      },
+      "optimized": {
+        "live_objects": 150,
+        "live_bytes": 20372,
+        "peak_objects": 1152,
+        "retain_calls": 8217,
+        "release_calls": 10219,
+        "pair_allocations": 2000,
+        "pair_reuse_attempts": 2000,
+        "pair_reuses": 0,
+        "pair_reuse_misses": 2000,
+        "pair_tail_transfers": 0,
+        "pair_tail_shares": 0,
+        "capture_edges_created": 69,
+        "live_capture_edges": 57,
+        "peak_capture_edges": 58,
+        "cached_objects": 1002,
+        "cached_bytes": 128256,
+        "peak_cached_bytes": 128256,
+        "system_allocations": 1152,
+        "system_frees": 0,
+        "collections": 0,
+        "acyclic_collections": 0,
+        "cycle_objects_freed": 0,
+        "artifact_sha256": "56302fc8320424144ff50967d0faa6ec6dc155b5bcb0f57daf10e16c2f18b7a0",
+        "source_sha256": "bef41a8f049c5837342f4ecd3cede7cac97a70fb2727ec761938f612c5d774b6"
+      }
+    }
+  },
+  "optimizer": "PASS",
+  "canonical_receipt": "<RC_WORKTREE>/evidence/rc/certify-20261016T215755.221415Z/result.json",
+  "canonical_receipt_sha256": "c90fb7eeeae0ba2d62026d0e01cfe803abac44b9618fa3ca537cedddd9f3fcfd",
+  "source_unchanged": true,
+  "ended_utc": "2026-10-16T22:04:01.855193+00:00"
+}

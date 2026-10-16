@@ -18,6 +18,12 @@ Their implemented scope and evidence are described in
 [RC-BACKEND.md](docs/RC-BACKEND.md) and
 [the validation record](docs/rc-validation.md).
 
+The current 43.1 candidate passes all 136 suite assertions, fatal sanitizer
+qualification, Make/CMake, and the installed Darwin Nix checks. The performance
+target remains **OPEN**: two five-pair batches were 10.3% and 8.1% slower in user
+CPU than rebuilt Boehm, with about 58% lower peak RSS. Linux and remote CI remain
+unverified. See the [43.1 qualification record](docs/qualification/shen-43.1-continuation.md).
+
 The historical four alternating full S42 pairs passed 134/0 for both implementations.
 RC remained 0.9% slower in paired wall time and 4.1% slower in paired user CPU,
 with 62.9% lower peak memory. Other host workloads affected timing; this does not

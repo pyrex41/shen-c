@@ -19,7 +19,7 @@ enum Op {
  P_CLOSE, P_TIME, P_ADD, P_SUB, P_MUL, P_DIV, P_GT, P_LT, P_GE, P_LE,
  P_NUMBER, P_SYMBOL, P_BOOLEAN, P_INTEGER, P_VARIABLE, P_NOT, P_VALUEOR,
  P_VGETOR, P_CHAROUT, P_CHARIN, P_WRITESTR, P_PR, P_FUNCTION, P_EXIT,
- P_GC, P_READCHARS, P_DO
+ P_GC, P_READCHARS, P_DO, P_CHARSTREAM, P_READUNIT
 };
 struct Primitive { const char *name; size_t arity; enum Op op; };
 static const struct Primitive core[] = {
@@ -35,7 +35,9 @@ static const struct Primitive core[] = {
  {"+",2,P_ADD},{"-",2,P_SUB},{"*",2,P_MUL},{"/",2,P_DIV},
  {">",2,P_GT},{"<",2,P_LT},{">=",2,P_GE},{"<=",2,P_LE},
  {"number?",1,P_NUMBER},{"function",1,P_FUNCTION},{"exit",1,P_EXIT},
- {"shen.gc",0,P_GC},{"do",2,P_DO}
+ {"shen.gc",0,P_GC},{"do",2,P_DO},
+ {"char-stream?",1,P_CHARSTREAM},{"read-unit-string",1,P_READUNIT},
+ {"write-string",2,P_WRITESTR},{"shen.read-unit-string",1,P_READUNIT}
 };
 static const struct Primitive overwrites[] = {
  {"symbol?",1,P_SYMBOL},{"boolean?",1,P_BOOLEAN},{"integer?",1,P_INTEGER},
@@ -173,6 +175,16 @@ static RcValue *primitive_op(RcContext *c,RcValue *self,enum Op op,
  case P_READ:{
   if(rc_type(a)!=RC_STREAM||!rc_stream_file(a)||!rc_stream_is_input(a))return rc_error(c,"read-byte requires open stream");
   int byte=fgetc(rc_stream_file(a));if(byte==EOF&&ferror(rc_stream_file(a)))return rc_error(c,"Failed to read byte");return rc_integer(c,byte==EOF?-1:byte);}
+ case P_CHARSTREAM:
+  /* This port exposes byte-oriented streams, including standard input/output.
+   * 43.1 uses this public predicate to select its byte reader/writer path. */
+  if(rc_type(a)!=RC_STREAM)return rc_error(c,"char-stream? expects a stream");
+  return rc_false(c);
+ case P_READUNIT:{
+  if(rc_type(a)!=RC_STREAM||!rc_stream_file(a)||!rc_stream_is_input(a))return rc_error(c,"read-unit-string requires open input stream");
+  int byte=fgetc(rc_stream_file(a));
+  if(byte==EOF)return rc_error(c,ferror(rc_stream_file(a))?"Failed to read unit string":"read-unit-string: end of stream");
+  char unit=(char)(unsigned char)byte;return rc_string_n(c,&unit,1);}
  case P_OPEN:return open_file(c,a,b);
  case P_CLOSE:return rc_stream_close(c,a)?rc_nil():NULL;
  case P_TIME:

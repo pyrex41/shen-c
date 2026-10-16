@@ -60,3 +60,13 @@ else:
 spoof = 't[9]=rc_string(ctx,"rc_function_set(ctx,t[0],t[1]); t[0]=rc_eval(ctx,argv[0]); static RcValue *rc_native_99() { }");'
 assert native_definition_evidence(source.replace('return t[0];', spoof + ' return t[0];'), 'proof')['body'] == 'rc_native_body_1'
 print('RC native evidence: cached-symbol wrapper, conservative registration and literal spoof controls PASS; %d negative controls rejected' % (len(controls)+1))
+
+# The exact identity constructor has an implicit arity of two, for both ABIs.
+for constructor in ('rc_closure_return_second','rc_closure_return_second_owned'):
+    identity_source=source.replace('rc_closure_owned(ctx,1,rc_native_1,0,NULL)',constructor+'(ctx,rc_native_1,0,NULL)').replace('if(argc!=1)','if(argc!=2)')
+    assert native_definition_evidence(identity_source,'proof')['body']=='rc_native_body_1'
+    for wrong in [identity_source.replace('if(argc!=2)','if(argc!=1)'),identity_source.replace('return rc_native_body_1(ctx,self,argv)','return rc_native_body_9(ctx,self,argv)'),identity_source.replace('rc_retain(argv[0])','rc_eval(ctx,argv[0])')]:
+        try:native_definition_evidence(wrong,'proof')
+        except ValueError:pass
+        else:raise AssertionError('bad identity constructor body accepted')
+print('Native identity constructor controls: both ABIs and arity/body/eval rejection PASS')

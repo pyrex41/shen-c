@@ -1,7 +1,7 @@
 {
   "archive_url": "https://www.shenlanguage.org/Download/S43.zip",
   "archive_sha256": "195537eb3480363313678594897d4d8cf6399b484afab0d68cf180e725c52d40",
-  "excluded": "Optional Lib applications, platform-specific Lisp primitives and UI assets",
+  "excluded": "Optional Lib applications, unselected platform-specific Lisp primitives and UI assets",
   "files": [
     {
       "archive_path": "S43/install.lsp",
@@ -578,6 +578,30 @@
       "path": "shen/src/kl/yacc.kl",
       "bytes": 16716,
       "sha256": "192880765a29ae6801ef9088a7511e4477be998e6c16ab82f3cc3a2087727f00"
+    },
+    {
+      "archive_path": "S43/Primitives/char-stream.lsp",
+      "path": "shen/releases/s43.1/reference-primitives/char-stream.lsp",
+      "bytes": 191,
+      "sha256": "56f3bf0878ce4841b28ac76043e2d8bd83455003c8fea9fe1846272ee8cab03e"
+    },
+    {
+      "archive_path": "S43/Primitives/read-unit-string.lsp",
+      "path": "shen/releases/s43.1/reference-primitives/read-unit-string.lsp",
+      "bytes": 157,
+      "sha256": "4212cdfd31c5e29767d5a1e8ddf614a6a90bb47aaba423bff6e7f2ad89defb06"
+    },
+    {
+      "archive_path": "S43/Primitives/write-string.lsp",
+      "path": "shen/releases/s43.1/reference-primitives/write-string.lsp",
+      "bytes": 187,
+      "sha256": "20a3cac7c6433d1dd680961699d5d0b86fa04f4319f15f1f6af2afe6c89e0a4c"
+    },
+    {
+      "archive_path": "S43/Primitives/LICENSE",
+      "path": "shen/releases/s43.1/reference-primitives/LICENSE",
+      "bytes": 1429,
+      "sha256": "9ea6a79fa0aad8bb3c018bb099832f997e1ccfdb5433a0a75b50269062b29211"
     }
   ]
 }
