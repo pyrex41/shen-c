@@ -18,6 +18,9 @@ import sys
 import time
 
 root = Path(os.environ['RC_TOOLCHAIN_ROOT']).resolve()
+sys.dont_write_bytecode = True
+sys.path.insert(0, str(root / 'scripts'))
+from rc_native_evidence import native_definition_evidence
 parser = argparse.ArgumentParser(prog='scripts/test-rc-toolchain.sh', description='Fresh standalone RC toolchain acceptance; never runs canonical suite itself.')
 parser.add_argument('--out', type=Path, help='New evidence directory; must not already exist.')
 parser.add_argument('--gc-negative-control', type=Path, default=Path(os.environ['RC_GC_NEGATIVE']) if os.environ.get('RC_GC_NEGATIVE') else None,
@@ -57,7 +60,7 @@ def digest(path):
 
 def snapshot():
     paths = sorted((root / 'src/rc').glob('*.[ch]'))
-    paths += [root / name for name in ('tools/rc-build.c', 'Makefile', 'Makefile.rc', 'scripts/compile-shen-rc.sh', 'scripts/test-rc.sh', 'scripts/test-rc-toolchain.sh')]
+    paths += [root / name for name in ('tools/rc-build.c', 'Makefile', 'Makefile.rc', 'scripts/compile-shen-rc.sh', 'scripts/test-rc.sh', 'scripts/test-rc-toolchain.sh', 'scripts/rc_native_evidence.py', 'test/rc/test_native_evidence.py')]
     paths += sorted((root / 'shen/src/kl').glob('*.kl'))
     return {str(p.relative_to(root)): digest(p) for p in paths}
 
@@ -110,37 +113,13 @@ def audit(label, binary, expect_gc=False, synthetic=False):
 
 
 def native_evidence(label, source_path, symbol=None):
-    c_source = source_path.read_text()
-    headers = list(re.finditer(r'static\s+RcValue\s*\*\s*rc_native_(\d+)\s*\([^;{}]*\)\s*\{', c_source))
-    check(bool(headers), '%s has native C function bodies' % label)
-    selected = c_source
+    try:
+        evidence = native_definition_evidence(source_path.read_text(), symbol)
+    except ValueError as error:
+        raise RuntimeError('%s native evidence rejected: %s' % (label, error)) from error
     if symbol is not None:
-        # The complete kernel legitimately contains eval-kl. Follow the user's
-        # function registration to its actual callback and inspect that body.
-        bodies = {}
-        for header in headers:
-            end = c_source.find('\n}\n', header.end())
-            if end < 0:
-                raise RuntimeError('%s native callback body boundary is missing' % label)
-            bodies[header.group(1)] = c_source[header.end():end]
-        callbacks = []
-        name_pattern = r't\[(\d+)\]\s*=\s*rc_symbol\(ctx,' + re.escape(json.dumps(symbol)) + r'\);'
-        for body in bodies.values():
-            for name in re.finditer(name_pattern, body):
-                rest = body[name.end():]
-                setter = re.search(r'rc_function_set\(ctx,t\[' + name.group(1) + r'\],t\[(\d+)\]\)', rest)
-                if setter:
-                    closure = re.search(r't\[' + setter.group(1) + r'\]\s*=\s*rc_closure(?:_owned)?\(ctx,\d+,rc_native_(\d+),', rest[:setter.start()])
-                    if closure:
-                        callbacks.append(closure.group(1))
-        check(len(callbacks) == 1 and callbacks[0] in bodies,
-              '%s registration identifies exactly one actual native callback' % label)
-        selected = bodies[callbacks[0]]
-        record.setdefault('native_definition_evidence', {})[symbol] = {
-            'callback': 'rc_native_' + callbacks[0],
-            'body_sha256': hashlib.sha256(selected.encode()).hexdigest()}
-    check(not re.search(r'\b(?:rc_eval\w*|eval_kl\w*|shen_eval\w*)\s*\(', selected) and '"eval-kl"' not in selected,
-          '%s has no source-evaluator forwarding body' % label)
+        record.setdefault('native_definition_evidence', {})[symbol] = evidence
+    check(True, '%s selected native C body has value operations and no direct source-evaluator forwarding' % label)
 
 
 def cli_case(name, argv, expected=None, *, fail=False, data=None, contains=None):
@@ -163,6 +142,7 @@ def cli_case(name, argv, expected=None, *, fail=False, data=None, contains=None)
 
 save()
 try:
+    run('native-evidence-controls', [sys.executable, root / 'test/rc/test_native_evidence.py'], timeout=30)
     record['source_sha256'] = snapshot()
     _, revision, _ = run('checkout-revision', ['git', 'rev-parse', 'HEAD'], timeout=10)
     record['checkout_revision'] = revision.strip()
