@@ -46,10 +46,25 @@ with tempfile.TemporaryDirectory(prefix='shen-rc-compaction.') as tmp:
         if build.returncode:
             raise SystemExit('%s build failed:\n%s\n%s' % (mode,build.stdout,build.stderr))
         code = (app / 'app.c').read_text()
-        function = re.search(r'static RcValue \*rc_native_1\([^\n]+\) \{(.*?)\n\}', code, re.S)
-        assert function, mode
-        count = re.search(r'(?:RcValue \*t\[|RcValue \*\*a=t\+)(\d+)', function[1])
-        assert count, function[1]
+        def single_function(name):
+            functions = re.findall(r'static RcValue \*' + re.escape(name) +
+                                   r'\([^\n]+\) \{(.*?)\n\}', code, re.S)
+            assert len(functions) == 1, (mode, name, len(functions))
+            return functions[0]
+        callback = single_function('rc_native_1')
+        guard = r'if\(argc!=1\) return rc_error\(ctx,"native arity mismatch"\);'
+        if mode == 'optimized':
+            # Public callbacks validate the runtime ABI before delegating to a
+            # single internal body, which owns the compacted frame.
+            assert re.fullmatch(r'\s*' + guard +
+                                r'\s*return rc_native_body_1\(ctx,self,argv\);\s*', callback), callback
+            function = single_function('rc_native_body_1')
+        else:
+            assert re.search(guard, callback), callback
+            assert not re.search(r'static RcValue \*rc_native_body_1\(', code), mode
+            function = callback
+        count = re.search(r'(?:RcValue \*t\[|RcValue \*\*a=t\+)(\d+)', function)
+        assert count, function
         frames[mode] = int(count[1])
         run = subprocess.run([str(app / 'app')], env=dict(env, SHEN_RC_PRINT='1'),
                              capture_output=True, text=True, timeout=30)
