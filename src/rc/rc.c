@@ -953,34 +953,42 @@ static RcValue *apply_request(RcContext *ctx, RcValue *request) {
             }
             size_t n = target->as.closure.arity;
             if (n > SIZE_MAX / sizeof(RcValue *)) { rc_error(ctx, "call size overflow"); rc_release(resolved); goto fail; }
-            RcValue *small_actual[8];
-            RcValue **actual = n <= 8 ? small_actual : malloc(n * sizeof(*actual));
-            if (!actual) { rc_error(ctx, "out of memory"); rc_release(resolved); goto fail; }
-            size_t bound = target->as.closure.bound_count;
-            if (target->as.closure.owned_native) {
-                /* Bound arguments remain closure-owned and are shared here.
-                 * Unbound request edges become owned C slots without changing
-                 * counts. Nil replaces transferred graph slots before callback
-                 * entry, so any callback safepoint sees a valid heap and roots. */
-                for (size_t i = 0; i < bound; ++i) actual[i] = rc_retain(target->as.closure.bound[i]);
-                for (size_t i = 0; i < needed; ++i) {
-                    if (request->refs == 1) {
-                        actual[bound + i] = request->as.tail.argv[i];
-                        request->as.tail.argv[i] = rc_nil();
-                    } else {
-                        /* Tail values may themselves be captured/shared.
-                         * Executing one must not consume its reusable args. */
-                        actual[bound + i] = rc_retain(request->as.tail.argv[i]);
-                    }
-                }
-                result = target->as.closure.owned_native(ctx, target, n, actual);
-                consume_arguments(n, actual);
+            if (!target->as.closure.owned_native && !target->as.closure.bound_count) {
+                /* Borrowed callbacks cannot change the slots. The request
+                 * stays rooted through callback return, including collection
+                 * and repeated execution of a shared request. Excess args
+                 * already have their own pending root; only n are exposed. */
+                result = target->as.closure.native(ctx, target, n, request->as.tail.argv);
             } else {
-                for (size_t i = 0; i < bound; ++i) actual[i] = target->as.closure.bound[i];
-                for (size_t i = 0; i < needed; ++i) actual[bound + i] = request->as.tail.argv[i];
-                result = target->as.closure.native(ctx, target, n, actual);
+                RcValue *small_actual[8];
+                RcValue **actual = n <= 8 ? small_actual : malloc(n * sizeof(*actual));
+                if (!actual) { rc_error(ctx, "out of memory"); rc_release(resolved); goto fail; }
+                size_t bound = target->as.closure.bound_count;
+                if (target->as.closure.owned_native) {
+                    /* Bound arguments remain closure-owned and are shared here.
+                     * Unbound request edges become owned C slots without changing
+                     * counts. Nil replaces transferred graph slots before callback
+                     * entry, so any callback safepoint sees a valid heap and roots. */
+                    for (size_t i = 0; i < bound; ++i) actual[i] = rc_retain(target->as.closure.bound[i]);
+                    for (size_t i = 0; i < needed; ++i) {
+                        if (request->refs == 1) {
+                            actual[bound + i] = request->as.tail.argv[i];
+                            request->as.tail.argv[i] = rc_nil();
+                        } else {
+                            /* Tail values may themselves be captured/shared.
+                             * Executing one must not consume its reusable args. */
+                            actual[bound + i] = rc_retain(request->as.tail.argv[i]);
+                        }
+                    }
+                    result = target->as.closure.owned_native(ctx, target, n, actual);
+                    consume_arguments(n, actual);
+                } else {
+                    for (size_t i = 0; i < bound; ++i) actual[i] = target->as.closure.bound[i];
+                    for (size_t i = 0; i < needed; ++i) actual[bound + i] = request->as.tail.argv[i];
+                    result = target->as.closure.native(ctx, target, n, actual);
+                }
+                if (actual != small_actual) free(actual);
             }
-            if (actual != small_actual) free(actual);
         }
         rc_release(resolved);
         rc_release(request); request = NULL;

@@ -47,6 +47,82 @@ static RcValue *last_owned(RcContext *ctx,RcValue *self,size_t argc,RcValue **ar
     if(!argc)return rc_retain(rc_capture(self,0));
     RcValue *out=args[argc-1];args[argc-1]=NULL;return out;
 }
+static size_t span_arity, span_calls;
+static RcValue *span_value;
+static RcValue *borrowed_span(RcContext *ctx,RcValue *self,size_t argc,RcValue *const *args) {
+    (void)self;assert(argc==span_arity);++span_calls;
+    rc_collect(ctx);
+    for(size_t i=0;i<argc;i++)assert(args[i]==span_value&&rc_type(args[i])==RC_VECTOR);
+    return rc_retain(argc?args[argc-1]:rc_nil());
+}
+static RcValue *span_replace(RcContext *ctx,RcValue *self,size_t argc,RcValue *const *args) {
+    assert(argc==32);
+    assert(rc_function_set(ctx,rc_capture(self,0),rc_capture(self,2)));
+    assert(rc_global_set(ctx,rc_capture(self,1),rc_nil()));
+    rc_collect(ctx);
+    assert(rc_type(rc_capture(self,0))==RC_SYMBOL);
+    for(size_t i=0;i<argc;i++)assert(args[i]==span_value&&rc_type(args[i])==RC_PAIR);
+    return rc_retain(args[31]);
+}
+static RcValue *span_result(RcContext *ctx,RcValue *self,size_t argc,RcValue *const *args) {
+    (void)args;assert(argc==2);rc_collect(ctx);return rc_retain(rc_capture(self,0));
+}
+static RcValue *borrowed_error(RcContext *ctx,RcValue *self,size_t argc,RcValue *const *args) {
+    (void)self;assert(argc==9);rc_collect(ctx);
+    rc_error(ctx,"borrowed span callback error");return rc_retain(args[8]);
+}
+static void borrowed_span_cases(void) {
+    const size_t arities[]={0,1,2,8,9,32};
+    for(size_t k=0;k<sizeof(arities)/sizeof(arities[0]);k++) {
+        RcContext *ctx=rc_context_new();assert(ctx);span_arity=arities[k];span_calls=0;
+        RcValue *fn=rc_closure(ctx,span_arity,borrowed_span,0,NULL),*args[32];
+        span_value=rc_vector(ctx,1);assert(rc_vector_set(ctx,span_value,0,span_value));
+        for(size_t i=0;i<span_arity;i++)args[i]=span_value;
+        RcValue *request=rc_tailcall(ctx,fn,span_arity,args);
+        RcValue *wrapper=rc_closure(ctx,0,return_request,1,&request);
+        rc_release(span_value);rc_release(fn);
+        /* No external argument or target owner remains: request edges alone
+         * protect them during full collection in the callback. Repeat the
+         * same captured request to check immutable borrowed slot reuse. */
+        for(size_t repeat=0;repeat<3;repeat++) {
+            RcValue *out=rc_apply(ctx,wrapper,0,NULL);assert(out&&!rc_has_error(ctx));
+            assert(out==(span_arity?span_value:rc_nil()));rc_release(out);
+        }
+        assert(span_calls==3);rc_release(wrapper);rc_release(request);rc_collect(ctx);
+        assert(rc_stats(ctx).live_objects==0);rc_context_free(ctx);
+    }
+    RcContext *ctx=rc_context_new();assert(ctx);
+    RcValue *name=rc_symbol(ctx,"span-self"),*global=rc_symbol(ctx,"span-root");
+    RcValue *id=rc_closure(ctx,1,borrowed_id,0,NULL),*captures[]={name,global,id};
+    RcValue *fn=rc_closure(ctx,32,span_replace,3,captures);
+    assert(rc_function_set(ctx,name,fn));rc_release(fn);
+    span_value=rc_cons(ctx,rc_nil(),rc_nil());assert(rc_global_set(ctx,global,span_value));
+    RcValue *args[32];for(size_t i=0;i<32;i++)args[i]=span_value;
+    RcValue *request=rc_tailcall(ctx,name,32,args);rc_release(span_value);
+    RcValue *wrapper=rc_closure(ctx,0,return_request,1,&request);
+    RcValue *out=rc_apply(ctx,wrapper,0,NULL);assert(out==span_value&&!rc_has_error(ctx));rc_release(out);
+    rc_release(wrapper);rc_release(request);
+    /* Prefix dispatch exposes original arity, with the suffix pinned until
+     * the returned function consumes it. The second call is ordinary small
+     * application; the first always takes the borrowed request span path. */
+    fn=rc_closure(ctx,2,span_result,1,&id);
+    RcValue *value=rc_integer(ctx,73),*over[]={value,value,value};
+    out=rc_apply(ctx,fn,3,over);assert(out==value&&!rc_has_error(ctx));rc_release(out);rc_release(fn);
+    RcValue *yes=rc_true(ctx);
+    RcValue *guard=rc_require_boolean(ctx,rc_tailcall(ctx,id,1,&yes));
+    wrapper=rc_closure(ctx,0,return_request,1,&guard);
+    for(int i=0;i<2;i++){out=rc_apply(ctx,wrapper,0,NULL);assert(out==yes);rc_release(out);}
+    rc_release(wrapper);rc_release(guard);
+    guard=rc_require_boolean(ctx,rc_tailcall(ctx,id,1,&value));
+    wrapper=rc_closure(ctx,0,return_request,1,&guard);
+    assert(!rc_apply(ctx,wrapper,0,NULL)&&rc_has_error(ctx));rc_clear_error(ctx);
+    rc_release(wrapper);rc_release(guard);
+    fn=rc_closure(ctx,9,borrowed_error,0,NULL);for(size_t i=0;i<9;i++)args[i]=value;
+    size_t live=rc_stats(ctx).live_objects;
+    assert(!rc_apply(ctx,fn,9,args)&&rc_has_error(ctx));rc_clear_error(ctx);
+    assert(rc_stats(ctx).live_objects==live);rc_release(fn);
+    rc_release(yes);rc_release(value);rc_release(id);rc_release(name);rc_release(global);rc_context_free(ctx);
+}
 static void inline_tail_cases(void) {
     RcContext *ctx=rc_context_new();assert(ctx);
     RcValue *value=rc_integer(ctx,42);
@@ -128,6 +204,7 @@ static void compiled_call_cases(void) {
     rc_collect(ctx);assert(rc_stats(ctx).live_objects==roots);rc_context_free(ctx);
 }
 int main(void) {
+    borrowed_span_cases();
     inline_tail_cases();
     compiled_call_cases();
     RcContext *ctx=rc_context_new();assert(ctx);
