@@ -117,3 +117,41 @@ all 134/134. Performance parity remains OPEN. See `rc-validation.md` for current
 receipts and historical sanitizer boundaries. The new artifact was profiled
 separately; next work should reduce remaining dispatch, symbol lookup, and allocation costs;
 do not disable cycle reclamation or substitute a smaller suite.
+
+## Aggressive performance campaign after c0b4309
+
+User acceptance target: outperform the preserved Boehm CLI on the unchanged
+full 134-test S42 suite, with Boehm completely absent and exact cycle
+reclamation preserved. A partial speedup does not meet this target.
+
+Parallel isolated candidate lanes: compiled symbol tables; guarded primitive
+calls; self-tail-call loops; frame-slot reuse; bounded object reuse with ASan
+poisoning; exact cycle-collection work reduction. Build lane evaluates LTO
+without changing arithmetic semantics. Independent review gates integration.
+
+Coordinator integrates reviewed commits, resolves overlapping runtime/emitter
+changes, and qualifies combined source. Benchmark lane runs a single serial
+queue with immutable binary/suite/input identities and balanced repetitions,
+recording wall time, CPU time, retired instructions, and memory. No concurrent
+compilation during final timing. Reject semantic shortcuts, suite edits,
+disabled collection, hidden unbounded caches, or performance claims from
+sanitizer runs. Keep correctness and performance gates separate.
+
+### Resumed second round, 2026-10-16
+
+An authentication refresh failure interrupted the coordinator and four lanes;
+their isolated worktrees and completed artifacts were preserved. The seven
+first-round changes at `7933147` pass the unchanged 134-test suite. A fresh
+serial exploratory comparison measured O3 at 54.60 s wall / 50.30 s user CPU,
+ThinLTO at 41.75 s / 38.53 s, and preserved Boehm at 18.29 s / 15.43 s.
+These are single runs, not a repeated performance qualification. ThinLTO is
+still 2.50 times slower by user CPU. Raw identities and stage timings are in
+`evidence/rc/perf-combined-three-20261016T141748Z/result.json`.
+
+Second-round work targets equality, interpreted argument and lexical lookup,
+compact managed environments, primitive dispatch, tail recursion hidden by
+`do`, redundant generated cleanup, and selective initialization of pooled
+objects. Each change requires independent review and focused correctness
+evidence before integration, followed by a fresh combined build and suite.
+Native list overwrites that bypass helper redefinition are deferred and must
+not count toward the unchanged-semantics performance target.
