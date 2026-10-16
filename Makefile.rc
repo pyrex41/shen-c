@@ -18,7 +18,7 @@ RC_LTO ?= auto
 ifneq ($(words $(RC_LTO)),1)
 $(error RC_LTO must be 0, auto, or 1)
 endif
-ifeq ($(filter $(RC_LTO),0 auto 1),)
+ifeq ($(filter 0 auto 1,$(RC_LTO)),)
 $(error RC_LTO must be 0, auto, or 1)
 endif
 RC_LTO_BUILD_GOALS := $(filter-out clean,$(if $(MAKECMDGOALS),$(MAKECMDGOALS),all))
