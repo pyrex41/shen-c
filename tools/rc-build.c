@@ -118,7 +118,7 @@ static bool build_app(RcContext *ctx,const char *input,const char *output,RcEmit
   fputs("# Generated app uses only the independent RC runtime.\nSHEN_C_HOME ?= ",out); mkvalue(out,home);
   fputs("\n"
         "CC ?= cc\n"
-        "CFLAGS ?= -O2\n"
+        "CFLAGS ?= -O3\n"
         "rc_empty :=\n"
         "rc_space := $(rc_empty) $(rc_empty)\n"
         "rc_escape = $(subst $(rc_space),\\$(rc_space),$(1))\n"

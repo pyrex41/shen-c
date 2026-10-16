@@ -4,13 +4,37 @@ AR ?= ar
 RC_BUILD ?= obj/rc
 RC_BIN ?= bin/rc
 RC_TOOL_BIN ?= bin
-RC_CFLAGS ?= $(if $(strip $(CFLAGS)),$(CFLAGS),-O2 -g)
+RC_CFLAGS ?= $(if $(strip $(CFLAGS)),$(CFLAGS),-O3 -g)
 RC_CPPFLAGS ?= $(CPPFLAGS)
 override RC_CFLAGS += -std=c17 -Wall -Wextra -Wpedantic -Isrc/rc
 RC_LDFLAGS ?= $(LDFLAGS)
 RC_LDLIBS ?= -lm
 RC_SANITIZE ?= 0
 RC_ACYCLIC_ONLY ?= 0
+# auto falls back if this compiler/archive/link combination cannot use LTO.
+# Set RC_LTO=0 to disable, RC_LTO=1 to require it, or RC_LTO_FLAGS to
+# override the compiler-specific flag (the override is still link-probed).
+RC_LTO ?= auto
+ifneq ($(filter $(RC_LTO),0 auto 1),$(RC_LTO))
+$(error RC_LTO must be 0, auto, or 1)
+endif
+RC_LTO_BUILD_GOALS := $(filter-out clean,$(if $(MAKECMDGOALS),$(MAKECMDGOALS),all))
+ifneq ($(strip $(RC_LTO_BUILD_GOALS)),)
+ifneq ($(RC_SANITIZE),1)
+ifneq ($(RC_LTO),0)
+RC_LTO_PROBE := $(shell CC='$(CC)' AR='$(AR)' RC_PROBE_CFLAGS='$(RC_CPPFLAGS) $(RC_CFLAGS)' RC_PROBE_LDFLAGS='$(RC_LDFLAGS)' RC_PROBE_LDLIBS='$(RC_LDLIBS)' RC_PROBE_FLAGS='$(RC_LTO_FLAGS)' sh src/rc/probe-lto.sh)
+ifneq ($(RC_LTO_PROBE),)
+override RC_CFLAGS += $(RC_LTO_PROBE)
+override RC_LDFLAGS += $(RC_LTO_PROBE)
+else
+ifeq ($(RC_LTO),1)
+$(error RC_LTO=1 requested but compiler/archive/link LTO probe failed)
+endif
+$(info Shen RC: LTO unavailable; building without LTO)
+endif
+endif
+endif
+endif
 ifeq ($(RC_ACYCLIC_ONLY),1)
 override RC_CFLAGS += -DSHEN_RC_ACYCLIC_ONLY
 endif
