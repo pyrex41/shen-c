@@ -34,6 +34,16 @@ RcValue *rc_primitive_consp_owned(RcContext *,RcValue *,RcValue **,bool);
 RcValue *rc_primitive_numberp_owned(RcContext *,RcValue *,RcValue **,bool);
 RcValue *rc_primitive_stringp_owned(RcContext *,RcValue *,RcValue **,bool);
 RcValue *rc_primitive_eq_owned(RcContext *,RcValue *,RcValue **,bool);
+/* Fixed-arity arithmetic/comparison variants use the same checked ownership
+ * contract as the tiny entry points above, with two owned argument slots. */
+RcValue *rc_primitive_add_owned(RcContext *,RcValue *,RcValue **,bool);
+RcValue *rc_primitive_sub_owned(RcContext *,RcValue *,RcValue **,bool);
+RcValue *rc_primitive_mul_owned(RcContext *,RcValue *,RcValue **,bool);
+RcValue *rc_primitive_div_owned(RcContext *,RcValue *,RcValue **,bool);
+RcValue *rc_primitive_gt_owned(RcContext *,RcValue *,RcValue **,bool);
+RcValue *rc_primitive_lt_owned(RcContext *,RcValue *,RcValue **,bool);
+RcValue *rc_primitive_ge_owned(RcContext *,RcValue *,RcValue **,bool);
+RcValue *rc_primitive_le_owned(RcContext *,RcValue *,RcValue **,bool);
 /* Shen representation for diagnostics and standalone program output. */
 bool rc_print(FILE *out, RcValue *value);
 #endif

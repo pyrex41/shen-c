@@ -1,16 +1,17 @@
 # Canonical builtin identities and tiny owned entry points
 
 The emitter selects separate fixed-arity entry points for `hd`, `tl`, `cons?`,
-`number?`, `string?`, and `=`. Their small bodies avoid generic opcode decoding,
+`number?`, `string?`, `=`, and eight arithmetic/comparison operations
+(`+`, `-`, `*`, `/`, `>`, `<`, `>=`, `<=`). Their small bodies avoid generic opcode decoding,
 expected-arity dispatch, and the large primitive switch. Other primitive calls
 keep the existing dispatcher. Lexical shadows and calls with different arities
 also keep ordinary dispatch.
 
-Each context owns a fixed six-entry canonical closure table. Successful builtin
+Each context owns a fixed fourteen-entry canonical closure table. Successful builtin
 installation stores the newly created original closure in its corresponding
-slot, retaining the new root before releasing the previous root. This adds 48
+slot, retaining the new root before releasing the previous root. This adds 112
 bytes per context on 64-bit hosts and no bytes per managed object. The table
-never grows, allocates no separate backing storage, and holds at most six extra
+never grows, allocates no separate backing storage, and holds at most fourteen extra
 closures that have been displaced by redefinition. Repeated installation replaces
 these roots rather than accumulating previous versions.
 
@@ -39,9 +40,9 @@ embedding API. Generated Makefiles track this header as a dependency.
 
 ## Validation
 
-All 15 focused runtime executables pass fatal AddressSanitizer and
+All 16 focused runtime executables pass fatal AddressSanitizer and
 UndefinedBehaviorSanitizer in both default immediate and boxed-integer builds.
-Canonical tests cover all six entry points; consumed/null/foreign arguments;
+Canonical identity tests cover the original six entry points; consumed/null/foreign arguments;
 partial, replaced, and other-operation callees; pending errors; ordinary versus
 tail projections; deferred boolean guards; ten repeated builtin installations
 with stable live-object counts; and old snapshots across reinstallation.
@@ -56,8 +57,12 @@ results under fatal sanitizers, checks all six specialized calls appear only in
 optimized output, and covers lexical shadows plus redefinition during argument
 evaluation. Empty-argument `hd` emission retains ordinary dispatch.
 
-## Bounded instruction measurements
+Arithmetic and comparison validation and measurements are documented separately
+in `canonical-numeric.md`.
 
+## Initial six-operation instruction measurements
+
+The initial candidate was commit `3aa882f8a466cd228d59b7262428b9971f65150c`.
 Baseline `4eb6b7c483a3543abdcdc5f35fa7a29753ff1e0f` and candidate used Apple
 clang 21.0.0 on arm64 Darwin, `-O2 -g -std=c17`, no LTO or sanitizers. Each
 operation ran 3,000,000 calls twice per binary, with reversed run order in the

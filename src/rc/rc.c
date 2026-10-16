@@ -392,7 +392,7 @@ void rc_builtin_cache_set(RcContext *ctx, RcBuiltinSlot slot, RcValue *fn) {
 bool rc_builtin_call_matches(RcContext *ctx, RcBuiltinSlot slot, RcValue *fn,
                               size_t argc, RcValue *const *argv) {
     if (!ctx || (unsigned)slot >= RC_BUILTIN_COUNT || !fn ||
-        ctx->builtin_roots[slot] != fn || argc != (slot == RC_BUILTIN_EQ ? 2u : 1u) ||
+        ctx->builtin_roots[slot] != fn || argc != (slot >= RC_BUILTIN_EQ ? 2u : 1u) ||
         !argv) return false;
     for (size_t i = 0; i < argc; ++i) if (!belongs(ctx,argv[i])) return false;
     return true;

@@ -277,7 +277,17 @@ static const char *tiny_leaf_api(RcValue *head,int arity) {
   if(named(head,"number?"))return "rc_primitive_numberp_owned";
   if(named(head,"string?"))return "rc_primitive_stringp_owned";
  }
- if(arity==2&&named(head,"="))return "rc_primitive_eq_owned";
+ if(arity==2) {
+  if(named(head,"="))return "rc_primitive_eq_owned";
+  if(named(head,"+"))return "rc_primitive_add_owned";
+  if(named(head,"-"))return "rc_primitive_sub_owned";
+  if(named(head,"*"))return "rc_primitive_mul_owned";
+  if(named(head,"/"))return "rc_primitive_div_owned";
+  if(named(head,">"))return "rc_primitive_gt_owned";
+  if(named(head,"<"))return "rc_primitive_lt_owned";
+  if(named(head,">="))return "rc_primitive_ge_owned";
+  if(named(head,"<="))return "rc_primitive_le_owned";
+ }
  return NULL;
 }
 static int expr(RcEmitFn *,RcValue *,int,const Live *);

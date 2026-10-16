@@ -284,6 +284,23 @@ RcValue *rc_primitive_eq_owned(RcContext *c,RcValue *fn,RcValue **args,bool tail
  RcValue *a=args[0],*b=args[1];args[0]=NULL;args[1]=NULL;
  rc_release(a);rc_release(b);return leaf_finish(c,result);
 }
+#define BINARY_NUMERIC_LEAF(api,slot,op) \
+RcValue *api(RcContext *c,RcValue *fn,RcValue **args,bool tail) { \
+ if(!rc_builtin_call_matches(c,slot,fn,2,args)) \
+  return rc_primitive_call_owned(c,fn,2,args,tail); \
+ RcValue *result=numeric(c,op,args[0],args[1]); \
+ RcValue *a=args[0],*b=args[1];args[0]=NULL;args[1]=NULL; \
+ rc_release(a);rc_release(b);return leaf_finish(c,result); \
+}
+BINARY_NUMERIC_LEAF(rc_primitive_add_owned,RC_BUILTIN_ADD,P_ADD)
+BINARY_NUMERIC_LEAF(rc_primitive_sub_owned,RC_BUILTIN_SUB,P_SUB)
+BINARY_NUMERIC_LEAF(rc_primitive_mul_owned,RC_BUILTIN_MUL,P_MUL)
+BINARY_NUMERIC_LEAF(rc_primitive_div_owned,RC_BUILTIN_DIV,P_DIV)
+BINARY_NUMERIC_LEAF(rc_primitive_gt_owned,RC_BUILTIN_GT,P_GT)
+BINARY_NUMERIC_LEAF(rc_primitive_lt_owned,RC_BUILTIN_LT,P_LT)
+BINARY_NUMERIC_LEAF(rc_primitive_ge_owned,RC_BUILTIN_GE,P_GE)
+BINARY_NUMERIC_LEAF(rc_primitive_le_owned,RC_BUILTIN_LE,P_LE)
+#undef BINARY_NUMERIC_LEAF
 RcValue *rc_cons_call_reuse(RcContext *c,RcValue *function,
                             RcValue *candidate,RcValue *head,RcValue *tail,
                             bool tail_position) {
@@ -323,6 +340,14 @@ static bool install(RcContext *c,const struct Primitive *p,size_t n) {
     case P_NUMBER:rc_builtin_cache_set(c,RC_BUILTIN_NUMBERP,f);break;
     case P_STRING:rc_builtin_cache_set(c,RC_BUILTIN_STRINGP,f);break;
     case P_EQ:rc_builtin_cache_set(c,RC_BUILTIN_EQ,f);break;
+    case P_ADD:rc_builtin_cache_set(c,RC_BUILTIN_ADD,f);break;
+    case P_SUB:rc_builtin_cache_set(c,RC_BUILTIN_SUB,f);break;
+    case P_MUL:rc_builtin_cache_set(c,RC_BUILTIN_MUL,f);break;
+    case P_DIV:rc_builtin_cache_set(c,RC_BUILTIN_DIV,f);break;
+    case P_GT:rc_builtin_cache_set(c,RC_BUILTIN_GT,f);break;
+    case P_LT:rc_builtin_cache_set(c,RC_BUILTIN_LT,f);break;
+    case P_GE:rc_builtin_cache_set(c,RC_BUILTIN_GE,f);break;
+    case P_LE:rc_builtin_cache_set(c,RC_BUILTIN_LE,f);break;
     default:break;
    }
   }
