@@ -352,6 +352,39 @@ RcValue *rc_primitive_call_owned(RcContext *c,RcValue *fn,
  return slot>=0 ? calls[(unsigned)slot](c,fn,args,tail)
                 : primitive_call_owned_slow(c,fn,argc,args,tail);
 }
+RcValue *rc_assoc_try_owned(RcContext *c,RcValue *self,RcValue **args,
+                            RcValue *const *deps,bool *handled) {
+ *handled=false;
+ /* The existing nil branch is already cheap; avoid dependency guards there,
+  * including when a replacement equality changes that branch's meaning. */
+ if(rc_is_nil(args[1]))return NULL;
+ if(!rc_call_values_belong(c,self,2,args)||rc_arity(self)!=2)return NULL;
+ RcValue *fn=rc_function_lookup(c,deps[0]);bool valid=fn==self;rc_release(fn);
+ static const RcBuiltinSlot slots[]={RC_BUILTIN_EQ,RC_BUILTIN_CONSP,RC_BUILTIN_HD,RC_BUILTIN_TL};
+ for(size_t i=0;valid&&i<4;i++) {
+  fn=rc_function_lookup(c,deps[i+1]);valid=rc_builtin_identity_matches(c,slots[i],fn);rc_release(fn);
+ }
+ if(!valid)return NULL;
+ /* All dependency calls are now pure canonical primitives. Cursor and keys
+  * remain rooted by args; no callbacks can invalidate the entry guards.
+  * A bounded prefix avoids adding an intrinsic-specific cyclic-list hang. */
+ RcValue *cursor=args[1],*result=NULL;
+ for(size_t steps=0;steps<4096;steps++) {
+  if(rc_is_nil(cursor)){result=rc_nil();break;}
+  if(rc_type(cursor)!=RC_PAIR)return NULL;
+  RcValue *entry=rc_head_borrowed(cursor);
+  if(rc_type(entry)==RC_PAIR) {
+   bool equal=rc_equal(args[0],rc_head_borrowed(entry));
+   if(rc_has_error(c)){*handled=true;break;}
+   if(equal){result=rc_retain(entry);break;}
+  }
+  cursor=rc_tail_borrowed(cursor);
+ }
+ if(!result&&!*handled)return NULL;
+ *handled=true;
+ for(size_t i=0;i<2;i++){RcValue *v=args[i];args[i]=NULL;rc_release(v);}
+ return result;
+}
 RcValue *rc_cons_call_reuse(RcContext *c,RcValue *function,
                             RcValue *candidate,RcValue *head,RcValue *tail,
                             bool tail_position) {

@@ -45,6 +45,12 @@ RcValue *rc_primitive_gt_owned(RcContext *,RcValue *,RcValue **,bool);
 RcValue *rc_primitive_lt_owned(RcContext *,RcValue *,RcValue **,bool);
 RcValue *rc_primitive_ge_owned(RcContext *,RcValue *,RcValue **,bool);
 RcValue *rc_primitive_le_owned(RcContext *,RcValue *,RcValue **,bool);
+/* Internal emitted intrinsic for the complete pinned assoc AST only. deps are
+ * interned symbols assoc, =, cons?, hd, tl; args/deps/handled must be non-NULL.
+ * On deoptimization, args and errors
+ * are untouched. On handled success/failure, both owned args are consumed. */
+RcValue *rc_assoc_try_owned(RcContext *,RcValue *self,RcValue **args,
+                            RcValue *const *deps,bool *handled);
 /* Shen representation for diagnostics and standalone program output. */
 bool rc_print(FILE *out, RcValue *value);
 #endif

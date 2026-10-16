@@ -48,7 +48,7 @@ struct Recycle;
 typedef struct DoGuard { int slot; struct DoGuard *outer; } DoGuard;
 typedef struct {
   Program *p; Buf code; Binding *bind; int nb, cap, slots, label, max_args; bool symbol_used;
-  int arity, boolean_tail; bool self_loop,borrowed_fn_used;
+  int arity, boolean_tail; bool self_loop,borrowed_fn_used,assoc_fast; size_t assoc_symbols[5];
   DoGuard *do_guard;
   int *physical,*free_slots,slot_cap,frame_slots,nfree; unsigned char *active,*borrowed_fn;
   char fail[64]; struct Recycle *recycle;
@@ -513,11 +513,23 @@ static int expr_inner(RcEmitFn *f,RcValue *x,int tail,const Live *after){
  if(recycle.binding>=0)f->recycle=recycle.outer;
  drop(f,fn);forget(p,av);check(f,result);drop_dead(f,after);return result;
 }
+/* Only this complete pinned kernel definition is eligible. No spelling-only
+ * replacement: modified source, parameters, error text or clauses stay native. */
+static bool exact_assoc(RcEmitFn *f,RcValue *params,RcValue *body) {
+ if(!optimize(f)||count(f->p,params)!=2||!named(first(params),"V3546")||!named(second(params),"V3547"))return false;
+ const char *text="(defun assoc (V3546 V3547) (cond ((= () V3547) ()) ((and (cons? V3547) (and (cons? (hd V3547)) (= V3546 (hd (hd V3547))))) (hd V3547)) ((cons? V3547) (assoc V3546 (tl V3547))) (true (simple-error \"attempt to search a non-list with assoc\n\"))))";
+ RcValue *expected=rc_read(f->p->ctx,&text);
+ if(!expected)bad(f->p,"assoc template read failed");
+ bool equal=rc_equal(body,at(f->p,rest(expected),2));rc_release(expected);
+ if(rc_has_error(f->p->ctx))bad(f->p,"assoc template comparison failed");
+ return equal;
+}
 static void finish_function(RcEmitFn *f,int id,int arity,int r){
  Program *p=f->p;
  if(optimize(f))put(&p->functions,"static RcValue *rc_native_body_%d(RcContext *ctx,RcValue *self,RcValue **argv) {\n  (void)self; (void)argv;\n  RcValue *result=NULL;\n",id);
  else put(&p->functions,"static RcValue *rc_native_%d(RcContext *ctx,RcValue *self,size_t argc,RcValue *const *argv) {\n  (void)self; (void)argv;\n  if(argc!=%d) return rc_error(ctx,\"native arity mismatch\");\n  RcValue *result=NULL;\n",id,arity);
  symbol_frame(&p->functions,f->symbol_used);
+ if(f->assoc_fast)put(&p->functions,"  { bool handled=false; RcValue *deps[]={symbols[%zu],symbols[%zu],symbols[%zu],symbols[%zu],symbols[%zu]};\n    RcValue *fast=rc_assoc_try_owned(ctx,self,argv,deps,&handled); if(handled) return fast; }\n",f->assoc_symbols[0],f->assoc_symbols[1],f->assoc_symbols[2],f->assoc_symbols[3],f->assoc_symbols[4]);
  if(f->frame_slots>64)put(&p->functions,"  RcValue **t=calloc(%d,sizeof(*t));\n  if(!t) return rc_error(ctx,\"native frame allocation failed\");\n  RcValue **a=t+%d; (void)a;\n",f->frame_slots+f->max_args,f->frame_slots);
  else put(&p->functions,"  RcValue *t[%d]={0}; RcValue *a[%d]; (void)a;\n",f->frame_slots?f->frame_slots:1,f->max_args?f->max_args:1);
  /* Atom-only argument evaluation prevents overlapping borrowed callees in
@@ -542,6 +554,10 @@ static void finish_function(RcEmitFn *f,int id,int arity,int r){
 }
 static int compile(Program *p,RcValue *params,RcValue *body,Binding *caps,int ncaps,int freeze){
  RcEmitFn f={0};f.p=p;f.code.owner=p;int id=p->next++,arity=freeze==1?0:(freeze==2?1:count(p,params));f.arity=arity;snprintf(f.fail,sizeof f.fail,"cleanup");
+ if(!ncaps&&!freeze&&exact_assoc(&f,params,body)) {
+  const char *deps[]={"assoc","=","cons?","hd","tl"};f.assoc_fast=true;
+  for(size_t i=0;i<5;i++)f.assoc_symbols[i]=symbol_index(&f,deps[i]);
+ }
  /* Certify the exact effect-free identity body, independent of its name.
   * The generated guard also rejects bound/partially applied closures. */
  if(optimize(&f)&&!ncaps&&!freeze&&arity==2&&is_symbol(body)&&is_symbol(first(params))&&is_symbol(second(params))&&!strcmp(name(body),name(second(params)))&&strcmp(name(first(params)),name(second(params))))
