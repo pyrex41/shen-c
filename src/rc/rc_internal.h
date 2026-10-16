@@ -21,6 +21,10 @@ int rc_builtin_call_slot(RcContext *, RcValue *, size_t, RcValue *const *);
 typedef enum { RC_LIST_LENGTH_OK, RC_LIST_LENGTH_IMPROPER,
                RC_LIST_LENGTH_OVERFLOW } RcListLengthStatus;
 RcListLengthStatus rc_list_length_cached(RcValue *list,size_t *out);
+/* Consumes an owned evaluator argument result. Same-context values pass;
+ * tail requests acquire a deferred context check without forcing recursion.
+ * Completion preserves the generic owned-call operand error diagnostic. */
+RcValue *rc_eval_require_argument_context(RcContext *,RcValue *);
 /* Private interpreted callback layout: [body, environment, parameter keys...].
  * Validates context, callback identity, original arity and exact capture count.
  * The returned span is borrowed; the active runtime call must keep self rooted

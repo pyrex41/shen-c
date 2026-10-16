@@ -84,7 +84,11 @@ static RcValue *make_function(RcContext *ctx, RcValue *params, RcValue *body, Rc
     if(!captures)return rc_error(ctx,"eval-kl: out of memory constructing parameter captures");
     captures[0]=body;captures[1]=env;
     for(size_t i=0;i<arity;i++,params=rc_tail_borrowed(params))captures[i+2]=rc_head_borrowed(params);
-    RcValue *function=rc_closure(ctx,arity,dynamic_call,count,captures);
+    /* parameters() has proved symbol keys are distinct. A direct reference
+     * to parameter two has no effects and cannot inspect parameter one. */
+    bool returns_second=arity==2 && body==captures[3];
+    RcValue *function=returns_second ? rc_closure_return_second(ctx,dynamic_call,count,captures)
+        : rc_closure(ctx,arity,dynamic_call,count,captures);
     if(captures!=small)free(captures);
     return function;
 }
@@ -101,6 +105,35 @@ static RcValue *application(RcContext *ctx, RcValue *expr, RcValue *env, size_t 
         rc_release(function);
         function=resolved;
         if (!function) return NULL;
+    }
+    if (tail && argc==2 && rc_closure_returns_second(ctx,function)) {
+        /* The selected closure remains owned across both argument effects.
+         * The exact body only returns argument two, whose owned result/request
+         * is acquired before dead argument/callee owners leave. In particular,
+         * deferred requests own every value needed by the next callback. */
+        RcValue *args=rc_tail_borrowed(expr),*left=rc_head_borrowed(args);
+        RcValue *ignored=rc_type(left)==RC_PAIR ? evaluate(ctx,left,env,false)
+            : atomic_value(ctx,left,env);
+        if (!ignored) { rc_release(function); return NULL; }
+        RcValue *right=rc_head_borrowed(rc_tail_borrowed(args));
+        bool valid_first=rc_call_values_belong(ctx,function,1,&ignored);
+        RcValue *result=rc_type(right)==RC_PAIR ? evaluate(ctx,right,env,valid_first)
+            : atomic_value(ctx,right,env);
+        if (result && !valid_first) {
+            /* Keep right-side effects/errors before the original operand
+             * rejection, and preserve its exact generic diagnostic. */
+            RcValue *argv[2]={ignored,result};
+            result=rc_primitive_call_owned(ctx,function,2,argv,true);
+            rc_release(argv[0]);rc_release(argv[1]);rc_release(function);
+            return result;
+        }
+        rc_release(ignored); rc_release(function);
+        if (!result) return NULL;
+        if (rc_has_error(ctx)) { rc_release(result); return NULL; }
+        result=rc_eval_require_argument_context(ctx,result);
+        if(!result)return NULL;
+        rc_safepoint(ctx);
+        return result;
     }
     /* Partial cleanup reads only assigned slots; complete dispatch initializes
      * all argc entries. Keep the heap allocation path unchanged. */

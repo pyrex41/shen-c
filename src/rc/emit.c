@@ -271,6 +271,12 @@ static void drop_dead(RcEmitFn *f,const Live *live){
  if(first>=0)dead_range(f,first,end);
 }
 static const char *closure_api(Program *p){return p->options.conservative_ownership?"rc_closure":"rc_closure_owned";}
+/* Exact lexical identity proof shared by native construction and self-loop
+ * guards. Distinct binders make the body reference unambiguous. */
+static bool exact_second_identity(RcValue *params,RcValue *body,int arity) {
+ return arity==2&&is_symbol(body)&&is_symbol(first(params))&&is_symbol(second(params))&&
+        !strcmp(name(body),name(second(params)))&&strcmp(name(first(params)),name(second(params)));
+}
 /* Mode 2 only permits guarded self recursion through pending transparent do
  * calls. Its ordinary fallback must finish before invoking those do calls. */
 static const char *call_api(RcEmitFn *f,int tail){return optimize(f)?(tail==1?"rc_tailcall_owned_args":"rc_apply_owned_args"):(tail==1?"rc_tailcall":"rc_apply");}
@@ -451,7 +457,10 @@ static int expr_inner(RcEmitFn *f,RcValue *x,int tail,const Live *after){
   int id=compile(p,second(args),at(p,args,2),NULL,0,0),t=fresh(f),cl=fresh(f);
   if(optimize(f)){ModuleDef *d=alloc(p,sizeof(*d));*d=(ModuleDef){symbol_index(f,name(first(args))),id,count(p,second(args)),p->module_defs};p->module_defs=d;}
   symbol_slot(f,t,name(first(args)));check(f,t);
-  put(&f->code,"  t[%d]=%s(ctx,%d,rc_native_%d,0,NULL);\n",cl,closure_api(p),count(p,second(args)),id);check(f,cl);
+  if(exact_second_identity(second(args),at(p,args,2),count(p,second(args))))
+   put(&f->code,"  t[%d]=%s(ctx,rc_native_%d,0,NULL);\n",cl,p->options.conservative_ownership?"rc_closure_return_second":"rc_closure_return_second_owned",id);
+  else put(&f->code,"  t[%d]=%s(ctx,%d,rc_native_%d,0,NULL);\n",cl,closure_api(p),count(p,second(args)),id);
+  check(f,cl);
   if(p->options.source_metadata&&p->user_phase&&x==p->metadata_root){
    int quoted=fresh(f),data=literal(p,x);
    put(&f->code,"  t[%d]=rc_literal_%d(ctx);\n",quoted,data);check(f,quoted);
@@ -560,7 +569,7 @@ static int compile(Program *p,RcValue *params,RcValue *body,Binding *caps,int nc
  }
  /* Certify the exact effect-free identity body, independent of its name.
   * The generated guard also rejects bound/partially applied closures. */
- if(optimize(&f)&&!ncaps&&!freeze&&arity==2&&is_symbol(body)&&is_symbol(first(params))&&is_symbol(second(params))&&!strcmp(name(body),name(second(params)))&&strcmp(name(first(params)),name(second(params))))
+ if(optimize(&f)&&!ncaps&&!freeze&&exact_second_identity(params,body,arity))
   put(&p->transparent_do," || rc_closure_is_owned_native(fn,rc_native_%d)",id);
  for(int i=0;i<ncaps;i++){int s=fresh(&f);bind(&f,caps[i].name,s);put(&f.code,"  t[%d]=rc_retain(rc_capture(self,%d));\n",s,i);}
  for(int i=0;i<arity;i++,params=freeze==2?rc_nil():rest(params)){RcValue *param=freeze==2?params:first(params);if(!is_symbol(param))bad(p,"rc emit: function parameter");for(int j=ncaps;j<f.nb;j++)if(!strcmp(f.bind[j].name,name(param)))bad(p,"rc emit: duplicate function parameter");int s=fresh(&f);bind(&f,name(param),s);

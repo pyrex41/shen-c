@@ -147,6 +147,15 @@ RcValue *rc_closure(RcContext *ctx, size_t arity, RcNative native,
                     size_t capture_count, RcValue *const *captures);
 RcValue *rc_closure_owned(RcContext *ctx, size_t arity, RcNativeOwned native,
                           size_t capture_count, RcValue *const *captures);
+/* Trusted compiler/interpreter certificate: the callback has the exact,
+ * effect-free two-parameter body returning its second argument. These fixed
+ * arity constructors permit tail forwarding under dead-owner last-use rules;
+ * an arbitrary callback must use the ordinary closure constructors. */
+RcValue *rc_closure_return_second(RcContext *ctx, RcNative native,
+                                  size_t capture_count, RcValue *const *captures);
+RcValue *rc_closure_return_second_owned(RcContext *ctx, RcNativeOwned native,
+                                        size_t capture_count, RcValue *const *captures);
+bool rc_closure_returns_second(RcContext *ctx, const RcValue *function);
 bool rc_closure_is_native(const RcValue *closure, RcNative native);
 bool rc_closure_is_owned_native(const RcValue *closure, RcNativeOwned native);
 /* Internal compiler ABI: function/arguments must already be valid values of

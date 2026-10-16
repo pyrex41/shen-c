@@ -26,6 +26,13 @@
 
 #define RC_OBJECT_CACHE_LIMIT 1024
 
+/* Normalized completion guards: boolean already validates context. Context
+ * followed by boolean keeps context's earlier diagnostic; a later context
+ * check after boolean is redundant. */
+enum { GUARD_BOOLEAN=1, GUARD_CONTEXT=2 };
+static unsigned compose_guards(unsigned first,unsigned after) {
+    return !first ? after : first==GUARD_CONTEXT ? first|after : first;
+}
 struct RcValue {
     RcType type;
     size_t refs, bytes;
@@ -35,6 +42,7 @@ struct RcValue {
     size_t visit_epoch;
     bool marked, reaches_vector, cycle_source;
     uint8_t builtin_slot; /* Canonical slot + 1, zero for ordinary values. */
+    bool returns_second; /* Immutable trusted exact identity-body certificate. */
     RcContext *ctx;
     RcValue *prev, *next;
     union {
@@ -58,7 +66,7 @@ struct RcValue {
         } closure;
         struct { FILE *file; bool close, input; } stream;
         struct {
-            RcValue *function; size_t argc; RcValue **argv; bool require_boolean;
+            RcValue *function; size_t argc; RcValue **argv; uint8_t guards;
             RcValue *inline_args[3];
         } tail;
     } as;
@@ -78,7 +86,8 @@ typedef struct RcResolvedSymbols {
     RcValue *values[];
 } RcResolvedSymbols;
 _Static_assert(RC_BUILTIN_COUNT <= UINT8_MAX, "builtin tags must fit in one byte");
-/* The byte occupies the prior padding before ctx, including on boxed builds. */
+/* The builtin and semantic certificate bytes occupy pre-existing padding
+ * before ctx, including on boxed builds. */
 _Static_assert(offsetof(RcValue, ctx) ==
                ((offsetof(RcValue, cycle_source) + sizeof(bool) +
                  _Alignof(RcContext *) - 1) / _Alignof(RcContext *)) * _Alignof(RcContext *),
@@ -167,7 +176,7 @@ static RcValue *allocate(RcContext *ctx, RcType type, size_t extra) {
      * are reset before a collection, and work links are set before insertion.
      * Reset the lifetime-wide defaults that must not survive pooled reuse. */
     v->prev = NULL; v->visit_epoch = 0;
-    v->marked = false; v->reaches_vector = false; v->cycle_source = false; v->builtin_slot = 0;
+    v->marked = false; v->reaches_vector = false; v->cycle_source = false; v->builtin_slot = 0; v->returns_second = false;
     v->type = type; v->refs = 1; v->ctx = ctx; v->bytes = sizeof(*v) + extra;
     v->next = ctx->objects;
     if (v->next) v->next->prev = v;
@@ -828,6 +837,22 @@ RcValue *rc_closure_owned(RcContext *ctx, size_t arity, RcNativeOwned native,
                           size_t capture_count, RcValue *const *captures) {
     return closure_create(ctx, arity, NULL, native, capture_count, captures);
 }
+RcValue *rc_closure_return_second(RcContext *ctx, RcNative native,
+                                  size_t capture_count, RcValue *const *captures) {
+    RcValue *v=closure_create(ctx,2,native,NULL,capture_count,captures);
+    if(v)v->returns_second=true;
+    return v;
+}
+RcValue *rc_closure_return_second_owned(RcContext *ctx, RcNativeOwned native,
+                                        size_t capture_count, RcValue *const *captures) {
+    RcValue *v=closure_create(ctx,2,NULL,native,capture_count,captures);
+    if(v)v->returns_second=true;
+    return v;
+}
+bool rc_closure_returns_second(RcContext *ctx, const RcValue *v) {
+    return belongs(ctx,v) && rc_type(v)==RC_CLOSURE && v->returns_second &&
+           v->as.closure.arity==2 && !v->as.closure.bound_count;
+}
 bool rc_call_values_belong(RcContext *ctx,RcValue *function,size_t argc,
                            RcValue *const *argv) {
     if(!ctx||!belongs(ctx,function)||(argc&&!argv))return false;
@@ -886,6 +911,8 @@ static RcValue *partial(RcContext *ctx, RcValue *fn, size_t argc, RcValue *const
     if (n > SIZE_MAX / sizeof(RcValue *)) return rc_error(ctx, "partial application size overflow");
     RcValue **bound = n ? malloc(n * sizeof(*bound)) : NULL;
     if (n && !bound) return rc_error(ctx, "out of memory");
+    /* Ordinary construction clears semantic certificates. A partial closure
+     * therefore never advertises the unbound two-argument identity contract. */
     RcValue *v = closure_create(ctx, fn->as.closure.arity, fn->as.closure.native,
                                 fn->as.closure.owned_native,
                                 fn->as.closure.capture_count, fn->as.closure.captures);
@@ -907,7 +934,7 @@ RcValue *rc_tailcall(RcContext *ctx, RcValue *fn, size_t argc, RcValue *const *a
     if (!v) { free(copy); return NULL; }
     if (argc && argc <= 3) copy = v->as.tail.inline_args;
     v->as.tail.function = rc_retain(fn); v->as.tail.argc = argc; v->as.tail.argv = copy;
-    v->as.tail.require_boolean = false;
+    v->as.tail.guards = 0;
     v->reaches_vector = may_reach_vector(fn);
     ctx->graph_slots += argc;
     for (size_t i = 0; i < argc; ++i) {
@@ -939,7 +966,7 @@ RcValue *rc_tailcall_owned_args(RcContext *ctx, RcValue *fn, size_t argc, RcValu
     if (!v) { free(copy); consume_arguments(argc, argv); return NULL; }
     if (argc && argc <= 3) copy = v->as.tail.inline_args;
     v->as.tail.function = rc_retain(fn); v->as.tail.argc = argc; v->as.tail.argv = copy;
-    v->as.tail.require_boolean = false;
+    v->as.tail.guards = 0;
     v->reaches_vector = may_reach_vector(fn);
     ctx->graph_slots += argc;
     for (size_t i = 0; i < argc; ++i) {
@@ -948,37 +975,50 @@ RcValue *rc_tailcall_owned_args(RcContext *ctx, RcValue *fn, size_t argc, RcValu
     }
     return v;
 }
-RcValue *rc_require_boolean(RcContext *ctx, RcValue *value) {
+static RcValue *require_guard(RcContext *ctx,RcValue *value,unsigned guard) {
     if (!value) {
-        if (!rc_has_error(ctx)) rc_error(ctx, "missing boolean result");
+        if (!rc_has_error(ctx)) rc_error(ctx,guard==GUARD_BOOLEAN ? "missing boolean result" : "invalid owned argument/context");
         return NULL;
     }
-    if (belongs(ctx, value) && rc_type(value) == RC_TAIL) {
-        if (value->refs > 1 && !value->as.tail.require_boolean) {
-            RcValue *copy = rc_tailcall(ctx, value->as.tail.function,
-                                        value->as.tail.argc, value->as.tail.argv);
+    if (belongs(ctx,value) && rc_type(value)==RC_TAIL) {
+        unsigned before=value->as.tail.guards,after=compose_guards(before,guard);
+        if (value->refs>1 && after!=before) {
+            RcValue *copy=rc_tailcall(ctx,value->as.tail.function,value->as.tail.argc,value->as.tail.argv);
             rc_release(value);
-            if (!copy) return NULL;
-            value = copy;
+            if(!copy)return NULL;
+            value=copy;
         }
-        value->as.tail.require_boolean = true;
+        value->as.tail.guards=(uint8_t)after;
         return value;
     }
-    if (belongs(ctx, value) && rc_is_boolean(value)) return value;
+    if (belongs(ctx,value) && (guard==GUARD_CONTEXT || rc_is_boolean(value))) return value;
     rc_release(value);
-    return rc_error(ctx, "boolean expected");
+    return rc_error(ctx,guard==GUARD_BOOLEAN ? "boolean expected" : "invalid owned argument/context");
 }
-/* args == NULL is a boolean continuation. Adjacent identical guards collapse,
- * so arbitrarily long chains of tail and/or calls use one pending guard. */
-typedef struct ApplyPending { RcValue *args; struct ApplyPending *next; } ApplyPending;
+RcValue *rc_require_boolean(RcContext *ctx,RcValue *value) {
+    return require_guard(ctx,value,GUARD_BOOLEAN);
+}
+RcValue *rc_eval_require_argument_context(RcContext *ctx,RcValue *value) {
+    return require_guard(ctx,value,GUARD_CONTEXT);
+}
+/* args == NULL denotes a normalized completion guard. Adjacent guards merge
+ * without crossing an overapplication boundary, keeping long tail do/boolean
+ * chains bounded and preserving error order. */
+typedef struct ApplyPending {
+    RcValue *args; struct ApplyPending *next; unsigned guards;
+} ApplyPending;
 static RcValue *apply_request(RcContext *ctx, RcValue *request) {
     RcValue *result = NULL;
     ApplyPending *pending = NULL;
     while (request) {
-        if (request->as.tail.require_boolean && (!pending || pending->args)) {
-            ApplyPending *p = malloc(sizeof(*p));
-            if (!p) { rc_error(ctx, "out of memory"); goto fail; }
-            p->args = NULL; p->next = pending; pending = p;
+        if (request->as.tail.guards) {
+            if (pending && !pending->args) {
+                pending->guards=compose_guards(request->as.tail.guards,pending->guards);
+            } else {
+                ApplyPending *p=malloc(sizeof(*p));
+                if(!p){rc_error(ctx,"out of memory");goto fail;}
+                p->args=NULL; p->guards=request->as.tail.guards; p->next=pending; pending=p;
+            }
         }
         RcValue *target = request->as.tail.function;
         RcValue *resolved = NULL;
@@ -999,7 +1039,7 @@ static RcValue *apply_request(RcContext *ctx, RcValue *request) {
                 if (!p) { rc_error(ctx, "out of memory"); rc_release(resolved); goto fail; }
                 p->args = rc_tailcall(ctx, rc_nil(), available - needed, request->as.tail.argv + needed);
                 if (!p->args) { free(p); rc_release(resolved); goto fail; }
-                p->next = pending; pending = p;
+                p->guards=0; p->next = pending; pending = p;
             }
             size_t n = target->as.closure.arity;
             if (n > SIZE_MAX / sizeof(RcValue *)) { rc_error(ctx, "call size overflow"); rc_release(resolved); goto fail; }
@@ -1047,9 +1087,10 @@ static RcValue *apply_request(RcContext *ctx, RcValue *request) {
         rc_safepoint(ctx);
         if (rc_type(result) == RC_TAIL) { request = result; result = NULL; continue; }
         while (pending && !pending->args) {
-            ApplyPending *p = pending; pending = p->next; free(p);
-            result = rc_require_boolean(ctx, result);
-            if (!result) goto fail;
+            ApplyPending *p=pending; pending=p->next; unsigned guards=p->guards; free(p);
+            if(guards&GUARD_CONTEXT)result=rc_eval_require_argument_context(ctx,result);
+            if(result&&(guards&GUARD_BOOLEAN))result=rc_require_boolean(ctx,result);
+            if(!result)goto fail;
         }
         if (!pending) return result;
         ApplyPending *p = pending; pending = p->next;

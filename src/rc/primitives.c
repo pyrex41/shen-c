@@ -418,7 +418,9 @@ static bool install(RcContext *c,const struct Primitive *p,size_t n) {
   RcValue *started=p[i].op==P_TIME?rc_number(c,(double)clock()/CLOCKS_PER_SEC):NULL;
   if(p[i].op==P_TIME&&!started){rc_release(code);return false;}
   RcValue *captures[]={code,started};
-  RcValue *f=rc_closure(c,p[i].arity,primitive,started?2:1,captures);rc_release(code);rc_release(started);if(!f)return false;
+  RcValue *f=p[i].op==P_DO ? rc_closure_return_second(c,primitive,1,captures)
+      : rc_closure(c,p[i].arity,primitive,started?2:1,captures);
+  rc_release(code);rc_release(started);if(!f)return false;
   RcValue *s=rc_symbol(c,p[i].name);bool ok=s&&rc_function_set(c,s,f);
   if(ok) {
    switch(p[i].op) {
