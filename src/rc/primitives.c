@@ -214,7 +214,7 @@ bool rc_primitive_is_do(const RcValue *function) {
  return rc_closure_is_native(function,primitive)&&rc_arity(function)==2&&
         code&&rc_integer_value(code)==P_DO;
 }
-RcValue *rc_primitive_call_owned(RcContext *c,RcValue *function,
+static RcValue *primitive_call_owned_slow(RcContext *c,RcValue *function,
                                 size_t argc,RcValue **args,bool tail_position) {
  RcValue *code=rc_native_call_capture(c,function,argc,args,primitive);
  if(code) {
@@ -261,15 +261,18 @@ static inline RcValue *leaf_finish(RcContext *c,RcValue *result) {
  rc_safepoint(c);return result;
 }
 #define UNARY_LEAF(api,slot,expression,projection) \
-RcValue *api(RcContext *c,RcValue *fn,RcValue **args,bool tail) { \
- if(!rc_builtin_call_matches(c,slot,fn,1,args)) \
-  return rc_primitive_call_owned(c,fn,1,args,tail); \
+static inline __attribute__((always_inline)) RcValue *api##_validated(RcContext *c,RcValue *fn,RcValue **args,bool tail) { \
  RcValue *result=(expression); \
  if(projection&&!tail&&rc_type(result)==RC_TAIL) { \
   rc_release(result);return rc_apply_owned_args(c,fn,1,args); \
  } \
  RcValue *arg=args[0];args[0]=NULL;rc_release(arg); \
  return leaf_finish(c,result); \
+} \
+RcValue *api(RcContext *c,RcValue *fn,RcValue **args,bool tail) { \
+ if(!rc_builtin_call_matches(c,slot,fn,1,args)) \
+  return primitive_call_owned_slow(c,fn,1,args,tail); \
+ return api##_validated(c,fn,args,tail); \
 }
 UNARY_LEAF(rc_primitive_hd_owned,RC_BUILTIN_HD,rc_head(c,args[0]),true)
 UNARY_LEAF(rc_primitive_tl_owned,RC_BUILTIN_TL,rc_tail(c,args[0]),true)
@@ -277,20 +280,28 @@ UNARY_LEAF(rc_primitive_consp_owned,RC_BUILTIN_CONSP,truth(c,rc_type(args[0])==R
 UNARY_LEAF(rc_primitive_numberp_owned,RC_BUILTIN_NUMBERP,truth(c,rc_type(args[0])==RC_NUMBER),false)
 UNARY_LEAF(rc_primitive_stringp_owned,RC_BUILTIN_STRINGP,truth(c,rc_type(args[0])==RC_STRING),false)
 #undef UNARY_LEAF
-RcValue *rc_primitive_eq_owned(RcContext *c,RcValue *fn,RcValue **args,bool tail) {
- if(!rc_builtin_call_matches(c,RC_BUILTIN_EQ,fn,2,args))
-  return rc_primitive_call_owned(c,fn,2,args,tail);
+static inline __attribute__((always_inline)) RcValue *rc_primitive_eq_owned_validated(RcContext *c,RcValue *fn,RcValue **args,bool tail) {
+ (void)fn;(void)tail;
  RcValue *result=truth(c,rc_equal(args[0],args[1]));
  RcValue *a=args[0],*b=args[1];args[0]=NULL;args[1]=NULL;
  rc_release(a);rc_release(b);return leaf_finish(c,result);
 }
+RcValue *rc_primitive_eq_owned(RcContext *c,RcValue *fn,RcValue **args,bool tail) {
+ if(!rc_builtin_call_matches(c,RC_BUILTIN_EQ,fn,2,args))
+  return primitive_call_owned_slow(c,fn,2,args,tail);
+ return rc_primitive_eq_owned_validated(c,fn,args,tail);
+}
 #define BINARY_NUMERIC_LEAF(api,slot,op) \
-RcValue *api(RcContext *c,RcValue *fn,RcValue **args,bool tail) { \
- if(!rc_builtin_call_matches(c,slot,fn,2,args)) \
-  return rc_primitive_call_owned(c,fn,2,args,tail); \
+static inline __attribute__((always_inline)) RcValue *api##_validated(RcContext *c,RcValue *fn,RcValue **args,bool tail) { \
+ (void)fn;(void)tail; \
  RcValue *result=numeric(c,op,args[0],args[1]); \
  RcValue *a=args[0],*b=args[1];args[0]=NULL;args[1]=NULL; \
  rc_release(a);rc_release(b);return leaf_finish(c,result); \
+} \
+RcValue *api(RcContext *c,RcValue *fn,RcValue **args,bool tail) { \
+ if(!rc_builtin_call_matches(c,slot,fn,2,args)) \
+  return primitive_call_owned_slow(c,fn,2,args,tail); \
+ return api##_validated(c,fn,args,tail); \
 }
 BINARY_NUMERIC_LEAF(rc_primitive_add_owned,RC_BUILTIN_ADD,P_ADD)
 BINARY_NUMERIC_LEAF(rc_primitive_sub_owned,RC_BUILTIN_SUB,P_SUB)
@@ -301,6 +312,33 @@ BINARY_NUMERIC_LEAF(rc_primitive_lt_owned,RC_BUILTIN_LT,P_LT)
 BINARY_NUMERIC_LEAF(rc_primitive_ge_owned,RC_BUILTIN_GE,P_GE)
 BINARY_NUMERIC_LEAF(rc_primitive_le_owned,RC_BUILTIN_LE,P_LE)
 #undef BINARY_NUMERIC_LEAF
+RcValue *rc_primitive_call_owned(RcContext *c,RcValue *fn,
+                                size_t argc,RcValue **args,bool tail) {
+ typedef RcValue *(*BuiltinCall)(RcContext *,RcValue *,RcValue **,bool);
+ _Static_assert(RC_BUILTIN_COUNT == RC_BUILTIN_LE + 1,
+                "extend the validated dispatch table for new canonical slots");
+ static const BuiltinCall calls[RC_BUILTIN_COUNT]={
+  [RC_BUILTIN_HD]=rc_primitive_hd_owned_validated,
+  [RC_BUILTIN_TL]=rc_primitive_tl_owned_validated,
+  [RC_BUILTIN_CONSP]=rc_primitive_consp_owned_validated,
+  [RC_BUILTIN_NUMBERP]=rc_primitive_numberp_owned_validated,
+  [RC_BUILTIN_STRINGP]=rc_primitive_stringp_owned_validated,
+  [RC_BUILTIN_EQ]=rc_primitive_eq_owned_validated,
+  [RC_BUILTIN_ADD]=rc_primitive_add_owned_validated,
+  [RC_BUILTIN_SUB]=rc_primitive_sub_owned_validated,
+  [RC_BUILTIN_MUL]=rc_primitive_mul_owned_validated,
+  [RC_BUILTIN_DIV]=rc_primitive_div_owned_validated,
+  [RC_BUILTIN_GT]=rc_primitive_gt_owned_validated,
+  [RC_BUILTIN_LT]=rc_primitive_lt_owned_validated,
+  [RC_BUILTIN_GE]=rc_primitive_ge_owned_validated,
+  [RC_BUILTIN_LE]=rc_primitive_le_owned_validated
+ };
+ /* Failure goes straight to the slow dispatcher. Public tiny entry points do
+  * the same, so rejected foreign/null arguments cannot recurse through tags. */
+ int slot=rc_builtin_call_slot(c,fn,argc,args);
+ return slot>=0 ? calls[(unsigned)slot](c,fn,args,tail)
+                : primitive_call_owned_slow(c,fn,argc,args,tail);
+}
 RcValue *rc_cons_call_reuse(RcContext *c,RcValue *function,
                             RcValue *candidate,RcValue *head,RcValue *tail,
                             bool tail_position) {

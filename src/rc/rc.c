@@ -30,6 +30,7 @@ struct RcValue {
     RcType type;
     size_t refs, bytes, trial, visit_epoch;
     bool marked, reaches_vector, cycle_source;
+    uint8_t builtin_slot; /* Canonical slot + 1, zero for ordinary values. */
     RcContext *ctx;
     RcValue *prev, *next, *work;
     union {
@@ -67,6 +68,12 @@ typedef struct RcResolvedSymbols {
     struct RcResolvedSymbols *next;
     RcValue *values[];
 } RcResolvedSymbols;
+_Static_assert(RC_BUILTIN_COUNT <= UINT8_MAX, "builtin tags must fit in one byte");
+/* The byte occupies the prior padding before ctx, including on boxed builds. */
+_Static_assert(offsetof(RcValue, ctx) ==
+               ((offsetof(RcValue, cycle_source) + sizeof(bool) +
+                 _Alignof(RcContext *) - 1) / _Alignof(RcContext *)) * _Alignof(RcContext *),
+               "builtin tag must not shift the value header");
 struct RcContext {
     RcValue *objects;
     RcValue *object_cache[RC_OBJECT_CACHE_LIMIT];
@@ -151,7 +158,7 @@ static RcValue *allocate(RcContext *ctx, RcType type, size_t extra) {
      * are reset before a collection, and work links are set before insertion.
      * Reset the lifetime-wide defaults that must not survive pooled reuse. */
     v->prev = NULL; v->visit_epoch = 0;
-    v->marked = false; v->reaches_vector = false; v->cycle_source = false;
+    v->marked = false; v->reaches_vector = false; v->cycle_source = false; v->builtin_slot = 0;
     v->type = type; v->refs = 1; v->ctx = ctx; v->bytes = sizeof(*v) + extra;
     v->next = ctx->objects;
     if (v->next) v->next->prev = v;
@@ -384,9 +391,11 @@ bool rc_is_nil(const RcValue *v) { return v == &nil_value; }
 static bool belongs(RcContext *ctx, const RcValue *v) { return v && (v == &nil_value || is_immediate(v) || v->ctx == ctx); }
 void rc_builtin_cache_set(RcContext *ctx, RcBuiltinSlot slot, RcValue *fn) {
     /* The private installer contract guarantees the original exact builtin. */
-    if (!ctx || (unsigned)slot >= RC_BUILTIN_COUNT || !belongs(ctx,fn)) abort();
+    if (!ctx || (unsigned)slot >= RC_BUILTIN_COUNT || !belongs(ctx,fn) ||
+        rc_type(fn) != RC_CLOSURE) abort();
     RcValue *old = ctx->builtin_roots[slot];
     ctx->builtin_roots[slot] = rc_retain(fn);
+    fn->builtin_slot = (uint8_t)((unsigned)slot + 1);
     rc_release(old);
 }
 bool rc_builtin_call_matches(RcContext *ctx, RcBuiltinSlot slot, RcValue *fn,
@@ -396,6 +405,18 @@ bool rc_builtin_call_matches(RcContext *ctx, RcBuiltinSlot slot, RcValue *fn,
         !argv) return false;
     for (size_t i = 0; i < argc; ++i) if (!belongs(ctx,argv[i])) return false;
     return true;
+}
+int rc_builtin_call_slot(RcContext *ctx, RcValue *fn, size_t argc,
+                         RcValue *const *argv) {
+    /* Most user closures and unselected primitives have no tag. Check this
+     * initialized common-header byte before touching closure-specific fields. */
+    if (!ctx || !is_heap(fn) || !fn->builtin_slot) return -1;
+    if (fn->type != RC_CLOSURE || fn->ctx != ctx) return -1;
+    unsigned slot = (unsigned)fn->builtin_slot - 1;
+    if (slot >= RC_BUILTIN_COUNT || ctx->builtin_roots[slot] != fn ||
+        argc != (slot >= RC_BUILTIN_EQ ? 2u : 1u) || !argv) return -1;
+    for (size_t i = 0; i < argc; ++i) if (!belongs(ctx,argv[i])) return -1;
+    return (int)slot;
 }
 RcValue *rc_env_frame(RcContext *ctx,RcValue *parent,size_t count,
                       RcValue *const *keys,RcValue *const *values) {

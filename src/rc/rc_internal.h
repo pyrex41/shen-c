@@ -12,4 +12,7 @@ typedef enum {
 void rc_builtin_cache_set(RcContext *, RcBuiltinSlot, RcValue *);
 bool rc_builtin_call_matches(RcContext *, RcBuiltinSlot, RcValue *, size_t,
                               RcValue *const *);
+/* Validated exact canonical call slot, or -1. Includes every argument check;
+ * callers may enter the shared private tiny body without rechecking guards. */
+int rc_builtin_call_slot(RcContext *, RcValue *, size_t, RcValue *const *);
 #endif

@@ -52,7 +52,7 @@ RC_OBJECTS := $(patsubst src/rc/%.c,$(RC_BUILD)/%.o,$(RC_SOURCES))
 ifeq ($(RC_ACYCLIC_ONLY),1)
 RC_TESTS := test_acyclic
 else
-RC_TESTS := test_cycles test_primitives test_eval test_env test_bool_tail test_apply_fast test_object_cache test_immediates test_collection test_reuse test_acyclic test_symbols test_primitive_fast test_equal test_canonical_primitives test_canonical_numeric test_callee
+RC_TESTS := test_cycles test_primitives test_eval test_env test_bool_tail test_apply_fast test_object_cache test_immediates test_collection test_reuse test_acyclic test_symbols test_primitive_fast test_equal test_canonical_primitives test_canonical_numeric test_generic_builtin_tag test_callee
 endif
 RC_TEST_BINS := $(addprefix $(RC_BIN)/,$(RC_TESTS))
 
