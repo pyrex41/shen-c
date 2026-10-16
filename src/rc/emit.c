@@ -48,9 +48,9 @@ struct Recycle;
 typedef struct DoGuard { int slot; struct DoGuard *outer; } DoGuard;
 typedef struct {
   Program *p; Buf code; Binding *bind; int nb, cap, slots, label, max_args; bool symbol_used;
-  int arity, boolean_tail; bool self_loop;
+  int arity, boolean_tail; bool self_loop,borrowed_fn_used;
   DoGuard *do_guard;
-  int *physical,*free_slots,slot_cap,frame_slots,nfree; unsigned char *active;
+  int *physical,*free_slots,slot_cap,frame_slots,nfree; unsigned char *active,*borrowed_fn;
   char fail[64]; struct Recycle *recycle;
 } RcEmitFn;
 static void put(Buf *b, const char *fmt, ...) {
@@ -89,9 +89,10 @@ static int fresh(RcEmitFn *f) {
     f->physical=resize(f->p,f->physical,(size_t)f->slot_cap*sizeof(*f->physical));
     f->free_slots=resize(f->p,f->free_slots,(size_t)f->slot_cap*sizeof(*f->free_slots));
     f->active=resize(f->p,f->active,(size_t)f->slot_cap*sizeof(*f->active));
+    f->borrowed_fn=resize(f->p,f->borrowed_fn,(size_t)f->slot_cap*sizeof(*f->borrowed_fn));
   }
   f->physical[slot]=f->nfree?f->free_slots[--f->nfree]:f->frame_slots++;
-  f->active[slot]=1;return slot;
+  f->active[slot]=1;f->borrowed_fn[slot]=0;return slot;
 }
 /* Logical slots remain unique for bindings, liveness, and trap boundaries.
  * Only private expression temporaries become available for frame reuse. In
@@ -113,7 +114,9 @@ static void rewrite_frame_code(Buf *out,const RcEmitFn *f) {
     }else if(s[i]=='t'&&s[i+1]=='['&&(i==0||!((s[i-1]>='a'&&s[i-1]<='z')||(s[i-1]>='A'&&s[i-1]<='Z')||(s[i-1]>='0'&&s[i-1]<='9')||s[i-1]=='_'))) {
       size_t end=i+2;int slot=0;while(s[end]>='0'&&s[end]<='9'){slot=slot*10+s[end]-'0';end++;}
       if(end>i+2&&s[end]==']'&&slot<f->slots) {
-        put(out,"%.*st[%d]",(int)(i-start),s+start,f->physical[slot]);i=end+1;start=i;
+        if(f->borrowed_fn[slot])put(out,"%.*sborrowed_fn",(int)(i-start),s+start);
+        else put(out,"%.*st[%d]",(int)(i-start),s+start,f->physical[slot]);
+        i=end+1;start=i;
       }else i++;
     }else i++;
   }
@@ -167,7 +170,10 @@ static void frame_code(Buf *out,const RcEmitFn *f) {
  }
  discard(nulls);discard(rewritten.p);
 }
-static void drop(RcEmitFn *f,int x) { put(&f->code,"  if(t[%d]) rc_release(t[%d]); t[%d]=NULL;\n",x,x,x); }
+static void drop(RcEmitFn *f,int x) {
+ if(f->borrowed_fn[x])put(&f->code,"  t[%d]=NULL;\n",x);
+ else put(&f->code,"  if(t[%d]) rc_release(t[%d]); t[%d]=NULL;\n",x,x,x);
+}
 static void check(RcEmitFn *f,int x) { put(&f->code,"  if(!t[%d]) goto %s;\n",x,f->fail); }
 static void move(RcEmitFn *f,int dst,int src) { put(&f->code,"  t[%d]=t[%d]; t[%d]=NULL;\n",dst,src,src); }
 /* The runtime borrows this scratch storage only for the duration of a call;
@@ -377,12 +383,13 @@ static int trap(RcEmitFn *f,RcValue *args,int tail,const Live *after){
  put(&f->code,"  t[%d]=%s(ctx,t[%d],1,a);\n",dst,call_api(f,tail),h);drop(f,h);if(!optimize(f))drop(f,err);check(f,dst);drop_dead(f,after);
  put(&f->code,"trap_done_%d:;\n",id);return dst;
 }
-static int function_head(RcEmitFn *f,RcValue *head,const Live *after){
+static int function_head(RcEmitFn *f,RcValue *head,const Live *after,bool borrow){
  if(is_symbol(head)&&binding(f,name(head))<0){
   int fn=fresh(f);size_t index=symbol_index(f,name(head));
   /* Resolve the current binding before evaluating any argument. The table
    * caches symbol identity only; redefining functions remains observable. */
-  put(&f->code,"  t[%d]=rc_function_get(ctx,symbols[%zu]);\n",fn,index);check(f,fn);return fn;
+  if(borrow){f->borrowed_fn[fn]=1;f->borrowed_fn_used=true;}
+  put(&f->code,"  t[%d]=%s(ctx,symbols[%zu]);\n",fn,borrow?"rc_function_get_borrowed":"rc_function_get",index);check(f,fn);return fn;
  }
  int fn=expr(f,head,0,after);put(&f->code,"  if(rc_type(t[%d])==RC_SYMBOL) { RcValue *resolved=rc_function_get(ctx,t[%d]); rc_release(t[%d]); t[%d]=resolved; }\n",fn,fn,fn,fn);check(f,fn);return fn;
 }
@@ -409,7 +416,7 @@ static int expr_inner(RcEmitFn *f,RcValue *x,int tail,const Live *after){
   RcValue *q=x;for(int i=0;i<n;i++){nodes[i]=q;q=second(rest(q));}
   suffix[n]=uses(f,end);merge(p,&suffix[n],after);
   for(int i=n-1;i>=0;i--){suffix[i]=copy_live(p,&suffix[i+1]);if(optimize(f))scan(f,first(rest(nodes[i])),NULL,&suffix[i]);}
-  for(int i=0;i<n;i++){functions[i]=function_head(f,first(nodes[i]),&suffix[i]);left[i]=expr(f,first(rest(nodes[i])),0,&suffix[i+1]);}
+  for(int i=0;i<n;i++){functions[i]=function_head(f,first(nodes[i]),&suffix[i],false);left[i]=expr(f,first(rest(nodes[i])),0,&suffix[i+1]);}
   DoGuard *saved=f->do_guard,*guards=NULL;
   if(optimize(f)&&tail){
    guards=alloc(p,(size_t)n*sizeof(*guards));
@@ -444,7 +451,17 @@ static int expr_inner(RcEmitFn *f,RcValue *x,int tail,const Live *after){
   }
   put(&f->code,"  if(!rc_function_set(ctx,t[%d],t[%d])) goto %s;\n",t,cl,f->fail);drop(f,cl);p->defuns++;drop_dead(f,after);return t;
  }
- int n=count(p,args);Live head_after=sequence_live(f,args,after);int fn=function_head(f,head,&head_after);clear_live(p,&head_after);
+ int n=count(p,args);
+ /* Atom construction can allocate, but never invokes callbacks or a safepoint.
+  * Therefore the selected function's symbol binding roots it until leaf-helper
+  * entry. Generic helper fallback roots the callee before running user code.
+  * Module direct bodies and reuse helpers require a caller-owned callee. */
+ bool borrow_fn=optimize(f)&&special&&leaf_primitive(head)&&!named(head,"cons")&&(!named(head,"tl")||!f->recycle);
+ if(borrow_fn)for(RcValue *q=args;!rc_is_nil(q);q=rest(q)){
+  RcType type=rc_type(first(q));
+  if(type!=RC_NIL&&type!=RC_SYMBOL&&type!=RC_NUMBER&&type!=RC_STRING){borrow_fn=false;break;}
+ }
+ Live head_after=sequence_live(f,args,after);int fn=function_head(f,head,&head_after,borrow_fn);clear_live(p,&head_after);
  Recycle recycle={-1,-1,f->recycle};
  if(optimize(f)&&special&&named(head,"cons")&&n==2){Live used=sequence_live(f,args,NULL);
   for(int i=f->nb-1;i>=0;i--)if(binding(f,f->bind[i].name)==f->bind[i].slot&&has(&used,f->bind[i].slot)&&!has(after,f->bind[i].slot)){recycle.binding=f->bind[i].slot;recycle.token=fresh(f);break;}
@@ -495,14 +512,20 @@ static void finish_function(RcEmitFn *f,int id,int arity,int r){
  symbol_frame(&p->functions,f->symbol_used);
  if(f->frame_slots>64)put(&p->functions,"  RcValue **t=calloc(%d,sizeof(*t));\n  if(!t) return rc_error(ctx,\"native frame allocation failed\");\n  RcValue **a=t+%d; (void)a;\n",f->frame_slots+f->max_args,f->frame_slots);
  else put(&p->functions,"  RcValue *t[%d]={0}; RcValue *a[%d]; (void)a;\n",f->frame_slots?f->frame_slots:1,f->max_args?f->max_args:1);
+ /* Atom-only argument evaluation prevents overlapping borrowed callees in
+  * this activation, so all logical borrowed slots share one scalar. */
+ if(f->borrowed_fn_used)put(&p->functions,"  RcValue *borrowed_fn=NULL; (void)borrowed_fn;\n");
  if(f->self_loop)put(&p->functions,"entry:;\n");
  frame_code(&p->functions,f);r=f->physical[r];
- put(&p->functions,"  result=t[%d]; t[%d]=NULL;\ncleanup:\n  for(size_t i=0;i<%d;i++) if(t[i]) rc_release(t[i]);\n",r,r,f->frame_slots);if(f->frame_slots>64)put(&p->functions,"  free(t);\n");put(&p->functions,"  return result;\n");
+ put(&p->functions,"  result=t[%d]; t[%d]=NULL;\ncleanup:\n  for(size_t i=0;i<%d;i++) if(t[i]) rc_release(t[i]);\n",r,r,f->frame_slots);
+ if(f->borrowed_fn_used)put(&p->functions,"  borrowed_fn=NULL;\n");
+ if(f->frame_slots>64)put(&p->functions,"  free(t);\n");put(&p->functions,"  return result;\n");
  if(f->self_loop){
   /* a owns the staged arguments while the previous iteration's lexical and
    * temporary owners are dropped. argv belongs to the active runtime call,
    * so it is distinct from this callback's frame and scratch storage. */
   put(&p->functions,"recur:\n  for(size_t i=0;i<%d;i++) if(t[i]) { rc_release(t[i]); t[i]=NULL; }\n",f->frame_slots);
+  if(f->borrowed_fn_used)put(&p->functions,"  borrowed_fn=NULL;\n");
   for(int i=0;i<arity;i++)put(&p->functions,"  argv[%d]=a[%d]; a[%d]=NULL;\n",i,i,i);
   put(&p->functions,"  rc_safepoint(ctx);\n  goto entry;\n");
  }

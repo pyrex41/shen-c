@@ -1041,6 +1041,10 @@ RcValue *rc_function_get(RcContext *ctx, RcValue *symbol) {
     RcValue *v = rc_function_lookup(ctx, symbol);
     return v ? v : rc_error(ctx, "undefined function %s", rc_text(symbol) ? rc_text(symbol) : "<non-symbol>");
 }
+RcValue *rc_function_get_borrowed(RcContext *ctx, RcValue *symbol) {
+    RcValue *v = belongs(ctx, symbol) && rc_type(symbol) == RC_SYMBOL ? symbol->as.text.function : NULL;
+    return v ? v : rc_error(ctx, "undefined function %s", rc_text(symbol) ? rc_text(symbol) : "<non-symbol>");
+}
 bool rc_function_set(RcContext *ctx, RcValue *symbol, RcValue *fn) {
     if (!fn || rc_type(fn) != RC_CLOSURE) { rc_error(ctx, "function binding expects a closure"); return false; }
     return ctx && set_symbol_slot(ctx, symbol, fn, true);

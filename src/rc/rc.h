@@ -194,6 +194,11 @@ bool rc_stream_close(RcContext *ctx, RcValue *stream);
 RcValue *rc_global_get(RcContext *ctx, RcValue *symbol);
 bool rc_global_set(RcContext *ctx, RcValue *symbol, RcValue *value);
 RcValue *rc_function_get(RcContext *ctx, RcValue *symbol);
+/* Borrowed current function binding, with the same undefined-function errors.
+ * Valid only while the binding remains unchanged or an independent owner roots
+ * it. Callers must prevent callbacks/redefinition until a dispatch API protects
+ * the callee; ordinary value results from rc_function_get remain owned. */
+RcValue *rc_function_get_borrowed(RcContext *ctx, RcValue *symbol);
 /* Missing binding returns NULL without setting an error; result is owned. */
 RcValue *rc_function_lookup(RcContext *ctx, RcValue *symbol);
 bool rc_function_set(RcContext *ctx, RcValue *symbol, RcValue *function);
