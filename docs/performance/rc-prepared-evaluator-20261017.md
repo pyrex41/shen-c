@@ -1,7 +1,9 @@
 # Shen 43.1 evaluator and ownership optimization
 
-Performance target remains **OPEN** while the final candidate is being measured
-and qualified. The 43.1 correctness checkpoint `8625781` and its S42 predecessor
+The [final measured checkpoint](rc-43.1-final-20261017.md) passes the numerical
+performance gates and all recorded correctness/platform checks. Strict quiet-host
+provenance remains UNKNOWN, so that part of the finish line remains OPEN.
+The 43.1 correctness checkpoint `8625781` and its S42 predecessor
 remain intact. Work is isolated on `perf/shen-43.1-prepared-eval`, starting from
 the comparative profiling checkpoint `c34045b`.
 
@@ -28,10 +30,8 @@ measurements do not substitute for the final two batches of five Boehm pairs.
 
 F1's exploratory three-way comparison with Boehm has a median paired user CPU
 ratio of 0.8892. One pair is 0.9082, and the first Boehm sample has higher
-instruction/collection work; every sample is retained. This is promising but
-not final acceptance. Maximum observed F1 RSS is 32,047,104 bytes, below the
-32,531,251-byte acceptance ceiling and below Boehm. The ten frozen pairs and
-remaining platform checks are the next gates.
+instruction/collection work; every sample is retained. These exploratory pairs preceded the now-passing twenty-run numerical qualification. Maximum observed F1 RSS is 32,047,104 bytes, below the
+32,531,251-byte acceptance ceiling and below Boehm. The final frozen pairs and remaining platform checks now pass; strict host quietness remains unqualified.
 
 These changes compare complete implementations. They do not isolate the causal
 cost of reference counting versus Boehm.
@@ -109,11 +109,12 @@ The [portable publication](../evidence/rc-optimization-20261017/publication.json
 binds original and published hashes separately; its [candidate analysis](../evidence/rc-optimization-20261017/opt-20261017/candidate-analysis.json)
 retains every matched ratio. No binaries or object files are published.
 
-The final sources match frozen F1. Its complete generated kernel/suite passes
-fatal ASan/UBSan with ownership-summary assertions; default runtime and warm
-Prolog controls pass. Default/boxed runtime and emitted checks also pass in the
-later G1 build, whose pure condition experiment was then reverted. Final fresh
-Make/CMake/install and source-compilation receipts remain pending. The new controls
+The final sources match frozen F1. Fatal default/boxed runtime and emitted
+checks, full generated-kernel sanitizers with ownership assertions, fresh Make
+source/CLI/metadata checks, 24/24 CMake tests, Darwin Nix installation and its
+complete suite, and all four Linux/macOS/sanitizer CI jobs pass. Exact final
+receipts and reproduction commands are in the final measured checkpoint.
+The new controls
 cover shared-body cache guards, lazily materialized environments, 400 generated
 comparisons against the original interpreter, recursive promotion, cache reuse,
 cycles, 35 native-condition results and 36 guarded-Prolog cases. The dependency controls warm the guard cache before redefinition, so they exercise invalidation. A per-context single-entry cache stores three permanent symbol keys and a guard mask. Every function publication invalidates it, and saturation disables cache hits.
@@ -124,7 +125,7 @@ new runtime control, causing a late parser failure; the driver passes syntax
 validation and is rerun unchanged. That interrupted run is not a qualification
 PASS. Baseline and every candidate's timing samples remain intact.
 
-Final acceptance still needs ten frozen alternating RC/Boehm pairs, CPU ratio
+The final numerical acceptance runs satisfy ten frozen alternating RC/Boehm pairs, CPU ratio
 <=0.90 in each batch, eight CPU wins, wall ratio <=1.03, maximum RSS <=1.05 of the
 30,982,144-byte pre-optimization RC baseline, and RC below Boehm in every pair.
 Profiling stays separate. Defender and desktop activity are present, so host

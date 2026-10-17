@@ -1,0 +1,24 @@
+{
+  "<BOEHM_ROOT>/obj/main.o": {
+    "producer_strings": [
+      "Apple clang version 21.0.0"
+    ]
+  },
+  "<BOEHM_ROOT>/obj/kernel_aot/sys.o": {
+    "producer_strings": [
+      "Apple clang version 21.0.0"
+    ]
+  },
+  "obj/guard-f1-release/rc.o": {
+    "producer_strings": [
+      "Apple clang version 21.0.0"
+    ]
+  },
+  "obj/rooted-e2-release/kernel.o": {
+    "producer_strings": [
+      "Apple clang version 21.0.0"
+    ]
+  },
+  "rc_build_version": "cmdsize 32\n platform 1\n    minos 27.0\n      sdk 27.0\n   ntools 1\n     tool 3\n  version 27037.1",
+  "boehm_build_version": "cmdsize 32\n platform 1\n    minos 27.0\n      sdk 27.0\n   ntools 1\n     tool 3\n  version 27037.1"
+}

@@ -1,0 +1,44 @@
+{
+  "release_manifest_sha256": "c20ce7e0c5f98b3d427ce6db4045b6a9ac335f5d7cfd592333baee7061f69f46",
+  "kernel_version": "43.1",
+  "source": "<CI_ROOT>/evidence/rc/toolchain-20261017T225541.389499Z/pattern-sum.shen",
+  "source_sha256": "e960d0b574234dd7506ec5134423a7118cfcffbbbea7006224ce7938d5f15f9c",
+  "cwd": "<CI_ROOT>",
+  "kernel_sha256": {
+    "shen/src/kl/sys.kl": "97412f6584716e2418aea326c1ecf0456a77a205504d078d26936cd5b9370412",
+    "shen/src/kl/writer.kl": "a1da3d9a287d0d4d78f87517ff11b2ca7690a01bf412dd72178f29ef6e7a4a0d",
+    "shen/src/kl/core.kl": "f2477d4151c3ecd2d76c8f2b58ec577a6dc830392e0afd342e2fdb3d1adb1a75",
+    "shen/src/kl/reader.kl": "97f008caaf51072851cc730620d9bdd816bfd1be70cb22fd502a6b3cb000b269",
+    "shen/src/kl/declarations.kl": "fa1f04b92a61167971b3b58a3785b05b79be984f123bb43b4bd03388ee29f5b7",
+    "shen/src/kl/toplevel.kl": "7c0dae226e3fa6a9ca53bd44729774a5f6a8025f2d7fcb43a58ae0e7a2bc46c2",
+    "shen/src/kl/macros.kl": "617c70c191f07c054e6fc597006477bc57519944c0e27956336e4d72e3e8a2af",
+    "shen/src/kl/load.kl": "56eba5b674e5085a09dfa38390b1e7f677496e0c601fd3ed6f482577bcf971c9",
+    "shen/src/kl/prolog.kl": "dc401f8940f7f97fbfc87157338ff8b84fd845c1101b70e6db893886aaf11c17",
+    "shen/src/kl/sequent.kl": "b1018c6d58706f78ac81cc72cf7c4712d36d1be173708ff9def26d0169ddd644",
+    "shen/src/kl/track.kl": "6130a32d6e5c7afed98f20dfbc68eaf7f68c6e2e714114852514d4f604c8ff3f",
+    "shen/src/kl/t-star.kl": "546928d3435934091fc6df6274a6c9d58ece7297c868fbe55ebe328be360159a",
+    "shen/src/kl/yacc.kl": "192880765a29ae6801ef9088a7511e4477be998e6c16ab82f3cc3a2087727f00",
+    "shen/src/kl/types.kl": "8b6db3592b829f08a0f35367733adf7c2e686220be699a16b392b4cce4a77c3c"
+  },
+  "compiler_sha256": {
+    "cli": "fb566a184c8267a981da258c24f2446e414946972a526a5964162911ec720ece",
+    "builder": "da9f55a2ac07cfc089a1dbb50a3b5aa35052d4d11f8b8db86abc8310ba7e887c"
+  },
+  "conservative_ownership": false,
+  "acyclic_requested": false,
+  "source_transport": "escaped-v1",
+  "frontend": "compiled standard kernel read-file then shen.shen->kl-h; fresh bootstrap context",
+  "frontend_seconds": 0.161,
+  "build_seconds": 36.053,
+  "kl_sha256": "1dd74ae44cb50add33119690c25a4005eea22df8e9d8071d6172f79ddc125b93",
+  "source_events_sha256": "64b47cf42dcea04c11a730e705a23154e0042c47f886f8164bc404e9e1081e40",
+  "artifact_sha256": "cf244e579270bc0db101beecfcbdd5f8bfe2bb7be27fbbb11e3c005168769cc2",
+  "output_sha256": {
+    "app.c": "977bfc305e8f89fd658ebcd0e2bf185cfdcba8551caa3df35d7bb66510c7317f",
+    "Makefile": "e590b185bc8ffd1ef84e9361658386de608b87f3349f7e389d8579bcb4888622",
+    "app": "cf244e579270bc0db101beecfcbdd5f8bfe2bb7be27fbbb11e3c005168769cc2",
+    "source.kl": "1dd74ae44cb50add33119690c25a4005eea22df8e9d8071d6172f79ddc125b93",
+    "source-events.kl": "64b47cf42dcea04c11a730e705a23154e0042c47f886f8164bc404e9e1081e40"
+  },
+  "acyclic_forced_by_makefile": false
+}

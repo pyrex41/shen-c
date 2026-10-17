@@ -6,6 +6,18 @@ Boehm comparator is a detached worktree at 97aa8e1.
 
 ## Written implementation plan
 
+Latest checkpoint: [43.1 final measured qualification](../performance/rc-43.1-final-20261017.md).
+Code `8e01579` is pushed on `perf/shen-43.1-prepared-eval`. Two frozen five-pair
+CPU ratios are **0.8811 / 0.8360**, with **10/10 CPU wins**, twenty complete 136/0
+runs, wall improvements and RSS **+3.49%** versus the frozen RC baseline, below
+Boehm in every pair. All four Linux/macOS/sanitizer CI jobs pass, alongside fresh
+Darwin Make/CMake/Nix/source checks. Numerical performance is PASS; strict
+quiet-host provenance remains UNKNOWN because background Defender/desktop
+services are recorded. The full finish line remains OPEN for that condition.
+These results supersede the historical OPEN CPU results below without replacing
+their evidence. Reviewable checkpoints: 43.1 correctness `8625781`, measured
+optimization `8e01579`, and the final qualification documentation/evidence commit.
+
 Current optimization continuation: [prepared evaluator and certified ownership](../performance/rc-prepared-evaluator-20261017.md). The original checkpoints below remain historical evidence; new candidate qualification is recorded separately.
 
 Follow-up on 2026-10-17: [comparative profiling and CPU budget](../performance/rc-comparative-profile-20261017.md).

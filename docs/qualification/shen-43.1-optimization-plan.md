@@ -28,3 +28,5 @@ Start: `c34045b`; product baseline `8625781`. Isolated worktree/branch:
 Measured continuation: B3 passes the exploratory memory gate; C1 native conditions, D1 guarded Prolog borrows and E1 owned-exit summaries each win matched pairs. E2 tests privately rooted dispatch. See `../performance/rc-prepared-evaluator-20261017.md` for exact evidence boundaries.
 
 E2 and F1 improve matched CPU; G1 was reverted after 0/3 wins despite fewer instructions. Freeze F1 for the ten-pair gate and remaining CLI/build/platform qualification.
+
+Frozen F1 now passes ten paired numerical gates (0.8811/0.8360 CPU, 10 wins, RSS +3.49%), complete correctness and all four CI lanes. Final report: `../performance/rc-43.1-final-20261017.md`. Strict quiet-host provenance remains UNKNOWN; no further product optimization is needed to meet the recorded numerical target.

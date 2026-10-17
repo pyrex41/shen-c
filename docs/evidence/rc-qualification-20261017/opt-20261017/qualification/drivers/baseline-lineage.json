@@ -1,0 +1,10 @@
+{
+  "scope": "RSS lineage; distinct from the post-assoc 8625781 diagnostic reference",
+  "old_final_config": "<RC_BASELINE_ROOT>/evidence/rc/qualified-freeze-v2/final-config.json",
+  "old_final_config_sha256": "ff17bf714174bf34b46e4cd471ae81491a8724094d25fff54147b3358cab57b8",
+  "rss_receipt": "<RC_BASELINE_ROOT>/evidence/rc/qualified-baseline/result.json",
+  "rss_receipt_sha256": "8cebbb416ee6798c20a124205bdeb0732ce13a02871c8d88ee6965e75c3dab75",
+  "rss_baseline_median_bytes": 30982144,
+  "execution_status": "PASS",
+  "baseline_binary_sha256": "d2e1e9aab7db9f579a6ea0e3670e354fbbb7475af45f40729194ff4fe643393c"
+}

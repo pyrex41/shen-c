@@ -36,6 +36,8 @@ for directory in a.input:
   if total>512*1024*1024:raise ValueError('publication input budget exceeded')
   raw=path.read_bytes();text=raw.decode('utf-8',errors='backslashreplace')
   for old,new in replacements:text=text.replace(old,new)
+  text=re.sub(r'/(?:Users|home)/runner/work/[^/\s\"\'<>]+/[^/\s\"\'<>]+', '<CI_ROOT>',text)
+  text=re.sub(r'/(?:Users|home)/[^/\s\"\'<>]+', '<HOME>',text)
   text=re.sub(r'/var/folders/[^\s\"\']+', '<TMP>',text)
   portable=text.encode();target=out/relative/rel
   if path.suffix in {'.json','.jsonl','.py','.sh'}:

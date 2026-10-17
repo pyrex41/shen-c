@@ -1,0 +1,18 @@
+{
+  "repetitions": 1,
+  "source_identity": {
+    "commit": "8e01579c238ad6bf2aef18492bb47cf389cbbeed",
+    "nix_output": "/nix/store/1rcjcyjqa4s8nkvalkhimgn12nin6azy-shen-c-0.2.3"
+  },
+  "cases": [
+    {
+      "label": "nix_installed",
+      "argv": [
+        "/nix/store/1rcjcyjqa4s8nkvalkhimgn12nin6azy-shen-c-0.2.3/bin/shen-rc",
+        "script",
+        "runme.shen"
+      ],
+      "env": {}
+    }
+  ]
+}

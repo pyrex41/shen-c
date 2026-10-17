@@ -1,0 +1,36 @@
+{
+  "scope": "diagnostic counters only; native kernel -O0, runtime -O2, no performance credit",
+  "commands": [
+    [
+      "/usr/bin/cc",
+      "-O2",
+      "-g",
+      "-std=c17",
+      "-I<OPT_ROOT>/evidence/rc/opt-20261017/diagnostic-final/sources",
+      "-c",
+      "<OPT_ROOT>/evidence/rc/opt-20261017/diagnostic-final/main-total.c",
+      "-o",
+      "<OPT_ROOT>/evidence/rc/opt-20261017/diagnostic-final/main-total.o"
+    ],
+    [
+      "/usr/bin/cc",
+      "<OPT_ROOT>/evidence/rc/opt-20261017/diagnostic-final/rc.o",
+      "<OPT_ROOT>/evidence/rc/opt-20261017/diagnostic-final/primitives.o",
+      "<OPT_ROOT>/evidence/rc/opt-20261017/diagnostic-final/eval.o",
+      "<OPT_ROOT>/evidence/rc/opt-20261017/diagnostic-final/read.o",
+      "<OPT_ROOT>/evidence/rc/opt-20261017/diagnostic-final/main-total.o",
+      "<OPT_ROOT>/evidence/rc/opt-20261017/diagnostic-final/kernel.o",
+      "-lm",
+      "-o",
+      "<OPT_ROOT>/evidence/rc/opt-20261017/diagnostic-final/shen-counts-total"
+    ]
+  ],
+  "sha256": {
+    "<OPT_ROOT>/evidence/rc/opt-20261017/diagnostic-final/main-total.c": "4d4b3892f167bc2c8c1fb46a33ac4229c2d23d8ae5edf8fe05e758e059c1b437",
+    "<OPT_ROOT>/evidence/rc/opt-20261017/diagnostic-final/rc.o": "6f1ab83630fe689252cae7222240ad1dca567745510791940a45634c2fc5974b",
+    "<OPT_ROOT>/evidence/rc/opt-20261017/diagnostic-final/primitives.o": "f2684e6ba417c00df58654768d9281484d4360d47f672861b6a5552aa6cc1007",
+    "<OPT_ROOT>/evidence/rc/opt-20261017/diagnostic-final/eval.o": "79c03d0e5aa798ac5149bb02b28bc0291672e747bfddd1804709ee971a795f50",
+    "<OPT_ROOT>/evidence/rc/opt-20261017/diagnostic-final/read.o": "65d19b497c6c252aac0f93198da14256d2be92536f971edd9bbb8f60df1e04af",
+    "<OPT_ROOT>/evidence/rc/opt-20261017/diagnostic-final/kernel.o": "f3d75aadfcfa694d6156a2f97f75f6c53481bc8930436e6e354e340415573b77"
+  }
+}
