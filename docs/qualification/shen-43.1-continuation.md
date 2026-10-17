@@ -6,6 +6,15 @@ Boehm comparator is a detached worktree at 97aa8e1.
 
 ## Written implementation plan
 
+Follow-up on 2026-10-17: [comparative profiling and CPU budget](../performance/rc-comparative-profile-20261017.md).
+Both backends now have repeated whole-process/load-focused profiles and exclusive
+phase accounting. Reading/macro processing and translation show the main excess
+RC time; diagnostic calibration limits precise phase comparisons. A two-counter
+control saves 2.6% median paired CPU but violates the statistics contract and is
+not a product candidate. Closure/symbol temporaries account for about 66% of
+ownership operations. Next: compiler ownership/effect summaries at certified
+source-processing call boundaries. Product remains `8625781`; target stays OPEN.
+
 1. Vendor byte-exact official S43 archive subsets, bind a release manifest to
    kernel, source, boot order, suite and redirect output. Confirm the suite count
    structurally. Preserve S42 suite and historical measurements.

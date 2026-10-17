@@ -1,0 +1,65 @@
+{
+  "scope": "diagnostic follow-up; product runtime/compiler unchanged from 8625781",
+  "host": {
+    "system": "Darwin",
+    "node": "Mac.lan",
+    "release": "27.0.0",
+    "version": "Darwin Kernel Version 27.0.0: Tue Aug 11 21:02:59 PDT 2026; root:xnu-13432.1.9~1/RELEASE_ARM64_T8142",
+    "machine": "arm64"
+  },
+  "os": "ProductName:\t\tmacOS\nProductVersion:\t\t27.0.1\nBuildVersion:\t\t26A434\n",
+  "compiler": "Apple clang version 21.0.0 (clang-2100.3.34.2)\nTarget: arm64-apple-darwin27.0.0\nThread model: posix\nInstalledDir: /Library/Developer/CommandLineTools/usr/bin\n",
+  "sdk": "27.0",
+  "manifest_sha256": "c20ce7e0c5f98b3d427ce6db4045b6a9ac335f5d7cfd592333baee7061f69f46",
+  "runtime_compiler_sha256": {
+    "src/rc/emit.c": "b8705439e0bbd60cc6fd3f57456351f461b973935b903761c2f4fc9cb12de05a",
+    "src/rc/emit.h": "ae1946b669f771941b12a706316a28090aefd126f54cc687fa00a3b10b322a9f",
+    "src/rc/eval.c": "177229776becca7592459e2ee9625a97bf16cc8fc5feaffabbd3e9c5e455c3dd",
+    "src/rc/eval.h": "40840e20cb00334a7032ef11aec08ce6a0846912ae05dfb0d08e894ba7ad2e15",
+    "src/rc/main.c": "aed4ac89c8aaf338f8519b35554effd251b04d47bbee6dbf5781343097d74275",
+    "src/rc/primitives.c": "3e51bcb2083475e2d07d6cb0ce1b08f9d7a7ee524e74779be2c4a7781f65efc5",
+    "src/rc/primitives.h": "ab8cc324d48775dded4ca6cd49eabd1a99a93fb9ff33e96862cc5243636f0a77",
+    "src/rc/rc.c": "e5d89b2abe397320ba0b2e77afda975f2189af84589bc9daf7da952c155103bf",
+    "src/rc/rc.h": "b77320047d47b013b5064b44d749e80fab11319769145d9e6a676371d9990aec",
+    "src/rc/rc_internal.h": "da618b5f1687911ae775d983fc115007d81e039c8a19b3fcab92c09e9282e438",
+    "src/rc/read.c": "f61444980f2d34d3986f9640103b3478501c4d368f6c2dd5058a4b39b3143667",
+    "src/rc/read.h": "71fb3e8ce757174ee47dde95f732200ae1b023c66f8164ac0a4d82ebb241fea5"
+  },
+  "binaries": {
+    "checkpoint": {
+      "path": "<CHECKPOINT_ROOT>/bin/shen-rc",
+      "sha256": "c1c5aeaacd96d433194ce42670ba17e6cfd4d0af21209a5ae3486475169a8829",
+      "dependencies": "<CHECKPOINT_ROOT>/bin/shen-rc:\n\t/usr/lib/libSystem.B.dylib (compatibility version 1.0.0, current version 1359.0.0)\n"
+    },
+    "boehm": {
+      "path": "<BOEHM_ROOT>/bin/shen-c",
+      "sha256": "c3673fd327c8c74e0485d013fb9f48f004583fa31dcdfe9f7bbcb1db3db11f3b",
+      "dependencies": "<BOEHM_ROOT>/bin/shen-c:\n\t/nix/store/r9bdx29an70k9jg6jj2h1ccnpjqdbwzg-boehm-gc-8.2.12/lib/libgc.1.dylib (compatibility version 7.0.0, current version 7.6.0)\n\t/usr/lib/libSystem.B.dylib (compatibility version 1.0.0, current version 1359.0.0)\n"
+    },
+    "accounting-rc": {
+      "path": "<PROFILE_ROOT>/evidence/rc/profile-20261017/build-v6/shen-rc",
+      "sha256": "984b275b5b106c474eb7c9f828d4a8aba06c00167c8d0a99001368a10f586bfb",
+      "dependencies": "<PROFILE_ROOT>/evidence/rc/profile-20261017/build-v6/shen-rc:\n\t/usr/lib/libSystem.B.dylib (compatibility version 1.0.0, current version 1359.0.0)\n"
+    },
+    "accounting-boehm": {
+      "path": "<PROFILE_ROOT>/evidence/rc/profile-20261017/build-v6/shen-boehm",
+      "sha256": "7d175895654cb9c574414742c5b43bd9904cceb6ae574291f91afc8cd1793187",
+      "dependencies": "<PROFILE_ROOT>/evidence/rc/profile-20261017/build-v6/shen-boehm:\n\t/nix/store/r9bdx29an70k9jg6jj2h1ccnpjqdbwzg-boehm-gc-8.2.12/lib/libgc.1.dylib (compatibility version 7.0.0, current version 7.6.0)\n\t/usr/lib/libSystem.B.dylib (compatibility version 1.0.0, current version 1359.0.0)\n"
+    },
+    "counter-disabled": {
+      "path": "<PROFILE_ROOT>/evidence/rc/profile-20261017/counter-control/shen-counter-control",
+      "sha256": "952ad99aa1fb8b52eb845766a3d24d87d5e3329669156886a539e494e9f7a08a",
+      "dependencies": "<PROFILE_ROOT>/evidence/rc/profile-20261017/counter-control/shen-counter-control:\n\t/usr/lib/libSystem.B.dylib (compatibility version 1.0.0, current version 1359.0.0)\n"
+    },
+    "typed": {
+      "path": "<PROFILE_ROOT>/evidence/rc/profile-20261017/type-counts/shen-type-counts",
+      "sha256": "522a8e3b10283dd00253255cd83140a5f43f6490cca00086d38abdd05e5b7583",
+      "dependencies": "<PROFILE_ROOT>/evidence/rc/profile-20261017/type-counts/shen-type-counts:\n\t/usr/lib/libSystem.B.dylib (compatibility version 1.0.0, current version 1359.0.0)\n"
+    }
+  },
+  "dependencies": {
+    "/nix/store/r9bdx29an70k9jg6jj2h1ccnpjqdbwzg-boehm-gc-8.2.12/lib/libgc.1.dylib": "5115bc7b4d0d795912999a18f2ef53be28f38ef2b258df023e43fad129d5496f"
+  },
+  "source_flags_note": "All compile/link arguments are retained in build receipts. Primary driver byte hashes are in harness-snapshot.json; final driver smoke hashes are in its result.json.",
+  "input_artifact_checks": "PASS"
+}

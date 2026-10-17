@@ -1,0 +1,49 @@
+{
+  "cases": [
+    {
+      "label": "rc_checkpoint",
+      "argv": [
+        "<CHECKPOINT_ROOT>/bin/shen-rc",
+        "script",
+        "runme.shen"
+      ],
+      "env": {}
+    },
+    {
+      "label": "rc_accounting",
+      "argv": [
+        "<PROFILE_ROOT>/evidence/rc/profile-20261017/build-v6/shen-rc",
+        "script",
+        "runme.shen"
+      ],
+      "env": {
+        "SHEN_PROFILE_FILE": "<PROFILE_ROOT>/evidence/rc/profile-20261017/rc-calibration-phases.jsonl"
+      }
+    },
+    {
+      "label": "boehm_checkpoint",
+      "argv": [
+        "<BOEHM_ROOT>/bin/shen-c",
+        "script",
+        "runme.shen"
+      ],
+      "env": {}
+    },
+    {
+      "label": "boehm_accounting",
+      "argv": [
+        "<PROFILE_ROOT>/evidence/rc/profile-20261017/build-v6/shen-boehm",
+        "script",
+        "runme.shen"
+      ],
+      "env": {
+        "SHEN_PROFILE_FILE": "<PROFILE_ROOT>/evidence/rc/profile-20261017/boehm-calibration-phases.jsonl",
+        "SHEN_C_HOME": "<BOEHM_ROOT>"
+      }
+    }
+  ],
+  "repetitions": 3,
+  "source_identity": {
+    "scope": "calibrate diagnostic overhead, no acceptance credit"
+  }
+}

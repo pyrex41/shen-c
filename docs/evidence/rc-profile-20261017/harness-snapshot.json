@@ -1,0 +1,8 @@
+{
+  "scripts/build-phase-profile.py": "55d94d5bca9ad65f40421468102be52e85f5a7e347dd59267eb2fb6263bdca1f",
+  "scripts/compare-phase-profile.py": "ad56b6fc008557017868c421d33c3e5fa7276fe081df25fab8fcc927f760c355",
+  "scripts/rc_phase_profile.c": "87ed54df828431ca45809f79731702af58dc02d6edd73efb4a2ee5856bf17917",
+  "scripts/rc_phase_profile.h": "dbb289db1e916d63c453c2d883d5bcf77af4b27346ba65c55b393b7f4a38b697",
+  "scripts/release_manifest.py": "19b1dd8d4a0a6fc412247143bfcba0ab68d9c96e15a63e1c806d7a81347eb96a",
+  "scripts/build-rc-counter-control.py": "2e29c4a6409300f2d37075808a3e19ffae3f01dc0d428bd5f4243db00fb0edf6"
+}

@@ -1,0 +1,32 @@
+{
+  "repetitions": 5,
+  "source_identity": {
+    "counter_control_receipt_sha256": "06567bd5004a276e9b52bcc51a13d418ad76e00f900db96a6f49dff52bcd3342"
+  },
+  "cases": [
+    {
+      "label": "checkpoint",
+      "argv": [
+        "<PROFILE_ROOT>/evidence/rc/profile-20261017/counter-control/shen-checkpoint",
+        "script",
+        "runme.shen"
+      ],
+      "env": {},
+      "dependency_sha256": {
+        "<PROFILE_ROOT>/evidence/rc/profile-20261017/counter-control/build.json": "06567bd5004a276e9b52bcc51a13d418ad76e00f900db96a6f49dff52bcd3342"
+      }
+    },
+    {
+      "label": "counter_control",
+      "argv": [
+        "<PROFILE_ROOT>/evidence/rc/profile-20261017/counter-control/shen-counter-control",
+        "script",
+        "runme.shen"
+      ],
+      "env": {},
+      "dependency_sha256": {
+        "<PROFILE_ROOT>/evidence/rc/profile-20261017/counter-control/build.json": "06567bd5004a276e9b52bcc51a13d418ad76e00f900db96a6f49dff52bcd3342"
+      }
+    }
+  ]
+}

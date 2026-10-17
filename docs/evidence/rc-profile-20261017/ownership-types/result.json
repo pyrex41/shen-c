@@ -1,0 +1,135 @@
+{
+  "scope": "additional diagnostic ownership counters, no timing credit",
+  "binary_sha256": "522a8e3b10283dd00253255cd83140a5f43f6490cca00086d38abdd05e5b7583",
+  "exit": 0,
+  "suite": {
+    "status": "PASS",
+    "errors": [],
+    "passed_reports": [
+      2,
+      4,
+      8,
+      10,
+      17,
+      23,
+      25,
+      29,
+      31,
+      33,
+      35,
+      38,
+      44,
+      46,
+      48,
+      52,
+      54,
+      59,
+      64,
+      70,
+      75,
+      77,
+      90,
+      95,
+      98,
+      101,
+      103,
+      108,
+      111,
+      115,
+      120,
+      125,
+      129,
+      131,
+      133,
+      136
+    ],
+    "failed_reports": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "output_sha256": {
+      "test.txt": "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824"
+    }
+  },
+  "counts": {
+    "nil": {
+      "retain": 0,
+      "release": 0
+    },
+    "number": {
+      "retain": 1501900,
+      "release": 2002481
+    },
+    "string": {
+      "retain": 2276318,
+      "release": 4278150
+    },
+    "symbol": {
+      "retain": 218539367,
+      "release": 218436963
+    },
+    "pair": {
+      "retain": 119580713,
+      "release": 134653002
+    },
+    "vector": {
+      "retain": 78343519,
+      "release": 80625532
+    },
+    "closure": {
+      "retain": 281053318,
+      "release": 286553795
+    },
+    "stream": {
+      "retain": 76226,
+      "release": 76271
+    },
+    "tail": {
+      "retain": 0,
+      "release": 41238992
+    },
+    "env": {
+      "retain": 18731101,
+      "release": 35367034
+    }
+  },
+  "boolean_subset": {
+    "retain": 129524318,
+    "release": 129520861
+  },
+  "status": "PASS"
+}
