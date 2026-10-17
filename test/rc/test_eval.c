@@ -190,6 +190,8 @@ int main(void) {
      * to the closure. Repeated evaluation must leave no unrooted RC graph. */
     input="(let V (absvector 1) (let F (lambda X (<-address V 0)) (address-> V 0 F)))";
     RcValue *cycle_form=rc_read(ctx,&input); assert(cycle_form);
+    /* Warm the bounded body-plan cache before checking repeated reclamation. */
+    for(size_t i=0;i<64;i++){value=rc_eval(ctx,cycle_form);assert(value);rc_release(value);}
     rc_collect(ctx); size_t baseline=rc_stats(ctx).live_objects;
     for (size_t i=0;i<100;++i) {
         value=rc_eval(ctx,cycle_form); assert(value); rc_release(value);
@@ -198,6 +200,7 @@ int main(void) {
     rc_release(cycle_form);
     input="(let V (absvector 1) ((lambda X (simple-error \"owned failure\")) V))";
     RcValue *error_form=rc_read(ctx,&input); assert(error_form);
+    for(size_t i=0;i<64;i++){assert(!rc_eval(ctx,error_form)&&rc_has_error(ctx));rc_clear_error(ctx);}
     rc_collect(ctx); baseline=rc_stats(ctx).live_objects;
     for (size_t i=0;i<100;++i) {
         assert(!rc_eval(ctx,error_form) && rc_has_error(ctx)); rc_clear_error(ctx);

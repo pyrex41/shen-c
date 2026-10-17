@@ -1,0 +1,26 @@
+{
+  "status": "experimental",
+  "flags": "/usr/bin/cc -O3 -g -flto=thin -std=c17",
+  "source_sha256": {
+    "src/rc/eval.c": "9a6d194bb07e28a1e0ecdaea3a949c28b48609b159d560aa949739ad0f7f0f0d",
+    "src/rc/rc.c": "b6db45f8006a037881453648c33d94ebe861b078f5dc278e21bb5d0638890bb0",
+    "src/rc/rc_internal.h": "5b06402cbbdb7f8c0ed3eec23704e0ab92aa249852660b79b1392c7851eaad76",
+    "src/rc/emit.c": "d62241e780c5867495345ad310a65e9f852a0e67154aadcc908f3a63ca9c5374",
+    "src/rc/primitives.c": "28baec81d83537a9a62bf18040d147c3321e972f125958bf68fbba00bb846403",
+    "src/rc/read.c": "f61444980f2d34d3986f9640103b3478501c4d368f6c2dd5058a4b39b3143667",
+    "src/rc/eval.h": "40840e20cb00334a7032ef11aec08ce6a0846912ae05dfb0d08e894ba7ad2e15",
+    "src/rc/main.c": "aed4ac89c8aaf338f8519b35554effd251b04d47bbee6dbf5781343097d74275",
+    "src/rc/primitives.h": "9416a06ccc9c6b1485ab00a82b620a6aff78342b271b1a70c564010e3e36af60",
+    "src/rc/rc.h": "b77320047d47b013b5064b44d749e80fab11319769145d9e6a676371d9990aec",
+    "src/rc/emit.h": "ae1946b669f771941b12a706316a28090aefd126f54cc687fa00a3b10b322a9f",
+    "src/rc/eval_plan.h": "53dd9f4c5e06372e2aa644a97ae265432902d2487dbd6474b57e2811c5e2f7e9",
+    "src/rc/read.h": "71fb3e8ce757174ee47dde95f732200ae1b023c66f8164ac0a4d82ebb241fea5",
+    "tools/rc-build.c": "dbf6c04b2b5ebbf9197061208c89aa2d781e2b261f17f8a0f04b8931f370e818"
+  },
+  "artifacts": {
+    "bin/owned-e1-release/shen-rc": "0e1ca48a6e3b190804acea0bc522ac6f6f78646594579649d2fd06b260466cbe",
+    "obj/owned-e1-release/kernel.c": "9de934b4ad4a67fc64e4e08ecf637080d65b9ec76ece9ff246f3eb31c6c3e4bd",
+    "bin/owned-e1-release/lib/libshenrc.a": "08204155240157caa1d9207cb77b05bf000c13394573013d9ba0b4fe40a5cf1e"
+  },
+  "dependencies": "<OPT_ROOT>/bin/owned-e1-release/shen-rc:\n\t/usr/lib/libSystem.B.dylib (compatibility version 1.0.0, current version 1359.0.0)\n"
+}

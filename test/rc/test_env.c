@@ -99,7 +99,10 @@ static void interpreted(void) {
     eval_number(ctx,"(let F (ten-params 20 1 2) (F 3 4 5 6 7 8 22))",42);
     eval_number(ctx,"(do (defun ten-params (A B C D E F G H I J) 42) (ten-params 0 0 0 0 0 0 0 0 0 0))",42);
     const char *source="(let V (absvector 1) (let X 40 (let F (lambda Y (+ X (<-address V 0))) (do (address-> V 0 F) V))))";
-    form=rc_read(ctx,&source);assert(form);rc_collect(ctx);size_t baseline=rc_stats(ctx).live_objects;
+    form=rc_read(ctx,&source);assert(form);
+    /* Prepare once; every subsequent evaluation must reclaim its whole graph. */
+    for(size_t i=0;i<64;i++){value=rc_eval(ctx,form);assert(value);rc_release(value);}
+    rc_collect(ctx);size_t baseline=rc_stats(ctx).live_objects;
     for(size_t i=0;i<100;i++){value=rc_eval(ctx,form);assert(value);rc_release(value);rc_collect(ctx);assert(rc_stats(ctx).live_objects==baseline);}
     rc_release(form);
     source="(let A 1 (let B 2 (let C (absvector 2) (simple-error \"unwind\"))))";
@@ -150,7 +153,10 @@ static void flattened_parameters(void) {
     args[0]=rc_integer(ctx,41);value=rc_apply_owned_args(ctx,fn,1,args);assert(value&&rc_integer_value(value)==42&&!args[0]);rc_release(value);rc_release(fn);rc_release(name);
     value=eval_value(ctx,"(defun flat-cycle (A B C D E F G H I) (lambda X A))");rc_release(value);
     const char *source="(let V (absvector 1) (let F (flat-cycle V 0 0 0 0 0 0 0 0) (do (address-> V 0 F) V)))";
-    RcValue *form=rc_read(ctx,&source);assert(form);rc_collect(ctx);size_t baseline=rc_stats(ctx).live_objects;
+    RcValue *form=rc_read(ctx,&source);assert(form);
+    /* Prepare once; every subsequent evaluation must reclaim its whole graph. */
+    for(size_t i=0;i<64;i++){value=rc_eval(ctx,form);assert(value);rc_release(value);}
+    rc_collect(ctx);size_t baseline=rc_stats(ctx).live_objects;
     for(size_t i=0;i<100;i++){value=rc_eval(ctx,form);assert(value);rc_release(value);rc_collect(ctx);assert(rc_stats(ctx).live_objects==baseline);}
     rc_release(form);rc_context_free(ctx);
 }

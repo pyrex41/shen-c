@@ -51,7 +51,7 @@ struct RcValue {
             char *data; size_t length; uint64_t hash;
             RcValue *intern_next, *global, *function;
         } text;
-        struct { RcValue *head, *tail; size_t proper_length; } pair;
+        struct { RcValue *head, *tail; size_t proper_length; RcValue *eval_plan; size_t eval_calls; } pair;
         struct { RcValue **items; size_t length; } vector;
         struct {
             RcValue *parent, **keys, **values; size_t count;
@@ -102,6 +102,11 @@ struct RcContext {
     RcValue *true_symbol, *false_symbol; /* Borrowed intern-table roots. */
     /* Owned context roots, bounded by the specialized builtin set. */
     RcValue *builtin_roots[RC_BUILTIN_COUNT];
+    /* One bounded dependency certificate. Keys borrow permanent intern roots;
+     * no managed values or extra collector edges are retained here. */
+    size_t function_generation,prolog_guard_generation;
+    RcValue *prolog_guard_keys[3];
+    unsigned prolog_guard_mask;
     RcStats stats;
     size_t collection_interval, since_collection, graph_slots, visit_epoch, cycle_sources;
     char *error;
@@ -194,7 +199,7 @@ static RcValue *allocate(RcContext *ctx, RcType type, size_t extra) {
     }
     ctx->since_collection++;
     switch (type) {
-    case RC_PAIR: ctx->graph_slots += 2; break;
+    case RC_PAIR: v->as.pair.eval_plan=NULL; v->as.pair.eval_calls=0; ctx->graph_slots += 2; break;
     case RC_VECTOR: case RC_CLOSURE: ctx->graph_slots += extra / sizeof(RcValue *); break;
     case RC_TAIL: ctx->graph_slots++; break;
     default: break;
@@ -230,7 +235,7 @@ RcValue *rc_retain(RcValue *v) {
 typedef void (*EdgeFn)(RcValue *, void *);
 static void edges(RcValue *v, EdgeFn fn, void *data) {
     switch (rc_type(v)) {
-    case RC_PAIR: fn(v->as.pair.head, data); fn(v->as.pair.tail, data); break;
+    case RC_PAIR: fn(v->as.pair.head, data); fn(v->as.pair.tail, data); if(v->as.pair.eval_plan)fn(v->as.pair.eval_plan,data); break;
     case RC_VECTOR:
         for (size_t i = 0; i < v->as.vector.length; ++i) fn(v->as.vector.items[i], data);
         break;
@@ -257,7 +262,7 @@ static void unlink_object(RcValue *v) {
     ctx->stats.live_bytes -= v->bytes;
     ctx->stats.total_frees++;
     switch (rc_type(v)) {
-    case RC_PAIR: ctx->graph_slots -= 2; break;
+    case RC_PAIR: ctx->graph_slots -= 2+(v->as.pair.eval_plan!=NULL); break;
     case RC_VECTOR:
         ctx->graph_slots -= v->as.vector.length;
         if (v->cycle_source) ctx->cycle_sources--;
@@ -499,6 +504,52 @@ RcValue *rc_env_lookup(const RcValue *environment,const RcValue *key) {
             if (frame->as.env.keys[i-1]==key) return frame->as.env.values[i-1];
     return NULL;
 }
+bool rc_prolog_guard_get(RcContext *ctx,RcValue *const *keys,unsigned *mask) {
+    if(ctx->function_generation==SIZE_MAX||ctx->function_generation!=ctx->prolog_guard_generation||
+       ctx->prolog_guard_keys[0]!=keys[0]||ctx->prolog_guard_keys[1]!=keys[1]||ctx->prolog_guard_keys[2]!=keys[2])return false;
+    *mask=ctx->prolog_guard_mask;return true;
+}
+void rc_prolog_guard_set(RcContext *ctx,RcValue *const *keys,unsigned mask) {
+    ctx->prolog_guard_generation=ctx->function_generation;ctx->prolog_guard_mask=mask;
+    for(size_t i=0;i<3;i++)ctx->prolog_guard_keys[i]=keys[i];
+}
+RcValue *rc_function_slot_borrowed(RcContext *ctx,RcValue *symbol) {
+    return belongs(ctx,symbol)&&rc_type(symbol)==RC_SYMBOL ? symbol->as.text.function : NULL;
+}
+RcValue *rc_vector_slot_borrowed(RcValue *vector,size_t index) {
+    return rc_type(vector)==RC_VECTOR&&index<vector->as.vector.length ? vector->as.vector.items[index] : NULL;
+}
+bool rc_eval_plan_environment(const RcValue *environment) {
+    return rc_is_nil(environment) || (rc_type(environment)==RC_ENV && !(environment->as.env.key_classes&2));
+}
+RcValue *rc_eval_plan_get(RcValue *expression) {
+    return rc_type(expression)==RC_PAIR ? expression->as.pair.eval_plan : NULL;
+}
+bool rc_eval_plan_heat(RcValue *expression) {
+    size_t *calls=&expression->as.pair.eval_calls;
+    if(*calls==SIZE_MAX)return false;
+    ++*calls;
+    /* Unsupported/mismatched shapes retry only at exponentially spaced
+     * counts. Optional preparation therefore stays bounded on cold and
+     * adversarial code without retaining a negative cache of parameter lists. */
+    return *calls>=32 && !(*calls&(*calls-1));
+}
+void rc_eval_plan_promote(RcValue *self,RcNative prepared,RcValue *plan) {
+    /* Only dynamic_call uses this after validating its exact private layout.
+     * The replacement reaches a subset of the original body's descendants;
+     * no new vector path or backedge is introduced. Publish both fields before
+     * dropping syntax. Aliases/partial copies retain identical semantics. */
+    RcValue *old=self->as.closure.captures[0];
+    self->as.closure.captures[0]=rc_retain(plan);self->as.closure.native=prepared;
+    rc_release(old);
+}
+void rc_eval_plan_set(RcValue *expression,RcValue *plan) {
+    RcValue *old=expression->as.pair.eval_plan;
+    expression->as.pair.eval_plan=rc_retain(plan);
+    expression->ctx->graph_slots+=(plan!=NULL);
+    expression->ctx->graph_slots-=(old!=NULL);
+    rc_release(old);
+}
 RcValue *rc_number(RcContext *ctx, double n) {
     RcValue *v = allocate(ctx, RC_NUMBER, 0);
     if (v) { v->as.number.real = n; v->as.number.exact = false; }
@@ -669,10 +720,14 @@ RcValue *rc_cons_reuse(RcContext *ctx, RcValue *candidate, RcValue *head, RcValu
          * invokes collection or user code. Even borrowed old children are safe. */
         rc_retain(head); rc_retain(tail);
         RcValue *old_head = candidate->as.pair.head, *old_tail = candidate->as.pair.tail;
+        RcValue *old_plan=candidate->as.pair.eval_plan;
+        candidate->as.pair.eval_plan=NULL;candidate->as.pair.eval_calls=0;
+        if(old_plan)ctx->graph_slots--;
         candidate->as.pair.head = head; candidate->as.pair.tail = tail;
         candidate->as.pair.proper_length = 0;
         candidate->reaches_vector = may_reach_vector(head) || may_reach_vector(tail);
         rc_release(old_head); rc_release(old_tail);
+        rc_release(old_plan);
         ctx->stats.pair_reuses++;
         return candidate;
     }
@@ -690,6 +745,9 @@ RcValue *rc_pair_take_tail_reuse(RcContext *ctx, RcValue *candidate, RcValue **o
     RcValue *tail = candidate->as.pair.tail;
     if (candidate->refs == 1) {
         RcValue *head = candidate->as.pair.head;
+        RcValue *old_plan=candidate->as.pair.eval_plan;
+        candidate->as.pair.eval_plan=NULL;candidate->as.pair.eval_calls=0;
+        if(old_plan)ctx->graph_slots--;
         /* Ownership of the old edge moves to the C result, with no decrement.
          * Before releasing any other edge, publish a valid pair containing nil
          * in both slots. The collector can visit it at every later safepoint. */
@@ -697,6 +755,7 @@ RcValue *rc_pair_take_tail_reuse(RcContext *ctx, RcValue *candidate, RcValue **o
         candidate->as.pair.proper_length = 0;
         candidate->reaches_vector = false;
         rc_release(head);
+        rc_release(old_plan);
         ctx->stats.pair_tail_transfers++;
     } else {
         rc_retain(tail);
@@ -771,7 +830,7 @@ static bool would_create_cycle(RcContext *ctx, RcValue *target, RcValue *item, s
         RcValue *v = search.work; search.work = v->work;
         size_t width = 0;
         switch (v->type) {
-        case RC_PAIR: width = 2; break;
+        case RC_PAIR: width = 2+(v->as.pair.eval_plan!=NULL); break;
         case RC_VECTOR: width = v->as.vector.length; break;
         case RC_CLOSURE: width = v->as.closure.capture_count + v->as.closure.bound_count; break;
         case RC_ENV: width = 1 + v->as.env.count; break;
@@ -1145,6 +1204,19 @@ RcValue *rc_compiled_call_complete(RcContext *ctx,RcValue *result,
     rc_safepoint(ctx);
     return rc_type(result)==RC_TAIL ? apply_request(ctx,result) : result;
 }
+/* Private generated/evaluator callers already root fn through completion.
+ * Their scratch slots are the actual owned callback array, avoiding a second
+ * callee owner and copy. Partial/overapplication and uncertain contexts retain
+ * the public checked path. Borrowed callbacks keep all argument roots here. */
+RcValue *rc_apply_rooted_owned_args(RcContext *ctx,RcValue *fn,size_t argc,RcValue **argv) {
+    if(!rc_call_values_belong(ctx,fn,argc,argv)||rc_type(fn)!=RC_CLOSURE||
+       fn->as.closure.bound_count||fn->as.closure.arity!=argc)
+        return rc_apply_owned_args(ctx,fn,argc,argv);
+    RcValue *result=fn->as.closure.owned_native
+        ? fn->as.closure.owned_native(ctx,fn,argc,argv)
+        : fn->as.closure.native(ctx,fn,argc,argv);
+    return rc_compiled_call_complete(ctx,result,argc,argv);
+}
 RcValue *rc_apply(RcContext *ctx, RcValue *fn, size_t argc, RcValue *const *argv) {
     bool handled;
     RcValue *result = apply_small(ctx, fn, argc, argv, NULL, &handled);
@@ -1176,6 +1248,9 @@ static bool set_symbol_slot(RcContext *ctx, RcValue *symbol, RcValue *value, boo
     /* These are context roots, not graph edges: the context owns their counts.
      * Interned symbols survive until context teardown, so slots stay addressable. */
     RcValue **slot = function ? &symbol->as.text.function : &symbol->as.text.global;
+    /* Every function publication invalidates dependency certificates. A
+     * saturated generation disables cache hits, rather than wrapping. */
+    if(function&&ctx->function_generation<SIZE_MAX)ctx->function_generation++;
     RcValue *old = *slot; *slot = rc_retain(value); rc_release(old); return true;
 }
 RcValue *rc_global_get(RcContext *ctx, RcValue *symbol) {

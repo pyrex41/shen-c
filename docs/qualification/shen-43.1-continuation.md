@@ -6,6 +6,8 @@ Boehm comparator is a detached worktree at 97aa8e1.
 
 ## Written implementation plan
 
+Current optimization continuation: [prepared evaluator and certified ownership](../performance/rc-prepared-evaluator-20261017.md). The original checkpoints below remain historical evidence; new candidate qualification is recorded separately.
+
 Follow-up on 2026-10-17: [comparative profiling and CPU budget](../performance/rc-comparative-profile-20261017.md).
 Both backends now have repeated whole-process/load-focused profiles and exclusive
 phase accounting. Reading/macro processing and translation show the main excess

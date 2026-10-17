@@ -1,0 +1,67 @@
+{
+  "repetitions": 3,
+  "source_identity": {
+    "candidate": {
+      "status": "experimental",
+      "flags": "/usr/bin/cc -O3 -g -flto=thin -std=c17",
+      "source_sha256": {
+        "src/rc/eval.c": "5d49c8bd17cb29737538745776a7f8dad6f395e9d09e489e6886bae73961709f",
+        "src/rc/rc.c": "756c3632874961db6bea634f9ae8a7c90b95d2ba98a0cc2c4f43392b6165b70f",
+        "src/rc/rc_internal.h": "5b06402cbbdb7f8c0ed3eec23704e0ab92aa249852660b79b1392c7851eaad76",
+        "src/rc/emit.c": "e4f56a44159e0a691d397b958770c39e8350519bc30d21b1067e09979166a03b",
+        "src/rc/primitives.c": "8766872430e280d0328b3f6337b0a7136bf5daff61b9410cc16ad5a00f265402",
+        "src/rc/read.c": "f61444980f2d34d3986f9640103b3478501c4d368f6c2dd5058a4b39b3143667",
+        "src/rc/eval.h": "40840e20cb00334a7032ef11aec08ce6a0846912ae05dfb0d08e894ba7ad2e15",
+        "src/rc/main.c": "aed4ac89c8aaf338f8519b35554effd251b04d47bbee6dbf5781343097d74275",
+        "src/rc/primitives.h": "ad9a5b0483d68a1829b6a0557d9b71b0f0ab240b67ec152ab2f0e4f3c87782d2",
+        "src/rc/rc.h": "b77320047d47b013b5064b44d749e80fab11319769145d9e6a676371d9990aec",
+        "src/rc/emit.h": "ae1946b669f771941b12a706316a28090aefd126f54cc687fa00a3b10b322a9f",
+        "src/rc/eval_plan.h": "91c896c000ff381922ccd5fa72420aab6cc8f87f1f8b7851d97c69142f167af4",
+        "src/rc/read.h": "71fb3e8ce757174ee47dde95f732200ae1b023c66f8164ac0a4d82ebb241fea5",
+        "tools/rc-build.c": "dbf6c04b2b5ebbf9197061208c89aa2d781e2b261f17f8a0f04b8931f370e818"
+      },
+      "artifacts": {
+        "bin/rooted-e2-release/shen-rc": "af7cf32e334c0cbf7b43a99b1758f0fa645abc5d2ab0d3b8988b290915984a29",
+        "obj/rooted-e2-release/kernel.c": "1c97f40cc3574dff23696b13cad8ad9c62af2a2080e5e84b0e436c4fd096c544",
+        "bin/rooted-e2-release/lib/libshenrc.a": "1a3fa09f487bd51ab94c57c546844f69989d9bb145bbbf503f8d51f4e60d549f"
+      },
+      "dependencies": "<OPT_ROOT>/bin/rooted-e2-release/shen-rc:\n\t/usr/lib/libSystem.B.dylib (compatibility version 1.0.0, current version 1359.0.0)\n"
+    },
+    "baseline": "candidate-e1"
+  },
+  "cases": [
+    {
+      "label": "owned_e1",
+      "argv": [
+        "<OPT_ROOT>/evidence/rc/opt-20261017/candidate-e1/shen-rc",
+        "script",
+        "runme.shen"
+      ],
+      "env": {}
+    },
+    {
+      "label": "rooted_e2",
+      "argv": [
+        "<OPT_ROOT>/evidence/rc/opt-20261017/candidate-e2/shen-rc",
+        "script",
+        "runme.shen"
+      ],
+      "env": {},
+      "dependency_sha256": {
+        "<OPT_ROOT>/evidence/rc/opt-20261017/candidate-e2/freeze.json": "261f44def3e98c45ffc7ac5afce929bba1b5f4ccab231671ee9dabe33571eee2"
+      }
+    },
+    {
+      "label": "boehm",
+      "argv": [
+        "<BOEHM_ROOT>/bin/shen-c",
+        "script",
+        "runme.shen"
+      ],
+      "env": {},
+      "dependency_sha256": {
+        "/nix/store/r9bdx29an70k9jg6jj2h1ccnpjqdbwzg-boehm-gc-8.2.12/lib/libgc.1.dylib": "5115bc7b4d0d795912999a18f2ef53be28f38ef2b258df023e43fad129d5496f"
+      }
+    }
+  ]
+}

@@ -67,13 +67,25 @@ static bool parameters(RcContext *ctx, RcValue *params, size_t *arity) {
     }
     return true;
 }
+static RcValue *prepared_call(RcContext *,RcValue *,size_t,RcValue *const *);
+static RcValue *plan_prepare(RcContext *,RcValue *,RcValue *,size_t,RcValue *const *,bool);
 static RcValue *dynamic_call(RcContext *ctx, RcValue *self, size_t argc, RcValue *const *argv) {
+    RcValue *const *captures=rc_eval_captures(ctx,self,dynamic_call,argc);if(!captures)return NULL;
+    RcValue *plan=plan_prepare(ctx,captures[0],captures[1],argc,captures+2,true);
+    if(plan) {
+        rc_eval_plan_promote(self,prepared_call,plan);rc_release(plan);
+        return prepared_call(ctx,self,argc,argv);
+    }
+    if(rc_has_error(ctx))return NULL;
     RcValue *body=NULL;
     RcValue *env=rc_eval_env_frame(ctx,self,dynamic_call,argc,argv,&body);
     if(!env)return NULL;
+    /* A nested invocation can promote the same closure while this older
+     * invocation is traversing its syntax. Hold that historical root locally
+     * until the original evaluator finishes. */
+    rc_retain(body);
     RcValue *result=evaluate(ctx,body,env,true);
-    rc_release(env);
-    return result;
+    rc_release(body);rc_release(env);return result;
 }
 static RcValue *make_function(RcContext *ctx, RcValue *params, RcValue *body, RcValue *env) {
     size_t arity;
@@ -87,8 +99,11 @@ static RcValue *make_function(RcContext *ctx, RcValue *params, RcValue *body, Rc
     /* parameters() has proved symbol keys are distinct. A direct reference
      * to parameter two has no effects and cannot inspect parameter one. */
     bool returns_second=arity==2 && body==captures[3];
-    RcValue *function=returns_second ? rc_closure_return_second(ctx,dynamic_call,count,captures)
-        : rc_closure(ctx,arity,dynamic_call,count,captures);
+    RcValue *plan=returns_second ? NULL : plan_prepare(ctx,body,env,arity,captures+2,false);
+    if(plan)captures[0]=plan;
+    RcValue *function=rc_has_error(ctx) ? NULL : returns_second ? rc_closure_return_second(ctx,dynamic_call,count,captures)
+        : rc_closure(ctx,arity,plan ? prepared_call : dynamic_call,count,captures);
+    rc_release(plan);
     if(captures!=small)free(captures);
     return function;
 }
@@ -123,7 +138,7 @@ static RcValue *application(RcContext *ctx, RcValue *expr, RcValue *env, size_t 
             /* Keep right-side effects/errors before the original operand
              * rejection, and preserve its exact generic diagnostic. */
             RcValue *argv[2]={ignored,result};
-            result=rc_primitive_call_owned(ctx,function,2,argv,true);
+            result=rc_primitive_call_rooted_owned(ctx,function,2,argv,true);
             rc_release(argv[0]);rc_release(argv[1]);rc_release(function);
             return result;
         }
@@ -148,11 +163,13 @@ static RcValue *application(RcContext *ctx, RcValue *expr, RcValue *env, size_t 
             : atomic_value(ctx,argument,env);
         if (!argv[i]) break;
     }
-    if (i==argc) result=rc_primitive_call_owned(ctx,function,argc,argv,tail);
+    if (i==argc) result=rc_primitive_call_rooted_owned(ctx,function,argc,argv,tail);
     for (size_t j=0; j<i; ++j) rc_release(argv[j]);
     if(argv!=small)free(argv); rc_release(function);
     return result;
 }
+#include "eval_plan.h"
+
 static RcValue *evaluate(RcContext *ctx, RcValue *input, RcValue *environment, bool tail) {
     if (!input) return rc_error(ctx,"eval-kl: null expression");
     /* Atomic lookup cannot invoke callbacks or collect. The caller keeps the

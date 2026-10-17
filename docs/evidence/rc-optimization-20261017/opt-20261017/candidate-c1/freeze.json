@@ -1,0 +1,25 @@
+{
+  "status": "experimental",
+  "flags": "/usr/bin/cc -O3 -g -flto=thin -std=c17",
+  "source_sha256": {
+    "src/rc/eval.c": "9a6d194bb07e28a1e0ecdaea3a949c28b48609b159d560aa949739ad0f7f0f0d",
+    "src/rc/rc.c": "ac378091a49d9ec4c26370d572bf0b3dea910a81dcc2a2d4d9fb902757efbed0",
+    "src/rc/rc_internal.h": "2ed4fd1d9eec977db182291685b5b0f55e6f6d422c0927728934bc879110f4f8",
+    "src/rc/emit.c": "db1d0ee2a1677b29bc5575984f42fcca2fd61dcdefb3b18a8c0c7aefe8ff3aba",
+    "src/rc/primitives.c": "f36e98378501e9e8cfdf89dec123df62c3bf276970563f2be1e9a1fa30d21a22",
+    "src/rc/read.c": "f61444980f2d34d3986f9640103b3478501c4d368f6c2dd5058a4b39b3143667",
+    "src/rc/eval.h": "40840e20cb00334a7032ef11aec08ce6a0846912ae05dfb0d08e894ba7ad2e15",
+    "src/rc/main.c": "aed4ac89c8aaf338f8519b35554effd251b04d47bbee6dbf5781343097d74275",
+    "src/rc/primitives.h": "a8e5c45c4e85daf6a1be3382ac02247e9a0d5c70f575e8a2efd0a038850bbf3a",
+    "src/rc/rc.h": "b77320047d47b013b5064b44d749e80fab11319769145d9e6a676371d9990aec",
+    "src/rc/emit.h": "ae1946b669f771941b12a706316a28090aefd126f54cc687fa00a3b10b322a9f",
+    "src/rc/eval_plan.h": "53dd9f4c5e06372e2aa644a97ae265432902d2487dbd6474b57e2811c5e2f7e9",
+    "src/rc/read.h": "71fb3e8ce757174ee47dde95f732200ae1b023c66f8164ac0a4d82ebb241fea5"
+  },
+  "artifacts": {
+    "bin/condition-c1/shen-rc": "d1b20ba3b1ebde51c807830a0243cb3aea335d69a1966a88c8c80a579fc9c2cd",
+    "obj/condition-c1/kernel.c": "e401ea33025fe7d399f655628e63259fbbe0f003bfb976e855aa69700dbb9d1c",
+    "bin/condition-c1/lib/libshenrc.a": "14c57e055d4775bea58eeb0ed24253c1f3fbfdbc2b81cc48f8b387aa724234df"
+  },
+  "dependencies": "<OPT_ROOT>/bin/condition-c1/shen-rc:\n\t/usr/lib/libSystem.B.dylib (compatibility version 1.0.0, current version 1359.0.0)\n"
+}

@@ -364,6 +364,102 @@ RcValue *rc_primitive_call_owned(RcContext *c,RcValue *fn,
  return slot>=0 ? calls[(unsigned)slot](c,fn,args,tail)
                 : primitive_call_owned_slow(c,fn,argc,args,tail);
 }
+RcValue *rc_primitive_call_rooted_owned(RcContext *c,RcValue *fn,size_t argc,RcValue **args,bool tail) {
+ /* Canonical and other primitive leaf paths keep their specialized finishing
+  * rules. Only non-tail general callbacks use the certified private boundary. */
+ if(!tail&&!rc_closure_is_native(fn,primitive))return rc_apply_rooted_owned_args(c,fn,argc,args);
+ return rc_primitive_call_owned(c,fn,argc,args,tail);
+}
+static int condition_slow(RcContext *c,RcValue *fn,size_t argc,RcValue **args) {
+ RcValue *value=rc_primitive_call_owned(c,fn,argc,args,false);
+ if(!value)return -1;
+ if(!boolean(value)){rc_release(value);return -2;}
+ int result=rc_is_true(value);rc_release(value);return result;
+}
+static int condition_finish(RcContext *c,int result,size_t argc,RcValue **args) {
+ for(size_t i=0;i<argc;i++){RcValue *arg=args[i];args[i]=NULL;rc_release(arg);}
+ if(rc_has_error(c))return -1;rc_safepoint(c);return result;
+}
+#define UNARY_CONDITION(api,slot,test) \
+int rc_condition_##api##_owned(RcContext *c,RcValue *fn,RcValue **args) { \
+ if(!rc_builtin_call_matches(c,slot,fn,1,args))return condition_slow(c,fn,1,args); \
+ int result=(test);return condition_finish(c,result,1,args); \
+}
+UNARY_CONDITION(consp,RC_BUILTIN_CONSP,rc_type(args[0])==RC_PAIR)
+UNARY_CONDITION(numberp,RC_BUILTIN_NUMBERP,rc_type(args[0])==RC_NUMBER)
+UNARY_CONDITION(stringp,RC_BUILTIN_STRINGP,rc_type(args[0])==RC_STRING)
+#undef UNARY_CONDITION
+int rc_condition_eq_owned(RcContext *c,RcValue *fn,RcValue **args) {
+ if(!rc_builtin_call_matches(c,RC_BUILTIN_EQ,fn,2,args))return condition_slow(c,fn,2,args);
+ int result=rc_equal(args[0],args[1]);return condition_finish(c,result,2,args);
+}
+#define NUMERIC_CONDITION(api,slot,comparison) \
+int rc_condition_##api##_owned(RcContext *c,RcValue *fn,RcValue **args) { \
+ if(!rc_builtin_call_matches(c,slot,fn,2,args))return condition_slow(c,fn,2,args); \
+ RcValue *a=args[0],*b=args[1];int result=-1; \
+ if(rc_type(a)!=RC_NUMBER||rc_type(b)!=RC_NUMBER)rc_error(c,"Arithmetic requires numbers"); \
+ else if(rc_number_is_exact_integer(a)&&rc_number_is_exact_integer(b))result=rc_integer_value(a) comparison rc_integer_value(b); \
+ else result=rc_number_value(a) comparison rc_number_value(b); \
+ return condition_finish(c,result,2,args); \
+}
+NUMERIC_CONDITION(gt,RC_BUILTIN_GT,>)
+NUMERIC_CONDITION(lt,RC_BUILTIN_LT,<)
+NUMERIC_CONDITION(ge,RC_BUILTIN_GE,>=)
+NUMERIC_CONDITION(le,RC_BUILTIN_LE,<=)
+#undef NUMERIC_CONDITION
+/* These guards recognize the installed unbound primitive implementation,
+ * including its opcode, rather than a replaceable symbol spelling. */
+static bool primitive_dependency(RcContext *c,RcValue *symbol,enum Op op,size_t arity) {
+ RcValue *fn=rc_function_slot_borrowed(c,symbol),*dummy[]={rc_nil(),rc_nil()};
+ RcValue *code=rc_native_call_capture(c,fn,arity,dummy,primitive);
+ return code&&rc_number_is_exact_integer(code)&&rc_integer_value(code)==op;
+}
+static unsigned prolog_dependencies(RcContext *c,RcValue *const *keys) {
+ unsigned mask;if(rc_prolog_guard_get(c,keys,&mask))return mask;
+ mask=(primitive_dependency(c,keys[0],P_VECTORP,1)?1u:0u)
+     |(primitive_dependency(c,keys[1],P_VGET,2)?2u:0u)
+     |(rc_builtin_identity_matches(c,RC_BUILTIN_EQ,rc_function_slot_borrowed(c,keys[2]))?4u:0u);
+ rc_prolog_guard_set(c,keys,mask);return mask;
+}
+static bool pvar_value(RcValue *value,RcValue *marker) {
+ return rc_type(value)==RC_VECTOR&&rc_vector_length(value)>0&&rc_vector_slot_borrowed(value,0)==marker;
+}
+RcValue *rc_pvar_try_owned(RcContext *c,RcValue *self,RcValue **args,
+                           RcValue *const *deps,bool *handled) {
+ *handled=false;
+ if(rc_has_error(c)||!rc_call_values_belong(c,self,1,args)||rc_arity(self)!=1)return NULL;
+ unsigned mask=prolog_dependencies(c,deps);if(!(mask&1))return NULL;
+ bool result=false;
+ if(rc_type(args[0])==RC_VECTOR) {
+  if(!(mask&2))return NULL;
+  if(rc_vector_length(args[0])) {
+   if(!(mask&4))return NULL;
+   result=pvar_value(args[0],deps[3]);
+  }
+ }
+ *handled=true;RcValue *value=truth(c,result),*arg=args[0];args[0]=NULL;rc_release(arg);
+ return leaf_finish(c,value);
+}
+RcValue *rc_lazyderef_try_owned(RcContext *c,RcValue *self,RcValue **args,
+ RcValue *const *deps,bool (*certified_pvar)(RcValue *),bool *handled) {
+ *handled=false;
+ if(rc_has_error(c)||!rc_call_values_belong(c,self,2,args)||rc_arity(self)!=2||
+    rc_function_slot_borrowed(c,deps[0])!=self||
+    !certified_pvar(rc_function_slot_borrowed(c,deps[1]))||prolog_dependencies(c,deps+2)!=7)return NULL;
+ RcValue *cursor=args[0],*store=args[1];size_t steps=0;
+ while(pvar_value(cursor,deps[5])) {
+  /* All uncertainty, including malformed indices and cycles longer than the
+   * bounded prefix, resumes the complete original body with original owners. */
+  if(++steps>4096||rc_vector_length(cursor)<2||rc_type(store)!=RC_VECTOR)return NULL;
+  RcValue *index=rc_vector_slot_borrowed(cursor,1);int64_t n;
+  if(!integer_arg(index,&n)||n<0||(uint64_t)n>=rc_vector_length(store))return NULL;
+  RcValue *next=rc_vector_slot_borrowed(store,(size_t)n);
+  if(next==deps[6])break;
+  cursor=next;
+ }
+ *handled=true;RcValue *result=rc_retain(cursor),*left=args[0],*right=args[1];args[0]=args[1]=NULL;
+ rc_release(left);rc_release(right);return leaf_finish(c,result);
+}
 RcValue *rc_assoc_try_owned(RcContext *c,RcValue *self,RcValue **args,
                             RcValue *const *deps,bool *handled) {
  *handled=false;

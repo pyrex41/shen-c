@@ -1,0 +1,30 @@
+{
+  "status": "experimental",
+  "kernel_objects_from": "8625781",
+  "flags": "/usr/bin/cc -O3 -g -flto=thin -std=c17",
+  "source_sha256": {
+    "src/rc/eval.c": "9a6d194bb07e28a1e0ecdaea3a949c28b48609b159d560aa949739ad0f7f0f0d",
+    "src/rc/rc.c": "ac378091a49d9ec4c26370d572bf0b3dea910a81dcc2a2d4d9fb902757efbed0",
+    "src/rc/rc_internal.h": "2ed4fd1d9eec977db182291685b5b0f55e6f6d422c0927728934bc879110f4f8",
+    "src/rc/emit.c": "b8705439e0bbd60cc6fd3f57456351f461b973935b903761c2f4fc9cb12de05a",
+    "src/rc/primitives.c": "3e51bcb2083475e2d07d6cb0ce1b08f9d7a7ee524e74779be2c4a7781f65efc5",
+    "src/rc/read.c": "f61444980f2d34d3986f9640103b3478501c4d368f6c2dd5058a4b39b3143667",
+    "src/rc/eval.h": "40840e20cb00334a7032ef11aec08ce6a0846912ae05dfb0d08e894ba7ad2e15",
+    "src/rc/main.c": "aed4ac89c8aaf338f8519b35554effd251b04d47bbee6dbf5781343097d74275",
+    "src/rc/primitives.h": "ab8cc324d48775dded4ca6cd49eabd1a99a93fb9ff33e96862cc5243636f0a77",
+    "src/rc/rc.h": "b77320047d47b013b5064b44d749e80fab11319769145d9e6a676371d9990aec",
+    "src/rc/emit.h": "ae1946b669f771941b12a706316a28090aefd126f54cc687fa00a3b10b322a9f",
+    "src/rc/eval_plan.h": "53dd9f4c5e06372e2aa644a97ae265432902d2487dbd6474b57e2811c5e2f7e9",
+    "src/rc/read.h": "71fb3e8ce757174ee47dde95f732200ae1b023c66f8164ac0a4d82ebb241fea5"
+  },
+  "artifact_sha256": {
+    "bin/shen-pvm-b3v2": "ef8932296651806dbe1783cc9ef75c5eb4d28af856b7e757b6d1faff346aaa62",
+    "bin/pvm-b3v2-release/libshenrc.a": "ec9f921a98f92fbb068b6a7896058ec52a3a75ae3de30e302e76259be322b2d5"
+  },
+  "kernel_sha256": {
+    "<RC_BASELINE_ROOT>/obj/rc/kernel.c": "dcea2e0201ecce628735b65f2e6e5939e685c8cb8ff2669e6fe297dcf308d1b2",
+    "<RC_BASELINE_ROOT>/obj/rc/kernel.o": "e9d6cadad53f73121269d37acf7bc5bcb7c71c1d5e5f9e3268df92e32a54408b",
+    "<RC_BASELINE_ROOT>/obj/rc/main.o": "ae8a1f0139130c6942511235715d7f6b6cea2296a27907e467b2ca3075e30e80"
+  },
+  "dependencies": "<OPT_ROOT>/bin/shen-pvm-b3v2:\n\t/usr/lib/libSystem.B.dylib (compatibility version 1.0.0, current version 1359.0.0)\n"
+}

@@ -1,0 +1,23 @@
+{
+  "repetitions": 3,
+  "cases": [
+    {
+      "label": "baseline",
+      "argv": [
+        "<RC_BASELINE_ROOT>/bin/shen-rc",
+        "script",
+        "runme.shen"
+      ],
+      "env": {}
+    },
+    {
+      "label": "capture_a1",
+      "argv": [
+        "<OPT_ROOT>/evidence/rc/opt-20261017/candidate-a1/shen-rc",
+        "script",
+        "runme.shen"
+      ],
+      "env": {}
+    }
+  ]
+}

@@ -25,6 +25,12 @@ RcValue *rc_tail_call_reuse(RcContext *ctx, RcValue *function,
 RcValue *rc_primitive_call_owned(RcContext *ctx, RcValue *function,
                                 size_t argc, RcValue **owned_args,
                                 bool tail_position);
+/* Private owned-call boundaries. The caller holds a strong function owner
+ * until completion and supplies a private scratch argv span with no observable
+ * outside alias. Slots are consumed on every path; public borrowed/owned apply
+ * contracts continue to use their independent runtime snapshots. */
+RcValue *rc_apply_rooted_owned_args(RcContext *,RcValue *,size_t,RcValue **);
+RcValue *rc_primitive_call_rooted_owned(RcContext *,RcValue *,size_t,RcValue **,bool);
 /* Fixed-arity builtin specializations. Function remains a borrowed snapshot;
  * argument arrays contain one owned slot (two for eq) and are consumed on
  * every path. Identity mismatches use ordinary checked dispatch. */
@@ -45,12 +51,31 @@ RcValue *rc_primitive_gt_owned(RcContext *,RcValue *,RcValue **,bool);
 RcValue *rc_primitive_lt_owned(RcContext *,RcValue *,RcValue **,bool);
 RcValue *rc_primitive_ge_owned(RcContext *,RcValue *,RcValue **,bool);
 RcValue *rc_primitive_le_owned(RcContext *,RcValue *,RcValue **,bool);
+/* Private compiler condition boundaries: consume owned arguments and return
+ * 0/1, -1 with an error, or -2 for a non-boolean completion. Replacements
+ * use ordinary non-tail checked apply; the emitter selects the original
+ * if/cond or boolean RHS validation diagnostic for -2. */
+int rc_condition_consp_owned(RcContext *,RcValue *,RcValue **);
+int rc_condition_numberp_owned(RcContext *,RcValue *,RcValue **);
+int rc_condition_stringp_owned(RcContext *,RcValue *,RcValue **);
+int rc_condition_eq_owned(RcContext *,RcValue *,RcValue **);
+int rc_condition_gt_owned(RcContext *,RcValue *,RcValue **);
+int rc_condition_lt_owned(RcContext *,RcValue *,RcValue **);
+int rc_condition_ge_owned(RcContext *,RcValue *,RcValue **);
+int rc_condition_le_owned(RcContext *,RcValue *,RcValue **);
 /* Internal emitted intrinsic for the complete pinned assoc AST only. deps are
  * interned symbols assoc, =, cons?, hd, tl; args/deps/handled must be non-NULL.
  * On deoptimization, args and errors
  * are untouched. On handled success/failure, both owned args are consumed. */
 RcValue *rc_assoc_try_owned(RcContext *,RcValue *self,RcValue **args,
                             RcValue *const *deps,bool *handled);
+/* Exact pinned Prolog bodies only. Misses leave arguments/errors untouched;
+ * hits consume all slots. Dependency checks precede a callback-free borrowed
+ * walk. The compiler predicate certifies the currently selected pvar body. */
+RcValue *rc_pvar_try_owned(RcContext *,RcValue *self,RcValue **args,
+                           RcValue *const *deps,bool *handled);
+RcValue *rc_lazyderef_try_owned(RcContext *,RcValue *self,RcValue **args,
+    RcValue *const *deps,bool (*certified_pvar)(RcValue *),bool *handled);
 /* Shen representation for diagnostics and standalone program output. */
 bool rc_print(FILE *out, RcValue *value);
 #endif

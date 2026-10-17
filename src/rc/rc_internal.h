@@ -30,11 +30,28 @@ RcValue *rc_eval_require_argument_context(RcContext *,RcValue *);
  * The returned span is borrowed; the active runtime call must keep self rooted
  * until callback return. Partial closures preserve the original capture shape. */
 RcValue *const *rc_eval_captures(RcContext *, RcValue *, RcNative, size_t arity);
-/* Only dynamic_call may use this trusted entry: make_function has validated
+/* Only interpreted callbacks may use this trusted entry: make_function has validated
  * immutable parameter keys/captured parent, and runtime dispatch has checked
  * every argv value against ctx. Still checks the exact callback/capture layout
  * and storage multiplication bounds. Returns owned ENV and borrowed body while
  * the active self remains rooted. The public rc_env_frame keeps all validation. */
 RcValue *rc_eval_env_frame(RcContext *, RcValue *, RcNative, size_t arity,
                            RcValue *const *argv, RcValue **body);
+/* Quiet borrowed reads. Caller roots the symbol/vector and proves context,
+ * bounds and the absence of callbacks/mutation until the borrow ends. */
+RcValue *rc_function_slot_borrowed(RcContext *,RcValue *symbol);
+RcValue *rc_vector_slot_borrowed(RcValue *vector,size_t index);
+/* One-entry function-dependency cache, private to guarded Prolog bodies.
+ * Keys are exact intern roots; every rc_function_set invalidates the cache. */
+bool rc_prolog_guard_get(RcContext *,RcValue *const *keys,unsigned *mask);
+void rc_prolog_guard_set(RcContext *,RcValue *const *keys,unsigned mask);
+/* Prepared evaluation private contracts. Local coordinates are emitted only
+ * from exact immutable lexical binders. No callback/collection occurs here.
+ * Plans contain code/parameter names and original AST descendants only, so
+ * attaching one does not introduce a new vector path or a backedge to self. */
+bool rc_eval_plan_environment(const RcValue *environment);
+RcValue *rc_eval_plan_get(RcValue *expression);
+void rc_eval_plan_set(RcValue *expression,RcValue *plan);
+bool rc_eval_plan_heat(RcValue *expression);
+void rc_eval_plan_promote(RcValue *self,RcNative prepared,RcValue *plan);
 #endif

@@ -1,0 +1,67 @@
+{
+  "repetitions": 3,
+  "source_identity": {
+    "candidate": {
+      "status": "experimental",
+      "flags": "/usr/bin/cc -O3 -g -flto=thin -std=c17",
+      "source_sha256": {
+        "src/rc/eval.c": "5d49c8bd17cb29737538745776a7f8dad6f395e9d09e489e6886bae73961709f",
+        "src/rc/rc.c": "981142db8a86ff6f802035f2ca69dfba1558c0aa2e5df6fe545bc8f97f0d9114",
+        "src/rc/rc_internal.h": "397a2e0220e73ddfedff03a13fb3048d53c8c4d9ad534f730b0ddee943e1f860",
+        "src/rc/emit.c": "56661f6410158914e88acd762ad567f0d6b671e31e8993bf0945881aba0ae023",
+        "src/rc/primitives.c": "0089c5e97899662c05ad51363a653899b4c19898de0ffd88eb8b59602747f1ce",
+        "src/rc/read.c": "f61444980f2d34d3986f9640103b3478501c4d368f6c2dd5058a4b39b3143667",
+        "src/rc/eval.h": "40840e20cb00334a7032ef11aec08ce6a0846912ae05dfb0d08e894ba7ad2e15",
+        "src/rc/main.c": "aed4ac89c8aaf338f8519b35554effd251b04d47bbee6dbf5781343097d74275",
+        "src/rc/primitives.h": "c370360aec231ecd817442dba6cee17dacbe7fddf96d1569d65e93a43fdcc464",
+        "src/rc/rc.h": "b77320047d47b013b5064b44d749e80fab11319769145d9e6a676371d9990aec",
+        "src/rc/emit.h": "ae1946b669f771941b12a706316a28090aefd126f54cc687fa00a3b10b322a9f",
+        "src/rc/eval_plan.h": "91c896c000ff381922ccd5fa72420aab6cc8f87f1f8b7851d97c69142f167af4",
+        "src/rc/read.h": "71fb3e8ce757174ee47dde95f732200ae1b023c66f8164ac0a4d82ebb241fea5",
+        "tools/rc-build.c": "dbf6c04b2b5ebbf9197061208c89aa2d781e2b261f17f8a0f04b8931f370e818"
+      },
+      "artifacts": {
+        "bin/pvar-g1-release/shen-rc": "7605051b6e294ac90398933ba694e04f49b5574be6adf9e6a51bfe8ff2fca71a",
+        "obj/pvar-g1-release/kernel.c": "f77a95145733f0a79aa58fd8eaab5c377bd72355a2218a2a04b5b11776aee6a5",
+        "bin/pvar-g1-release/lib/libshenrc.a": "f773bc513beef14ccc614bbcd698cb6b2468a00e2dfb73388bc2968a73482686"
+      },
+      "dependencies": "<OPT_ROOT>/bin/pvar-g1-release/shen-rc:\n\t/usr/lib/libSystem.B.dylib (compatibility version 1.0.0, current version 1359.0.0)\n"
+    },
+    "baseline": "candidate-f1"
+  },
+  "cases": [
+    {
+      "label": "guard_f1",
+      "argv": [
+        "<OPT_ROOT>/evidence/rc/opt-20261017/candidate-f1/shen-rc",
+        "script",
+        "runme.shen"
+      ],
+      "env": {}
+    },
+    {
+      "label": "pvar_g1",
+      "argv": [
+        "<OPT_ROOT>/evidence/rc/opt-20261017/candidate-g1/shen-rc",
+        "script",
+        "runme.shen"
+      ],
+      "env": {},
+      "dependency_sha256": {
+        "<OPT_ROOT>/evidence/rc/opt-20261017/candidate-g1/freeze.json": "dba8a6f49fdf4ce787c7477d738f564d1524f951ec54d3b414f0ffc7459563aa"
+      }
+    },
+    {
+      "label": "boehm",
+      "argv": [
+        "<BOEHM_ROOT>/bin/shen-c",
+        "script",
+        "runme.shen"
+      ],
+      "env": {},
+      "dependency_sha256": {
+        "/nix/store/r9bdx29an70k9jg6jj2h1ccnpjqdbwzg-boehm-gc-8.2.12/lib/libgc.1.dylib": "5115bc7b4d0d795912999a18f2ef53be28f38ef2b258df023e43fad129d5496f"
+      }
+    }
+  ]
+}
