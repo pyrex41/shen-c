@@ -25,7 +25,7 @@ extern bool rc_bootstrap_kernel(RcContext *ctx);
 static void usage(FILE *out) {
     fputs("Usage: shen-rc [--version] [--help] <COMMAND> [<ARGS>]\n\n"
           "  repl                         Interactive Shen REPL (default).\n"
-          "  script FILE [ARGS]           Load Shen source; *argv* is [FILE | ARGS].\n"
+          "  script FILE [ARGS]           Run Shen source quietly; *argv* is [FILE | ARGS].\n"
           "  compile-kl SOURCE OUTPUT [EVENTS]  Write escaped-v1 compiler AST and events.\n"
           "  eval [-q] [-e EXPR|-l FILE]...\n"
           "    -e, --eval EXPR            Evaluate Shen expressions and print results.\n"
@@ -131,39 +131,29 @@ static bool load_source(RcContext *ctx,const char *filename) {
     if (!value) return false;
     rc_release(value); return true;
 }
-static bool install_script_evaluator(RcContext *ctx) {
-    /* Keep script loading on the ordinary KL evaluator. This private helper
-     * has the same per-form dynamic lookup as shen.eval-and-print, but drops
-     * only the outer result print; output/file effects remain observable. */
-    static const char *const definition =
-        "(define shen-c.script-eval-and-print "
-        "Forms -> (map (lambda Form (eval-kl (shen.shen->kl Form))) Forms))";
-    RcValue *text=rc_string(ctx,definition);
-    RcValue *reader=rc_symbol(ctx,"read-from-string");
-    RcValue *eval_symbol=rc_symbol(ctx,"eval");
-    RcValue *forms=NULL,*eval_function=NULL,*read_function=NULL,*result=NULL;
-    RcValue *form=NULL,*name=NULL,*function=NULL,*target=NULL;
-    bool ok=false;
-    if (!text || !reader || !eval_symbol) goto done;
-    read_function=rc_function_get(ctx,reader);
-    eval_function=rc_function_get(ctx,eval_symbol);
-    if (!read_function || !eval_function) goto done;
-    forms=rc_apply(ctx,read_function,1,&text);
-    if (!forms || rc_type(forms)!=RC_PAIR) goto done;
-    form=rc_head_borrowed(forms);
-    result=rc_apply(ctx,eval_function,1,&form);
-    if (!result) goto done;
-    name=rc_symbol(ctx,"shen-c.script-eval-and-print");
-    target=rc_symbol(ctx,"shen.eval-and-print");
-    function=name ? rc_function_get(ctx,name) : NULL;
-    if (!name || !target || !function) goto done;
-    ok=rc_function_set(ctx,target,function);
-done:
-    rc_release(text); rc_release(reader); rc_release(eval_symbol);
-    rc_release(forms); rc_release(eval_function); rc_release(read_function);
-    rc_release(result);
-    rc_release(name); rc_release(function); rc_release(target);
-    return ok && !rc_has_error(ctx);
+static bool run_script(RcContext *ctx,const char *filename) {
+    /* Like the standard launcher's quiet-load: evaluate each form on the
+     * ordinary KL evaluator without printing its result, timing the file or
+     * typechecking it. A nested load inside the script is a normal kernel
+     * load and still prints its own results. Each form looks shen.shen->kl
+     * and eval-kl up again, so earlier forms may redefine them. */
+    RcValue *path=rc_string(ctx,filename);
+    if (!path) return false;
+    RcValue *forms=call(ctx,"read-file",1,&path); rc_release(path);
+    if (!forms) return false;
+    bool ok=true;
+    RcValue *rest=forms;
+    while (rc_type(rest)==RC_PAIR) {
+        RcValue *form=rc_head_borrowed(rest);
+        RcValue *kl=call(ctx,"shen.shen->kl",1,&form);
+        RcValue *value=kl ? call(ctx,"eval-kl",1,&kl) : NULL;
+        rc_release(kl);
+        if (!value) { ok=false; break; }
+        rc_release(value);
+        rest=rc_tail_borrowed(rest);
+    }
+    if (ok && !rc_is_nil(rest)) { rc_error(ctx,"kernel reader returned an improper form list"); ok=false; }
+    rc_release(forms); return ok;
 }
 /* escaped-v1 is an explicit compiler AST format. Literal strings and quoted
  * symbol tokens preserve every byte without introducing application syntax. */
@@ -543,10 +533,7 @@ int main(int argc,char **argv) {
     if (rc_bootstrap_kernel(ctx) && initial_directory(ctx) &&
         command_arguments(ctx,command==SCRIPT ? argc-2 : argc,command==SCRIPT ? argv+2 : argv)) {
         if (command==REPL) status=repl(ctx);
-        else if (command==SCRIPT) {
-            if (!install_script_evaluator(ctx)) status=1;
-            else status=load_source(ctx,argv[2]) ? 0 : 1;
-        }
+        else if (command==SCRIPT) status=run_script(ctx,argv[2]) ? 0 : 1;
         else if (command==COMPILE) status=compile_source(ctx,argv[2],argv[3],argc==5 ? argv[4] : NULL) ? 0 : 1;
         else status=eval_arguments(ctx,argc,argv,start);
     }
