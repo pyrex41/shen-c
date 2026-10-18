@@ -232,6 +232,15 @@ try:
     nested_output = cli_case('script-nested-load', ['script', str(outer)], contains='NESTED')
     check(nested_output.count('NESTED') == 1 and nested_output.count('OUTER') == 1,
           'CLI nested script preserves program output without result echoes')
+    # Deep non-tail recursion runs on the large evaluator stack; running out
+    # of it is an ordinary trappable error rather than a crash.
+    deep_script = empty / 'script-deep-recursion.shen'
+    deep_script.write_text('(define deep 0 -> 0 N -> (+ 1 (deep (- N 1))))\n(output "DEEP=~A~%" (deep 300000))\n')
+    cli_case('script-deep-recursion', ['script', str(deep_script)], contains='DEEP=300000')
+    runaway_script = empty / 'script-stack-exhausted.shen'
+    runaway_script.write_text('(define runaway X -> (+ 1 (runaway X)))\n'
+                              '(output "CAUGHT=~A~%" (trap-error (runaway 1) (/. E (error-to-string E))))\n')
+    cli_case('script-stack-exhausted', ['script', str(runaway_script)], contains='CAUGHT=stack exhausted')
     error_script = empty / 'script-error.shen'
     error_script.write_text('(simple-error "script-error")\n')
     cli_case('script-error', ['script', str(error_script)], fail=True)
