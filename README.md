@@ -5,36 +5,75 @@ A [Shen](https://shenlanguage.org/) implementation in C17, based on
 kernel. Shen provides pattern matching, macros, optional types, Prolog, and
 Shen-YACC.
 
-The default toolchain uses **reference counting and exact cycle reclamation**.
-The compiler, standalone executable, and generated C applications have no
-Boehm dependency. The complete kernel is compiled to native C; explicit
-`eval-kl` and source loading use the independent RC evaluator.
+**Shen-C 0.3.0 brings a native C17 compiler, the complete Shen 43.1 portable
+kernel, and reference counting with exact cycle reclamation.** The default
+compiler, standalone CLI and generated C applications have no Boehm dependency.
+The kernel is compiled to native C; source loading and explicit `eval-kl` use
+the RC evaluator. See the [release notes](CHANGELOG.md).
 
-The compiler inserts last-use ownership moves and drops, captures free
-variables, transfers arguments through owned calls, and reuses uniquely owned
-cons cells. Shared values keep their aliases intact. These optimizations are
-inspired by Perceus and implemented directly in C; Koka is not a build dependency.
-Their implemented scope and evidence are described in
-[RC-BACKEND.md](docs/RC-BACKEND.md) and
-[the validation record](docs/rc-validation.md).
+## Full-suite performance
 
-Shen-C **0.3.0** includes the pinned Shen **43.1** kernel and complete 136-test
-suite. Qualification covers fatal sanitizers, Make/CMake, installed Nix packages,
-Linux Clang/GCC and macOS CI. In the accepted Darwin arm64 measurement window,
-two five-pair batches used **16.4% and 16.6% less user CPU than rebuilt Boehm**,
-with roughly half the peak RSS. Every suite execution passed 136/0.
-Median full-suite wall time was **3.785 seconds** for RC versus **4.510 seconds**
-for Boehm, including startup, source loading and typechecking. Background macOS
-services remained active; these are host-specific complete-implementation
-comparisons. See the [measurement and qualification report](docs/performance/rc-43.1-final-20261017.md)
-and [release notes](CHANGELOG.md).
+On the measured Darwin arm64 host, RC used **16.4% and 16.6% less user CPU than
+rebuilt Boehm** in two batches of five alternating pairs, winning all ten CPU
+comparisons and using roughly half the peak memory. All twenty executions
+passed the complete **136-test Shen 43.1 suite**.
 
-The historical four alternating full S42 pairs passed 134/0 for both implementations.
-RC remained 0.9% slower in paired wall time and 4.1% slower in paired user CPU,
-with 62.9% lower peak memory. Other host workloads affected timing; this does not
-establish parity or a speedup at that historical checkpoint; see the
-[identity-tail checkpoint](docs/performance/rc-suite-identity-tail-20261016.md)
-for matched measurements and the exact correctness qualification scope.
+| Complete suite, median of ten runs per implementation | RC | Boehm |
+|---|---:|---:|
+| Wall time | **3.785 s** | 4.510 s |
+| User CPU | **3.675 s** | 4.405 s |
+
+These times include process startup, source loading, typechecking and test
+execution. Both implementations used the same pinned kernel, suite, compiler/SDK
+and input; each execution used a fresh writable suite copy. RC's largest peak
+RSS was 32,063,488 bytes, 3.49% above the frozen pre-optimization RC baseline
+and below Boehm in every pair. Ordinary macOS services remained active in the
+user-accepted measurement window. These are host-specific comparisons of the
+complete implementations; they do not isolate the cost of either memory manager.
+
+The [qualification report](docs/performance/rc-43.1-final-20261017.md) preserves
+every sample, artifact identity, reproduction command and rejected experiment.
+Historical [S42 measurements](docs/performance/rc-suite-identity-tail-20261016.md)
+remain separate from the 43.1 comparison.
+
+## How it works
+
+The approach combines compiler knowledge about ownership with less repeated
+work in the evaluator:
+
+- **Move values at their last use.** Generated C transfers ownership when a
+  value is no longer needed, captures only free variables, and drops values at
+  known boundaries. A uniquely owned cons cell can be reused; shared cells keep
+  their aliases intact. Certified internal call boundaries can borrow existing
+  roots and skip redundant argument copies or cleanup scans. Public borrowed
+  and owned C contracts remain unchanged.
+- **Prepare hot interpreted functions once.** Frequently used function bodies
+  get bounded evaluation plans that record expression kinds and lexical slots.
+  Repeated calls avoid walking the same syntax and searching the same names.
+  Parameter and local environments are materialized when a fallback or escaping
+  closure needs them. Cold and unsupported code uses the general evaluator.
+- **Guard specialized paths.** Native predicates and selected Prolog operations
+  avoid unnecessary temporary values and ownership work when their exact
+  preconditions hold. Runtime function guards and dependency-cache invalidation
+  preserve dynamic redefinition; uncertain cases use the general paths.
+- **Keep full graph semantics.** Reference counting handles ordinary lifetime
+  management, while exact cycle reclamation handles unreachable cyclic graphs.
+  Mutable data, shared values and escaping closures retain their semantics.
+  Reuse caches and evaluation plans have explicit bounds.
+
+Separate diagnostic runs recorded **22.7% fewer retain/release operations** and
+**7.6% fewer managed allocations** than the pre-optimization RC implementation.
+Those counters explain part of the reduced work; diagnostic timings are not
+used for the release performance claim.
+
+The ownership optimizations are inspired by Perceus and implemented directly
+in C. This is a bounded set of compiler/runtime optimizations; Koka is not a
+build dependency. The [compiler guide](docs/RC-BACKEND.md),
+[implementation record](docs/performance/rc-prepared-evaluator-20261017.md) and
+[validation record](docs/rc-validation.md) describe their scope and controls.
+Qualification includes the complete generated kernel under fatal ASan/UBSan,
+default/boxed runtime and emitted semantic controls, Make/CMake, installed Nix
+packages, and Linux Clang/GCC and macOS CI.
 
 ## Build
 
