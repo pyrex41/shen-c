@@ -1,0 +1,47 @@
+[
+  {
+    "command": [
+      "nix",
+      "develop",
+      "-c",
+      "cmake",
+      "-S",
+      ".",
+      "-B",
+      "build/gap-hash",
+      "-DCMAKE_C_COMPILER=/usr/bin/clang",
+      "-DSHEN_RC_SANITIZE=ON",
+      "-DCMAKE_BUILD_TYPE=Debug",
+      "-DCMAKE_C_FLAGS=-DSHEN_RC_VERIFY_OWNERSHIP=1"
+    ],
+    "exit_code": 0
+  },
+  {
+    "command": [
+      "nix",
+      "develop",
+      "-c",
+      "cmake",
+      "--build",
+      "build/gap-hash",
+      "--target",
+      "test_rc_canonical_hash",
+      "-j2"
+    ],
+    "exit_code": 0
+  },
+  {
+    "command": [
+      "nix",
+      "develop",
+      "-c",
+      "ctest",
+      "--test-dir",
+      "build/gap-hash",
+      "-R",
+      "^rc_canonical_hash$",
+      "--output-on-failure"
+    ],
+    "exit_code": 8
+  }
+]

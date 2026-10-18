@@ -1,0 +1,32 @@
+[
+  {
+    "command": [
+      "make",
+      "-f",
+      "Makefile.rc",
+      "CC=clang",
+      "RC_SANITIZE=1",
+      "RC_CPPFLAGS=-DSHEN_RC_VERIFY_OWNERSHIP=1",
+      "RC_BUILD=obj/gap-default",
+      "RC_BIN=bin/gap-default",
+      "-j2",
+      "test"
+    ],
+    "exit_code": 0
+  },
+  {
+    "command": [
+      "make",
+      "-f",
+      "Makefile.rc",
+      "CC=clang",
+      "RC_SANITIZE=1",
+      "RC_CPPFLAGS=-DSHEN_RC_VERIFY_OWNERSHIP=1 -DSHEN_RC_IMMEDIATE_INTEGERS=0",
+      "RC_BUILD=obj/gap-boxed",
+      "RC_BIN=bin/gap-boxed",
+      "-j2",
+      "test"
+    ],
+    "exit_code": 0
+  }
+]

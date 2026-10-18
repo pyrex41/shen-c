@@ -1,0 +1,1536 @@
+{
+  "started_utc": "2026-10-18T19:29:18.119483+00:00",
+  "scope": "fresh standalone compiler and CLI; native ownership optimizer acceptance",
+  "status": "PASS",
+  "canonical": "PASS",
+  "evidence": "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release",
+  "checks": [
+    "auditor symbol control rejected (not a runtime collector test)",
+    "fresh host produced by recorded build command",
+    "fresh-compiler-audit has no Boehm global symbols or direct linked dependency",
+    "fresh CLI produced from same isolated build graph",
+    "default build creates shen-c compatibility executable matching standalone CLI",
+    "fresh-cli-audit has no Boehm global symbols or direct linked dependency",
+    "CLI version-flag has no diagnostic",
+    "CLI version-flag result is present",
+    "CLI kernel-version has no diagnostic",
+    "CLI kernel-version exact result",
+    "CLI arithmetic has no diagnostic",
+    "CLI arithmetic exact result",
+    "CLI strings has no diagnostic",
+    "CLI strings exact result",
+    "CLI numeric-hash-equality has no diagnostic",
+    "CLI numeric-hash-equality exact result",
+    "CLI numeric-property-key has no diagnostic",
+    "CLI numeric-property-key exact result",
+    "CLI string-tail has no diagnostic",
+    "CLI string-tail exact result",
+    "CLI mutable-self-cycle has no diagnostic",
+    "CLI mutable-self-cycle exact result",
+    "CLI trap has no diagnostic",
+    "CLI trap exact result",
+    "CLI quiet has no diagnostic",
+    "CLI quiet exact result",
+    "CLI multiple-forms has no diagnostic",
+    "CLI multiple-forms exact result",
+    "CLI eof has no diagnostic",
+    "CLI list-without-final-newline has no diagnostic",
+    "CLI list-without-final-newline result is present",
+    "CLI expression-without-final-newline has no diagnostic",
+    "CLI expression-without-final-newline result is present",
+    "CLI missing-eval-option-argument fails observably",
+    "CLI unhandled-error fails observably",
+    "CLI missing-file fails observably",
+    "CLI stream-write has no diagnostic",
+    "CLI stream-write exact result",
+    "CLI stream contains exact written bytes",
+    "CLI script-argv has no diagnostic",
+    "CLI script-argv result is present",
+    "CLI script-result-quiet has no diagnostic",
+    "CLI script-result-quiet result is present",
+    "CLI script does not echo its final string result",
+    "CLI script-redefinition has no diagnostic",
+    "CLI script resolves shen.shen->kl after a preceding redefinition",
+    "CLI script-nested-load has no diagnostic",
+    "CLI script-nested-load result is present",
+    "CLI nested script preserves program output without result echoes",
+    "CLI script-error fails observably",
+    "CLI hash-redefined-explode has no diagnostic",
+    "CLI hash-redefined-explode result is present",
+    "custom kernel hash body preserved in owned emitter",
+    "custom kernel hash body preserved in borrowed emitter",
+    "CLI load-file has no diagnostic",
+    "real Shen compilation retains generated KL",
+    "Shen pattern-matching source application selected native C body has value operations and no direct source-evaluator forwarding",
+    "Shen dynamic function source application selected native C body has value operations and no direct source-evaluator forwarding",
+    "shen-source-app-audit has no Boehm global symbols or direct linked dependency",
+    "Shen source application has no runtime diagnostics",
+    "real Shen pattern cases and dynamic function lookup produce exact results 0/7/12/42/42",
+    "Shen frontend receipt identifies the fresh CLI and compiler binaries",
+    "Shen frontend receipt matches actual source, KL, and executable bytes",
+    "Shen frontend receipt identifies escaped-v1 transport and actual reader event bytes",
+    "Shen frontend receipt binds every required compiler output",
+    "Shen receipt output uses a local artifact filename: app.c",
+    "Shen receipt output hash matches: app.c",
+    "Shen receipt output uses a local artifact filename: Makefile",
+    "Shen receipt output hash matches: Makefile",
+    "Shen receipt output uses a local artifact filename: app",
+    "Shen receipt output hash matches: app",
+    "Shen receipt output uses a local artifact filename: source.kl",
+    "Shen receipt output hash matches: source.kl",
+    "Shen receipt output uses a local artifact filename: source-events.kl",
+    "Shen receipt output hash matches: source-events.kl",
+    "unique-100 conservative selected native C body has value operations and no direct source-evaluator forwarding",
+    "unique-100-conservative-audit has no Boehm global symbols or direct linked dependency",
+    "unique-100 conservative exact functional result",
+    "unique-100 conservative has no runtime diagnostic beyond stats",
+    "unique-100 conservative emits one real-runtime stats record",
+    "unique-100 conservative stats contain required integer counters",
+    "unique-100 optimized selected native C body has value operations and no direct source-evaluator forwarding",
+    "unique-100-optimized-audit has no Boehm global symbols or direct linked dependency",
+    "unique-100 optimized exact functional result",
+    "unique-100 optimized has no runtime diagnostic beyond stats",
+    "unique-100 optimized emits one real-runtime stats record",
+    "unique-100 optimized stats contain required integer counters",
+    "unique-1000 conservative selected native C body has value operations and no direct source-evaluator forwarding",
+    "unique-1000-conservative-audit has no Boehm global symbols or direct linked dependency",
+    "unique-1000 conservative exact functional result",
+    "unique-1000 conservative has no runtime diagnostic beyond stats",
+    "unique-1000 conservative emits one real-runtime stats record",
+    "unique-1000 conservative stats contain required integer counters",
+    "unique-1000 optimized selected native C body has value operations and no direct source-evaluator forwarding",
+    "unique-1000-optimized-audit has no Boehm global symbols or direct linked dependency",
+    "unique-1000 optimized exact functional result",
+    "unique-1000 optimized has no runtime diagnostic beyond stats",
+    "unique-1000 optimized emits one real-runtime stats record",
+    "unique-1000 optimized stats contain required integer counters",
+    "aliased-1000 conservative selected native C body has value operations and no direct source-evaluator forwarding",
+    "aliased-1000-conservative-audit has no Boehm global symbols or direct linked dependency",
+    "aliased-1000 conservative exact functional result",
+    "aliased-1000 conservative has no runtime diagnostic beyond stats",
+    "aliased-1000 conservative emits one real-runtime stats record",
+    "aliased-1000 conservative stats contain required integer counters",
+    "aliased-1000 optimized selected native C body has value operations and no direct source-evaluator forwarding",
+    "aliased-1000-optimized-audit has no Boehm global symbols or direct linked dependency",
+    "aliased-1000 optimized exact functional result",
+    "aliased-1000 optimized has no runtime diagnostic beyond stats",
+    "aliased-1000 optimized emits one real-runtime stats record",
+    "aliased-1000 optimized stats contain required integer counters",
+    "capture conservative selected native C body has value operations and no direct source-evaluator forwarding",
+    "capture-conservative-audit has no Boehm global symbols or direct linked dependency",
+    "capture conservative exact functional result",
+    "capture conservative has no runtime diagnostic beyond stats",
+    "capture conservative emits one real-runtime stats record",
+    "capture conservative stats contain required integer counters",
+    "capture optimized selected native C body has value operations and no direct source-evaluator forwarding",
+    "capture-optimized-audit has no Boehm global symbols or direct linked dependency",
+    "capture optimized exact functional result",
+    "capture optimized has no runtime diagnostic beyond stats",
+    "capture optimized emits one real-runtime stats record",
+    "capture optimized stats contain required integer counters",
+    "last-use conservative selected native C body has value operations and no direct source-evaluator forwarding",
+    "last-use-conservative-audit has no Boehm global symbols or direct linked dependency",
+    "last-use conservative exact functional result",
+    "last-use conservative has no runtime diagnostic beyond stats",
+    "last-use conservative emits one real-runtime stats record",
+    "last-use conservative stats contain required integer counters",
+    "last-use optimized selected native C body has value operations and no direct source-evaluator forwarding",
+    "last-use-optimized-audit has no Boehm global symbols or direct linked dependency",
+    "last-use optimized exact functional result",
+    "last-use optimized has no runtime diagnostic beyond stats",
+    "last-use optimized emits one real-runtime stats record",
+    "last-use optimized stats contain required integer counters",
+    "conservative unique-100 is an actual reuse-off control",
+    "unique-100 reuses at least one real pair per element",
+    "unique-100 avoids at least one allocation per element",
+    "conservative unique-1000 is an actual reuse-off control",
+    "unique-1000 reuses at least one real pair per element",
+    "unique-1000 avoids at least one allocation per element",
+    "retained alias prevents destructive pair reuse",
+    "aliased program exercises checked reuse fallback",
+    "free-variable analysis creates fewer actual closure capture edges",
+    "last-use release removes at least 1000 objects from overlapping list lifetimes",
+    "canonical host_build gate passed",
+    "canonical compiler_audit gate passed",
+    "canonical build gate passed",
+    "canonical suite gate passed",
+    "canonical artifact_audit gate passed",
+    "canonical host, compiler audit, app build, suite, and app audit all exited zero",
+    "canonical pinned suite completed all assertions at exit zero",
+    "canonical source still matches: shen/src/kl/sys.kl",
+    "canonical source still matches: shen/src/kl/writer.kl",
+    "canonical source still matches: shen/src/kl/core.kl",
+    "canonical source still matches: shen/src/kl/reader.kl",
+    "canonical source still matches: shen/src/kl/declarations.kl",
+    "canonical source still matches: shen/src/kl/toplevel.kl",
+    "canonical source still matches: shen/src/kl/macros.kl",
+    "canonical source still matches: shen/src/kl/load.kl",
+    "canonical source still matches: shen/src/kl/prolog.kl",
+    "canonical source still matches: shen/src/kl/sequent.kl",
+    "canonical source still matches: shen/src/kl/track.kl",
+    "canonical source still matches: shen/src/kl/t-star.kl",
+    "canonical source still matches: shen/src/kl/yacc.kl",
+    "canonical source still matches: shen/src/kl/types.kl",
+    "canonical source still matches: src/rc/emit.c",
+    "canonical source still matches: src/rc/emit.h",
+    "canonical source still matches: src/rc/eval.c",
+    "canonical source still matches: src/rc/eval.h",
+    "canonical source still matches: src/rc/eval_plan.h",
+    "canonical source still matches: src/rc/primitives.c",
+    "canonical source still matches: src/rc/primitives.h",
+    "canonical source still matches: src/rc/rc.c",
+    "canonical source still matches: src/rc/rc.h",
+    "canonical source still matches: src/rc/rc_internal.h",
+    "canonical source still matches: src/rc/read.c",
+    "canonical source still matches: src/rc/read.h",
+    "canonical source still matches: tools/rc-build.c",
+    "canonical source still matches: Makefile.rc",
+    "canonical source still matches: scripts/certify-rc.sh",
+    "canonical source still matches: scripts/test-rc.sh",
+    "canonical source still matches: shen/releases/s43.1.json",
+    "canonical source still matches: scripts/release_manifest.py",
+    "canonical source still matches: shen/test/s43.1/README",
+    "canonical source still matches: shen/test/s43.1/binary.shen",
+    "canonical source still matches: shen/test/s43.1/bubble version 1.shen",
+    "canonical source still matches: shen/test/s43.1/bubble version 2.shen",
+    "canonical source still matches: shen/test/s43.1/c-minus.shen",
+    "canonical source still matches: shen/test/s43.1/calculator.shen",
+    "canonical source still matches: shen/test/s43.1/call.shen",
+    "canonical source still matches: shen/test/s43.1/cartprod.shen",
+    "canonical source still matches: shen/test/s43.1/change.shen",
+    "canonical source still matches: shen/test/s43.1/classes-defaults.shen",
+    "canonical source still matches: shen/test/s43.1/classes-inheritance.shen",
+    "canonical source still matches: shen/test/s43.1/classes-typed.shen",
+    "canonical source still matches: shen/test/s43.1/classes-untyped.shen",
+    "canonical source still matches: shen/test/s43.1/cut.shen",
+    "canonical source still matches: shen/test/s43.1/depth.shen",
+    "canonical source still matches: shen/test/s43.1/einsteins-riddle.shen",
+    "canonical source still matches: shen/test/s43.1/findall.shen",
+    "canonical source still matches: shen/test/s43.1/fork.shen",
+    "canonical source still matches: shen/test/s43.1/harness.shen",
+    "canonical source still matches: shen/test/s43.1/interpreter.shen",
+    "canonical source still matches: shen/test/s43.1/kerneltests.shen",
+    "canonical source still matches: shen/test/s43.1/lisp.shen",
+    "canonical source still matches: shen/test/s43.1/metaprog.shen",
+    "canonical source still matches: shen/test/s43.1/minim.shen",
+    "canonical source still matches: shen/test/s43.1/montague.shen",
+    "canonical source still matches: shen/test/s43.1/mutual.shen",
+    "canonical source still matches: shen/test/s43.1/n queens-axioms.shen",
+    "canonical source still matches: shen/test/s43.1/n queens-r.shen",
+    "canonical source still matches: shen/test/s43.1/n queens.axioms",
+    "canonical source still matches: shen/test/s43.1/n queens.kl",
+    "canonical source still matches: shen/test/s43.1/n queens.shen",
+    "canonical source still matches: shen/test/s43.1/nreverseprolog.shen",
+    "canonical source still matches: shen/test/s43.1/parseprolog.shen",
+    "canonical source still matches: shen/test/s43.1/parser.shen",
+    "canonical source still matches: shen/test/s43.1/parsetest.shen",
+    "canonical source still matches: shen/test/s43.1/powerset.shen",
+    "canonical source still matches: shen/test/s43.1/prime.shen",
+    "canonical source still matches: shen/test/s43.1/prolog.shen",
+    "canonical source still matches: shen/test/s43.1/prologinterp.shen",
+    "canonical source still matches: shen/test/s43.1/proof assistant.shen",
+    "canonical source still matches: shen/test/s43.1/propcalcprolog.shen",
+    "canonical source still matches: shen/test/s43.1/proplog version 1.shen",
+    "canonical source still matches: shen/test/s43.1/proplog version 2.shen",
+    "canonical source still matches: shen/test/s43.1/qmachine.shen",
+    "canonical source still matches: shen/test/s43.1/redirect.shen",
+    "canonical source still matches: shen/test/s43.1/runme.shen",
+    "canonical source still matches: shen/test/s43.1/search.shen",
+    "canonical source still matches: shen/test/s43.1/secd1.shen",
+    "canonical source still matches: shen/test/s43.1/semantic net.shen",
+    "canonical source still matches: shen/test/s43.1/spreadsheet.shen",
+    "canonical source still matches: shen/test/s43.1/stack.shen",
+    "canonical source still matches: shen/test/s43.1/streams.shen",
+    "canonical source still matches: shen/test/s43.1/strings.shen",
+    "canonical source still matches: shen/test/s43.1/structures-typed.shen",
+    "canonical source still matches: shen/test/s43.1/structures-untyped.shen",
+    "canonical source still matches: shen/test/s43.1/tableauprolog.shen",
+    "canonical source still matches: shen/test/s43.1/test.txt",
+    "canonical source still matches: shen/test/s43.1/totalprolog.shen",
+    "canonical source still matches: shen/test/s43.1/unification.shen",
+    "canonical source still matches: shen/test/s43.1/yacc.shen",
+    "canonical receipt binds all current compiler/runtime core sources",
+    "canonical fresh host binary still matches receipt",
+    "canonical-host-audit has no Boehm global symbols or direct linked dependency",
+    "canonical build command identifies its retained output directory",
+    "canonical build command uses the retained audited compiler host",
+    "canonical suite command executes the retained build output app",
+    "canonical retained artifact matches receipt: app",
+    "canonical receipt binds generated app.c and Makefile",
+    "canonical generated artifact uses a local filename: app.c",
+    "canonical retained artifact matches receipt: app.c",
+    "canonical generated artifact uses a local filename: Makefile",
+    "canonical retained artifact matches receipt: Makefile",
+    "canonical-app-audit has no Boehm global symbols or direct linked dependency",
+    "compiler/runtime/kernel sources unchanged throughout fresh acceptance run"
+  ],
+  "cc": "clang",
+  "cflags": "-O2",
+  "pkg_config": "/nonexistent/rc-toolchain-pkg-config",
+  "commands": [
+    {
+      "label": "01-native-evidence-controls",
+      "command": [
+        "/Library/Developer/CommandLineTools/usr/bin/python3",
+        "<SHEN_C_ROOT>/test/rc/test_native_evidence.py"
+      ],
+      "exit": 0,
+      "seconds": 0.104,
+      "stdout": "01-native-evidence-controls.out",
+      "stderr": "01-native-evidence-controls.err"
+    },
+    {
+      "label": "02-checkout-revision",
+      "command": [
+        "git",
+        "rev-parse",
+        "HEAD"
+      ],
+      "exit": 0,
+      "seconds": 0.055,
+      "stdout": "02-checkout-revision.out",
+      "stderr": "02-checkout-revision.err"
+    },
+    {
+      "label": "03-compiler-version",
+      "command": [
+        "clang",
+        "--version"
+      ],
+      "exit": 0,
+      "seconds": 0.054,
+      "stdout": "03-compiler-version.out",
+      "stderr": "03-compiler-version.err"
+    },
+    {
+      "label": "04-build-auditor-control",
+      "command": [
+        "clang",
+        "-O2",
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/auditor-control.c",
+        "-o",
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/auditor-control"
+      ],
+      "exit": 0,
+      "seconds": 0.235,
+      "stdout": "04-build-auditor-control.out",
+      "stderr": "04-build-auditor-control.err"
+    },
+    {
+      "label": "05-auditor-negative-control",
+      "command": [
+        "<SHEN_C_ROOT>/scripts/test-rc.sh",
+        "--audit-only",
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/auditor-control"
+      ],
+      "exit": 1,
+      "seconds": 0.175,
+      "stdout": "05-auditor-negative-control.out",
+      "stderr": "05-auditor-negative-control.err"
+    },
+    {
+      "label": "06-fresh-host-build",
+      "command": [
+        "make",
+        "RC_BUILD=<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/fresh/obj",
+        "RC_BIN=<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/fresh/runtime",
+        "RC_TOOL_BIN=<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/fresh/bin",
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/fresh/bin/rc-build"
+      ],
+      "exit": 0,
+      "seconds": 2.609,
+      "stdout": "06-fresh-host-build.out",
+      "stderr": "06-fresh-host-build.err"
+    },
+    {
+      "label": "07-fresh-compiler-audit",
+      "command": [
+        "<SHEN_C_ROOT>/scripts/test-rc.sh",
+        "--audit-only",
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/fresh/bin/rc-build"
+      ],
+      "exit": 0,
+      "seconds": 0.222,
+      "stdout": "07-fresh-compiler-audit.out",
+      "stderr": "07-fresh-compiler-audit.err"
+    },
+    {
+      "label": "08-fresh-default-build",
+      "command": [
+        "make",
+        "RC_BUILD=<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/fresh/obj",
+        "RC_BIN=<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/fresh/runtime",
+        "RC_TOOL_BIN=<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/fresh/bin"
+      ],
+      "exit": 0,
+      "seconds": 43.072,
+      "stdout": "08-fresh-default-build.out",
+      "stderr": "08-fresh-default-build.err"
+    },
+    {
+      "label": "09-fresh-cli-audit",
+      "command": [
+        "<SHEN_C_ROOT>/scripts/test-rc.sh",
+        "--audit-only",
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/fresh/bin/shen-rc"
+      ],
+      "exit": 0,
+      "seconds": 0.751,
+      "stdout": "09-fresh-cli-audit.out",
+      "stderr": "09-fresh-cli-audit.err"
+    },
+    {
+      "label": "10-cli-version-flag",
+      "command": [
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/fresh/bin/shen-rc",
+        "--version"
+      ],
+      "exit": 0,
+      "seconds": 0.231,
+      "stdout": "10-cli-version-flag.out",
+      "stderr": "10-cli-version-flag.err"
+    },
+    {
+      "label": "11-cli-kernel-version",
+      "command": [
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/fresh/bin/shen-rc",
+        "eval",
+        "-e",
+        "(version)"
+      ],
+      "exit": 0,
+      "seconds": 0.119,
+      "stdout": "11-cli-kernel-version.out",
+      "stderr": "11-cli-kernel-version.err"
+    },
+    {
+      "label": "12-cli-arithmetic",
+      "command": [
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/fresh/bin/shen-rc",
+        "eval",
+        "-e",
+        "(+ 20 22)"
+      ],
+      "exit": 0,
+      "seconds": 0.067,
+      "stdout": "12-cli-arithmetic.out",
+      "stderr": "12-cli-arithmetic.err"
+    },
+    {
+      "label": "13-cli-strings",
+      "command": [
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/fresh/bin/shen-rc",
+        "eval",
+        "-e",
+        "(= (@s \"foo\" \"bar\") \"foobar\")"
+      ],
+      "exit": 0,
+      "seconds": 0.06,
+      "stdout": "13-cli-strings.out",
+      "stderr": "13-cli-strings.err"
+    },
+    {
+      "label": "14-cli-numeric-hash-equality",
+      "command": [
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/fresh/bin/shen-rc",
+        "eval",
+        "-e",
+        "(and (= (hash 1 1000000) (hash 1.0 1000000)) (and (= (hash 0 1000000) (hash -0.0 1000000)) (= (hash 9007199254740992 1000000) (hash 9007199254740992.0 1000000))))"
+      ],
+      "exit": 0,
+      "seconds": 0.065,
+      "stdout": "14-cli-numeric-hash-equality.out",
+      "stderr": "14-cli-numeric-hash-equality.err"
+    },
+    {
+      "label": "15-cli-numeric-property-key",
+      "command": [
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/fresh/bin/shen-rc",
+        "eval",
+        "-e",
+        "(do (put 1.0 shen-c.hash-test 42 (value *property-vector*)) (get 1 shen-c.hash-test (value *property-vector*)))"
+      ],
+      "exit": 0,
+      "seconds": 0.059,
+      "stdout": "15-cli-numeric-property-key.out",
+      "stderr": "15-cli-numeric-property-key.err"
+    },
+    {
+      "label": "16-cli-string-tail",
+      "command": [
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/fresh/bin/shen-rc",
+        "eval",
+        "-e",
+        "(= (tlstr \"hello\") \"ello\")"
+      ],
+      "exit": 0,
+      "seconds": 0.119,
+      "stdout": "16-cli-string-tail.out",
+      "stderr": "16-cli-string-tail.err"
+    },
+    {
+      "label": "17-cli-mutable-self-cycle",
+      "command": [
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/fresh/bin/shen-rc",
+        "eval",
+        "-e",
+        "(let V (absvector 1) (do (address-> V 0 V) (= V (<-address V 0))))"
+      ],
+      "exit": 0,
+      "seconds": 0.061,
+      "stdout": "17-cli-mutable-self-cycle.out",
+      "stderr": "17-cli-mutable-self-cycle.err"
+    },
+    {
+      "label": "18-cli-trap",
+      "command": [
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/fresh/bin/shen-rc",
+        "eval",
+        "-e",
+        "(trap-error (simple-error \"boom\") (lambda E (= (error-to-string E) \"boom\")))"
+      ],
+      "exit": 0,
+      "seconds": 0.12,
+      "stdout": "18-cli-trap.out",
+      "stderr": "18-cli-trap.err"
+    },
+    {
+      "label": "19-cli-quiet",
+      "command": [
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/fresh/bin/shen-rc",
+        "eval",
+        "-q",
+        "-e",
+        "(+ 20 22)"
+      ],
+      "exit": 0,
+      "seconds": 0.115,
+      "stdout": "19-cli-quiet.out",
+      "stderr": "19-cli-quiet.err"
+    },
+    {
+      "label": "20-cli-multiple-forms",
+      "command": [
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/fresh/bin/shen-rc",
+        "eval",
+        "-e",
+        "(+ 1 1) (+ 20 22)"
+      ],
+      "exit": 0,
+      "seconds": 0.062,
+      "stdout": "20-cli-multiple-forms.out",
+      "stderr": "20-cli-multiple-forms.err"
+    },
+    {
+      "label": "21-cli-eof",
+      "command": [
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/fresh/bin/shen-rc",
+        "repl"
+      ],
+      "exit": 0,
+      "seconds": 0.056,
+      "stdout": "21-cli-eof.out",
+      "stderr": "21-cli-eof.err"
+    },
+    {
+      "label": "22-cli-list-without-final-newline",
+      "command": [
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/fresh/bin/shen-rc",
+        "repl"
+      ],
+      "exit": 0,
+      "seconds": 0.268,
+      "stdout": "22-cli-list-without-final-newline.out",
+      "stderr": "22-cli-list-without-final-newline.err"
+    },
+    {
+      "label": "23-cli-expression-without-final-newline",
+      "command": [
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/fresh/bin/shen-rc",
+        "repl"
+      ],
+      "exit": 0,
+      "seconds": 0.061,
+      "stdout": "23-cli-expression-without-final-newline.out",
+      "stderr": "23-cli-expression-without-final-newline.err"
+    },
+    {
+      "label": "24-cli-missing-eval-option-argument",
+      "command": [
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/fresh/bin/shen-rc",
+        "eval",
+        "-e"
+      ],
+      "exit": 2,
+      "seconds": 0.063,
+      "stdout": "24-cli-missing-eval-option-argument.out",
+      "stderr": "24-cli-missing-eval-option-argument.err"
+    },
+    {
+      "label": "25-cli-unhandled-error",
+      "command": [
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/fresh/bin/shen-rc",
+        "eval",
+        "-e",
+        "(simple-error \"toolchain-unhandled\")"
+      ],
+      "exit": 1,
+      "seconds": 0.12,
+      "stdout": "25-cli-unhandled-error.out",
+      "stderr": "25-cli-unhandled-error.err"
+    },
+    {
+      "label": "26-cli-missing-file",
+      "command": [
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/fresh/bin/shen-rc",
+        "script",
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/empty-cwd/missing.shen"
+      ],
+      "exit": 1,
+      "seconds": 0.06,
+      "stdout": "26-cli-missing-file.out",
+      "stderr": "26-cli-missing-file.err"
+    },
+    {
+      "label": "27-cli-stream-write",
+      "command": [
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/fresh/bin/shen-rc",
+        "eval",
+        "-q",
+        "-e",
+        "(let S (open \"<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/empty-cwd/written.txt\" out) (do (pr \"toolchain-stream\" S) (close S)))"
+      ],
+      "exit": 0,
+      "seconds": 0.176,
+      "stdout": "27-cli-stream-write.out",
+      "stderr": "27-cli-stream-write.err"
+    },
+    {
+      "label": "28-cli-script-argv",
+      "command": [
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/fresh/bin/shen-rc",
+        "script",
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/empty-cwd/script with spaces.shen",
+        "argument-marker"
+      ],
+      "exit": 0,
+      "seconds": 0.055,
+      "stdout": "28-cli-script-argv.out",
+      "stderr": "28-cli-script-argv.err"
+    },
+    {
+      "label": "29-cli-script-result-quiet",
+      "command": [
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/fresh/bin/shen-rc",
+        "script",
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/empty-cwd/script-result-quiet.shen"
+      ],
+      "exit": 0,
+      "seconds": 0.326,
+      "stdout": "29-cli-script-result-quiet.out",
+      "stderr": "29-cli-script-result-quiet.err"
+    },
+    {
+      "label": "30-cli-script-redefinition",
+      "command": [
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/fresh/bin/shen-rc",
+        "script",
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/empty-cwd/script-redefinition.shen"
+      ],
+      "exit": 0,
+      "seconds": 0.117,
+      "stdout": "30-cli-script-redefinition.out",
+      "stderr": "30-cli-script-redefinition.err"
+    },
+    {
+      "label": "31-cli-script-nested-load",
+      "command": [
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/fresh/bin/shen-rc",
+        "script",
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/empty-cwd/outer.shen"
+      ],
+      "exit": 0,
+      "seconds": 0.058,
+      "stdout": "31-cli-script-nested-load.out",
+      "stderr": "31-cli-script-nested-load.err"
+    },
+    {
+      "label": "32-cli-script-error",
+      "command": [
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/fresh/bin/shen-rc",
+        "script",
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/empty-cwd/script-error.shen"
+      ],
+      "exit": 1,
+      "seconds": 0.057,
+      "stdout": "32-cli-script-error.out",
+      "stderr": "32-cli-script-error.err"
+    },
+    {
+      "label": "33-cli-hash-redefined-explode",
+      "command": [
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/fresh/bin/shen-rc",
+        "script",
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/empty-cwd/hash-formatting.shen"
+      ],
+      "exit": 0,
+      "seconds": 0.118,
+      "stdout": "33-cli-hash-redefined-explode.out",
+      "stderr": "33-cli-hash-redefined-explode.err"
+    },
+    {
+      "label": "34-custom-hash-owned-build",
+      "command": [
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/fresh/bin/rc-build",
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/custom-hash-owned/input",
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/custom-hash-owned/app"
+      ],
+      "exit": 0,
+      "seconds": 2.796,
+      "stdout": "34-custom-hash-owned-build.out",
+      "stderr": "34-custom-hash-owned-build.err"
+    },
+    {
+      "label": "35-custom-hash-owned-run",
+      "command": [
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/custom-hash-owned/app/app"
+      ],
+      "exit": 0,
+      "seconds": 0.109,
+      "stdout": "35-custom-hash-owned-run.out",
+      "stderr": "35-custom-hash-owned-run.err"
+    },
+    {
+      "label": "36-custom-hash-borrowed-build",
+      "command": [
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/fresh/bin/rc-build",
+        "--conservative-ownership",
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/custom-hash-borrowed/input",
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/custom-hash-borrowed/app"
+      ],
+      "exit": 0,
+      "seconds": 1.885,
+      "stdout": "36-custom-hash-borrowed-build.out",
+      "stderr": "36-custom-hash-borrowed-build.err"
+    },
+    {
+      "label": "37-custom-hash-borrowed-run",
+      "command": [
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/custom-hash-borrowed/app/app"
+      ],
+      "exit": 0,
+      "seconds": 0.264,
+      "stdout": "37-custom-hash-borrowed-run.out",
+      "stderr": "37-custom-hash-borrowed-run.err"
+    },
+    {
+      "label": "38-cli-load-file",
+      "command": [
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/fresh/bin/shen-rc",
+        "eval",
+        "-q",
+        "-l",
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/empty-cwd/loaded.shen",
+        "-e",
+        "(if (= (value *toolchain-loaded*) 42) true (simple-error \"load failed\"))"
+      ],
+      "exit": 0,
+      "seconds": 0.225,
+      "stdout": "38-cli-load-file.out",
+      "stderr": "38-cli-load-file.err"
+    },
+    {
+      "label": "39-shen-to-native-build",
+      "command": [
+        "<SHEN_C_ROOT>/scripts/compile-shen-rc.sh",
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/pattern-sum.shen",
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/native-shen"
+      ],
+      "exit": 0,
+      "seconds": 37.072,
+      "stdout": "39-shen-to-native-build.out",
+      "stderr": "39-shen-to-native-build.err"
+    },
+    {
+      "label": "40-shen-source-app-audit",
+      "command": [
+        "<SHEN_C_ROOT>/scripts/test-rc.sh",
+        "--audit-only",
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/native-shen/app"
+      ],
+      "exit": 0,
+      "seconds": 2.472,
+      "stdout": "40-shen-source-app-audit.out",
+      "stderr": "40-shen-source-app-audit.err"
+    },
+    {
+      "label": "41-shen-to-native-run",
+      "command": [
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/native-shen/app"
+      ],
+      "exit": 0,
+      "seconds": 1.36,
+      "stdout": "41-shen-to-native-run.out",
+      "stderr": "41-shen-to-native-run.err"
+    },
+    {
+      "label": "42-unique-100-conservative-build",
+      "command": [
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/fresh/bin/rc-build",
+        "--conservative-ownership",
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/native-unique-100-conservative/input",
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/native-unique-100-conservative/app"
+      ],
+      "exit": 0,
+      "seconds": 3.3,
+      "stdout": "42-unique-100-conservative-build.out",
+      "stderr": "42-unique-100-conservative-build.err"
+    },
+    {
+      "label": "43-unique-100-conservative-audit",
+      "command": [
+        "<SHEN_C_ROOT>/scripts/test-rc.sh",
+        "--audit-only",
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/native-unique-100-conservative/app/app"
+      ],
+      "exit": 0,
+      "seconds": 0.827,
+      "stdout": "43-unique-100-conservative-audit.out",
+      "stderr": "43-unique-100-conservative-audit.err"
+    },
+    {
+      "label": "44-unique-100-conservative-run",
+      "command": [
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/native-unique-100-conservative/app/app"
+      ],
+      "exit": 0,
+      "seconds": 0.541,
+      "stdout": "44-unique-100-conservative-run.out",
+      "stderr": "44-unique-100-conservative-run.err"
+    },
+    {
+      "label": "45-unique-100-optimized-build",
+      "command": [
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/fresh/bin/rc-build",
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/native-unique-100-optimized/input",
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/native-unique-100-optimized/app"
+      ],
+      "exit": 0,
+      "seconds": 2.341,
+      "stdout": "45-unique-100-optimized-build.out",
+      "stderr": "45-unique-100-optimized-build.err"
+    },
+    {
+      "label": "46-unique-100-optimized-audit",
+      "command": [
+        "<SHEN_C_ROOT>/scripts/test-rc.sh",
+        "--audit-only",
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/native-unique-100-optimized/app/app"
+      ],
+      "exit": 0,
+      "seconds": 2.135,
+      "stdout": "46-unique-100-optimized-audit.out",
+      "stderr": "46-unique-100-optimized-audit.err"
+    },
+    {
+      "label": "47-unique-100-optimized-run",
+      "command": [
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/native-unique-100-optimized/app/app"
+      ],
+      "exit": 0,
+      "seconds": 0.403,
+      "stdout": "47-unique-100-optimized-run.out",
+      "stderr": "47-unique-100-optimized-run.err"
+    },
+    {
+      "label": "48-unique-1000-conservative-build",
+      "command": [
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/fresh/bin/rc-build",
+        "--conservative-ownership",
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/native-unique-1000-conservative/input",
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/native-unique-1000-conservative/app"
+      ],
+      "exit": 0,
+      "seconds": 2.283,
+      "stdout": "48-unique-1000-conservative-build.out",
+      "stderr": "48-unique-1000-conservative-build.err"
+    },
+    {
+      "label": "49-unique-1000-conservative-audit",
+      "command": [
+        "<SHEN_C_ROOT>/scripts/test-rc.sh",
+        "--audit-only",
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/native-unique-1000-conservative/app/app"
+      ],
+      "exit": 0,
+      "seconds": 0.456,
+      "stdout": "49-unique-1000-conservative-audit.out",
+      "stderr": "49-unique-1000-conservative-audit.err"
+    },
+    {
+      "label": "50-unique-1000-conservative-run",
+      "command": [
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/native-unique-1000-conservative/app/app"
+      ],
+      "exit": 0,
+      "seconds": 0.601,
+      "stdout": "50-unique-1000-conservative-run.out",
+      "stderr": "50-unique-1000-conservative-run.err"
+    },
+    {
+      "label": "51-unique-1000-optimized-build",
+      "command": [
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/fresh/bin/rc-build",
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/native-unique-1000-optimized/input",
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/native-unique-1000-optimized/app"
+      ],
+      "exit": 0,
+      "seconds": 2.9,
+      "stdout": "51-unique-1000-optimized-build.out",
+      "stderr": "51-unique-1000-optimized-build.err"
+    },
+    {
+      "label": "52-unique-1000-optimized-audit",
+      "command": [
+        "<SHEN_C_ROOT>/scripts/test-rc.sh",
+        "--audit-only",
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/native-unique-1000-optimized/app/app"
+      ],
+      "exit": 0,
+      "seconds": 0.405,
+      "stdout": "52-unique-1000-optimized-audit.out",
+      "stderr": "52-unique-1000-optimized-audit.err"
+    },
+    {
+      "label": "53-unique-1000-optimized-run",
+      "command": [
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/native-unique-1000-optimized/app/app"
+      ],
+      "exit": 0,
+      "seconds": 0.291,
+      "stdout": "53-unique-1000-optimized-run.out",
+      "stderr": "53-unique-1000-optimized-run.err"
+    },
+    {
+      "label": "54-aliased-1000-conservative-build",
+      "command": [
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/fresh/bin/rc-build",
+        "--conservative-ownership",
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/native-aliased-1000-conservative/input",
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/native-aliased-1000-conservative/app"
+      ],
+      "exit": 0,
+      "seconds": 2.274,
+      "stdout": "54-aliased-1000-conservative-build.out",
+      "stderr": "54-aliased-1000-conservative-build.err"
+    },
+    {
+      "label": "55-aliased-1000-conservative-audit",
+      "command": [
+        "<SHEN_C_ROOT>/scripts/test-rc.sh",
+        "--audit-only",
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/native-aliased-1000-conservative/app/app"
+      ],
+      "exit": 0,
+      "seconds": 0.378,
+      "stdout": "55-aliased-1000-conservative-audit.out",
+      "stderr": "55-aliased-1000-conservative-audit.err"
+    },
+    {
+      "label": "56-aliased-1000-conservative-run",
+      "command": [
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/native-aliased-1000-conservative/app/app"
+      ],
+      "exit": 0,
+      "seconds": 0.131,
+      "stdout": "56-aliased-1000-conservative-run.out",
+      "stderr": "56-aliased-1000-conservative-run.err"
+    },
+    {
+      "label": "57-aliased-1000-optimized-build",
+      "command": [
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/fresh/bin/rc-build",
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/native-aliased-1000-optimized/input",
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/native-aliased-1000-optimized/app"
+      ],
+      "exit": 0,
+      "seconds": 1.352,
+      "stdout": "57-aliased-1000-optimized-build.out",
+      "stderr": "57-aliased-1000-optimized-build.err"
+    },
+    {
+      "label": "58-aliased-1000-optimized-audit",
+      "command": [
+        "<SHEN_C_ROOT>/scripts/test-rc.sh",
+        "--audit-only",
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/native-aliased-1000-optimized/app/app"
+      ],
+      "exit": 0,
+      "seconds": 0.89,
+      "stdout": "58-aliased-1000-optimized-audit.out",
+      "stderr": "58-aliased-1000-optimized-audit.err"
+    },
+    {
+      "label": "59-aliased-1000-optimized-run",
+      "command": [
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/native-aliased-1000-optimized/app/app"
+      ],
+      "exit": 0,
+      "seconds": 0.302,
+      "stdout": "59-aliased-1000-optimized-run.out",
+      "stderr": "59-aliased-1000-optimized-run.err"
+    },
+    {
+      "label": "60-capture-conservative-build",
+      "command": [
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/fresh/bin/rc-build",
+        "--conservative-ownership",
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/native-capture-conservative/input",
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/native-capture-conservative/app"
+      ],
+      "exit": 0,
+      "seconds": 2.183,
+      "stdout": "60-capture-conservative-build.out",
+      "stderr": "60-capture-conservative-build.err"
+    },
+    {
+      "label": "61-capture-conservative-audit",
+      "command": [
+        "<SHEN_C_ROOT>/scripts/test-rc.sh",
+        "--audit-only",
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/native-capture-conservative/app/app"
+      ],
+      "exit": 0,
+      "seconds": 1.207,
+      "stdout": "61-capture-conservative-audit.out",
+      "stderr": "61-capture-conservative-audit.err"
+    },
+    {
+      "label": "62-capture-conservative-run",
+      "command": [
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/native-capture-conservative/app/app"
+      ],
+      "exit": 0,
+      "seconds": 0.47,
+      "stdout": "62-capture-conservative-run.out",
+      "stderr": "62-capture-conservative-run.err"
+    },
+    {
+      "label": "63-capture-optimized-build",
+      "command": [
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/fresh/bin/rc-build",
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/native-capture-optimized/input",
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/native-capture-optimized/app"
+      ],
+      "exit": 0,
+      "seconds": 5.076,
+      "stdout": "63-capture-optimized-build.out",
+      "stderr": "63-capture-optimized-build.err"
+    },
+    {
+      "label": "64-capture-optimized-audit",
+      "command": [
+        "<SHEN_C_ROOT>/scripts/test-rc.sh",
+        "--audit-only",
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/native-capture-optimized/app/app"
+      ],
+      "exit": 0,
+      "seconds": 0.405,
+      "stdout": "64-capture-optimized-audit.out",
+      "stderr": "64-capture-optimized-audit.err"
+    },
+    {
+      "label": "65-capture-optimized-run",
+      "command": [
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/native-capture-optimized/app/app"
+      ],
+      "exit": 0,
+      "seconds": 0.231,
+      "stdout": "65-capture-optimized-run.out",
+      "stderr": "65-capture-optimized-run.err"
+    },
+    {
+      "label": "66-last-use-conservative-build",
+      "command": [
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/fresh/bin/rc-build",
+        "--conservative-ownership",
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/native-last-use-conservative/input",
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/native-last-use-conservative/app"
+      ],
+      "exit": 0,
+      "seconds": 1.447,
+      "stdout": "66-last-use-conservative-build.out",
+      "stderr": "66-last-use-conservative-build.err"
+    },
+    {
+      "label": "67-last-use-conservative-audit",
+      "command": [
+        "<SHEN_C_ROOT>/scripts/test-rc.sh",
+        "--audit-only",
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/native-last-use-conservative/app/app"
+      ],
+      "exit": 0,
+      "seconds": 0.298,
+      "stdout": "67-last-use-conservative-audit.out",
+      "stderr": "67-last-use-conservative-audit.err"
+    },
+    {
+      "label": "68-last-use-conservative-run",
+      "command": [
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/native-last-use-conservative/app/app"
+      ],
+      "exit": 0,
+      "seconds": 0.313,
+      "stdout": "68-last-use-conservative-run.out",
+      "stderr": "68-last-use-conservative-run.err"
+    },
+    {
+      "label": "69-last-use-optimized-build",
+      "command": [
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/fresh/bin/rc-build",
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/native-last-use-optimized/input",
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/native-last-use-optimized/app"
+      ],
+      "exit": 0,
+      "seconds": 1.455,
+      "stdout": "69-last-use-optimized-build.out",
+      "stderr": "69-last-use-optimized-build.err"
+    },
+    {
+      "label": "70-last-use-optimized-audit",
+      "command": [
+        "<SHEN_C_ROOT>/scripts/test-rc.sh",
+        "--audit-only",
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/native-last-use-optimized/app/app"
+      ],
+      "exit": 0,
+      "seconds": 0.506,
+      "stdout": "70-last-use-optimized-audit.out",
+      "stderr": "70-last-use-optimized-audit.err"
+    },
+    {
+      "label": "71-last-use-optimized-run",
+      "command": [
+        "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/native-last-use-optimized/app/app"
+      ],
+      "exit": 0,
+      "seconds": 0.554,
+      "stdout": "71-last-use-optimized-run.out",
+      "stderr": "71-last-use-optimized-run.err"
+    },
+    {
+      "label": "72-canonical-host-audit",
+      "command": [
+        "<SHEN_C_ROOT>/scripts/test-rc.sh",
+        "--audit-only",
+        "<SHEN_C_ROOT>/obj/rc-certify-20261018T192738.417611Z/host/bin/rc-build"
+      ],
+      "exit": 0,
+      "seconds": 0.172,
+      "stdout": "72-canonical-host-audit.out",
+      "stderr": "72-canonical-host-audit.err"
+    },
+    {
+      "label": "73-canonical-app-audit",
+      "command": [
+        "<SHEN_C_ROOT>/scripts/test-rc.sh",
+        "--audit-only",
+        "<SHEN_C_ROOT>/bin/rc-certify-20261018T192738.417611Z/app"
+      ],
+      "exit": 0,
+      "seconds": 0.186,
+      "stdout": "73-canonical-app-audit.out",
+      "stderr": "73-canonical-app-audit.err"
+    }
+  ],
+  "source_sha256": {
+    "src/rc/emit.c": "e80f2bcb263830352c23d2313ae08b25f74f85c24f27021798c8d9882929d0db",
+    "src/rc/emit.h": "ae1946b669f771941b12a706316a28090aefd126f54cc687fa00a3b10b322a9f",
+    "src/rc/eval.c": "5d49c8bd17cb29737538745776a7f8dad6f395e9d09e489e6886bae73961709f",
+    "src/rc/eval.h": "40840e20cb00334a7032ef11aec08ce6a0846912ae05dfb0d08e894ba7ad2e15",
+    "src/rc/eval_plan.h": "91c896c000ff381922ccd5fa72420aab6cc8f87f1f8b7851d97c69142f167af4",
+    "src/rc/main.c": "9b7036b5875d1714fb8b12720040066aaa3261e8ab7335c604f33f008f5bceea",
+    "src/rc/primitives.c": "324f8cfa2c309c73f9c5f969533ae28da5ba955c225391ad19e5625eca0ff49a",
+    "src/rc/primitives.h": "036f928535fc8c2504e18c67891e52f6c7c873599b61e18a80d7528f5bb963b3",
+    "src/rc/rc.c": "981142db8a86ff6f802035f2ca69dfba1558c0aa2e5df6fe545bc8f97f0d9114",
+    "src/rc/rc.h": "b77320047d47b013b5064b44d749e80fab11319769145d9e6a676371d9990aec",
+    "src/rc/rc_internal.h": "397a2e0220e73ddfedff03a13fb3048d53c8c4d9ad534f730b0ddee943e1f860",
+    "src/rc/read.c": "f61444980f2d34d3986f9640103b3478501c4d368f6c2dd5058a4b39b3143667",
+    "src/rc/read.h": "71fb3e8ce757174ee47dde95f732200ae1b023c66f8164ac0a4d82ebb241fea5",
+    "tools/rc-build.c": "dbf6c04b2b5ebbf9197061208c89aa2d781e2b261f17f8a0f04b8931f370e818",
+    "Makefile": "dee2ce14e25085f082df7541e5b13185a34d6aaac17a9b7531a59f300d287b33",
+    "Makefile.rc": "c4fd927878c539c96677ad3da407f4d54dfb5d333311cd3063e8c7fd93fca2fe",
+    "scripts/compile-shen-rc.sh": "b09346f06e816cc71d7500637ac105be0e6758bf39c5bb3a4787201aa34cbb36",
+    "scripts/test-rc.sh": "d21bbdfbf8a248510e582a454902e4ad5f6411ba3a6eba94dbbfec3c73869363",
+    "scripts/test-rc-toolchain.sh": "38f5a4a42ade70ba67b38f2880884b2e5eedfec7deb82be6745b7aaafe45b108",
+    "scripts/rc_native_evidence.py": "fa75f42a7921dbebd20aaf6752c04dcdfd7e08455261a88178be1e1601792810",
+    "test/rc/test_native_evidence.py": "792d25508638badb7e7fedf022425b2e50fe6c2cd189ae0e619431e9c5336202",
+    "shen/src/kl/backend.kl": "8782659640718da06da3e5ee32babfa6036d2d5c1af17d563e20d4db27b13da2",
+    "shen/src/kl/core.kl": "f2477d4151c3ecd2d76c8f2b58ec577a6dc830392e0afd342e2fdb3d1adb1a75",
+    "shen/src/kl/declarations.kl": "fa1f04b92a61167971b3b58a3785b05b79be984f123bb43b4bd03388ee29f5b7",
+    "shen/src/kl/load.kl": "56eba5b674e5085a09dfa38390b1e7f677496e0c601fd3ed6f482577bcf971c9",
+    "shen/src/kl/macros.kl": "617c70c191f07c054e6fc597006477bc57519944c0e27956336e4d72e3e8a2af",
+    "shen/src/kl/prolog.kl": "dc401f8940f7f97fbfc87157338ff8b84fd845c1101b70e6db893886aaf11c17",
+    "shen/src/kl/reader.kl": "97f008caaf51072851cc730620d9bdd816bfd1be70cb22fd502a6b3cb000b269",
+    "shen/src/kl/sequent.kl": "b1018c6d58706f78ac81cc72cf7c4712d36d1be173708ff9def26d0169ddd644",
+    "shen/src/kl/sys.kl": "97412f6584716e2418aea326c1ecf0456a77a205504d078d26936cd5b9370412",
+    "shen/src/kl/t-star.kl": "546928d3435934091fc6df6274a6c9d58ece7297c868fbe55ebe328be360159a",
+    "shen/src/kl/toplevel.kl": "7c0dae226e3fa6a9ca53bd44729774a5f6a8025f2d7fcb43a58ae0e7a2bc46c2",
+    "shen/src/kl/track.kl": "6130a32d6e5c7afed98f20dfbc68eaf7f68c6e2e714114852514d4f604c8ff3f",
+    "shen/src/kl/types.kl": "8b6db3592b829f08a0f35367733adf7c2e686220be699a16b392b4cce4a77c3c",
+    "shen/src/kl/writer.kl": "a1da3d9a287d0d4d78f87517ff11b2ca7690a01bf412dd72178f29ef6e7a4a0d",
+    "shen/src/kl/yacc.kl": "192880765a29ae6801ef9088a7511e4477be998e6c16ab82f3cc3a2087727f00"
+  },
+  "checkout_revision": "5e4405794a3cb28255c0963abb5661bb4ed7ac78",
+  "compiler_version": "Apple clang version 21.0.0 (clang-2100.3.34.2)\nTarget: arm64-apple-darwin27.0.0\nThread model: posix\nInstalledDir: /Library/Developer/CommandLineTools/usr/bin\n",
+  "host_build": "PASS",
+  "fresh_builder": "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/fresh/bin/rc-build",
+  "builder_sha256": "a39a30eb545b6d7cb16614e3c696e5a0122d4e0db98e80df3a39c971d01b730b",
+  "compiler_audit": "PASS",
+  "cli_build": "PASS",
+  "default_make_without_pkg_config": "PASS",
+  "cli_sha256": "eeacafde16af97e2aae81e1283f8b086bc28ccd841db2d4365a4a659ab6b9dc4",
+  "cli_smoke": "PASS",
+  "native_definition_evidence": {
+    "toolchain-sum": {
+      "callback": "rc_native_1869",
+      "body": "rc_native_body_1869",
+      "body_sha256": "cd033e70eb0ae5cbdd51b31ebd6edec7bb34b2bd7879e31e499c9393604bfff1"
+    },
+    "toolchain-invoke": {
+      "callback": "rc_native_1871",
+      "body": "rc_native_body_1871",
+      "body_sha256": "c12553c0b0e04f47590b6600bb7164e83cb531d098dd70e31e2138ca4cc6cc70"
+    }
+  },
+  "shen_pipeline": {
+    "status": "PASS",
+    "native_scope": "registered toolchain-sum and toolchain-invoke callback bodies",
+    "input_sha256": "e960d0b574234dd7506ec5134423a7118cfcffbbbea7006224ce7938d5f15f9c",
+    "kl_sha256": "1dd74ae44cb50add33119690c25a4005eea22df8e9d8071d6172f79ddc125b93",
+    "events_sha256": "64b47cf42dcea04c11a730e705a23154e0042c47f886f8164bc404e9e1081e40",
+    "c_sha256": "868d868f4069851cca810575a3936092a8d993472de6ec1903f4d1b0ad086a66",
+    "artifact_sha256": "62ad61bb300e2f61b7cf32a4503496cba38d9ca97eaf1ead08457346781b6d68",
+    "frontend_receipt": {
+      "release_manifest_sha256": "c20ce7e0c5f98b3d427ce6db4045b6a9ac335f5d7cfd592333baee7061f69f46",
+      "kernel_version": "43.1",
+      "source": "<SHEN_C_ROOT>/evidence/rc/corpus-gaps-20261018/toolchain-release/pattern-sum.shen",
+      "source_sha256": "e960d0b574234dd7506ec5134423a7118cfcffbbbea7006224ce7938d5f15f9c",
+      "cwd": "<SHEN_C_ROOT>",
+      "kernel_sha256": {
+        "shen/src/kl/sys.kl": "97412f6584716e2418aea326c1ecf0456a77a205504d078d26936cd5b9370412",
+        "shen/src/kl/writer.kl": "a1da3d9a287d0d4d78f87517ff11b2ca7690a01bf412dd72178f29ef6e7a4a0d",
+        "shen/src/kl/core.kl": "f2477d4151c3ecd2d76c8f2b58ec577a6dc830392e0afd342e2fdb3d1adb1a75",
+        "shen/src/kl/reader.kl": "97f008caaf51072851cc730620d9bdd816bfd1be70cb22fd502a6b3cb000b269",
+        "shen/src/kl/declarations.kl": "fa1f04b92a61167971b3b58a3785b05b79be984f123bb43b4bd03388ee29f5b7",
+        "shen/src/kl/toplevel.kl": "7c0dae226e3fa6a9ca53bd44729774a5f6a8025f2d7fcb43a58ae0e7a2bc46c2",
+        "shen/src/kl/macros.kl": "617c70c191f07c054e6fc597006477bc57519944c0e27956336e4d72e3e8a2af",
+        "shen/src/kl/load.kl": "56eba5b674e5085a09dfa38390b1e7f677496e0c601fd3ed6f482577bcf971c9",
+        "shen/src/kl/prolog.kl": "dc401f8940f7f97fbfc87157338ff8b84fd845c1101b70e6db893886aaf11c17",
+        "shen/src/kl/sequent.kl": "b1018c6d58706f78ac81cc72cf7c4712d36d1be173708ff9def26d0169ddd644",
+        "shen/src/kl/track.kl": "6130a32d6e5c7afed98f20dfbc68eaf7f68c6e2e714114852514d4f604c8ff3f",
+        "shen/src/kl/t-star.kl": "546928d3435934091fc6df6274a6c9d58ece7297c868fbe55ebe328be360159a",
+        "shen/src/kl/yacc.kl": "192880765a29ae6801ef9088a7511e4477be998e6c16ab82f3cc3a2087727f00",
+        "shen/src/kl/types.kl": "8b6db3592b829f08a0f35367733adf7c2e686220be699a16b392b4cce4a77c3c"
+      },
+      "compiler_sha256": {
+        "cli": "eeacafde16af97e2aae81e1283f8b086bc28ccd841db2d4365a4a659ab6b9dc4",
+        "builder": "a39a30eb545b6d7cb16614e3c696e5a0122d4e0db98e80df3a39c971d01b730b"
+      },
+      "conservative_ownership": false,
+      "acyclic_requested": false,
+      "source_transport": "escaped-v1",
+      "frontend": "compiled standard kernel read-file then shen.shen->kl-h; fresh bootstrap context",
+      "frontend_seconds": 0.224,
+      "build_seconds": 26.421,
+      "kl_sha256": "1dd74ae44cb50add33119690c25a4005eea22df8e9d8071d6172f79ddc125b93",
+      "source_events_sha256": "64b47cf42dcea04c11a730e705a23154e0042c47f886f8164bc404e9e1081e40",
+      "artifact_sha256": "62ad61bb300e2f61b7cf32a4503496cba38d9ca97eaf1ead08457346781b6d68",
+      "output_sha256": {
+        "app.c": "868d868f4069851cca810575a3936092a8d993472de6ec1903f4d1b0ad086a66",
+        "Makefile": "c76147f49da04473f07ef5df5904a8dd407d6b5a4c41d0fe54caea3c475b1236",
+        "app": "62ad61bb300e2f61b7cf32a4503496cba38d9ca97eaf1ead08457346781b6d68",
+        "source.kl": "1dd74ae44cb50add33119690c25a4005eea22df8e9d8071d6172f79ddc125b93",
+        "source-events.kl": "64b47cf42dcea04c11a730e705a23154e0042c47f886f8164bc404e9e1081e40"
+      },
+      "acyclic_forced_by_makefile": false
+    }
+  },
+  "native_measurements": {
+    "unique-100": {
+      "conservative": {
+        "live_objects": 148,
+        "live_bytes": 20108,
+        "peak_objects": 350,
+        "retain_calls": 10137,
+        "release_calls": 10839,
+        "pair_allocations": 200,
+        "pair_reuse_attempts": 0,
+        "pair_reuses": 0,
+        "pair_reuse_misses": 0,
+        "pair_tail_transfers": 0,
+        "pair_tail_shares": 0,
+        "capture_edges_created": 69,
+        "live_capture_edges": 57,
+        "peak_capture_edges": 58,
+        "cached_objects": 202,
+        "cached_bytes": 25856,
+        "peak_cached_bytes": 25856,
+        "system_allocations": 350,
+        "system_frees": 0,
+        "collections": 0,
+        "acyclic_collections": 0,
+        "cycle_objects_freed": 0,
+        "artifact_sha256": "9325b38971f035c9f3831259f8514da9282013437e456fbb5cc993ceab845746",
+        "source_sha256": "73b8e20861f23b6c87fb1cceb90bebe6083f14ab3751109c646ac222579c0cdb"
+      },
+      "optimized": {
+        "live_objects": 148,
+        "live_bytes": 20108,
+        "peak_objects": 251,
+        "retain_calls": 2815,
+        "release_calls": 3015,
+        "pair_allocations": 100,
+        "pair_reuse_attempts": 200,
+        "pair_reuses": 100,
+        "pair_reuse_misses": 100,
+        "pair_tail_transfers": 100,
+        "pair_tail_shares": 0,
+        "capture_edges_created": 69,
+        "live_capture_edges": 57,
+        "peak_capture_edges": 58,
+        "cached_objects": 103,
+        "cached_bytes": 13184,
+        "peak_cached_bytes": 13184,
+        "system_allocations": 251,
+        "system_frees": 0,
+        "collections": 0,
+        "acyclic_collections": 0,
+        "cycle_objects_freed": 0,
+        "artifact_sha256": "6f5637735c27ce6280d601e910bff47e4c8d099438dda79ba2a7093c141ef97e",
+        "source_sha256": "ab66045dc35bc535dafde6d017ae7c349813e4939a64f2172ea72f3197cfe434"
+      }
+    },
+    "unique-1000": {
+      "conservative": {
+        "live_objects": 148,
+        "live_bytes": 20108,
+        "peak_objects": 2150,
+        "retain_calls": 99237,
+        "release_calls": 106239,
+        "pair_allocations": 2000,
+        "pair_reuse_attempts": 0,
+        "pair_reuses": 0,
+        "pair_reuse_misses": 0,
+        "pair_tail_transfers": 0,
+        "pair_tail_shares": 0,
+        "capture_edges_created": 69,
+        "live_capture_edges": 57,
+        "peak_capture_edges": 58,
+        "cached_objects": 1024,
+        "cached_bytes": 131072,
+        "peak_cached_bytes": 131072,
+        "system_allocations": 2150,
+        "system_frees": 978,
+        "collections": 1,
+        "acyclic_collections": 1,
+        "cycle_objects_freed": 0,
+        "artifact_sha256": "59f94819830c10864435bf331f3576cbe7eddc3a43c1e4a674b8539aaec58867",
+        "source_sha256": "e0d9a9135ec479d0da3315e58db477aa1ad501c33dea66e0e9db76455dd05178"
+      },
+      "optimized": {
+        "live_objects": 148,
+        "live_bytes": 20108,
+        "peak_objects": 1151,
+        "retain_calls": 26215,
+        "release_calls": 28215,
+        "pair_allocations": 1000,
+        "pair_reuse_attempts": 2000,
+        "pair_reuses": 1000,
+        "pair_reuse_misses": 1000,
+        "pair_tail_transfers": 1000,
+        "pair_tail_shares": 0,
+        "capture_edges_created": 69,
+        "live_capture_edges": 57,
+        "peak_capture_edges": 58,
+        "cached_objects": 1003,
+        "cached_bytes": 128384,
+        "peak_cached_bytes": 128384,
+        "system_allocations": 1151,
+        "system_frees": 0,
+        "collections": 0,
+        "acyclic_collections": 0,
+        "cycle_objects_freed": 0,
+        "artifact_sha256": "36e46459bc00ec9cf4cb7ab8ad6e7de4910278ecb4b7ce40293abd7a86c7d981",
+        "source_sha256": "3fff584530d3fe78697f2ed0ef6e393a1af6d4dc027694f21465a529c1b11f79"
+      }
+    },
+    "aliased-1000": {
+      "conservative": {
+        "live_objects": 148,
+        "live_bytes": 20108,
+        "peak_objects": 2151,
+        "retain_calls": 91230,
+        "release_calls": 97233,
+        "pair_allocations": 2000,
+        "pair_reuse_attempts": 0,
+        "pair_reuses": 0,
+        "pair_reuse_misses": 0,
+        "pair_tail_transfers": 0,
+        "pair_tail_shares": 0,
+        "capture_edges_created": 69,
+        "live_capture_edges": 57,
+        "peak_capture_edges": 58,
+        "cached_objects": 1024,
+        "cached_bytes": 131072,
+        "peak_cached_bytes": 131072,
+        "system_allocations": 2151,
+        "system_frees": 979,
+        "collections": 1,
+        "acyclic_collections": 1,
+        "cycle_objects_freed": 0,
+        "artifact_sha256": "9af66e1d5d9c66cf6f49fab2d0a26058f8aaa64c8bb98fefdc062479b1f51bf2",
+        "source_sha256": "c11c85e922c448363d7fe419b83ee268df8bfd823ea50100e4057089690c0625"
+      },
+      "optimized": {
+        "live_objects": 148,
+        "live_bytes": 20108,
+        "peak_objects": 2149,
+        "retain_calls": 27211,
+        "release_calls": 31212,
+        "pair_allocations": 2000,
+        "pair_reuse_attempts": 2000,
+        "pair_reuses": 0,
+        "pair_reuse_misses": 2000,
+        "pair_tail_transfers": 0,
+        "pair_tail_shares": 1000,
+        "capture_edges_created": 69,
+        "live_capture_edges": 57,
+        "peak_capture_edges": 58,
+        "cached_objects": 1024,
+        "cached_bytes": 131072,
+        "peak_cached_bytes": 131072,
+        "system_allocations": 2149,
+        "system_frees": 977,
+        "collections": 1,
+        "acyclic_collections": 1,
+        "cycle_objects_freed": 0,
+        "artifact_sha256": "c6f9a614eee18f011d37e3afdbfd2b174f086baf2f9429267b7aadca8e368ad3",
+        "source_sha256": "681d47609486b463240c5d25a588080f82a2e612d69fcb8adbbd01f0bc8980f4"
+      }
+    },
+    "capture": {
+      "conservative": {
+        "live_objects": 150,
+        "live_bytes": 20377,
+        "peak_objects": 1153,
+        "retain_calls": 11223,
+        "release_calls": 13226,
+        "pair_allocations": 1000,
+        "pair_reuse_attempts": 0,
+        "pair_reuses": 0,
+        "pair_reuse_misses": 0,
+        "pair_tail_transfers": 0,
+        "pair_tail_shares": 0,
+        "capture_edges_created": 71,
+        "live_capture_edges": 57,
+        "peak_capture_edges": 59,
+        "cached_objects": 1003,
+        "cached_bytes": 128384,
+        "peak_cached_bytes": 128384,
+        "system_allocations": 1153,
+        "system_frees": 0,
+        "collections": 0,
+        "acyclic_collections": 0,
+        "cycle_objects_freed": 0,
+        "artifact_sha256": "9805302f21295e77af4d6640492327d57b3d5ae3175227878f0d85c0b32ecf6f",
+        "source_sha256": "b2a16491762952d477a783157cbe5ee65bae7a2134b95cbbbd698d90c018af8d"
+      },
+      "optimized": {
+        "live_objects": 149,
+        "live_bytes": 20244,
+        "peak_objects": 1150,
+        "retain_calls": 3214,
+        "release_calls": 4217,
+        "pair_allocations": 1000,
+        "pair_reuse_attempts": 1000,
+        "pair_reuses": 0,
+        "pair_reuse_misses": 1000,
+        "pair_tail_transfers": 0,
+        "pair_tail_shares": 0,
+        "capture_edges_created": 70,
+        "live_capture_edges": 57,
+        "peak_capture_edges": 58,
+        "cached_objects": 1001,
+        "cached_bytes": 128128,
+        "peak_cached_bytes": 128128,
+        "system_allocations": 1150,
+        "system_frees": 0,
+        "collections": 0,
+        "acyclic_collections": 0,
+        "cycle_objects_freed": 0,
+        "artifact_sha256": "ac6d1fec2b14ebd9979c5e066abc4fe32fce3b7dce7f8c41fc34a2e47a22ed07",
+        "source_sha256": "b81fffd287ca3cb1ebc3dc4144a79ab31b4900881dbef77fd2b7bc656df8c657"
+      }
+    },
+    "last-use": {
+      "conservative": {
+        "live_objects": 150,
+        "live_bytes": 20372,
+        "peak_objects": 2153,
+        "retain_calls": 22232,
+        "release_calls": 26235,
+        "pair_allocations": 2000,
+        "pair_reuse_attempts": 0,
+        "pair_reuses": 0,
+        "pair_reuse_misses": 0,
+        "pair_tail_transfers": 0,
+        "pair_tail_shares": 0,
+        "capture_edges_created": 69,
+        "live_capture_edges": 57,
+        "peak_capture_edges": 58,
+        "cached_objects": 1024,
+        "cached_bytes": 131072,
+        "peak_cached_bytes": 131072,
+        "system_allocations": 2153,
+        "system_frees": 979,
+        "collections": 1,
+        "acyclic_collections": 1,
+        "cycle_objects_freed": 0,
+        "artifact_sha256": "f1c1857162c8d89d96cd5b21b95e8d66c28c0284f31a944420db3aea26e805d2",
+        "source_sha256": "221514b14e77730ed05ce83dde8482c1044c3b9aa3254a53bbe5028db840d056"
+      },
+      "optimized": {
+        "live_objects": 149,
+        "live_bytes": 20239,
+        "peak_objects": 1151,
+        "retain_calls": 6215,
+        "release_calls": 8217,
+        "pair_allocations": 2000,
+        "pair_reuse_attempts": 2000,
+        "pair_reuses": 0,
+        "pair_reuse_misses": 2000,
+        "pair_tail_transfers": 0,
+        "pair_tail_shares": 0,
+        "capture_edges_created": 69,
+        "live_capture_edges": 57,
+        "peak_capture_edges": 58,
+        "cached_objects": 1002,
+        "cached_bytes": 128256,
+        "peak_cached_bytes": 128256,
+        "system_allocations": 1151,
+        "system_frees": 0,
+        "collections": 0,
+        "acyclic_collections": 0,
+        "cycle_objects_freed": 0,
+        "artifact_sha256": "86a335538377a5639085cf7107674194d5ebb0fb1698311d12c94dfdb14ae9cd",
+        "source_sha256": "5de4e04962bf47dd16df9af56566dab4b16cf305eff7d57523c35f3086405bbc"
+      }
+    }
+  },
+  "optimizer": "PASS",
+  "canonical_receipt": "<SHEN_C_ROOT>/evidence/rc/certify-20261018T192738.417611Z/result.json",
+  "canonical_receipt_sha256": "22aadcc6e128fca7de00e3586652af4fb2f463882dc09d491f0a44083ef5a9bd",
+  "source_unchanged": true,
+  "ended_utc": "2026-10-18T19:32:12.669079+00:00"
+}
