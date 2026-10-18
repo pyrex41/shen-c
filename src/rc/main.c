@@ -11,6 +11,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <pthread.h>
+#include <signal.h>
 #include <sys/stat.h>
 
 #ifndef SHEN_RC_VERSION
@@ -33,7 +35,9 @@ static void usage(FILE *out) {
           "    -q, --quiet                Suppress standard output using *hush*.\n\n"
           "The complete kernel is compiled into this executable.\n"
           "SHEN_RC_HOME optionally sets the initial Shen file directory;\n"
-          "the default is the process working directory.\n",out);
+          "the default is the process working directory.\n"
+          "SHEN_RC_STACK_SIZE sets the evaluator stack for deep recursion\n"
+          "(bytes, or with a K, M or G suffix; default 1G, minimum 4M).\n",out);
 }
 static bool is(const char *a,const char *b) { return !strcmp(a,b); }
 static bool set_owned(RcContext *ctx,const char *name,RcValue *value) {
@@ -495,12 +499,81 @@ static int repl(RcContext *ctx) {
         }
     }
 }
+enum Command { REPL, SCRIPT, EVAL, COMPILE };
+typedef struct { int argc; char **argv; enum Command command; int start; size_t stack; int status; } Job;
+static int execute(const Job *job,uintptr_t stack_limit) {
+    int argc=job->argc; char **argv=job->argv; enum Command command=job->command;
+    RcContext *ctx=rc_context_new();
+    if (!ctx) { fputs("shen-rc: cannot create runtime context\n",stderr); return 1; }
+    rc_set_stack_limit(ctx,(const void *)stack_limit);
+    int status=1;
+    if (rc_bootstrap_kernel(ctx) && initial_directory(ctx) &&
+        command_arguments(ctx,command==SCRIPT ? argc-2 : argc,command==SCRIPT ? argv+2 : argv)) {
+        if (command==REPL) status=repl(ctx);
+        else if (command==SCRIPT) status=run_script(ctx,argv[2]) ? 0 : 1;
+        else if (command==COMPILE) status=compile_source(ctx,argv[2],argv[3],argc==5 ? argv[4] : NULL) ? 0 : 1;
+        else status=eval_arguments(ctx,argc,argv,job->start);
+    }
+    if (status) fprintf(stderr,"shen-rc: %s\n",rc_has_error(ctx) ? rc_error_message(ctx) : "operation failed");
+    rc_context_free(ctx); return status;
+}
+/* Deep non-tail Shen recursion uses the C stack, so commands run on a thread
+ * with a large stack. Interpreted calls fail with a trappable Shen error once
+ * fewer than STACK_HEADROOM bytes remain. Deeper native recursion faults in
+ * the guard below the stack, which is reported instead of a bare SIGSEGV. */
+#define STACK_DEFAULT ((size_t)1<<30)
+#define STACK_MINIMUM ((size_t)4<<20)
+#define STACK_HEADROOM ((size_t)1<<20)
+#define STACK_GUARD ((size_t)1<<20)
+static uintptr_t guard_low,guard_high;
+static void stack_fault(int signal_number,siginfo_t *info,void *context) {
+    (void)context;
+    uintptr_t address=(uintptr_t)info->si_addr;
+    if (address>=guard_low && address<guard_high) {
+        static const char message[]="shen-rc: stack exhausted in native code: recursion is too deep\n";
+        ssize_t written=write(STDERR_FILENO,message,sizeof(message)-1); (void)written;
+        _exit(1);
+    }
+    /* Any other fault repeats on return with the default action. */
+    signal(signal_number,SIG_DFL);
+}
+static bool stack_size(size_t *size) {
+    const char *text=getenv("SHEN_RC_STACK_SIZE");
+    *size=STACK_DEFAULT;
+    if (!text || !*text) return true;
+    if (!isdigit((unsigned char)*text)) return false;
+    char *end; errno=0;
+    unsigned long long value=strtoull(text,&end,10);
+    unsigned shift=0;
+    if (*end=='K' || *end=='k') shift=10;
+    else if (*end=='M' || *end=='m') shift=20;
+    else if (*end=='G' || *end=='g') shift=30;
+    if (shift) ++end;
+    if (errno || *end || value>(SIZE_MAX>>shift) || ((size_t)value<<shift)<STACK_MINIMUM) return false;
+    size_t page=(size_t)sysconf(_SC_PAGESIZE);
+    *size=((size_t)value<<shift)/page*page;
+    return true;
+}
+static void *run_job(void *data) {
+    Job *job=data;
+    /* This frame is near the top of the thread's stack. */
+    volatile char top=0;
+    uintptr_t low=(uintptr_t)&top-job->stack;
+    guard_low=low-STACK_GUARD; guard_high=low+STACK_HEADROOM;
+    static char alternate[1<<16];
+    stack_t signal_stack={.ss_sp=alternate,.ss_size=sizeof(alternate)};
+    struct sigaction action={.sa_sigaction=stack_fault,.sa_flags=SA_SIGINFO|SA_ONSTACK};
+    sigemptyset(&action.sa_mask);
+    if (!sigaltstack(&signal_stack,NULL)) { sigaction(SIGSEGV,&action,NULL); sigaction(SIGBUS,&action,NULL); }
+    job->status=execute(job,low+STACK_HEADROOM);
+    return NULL;
+}
 int main(int argc,char **argv) {
     if (argc==2 && (is(argv[1],"--version") || is(argv[1],"-v"))) {
         printf("Shen-C RC %s (native compiled kernel)\n",SHEN_RC_VERSION); return 0;
     }
     if (argc>=2 && (is(argv[1],"--help") || is(argv[1],"-h"))) { usage(stdout); return 0; }
-    enum { REPL, SCRIPT, EVAL, COMPILE } command=REPL;
+    enum Command command=REPL;
     int start=2;
     if (argc>1) {
         if (is(argv[1],"repl")) {
@@ -527,16 +600,18 @@ int main(int argc,char **argv) {
         }
         if (!work) { fputs("shen-rc: eval requires -e EXPR or -l FILE\n",stderr); return 2; }
     }
-    RcContext *ctx=rc_context_new();
-    if (!ctx) { fputs("shen-rc: cannot create runtime context\n",stderr); return 1; }
-    int status=1;
-    if (rc_bootstrap_kernel(ctx) && initial_directory(ctx) &&
-        command_arguments(ctx,command==SCRIPT ? argc-2 : argc,command==SCRIPT ? argv+2 : argv)) {
-        if (command==REPL) status=repl(ctx);
-        else if (command==SCRIPT) status=run_script(ctx,argv[2]) ? 0 : 1;
-        else if (command==COMPILE) status=compile_source(ctx,argv[2],argv[3],argc==5 ? argv[4] : NULL) ? 0 : 1;
-        else status=eval_arguments(ctx,argc,argv,start);
+    Job job={argc,argv,command,start,0,1};
+    if (!stack_size(&job.stack)) { fputs("shen-rc: invalid SHEN_RC_STACK_SIZE\n",stderr); return 2; }
+    pthread_attr_t attributes; pthread_t thread;
+    bool threaded=!pthread_attr_init(&attributes);
+    if (threaded) {
+        threaded=!pthread_attr_setstacksize(&attributes,job.stack) &&
+                 !pthread_attr_setguardsize(&attributes,STACK_GUARD) &&
+                 !pthread_create(&thread,&attributes,run_job,&job);
+        pthread_attr_destroy(&attributes);
     }
-    if (status) fprintf(stderr,"shen-rc: %s\n",rc_has_error(ctx) ? rc_error_message(ctx) : "operation failed");
-    rc_context_free(ctx); return status;
+    /* Without a reserved stack, run unchecked on the process stack. */
+    if (!threaded) return execute(&job,0);
+    if (pthread_join(thread,NULL)) { fputs("shen-rc: cannot join evaluator thread\n",stderr); return 1; }
+    return job.status;
 }

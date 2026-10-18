@@ -110,6 +110,7 @@ struct RcContext {
     RcStats stats;
     size_t collection_interval, since_collection, graph_slots, visit_epoch, cycle_sources;
     char *error;
+    uintptr_t stack_limit;
     bool collecting, error_active, adaptive_collection, acyclic;
 };
 static RcValue nil_value = {.type = RC_NIL, .refs = SIZE_MAX};
@@ -161,6 +162,13 @@ RcValue *rc_error(RcContext *ctx, const char *format, ...) {
     return NULL;
 }
 bool rc_has_error(const RcContext *ctx) { return ctx && ctx->error_active; }
+void rc_set_stack_limit(RcContext *ctx, const void *limit) { if (ctx) ctx->stack_limit = (uintptr_t)limit; }
+bool rc_stack_check(RcContext *ctx) {
+    volatile char probe = 0;
+    if (!ctx->stack_limit || (uintptr_t)&probe >= ctx->stack_limit) return true;
+    rc_error(ctx, "stack exhausted: recursion is too deep");
+    return false;
+}
 const char *rc_error_message(const RcContext *ctx) {
     return ctx && ctx->error ? ctx->error : ctx && ctx->error_active ? "out of memory" : "";
 }
