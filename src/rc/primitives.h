@@ -5,6 +5,11 @@
  * rc_install_eval. Reinstall port hooks after loading kernel definitions. */
 bool rc_install_primitives(RcContext *ctx);
 bool rc_install_overwrites(RcContext *ctx);
+/* Install a port-local hashkey wrapper after the pinned kernel boots.  Numeric
+ * keys use the equality-compatible canonical spelling; all other values and
+ * later redefinitions retain the kernel's ordinary path. */
+bool rc_install_numeric_hash_owned(RcContext *ctx, RcNativeOwned expected);
+bool rc_install_numeric_hash_borrowed(RcContext *ctx, RcNative expected);
 /* Exact, unbound built-in do returns its second argument unchanged. */
 bool rc_primitive_is_do(const RcValue *function);
 /* Consumes candidate on every path. The snapshotted callee is checked before

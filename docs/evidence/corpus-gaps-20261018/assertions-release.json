@@ -1,0 +1,23 @@
+[
+  {
+    "command": [
+      "clang",
+      "-O2",
+      "-DNDEBUG",
+      "-Isrc/rc",
+      "test/rc/test_canonical_hash.c",
+      "bin/rc/libshenrc.a",
+      "-flto=thin",
+      "-lm",
+      "-o",
+      "bin/gap-hash-release"
+    ],
+    "exit_code": 0
+  },
+  {
+    "command": [
+      "bin/gap-hash-release"
+    ],
+    "exit_code": 0
+  }
+]

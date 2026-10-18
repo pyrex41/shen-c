@@ -1,0 +1,299 @@
+{
+  "scope": "Path-normalized portable evidence; raw binaries, generated C and full build trees retained locally. Original and published hashes identify normalization.",
+  "files": [
+    {
+      "raw_path": "evidence/rc/corpus-gaps-20261018/corpus-final.json",
+      "raw_sha256": "6ea093bbbe43793aebcfbac5e28eb85913dfde1e155ee54ae8cae855a9c58233",
+      "published_path": "corpus-final.json",
+      "published_sha256": "e2374b10423666d38f9a0def89717a6ae8e8fa8a62bc2a9a3bb33eb320759316"
+    },
+    {
+      "raw_path": "evidence/rc/corpus-gaps-20261018/corpus-cases.json",
+      "raw_sha256": "946ea2778c437daca894fb1d33474c1b8fef5ef59afa2071602d6b91914c742a",
+      "published_path": "corpus-cases.json",
+      "published_sha256": "946ea2778c437daca894fb1d33474c1b8fef5ef59afa2071602d6b91914c742a"
+    },
+    {
+      "raw_path": "evidence/rc/corpus-gaps-20261018/corpus-final.out",
+      "raw_sha256": "03a36af92bcb2ba61e31c05bd16fc732130983611ae9e1c535121da0548c2384",
+      "published_path": "corpus-final.out.gz",
+      "published_sha256": "deeede23b378a5673a3e798fec3562855d869ec371dfb93d3f2485c5f11d26eb"
+    },
+    {
+      "raw_path": "evidence/rc/corpus-gaps-20261018/corpus-final.err",
+      "raw_sha256": "8113d3ef4842f872d5ec9e739dc9fa59e01797c95149dd426218ebca4704b9b1",
+      "published_path": "corpus-final.err.gz",
+      "published_sha256": "80b4bacaaee9090822095be7d4fb8b0bd244e156c128f663eb06a14f7a9ed2ea"
+    },
+    {
+      "raw_path": "evidence/rc/corpus-gaps-20261018/runtime-final.json",
+      "raw_sha256": "ca7adbe404ef9e2f2b03977e091ceafeecda9068475cd0992121b734e6c72b3e",
+      "published_path": "runtime-final.json",
+      "published_sha256": "ca7adbe404ef9e2f2b03977e091ceafeecda9068475cd0992121b734e6c72b3e"
+    },
+    {
+      "raw_path": "evidence/rc/corpus-gaps-20261018/runtime-default-final.log",
+      "raw_sha256": "7c73a1aed0f3c1494894197a9458a17836ee8bcc16a10854f9fbaa499214c49c",
+      "published_path": "runtime-default-final.log.gz",
+      "published_sha256": "98f791baa0f1355340803c1ff236a7913e1fed262b26f3ed2695172eb821f1e1"
+    },
+    {
+      "raw_path": "evidence/rc/corpus-gaps-20261018/runtime-boxed-final.log",
+      "raw_sha256": "e2b70371b15b45a1e49cb7e7a0ce5d561f151e7ec077951e5574363c9ee119a9",
+      "published_path": "runtime-boxed-final.log.gz",
+      "published_sha256": "66a0f6b9faf1289041b910552db69d6133ab20475f47e00e93db2d6e3d61cc3c"
+    },
+    {
+      "raw_path": "evidence/rc/corpus-gaps-20261018/cmake-final.json",
+      "raw_sha256": "483429ec0ff0aefa0a21bcb0d7c87c50054138e02e953177811719f4d6159745",
+      "published_path": "cmake-final.json",
+      "published_sha256": "483429ec0ff0aefa0a21bcb0d7c87c50054138e02e953177811719f4d6159745"
+    },
+    {
+      "raw_path": "evidence/rc/corpus-gaps-20261018/cmake-final.log",
+      "raw_sha256": "a977cd3653176a731018daedbbebe69e4e934d52f1224197249f7bb56e261747",
+      "published_path": "cmake-final.log.gz",
+      "published_sha256": "bfed16db7173eb55404ef72352901a173b22afdf0cd732444dfba2ef14cfc337"
+    },
+    {
+      "raw_path": "evidence/rc/corpus-gaps-20261018/cmake-host.json",
+      "raw_sha256": "c7080d0df47144d257b67db1a2b6bc5b31d894e89420b87e69974f462c941b3d",
+      "published_path": "cmake-host.json",
+      "published_sha256": "c7080d0df47144d257b67db1a2b6bc5b31d894e89420b87e69974f462c941b3d"
+    },
+    {
+      "raw_path": "evidence/rc/corpus-gaps-20261018/cmake-host.log",
+      "raw_sha256": "f0b9a23d7ea3256a8054a9784fa298694b2c612c124b192ba2cfb753adc2876a",
+      "published_path": "cmake-host.log.gz",
+      "published_sha256": "53cd5cba3d334538425dd572065c468f2c7da35da58523a03f9bf8468d9c0ba7"
+    },
+    {
+      "raw_path": "evidence/rc/corpus-gaps-20261018/cmake-hash.json",
+      "raw_sha256": "1c88443a42b270a19ea4f0ce299c1a53308efa929c8e2d4f92e5db7b866b6600",
+      "published_path": "cmake-hash.json",
+      "published_sha256": "1c88443a42b270a19ea4f0ce299c1a53308efa929c8e2d4f92e5db7b866b6600"
+    },
+    {
+      "raw_path": "evidence/rc/corpus-gaps-20261018/cmake-hash.log",
+      "raw_sha256": "560e0c2f3a8d2db0275304f9cb542dd00d13d31f6a856706d200c3285a8526c3",
+      "published_path": "cmake-hash.log.gz",
+      "published_sha256": "82ea5152df917288f0b20b9444e327b458750b08edc59ad74c513e3234fef13e"
+    },
+    {
+      "raw_path": "evidence/rc/corpus-gaps-20261018/cmake-hash.sample",
+      "raw_sha256": "60c145b44042146b0dda57d7765eb664995666abc75532bf783adf4397b3a53c",
+      "published_path": "cmake-hash.sample.gz",
+      "published_sha256": "4d1867492d9a83cd6d4472f4ba1675f47972e7b30feb5e29a18673824c88961e"
+    },
+    {
+      "raw_path": "evidence/rc/certify-20261018T192738.417611Z/result.json",
+      "raw_sha256": "22aadcc6e128fca7de00e3586652af4fb2f463882dc09d491f0a44083ef5a9bd",
+      "published_path": "release/result.json",
+      "published_sha256": "c936f91cabe83a6808aae3b9c2e6ef04459720f72a8b1c0b5bfeed6e4855553d"
+    },
+    {
+      "raw_path": "evidence/rc/certify-20261018T192738.417611Z/suite.log",
+      "raw_sha256": "8467d1f4a32db5be3226d306b59cf63ec341ba438c07b10225ab62a51b0b4c8c",
+      "published_path": "release/suite.log.gz",
+      "published_sha256": "d4a97f962370342ba02c8ae0599cb68943677bab3be42d9c2578c6bb8ea10c86"
+    },
+    {
+      "raw_path": "evidence/rc/certify-20261018T192738.417611Z/suite-work/test.txt",
+      "raw_sha256": "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824",
+      "published_path": "release/redirect.txt",
+      "published_sha256": "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824"
+    },
+    {
+      "raw_path": "evidence/rc/certify-20261018T192738.420678Z/result.json",
+      "raw_sha256": "407f93ff592d07fe726cb784aecf54ec0de60720a2ce9ddaf620b40013f4c29f",
+      "published_path": "sanitized/result.json",
+      "published_sha256": "000e25bef6b9caa4cddecb6cd77ad11fbb029ecdb172958744b7048cb2b06adf"
+    },
+    {
+      "raw_path": "evidence/rc/certify-20261018T192738.420678Z/suite.log",
+      "raw_sha256": "b3b46d68b755739c4ad716ff991258910a8bd0edb2516a3acb5de07a612f27a7",
+      "published_path": "sanitized/suite.log.gz",
+      "published_sha256": "05fd8adb5a4b3151da8b15572d29345d9177608f63fead299baf54f19edc0bba"
+    },
+    {
+      "raw_path": "evidence/rc/certify-20261018T192738.420678Z/suite-work/test.txt",
+      "raw_sha256": "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824",
+      "published_path": "sanitized/redirect.txt",
+      "published_sha256": "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824"
+    },
+    {
+      "raw_path": "evidence/rc/corpus-gaps-20261018/toolchain-release/result.json",
+      "raw_sha256": "64a272e23211d48af08a00fcfd7be42132fa28a2cdafe16f9ba682108df82818",
+      "published_path": "toolchain/result.json",
+      "published_sha256": "d69f92cbba9f92cb51dae70bd7c734666f4be3e5df67172684b981d0ff3c6818"
+    },
+    {
+      "raw_path": "evidence/rc/corpus-gaps-20261018/toolchain-release/14-cli-numeric-hash-equality.err",
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "published_path": "toolchain/14-cli-numeric-hash-equality.err.gz",
+      "published_sha256": "ac73670af3abed54ac6fb4695131f4099be9fbe39d6076c5d0264a6bbdae9d83"
+    },
+    {
+      "raw_path": "evidence/rc/corpus-gaps-20261018/toolchain-release/14-cli-numeric-hash-equality.out",
+      "raw_sha256": "a17fcf0a2f50e2d495e4f90ce263410edc183add6c62699a2facbccf60410f74",
+      "published_path": "toolchain/14-cli-numeric-hash-equality.out.gz",
+      "published_sha256": "cc62a0bc390076f8ac09bc3da0be014fb75294591be5757e636c2122016995e7"
+    },
+    {
+      "raw_path": "evidence/rc/corpus-gaps-20261018/toolchain-release/28-cli-script-argv.err",
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "published_path": "toolchain/28-cli-script-argv.err.gz",
+      "published_sha256": "ac73670af3abed54ac6fb4695131f4099be9fbe39d6076c5d0264a6bbdae9d83"
+    },
+    {
+      "raw_path": "evidence/rc/corpus-gaps-20261018/toolchain-release/28-cli-script-argv.out",
+      "raw_sha256": "d5ed560af09fc5a85afe9d79f3d826884e35a074e9c77f77c24e053d1f65441c",
+      "published_path": "toolchain/28-cli-script-argv.out.gz",
+      "published_sha256": "e504fd6173c0909e5fc50b66167e5b96f87cd6f1ef474ea22ffbda47f830f228"
+    },
+    {
+      "raw_path": "evidence/rc/corpus-gaps-20261018/toolchain-release/29-cli-script-result-quiet.err",
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "published_path": "toolchain/29-cli-script-result-quiet.err.gz",
+      "published_sha256": "ac73670af3abed54ac6fb4695131f4099be9fbe39d6076c5d0264a6bbdae9d83"
+    },
+    {
+      "raw_path": "evidence/rc/corpus-gaps-20261018/toolchain-release/29-cli-script-result-quiet.out",
+      "raw_sha256": "73784ed621bcad8652e4037b232822f006573b4cb2c347816e9c31cad1d5acab",
+      "published_path": "toolchain/29-cli-script-result-quiet.out.gz",
+      "published_sha256": "5c14cd9acca4e7a2d3d5783f07c6e432ad6e788bed3bfa0d95932d2939bdf1e9"
+    },
+    {
+      "raw_path": "evidence/rc/corpus-gaps-20261018/toolchain-release/30-cli-script-redefinition.err",
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "published_path": "toolchain/30-cli-script-redefinition.err.gz",
+      "published_sha256": "ac73670af3abed54ac6fb4695131f4099be9fbe39d6076c5d0264a6bbdae9d83"
+    },
+    {
+      "raw_path": "evidence/rc/corpus-gaps-20261018/toolchain-release/30-cli-script-redefinition.out",
+      "raw_sha256": "59e6b1594aa21c3a030b80f37badec7e1f2fa1d9e2cd82871c40e292753783bb",
+      "published_path": "toolchain/30-cli-script-redefinition.out.gz",
+      "published_sha256": "c28db115e298ac279350972a5ea68cd73ccafeb454e0183212e720786c93d7e4"
+    },
+    {
+      "raw_path": "evidence/rc/corpus-gaps-20261018/toolchain-release/31-cli-script-nested-load.err",
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "published_path": "toolchain/31-cli-script-nested-load.err.gz",
+      "published_sha256": "ac73670af3abed54ac6fb4695131f4099be9fbe39d6076c5d0264a6bbdae9d83"
+    },
+    {
+      "raw_path": "evidence/rc/corpus-gaps-20261018/toolchain-release/31-cli-script-nested-load.out",
+      "raw_sha256": "43822c8a00acf6fe87f83299d70a9403185cf6ddab284d6702956dff4d17876e",
+      "published_path": "toolchain/31-cli-script-nested-load.out.gz",
+      "published_sha256": "a824d40df2d4b61ed5af918d420c4cf4b615bad08fc3a9f16851f3fde6467ccc"
+    },
+    {
+      "raw_path": "evidence/rc/corpus-gaps-20261018/toolchain-release/32-cli-script-error.err",
+      "raw_sha256": "ef7b3f5fdba3a0b9f265c4d4cece101126260e1168b67eabd400e65f5ae205d3",
+      "published_path": "toolchain/32-cli-script-error.err.gz",
+      "published_sha256": "8abc1e9272f00634840e219bb3e54f7f8447349fa1761321cf3b3a09b52befcd"
+    },
+    {
+      "raw_path": "evidence/rc/corpus-gaps-20261018/toolchain-release/32-cli-script-error.out",
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "published_path": "toolchain/32-cli-script-error.out.gz",
+      "published_sha256": "ac73670af3abed54ac6fb4695131f4099be9fbe39d6076c5d0264a6bbdae9d83"
+    },
+    {
+      "raw_path": "evidence/rc/corpus-gaps-20261018/toolchain-release/33-cli-hash-redefined-explode.err",
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "published_path": "toolchain/33-cli-hash-redefined-explode.err.gz",
+      "published_sha256": "ac73670af3abed54ac6fb4695131f4099be9fbe39d6076c5d0264a6bbdae9d83"
+    },
+    {
+      "raw_path": "evidence/rc/corpus-gaps-20261018/toolchain-release/33-cli-hash-redefined-explode.out",
+      "raw_sha256": "3f215385da7a73801db2985ed3b5683b719ce25d3afc8cee1534abb62235736b",
+      "published_path": "toolchain/33-cli-hash-redefined-explode.out.gz",
+      "published_sha256": "9bce11fe7da1a85c52f4637d3d6a3bb0c779b15261f4014452c0692a8768aaf6"
+    },
+    {
+      "raw_path": "evidence/rc/corpus-gaps-20261018/toolchain-release/34-custom-hash-owned-build.err",
+      "raw_sha256": "a8d2d9c0babbabf78bb844e864587781e8fa6ece589627a53575cae6a8613282",
+      "published_path": "toolchain/34-custom-hash-owned-build.err.gz",
+      "published_sha256": "190c4a5b6b1f5ec230462e43e6d42a39b56eea9ac63c611a9c31e971c1dbd420"
+    },
+    {
+      "raw_path": "evidence/rc/corpus-gaps-20261018/toolchain-release/34-custom-hash-owned-build.out",
+      "raw_sha256": "1d75cac4ba617d3ae80e3fdd4825e7be15e0f8c7fec5a382b23151f9130a7892",
+      "published_path": "toolchain/34-custom-hash-owned-build.out.gz",
+      "published_sha256": "89f76000665f21d56b480b94abaa537411c2794cc9561b421be8346cddf90bbc"
+    },
+    {
+      "raw_path": "evidence/rc/corpus-gaps-20261018/toolchain-release/35-custom-hash-owned-run.err",
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "published_path": "toolchain/35-custom-hash-owned-run.err.gz",
+      "published_sha256": "ac73670af3abed54ac6fb4695131f4099be9fbe39d6076c5d0264a6bbdae9d83"
+    },
+    {
+      "raw_path": "evidence/rc/corpus-gaps-20261018/toolchain-release/35-custom-hash-owned-run.out",
+      "raw_sha256": "7e332bcee418f7d700927c946d36341f0651d6d90997b58d3d5441dec96b2e74",
+      "published_path": "toolchain/35-custom-hash-owned-run.out.gz",
+      "published_sha256": "e8e6658aa2107c12346d096f531b9b4b5255ba712dc155faa712a8ded379a15b"
+    },
+    {
+      "raw_path": "evidence/rc/corpus-gaps-20261018/toolchain-release/36-custom-hash-borrowed-build.err",
+      "raw_sha256": "a8d2d9c0babbabf78bb844e864587781e8fa6ece589627a53575cae6a8613282",
+      "published_path": "toolchain/36-custom-hash-borrowed-build.err.gz",
+      "published_sha256": "190c4a5b6b1f5ec230462e43e6d42a39b56eea9ac63c611a9c31e971c1dbd420"
+    },
+    {
+      "raw_path": "evidence/rc/corpus-gaps-20261018/toolchain-release/36-custom-hash-borrowed-build.out",
+      "raw_sha256": "1d75cac4ba617d3ae80e3fdd4825e7be15e0f8c7fec5a382b23151f9130a7892",
+      "published_path": "toolchain/36-custom-hash-borrowed-build.out.gz",
+      "published_sha256": "89f76000665f21d56b480b94abaa537411c2794cc9561b421be8346cddf90bbc"
+    },
+    {
+      "raw_path": "evidence/rc/corpus-gaps-20261018/toolchain-release/37-custom-hash-borrowed-run.err",
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "published_path": "toolchain/37-custom-hash-borrowed-run.err.gz",
+      "published_sha256": "ac73670af3abed54ac6fb4695131f4099be9fbe39d6076c5d0264a6bbdae9d83"
+    },
+    {
+      "raw_path": "evidence/rc/corpus-gaps-20261018/toolchain-release/37-custom-hash-borrowed-run.out",
+      "raw_sha256": "7e332bcee418f7d700927c946d36341f0651d6d90997b58d3d5441dec96b2e74",
+      "published_path": "toolchain/37-custom-hash-borrowed-run.out.gz",
+      "published_sha256": "e8e6658aa2107c12346d096f531b9b4b5255ba712dc155faa712a8ded379a15b"
+    },
+    {
+      "raw_path": "evidence/rc/corpus-gaps-20261018/assertions-release.json",
+      "raw_sha256": "550934654ce4ea04521a655566787cd733c7970f2450b7772f5da607572c4077",
+      "published_path": "assertions-release.json",
+      "published_sha256": "550934654ce4ea04521a655566787cd733c7970f2450b7772f5da607572c4077"
+    },
+    {
+      "raw_path": "evidence/rc/corpus-gaps-20261018/assertions-release.log",
+      "raw_sha256": "b80c6b3dd4debf8184a63f7f0855f1440a1ff40a0474a445e3adff224bee37ce",
+      "published_path": "assertions-release.log.gz",
+      "published_sha256": "ec319ffc4fa4e06b7d76cfeed4d11d1de48077204124d4299ba5de69ad94e108"
+    },
+    {
+      "raw_path": "evidence/rc/corpus-gaps-20261018/assertions-source.json",
+      "raw_sha256": "b99e2f4e6f17febcf1472859ddc2ef5c05565dc6f48904e262739f42b8069aa5",
+      "published_path": "assertions-source.json",
+      "published_sha256": "b99e2f4e6f17febcf1472859ddc2ef5c05565dc6f48904e262739f42b8069aa5"
+    },
+    {
+      "raw_path": "evidence/rc/corpus-gaps-20261018/corpus-ci.json",
+      "raw_sha256": "bafc225a9b6a2ed86e917c985249c36d16d3cd12a19c4f8761539aa80937b6e2",
+      "published_path": "corpus-ci.json",
+      "published_sha256": "bafc225a9b6a2ed86e917c985249c36d16d3cd12a19c4f8761539aa80937b6e2"
+    },
+    {
+      "raw_path": "evidence/rc/corpus-gaps-20261018/bifrost-adapter-ci.json",
+      "raw_sha256": "b21590ac2a25c2a6774af996ec6448a716fec5f1dff46b7ccd3f75f754b6a04a",
+      "published_path": "bifrost-adapter-ci.json",
+      "published_sha256": "b21590ac2a25c2a6774af996ec6448a716fec5f1dff46b7ccd3f75f754b6a04a"
+    },
+    {
+      "raw_path": "evidence/rc/corpus-gaps-20261018/qualification-ci.json",
+      "raw_sha256": "4e9cb74879105534eb463415613b8ca2e60ecc7dd81099cea87f5898663cd4e9",
+      "published_path": "qualification-ci.json",
+      "published_sha256": "4e9cb74879105534eb463415613b8ca2e60ecc7dd81099cea87f5898663cd4e9"
+    }
+  ]
+}

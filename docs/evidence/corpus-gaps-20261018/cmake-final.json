@@ -1,0 +1,26 @@
+[
+  {
+    "command": [
+      "/nix/store/pwml4akrsnl3ismgd778y5cc117zskk2-cmake-4.3.4/bin/cmake",
+      "--build",
+      "build/gap-hash-host",
+      "--target",
+      "test_rc_canonical_hash",
+      "-j2"
+    ],
+    "exit_code": 0
+  },
+  {
+    "command": [
+      "/nix/store/pwml4akrsnl3ismgd778y5cc117zskk2-cmake-4.3.4/bin/ctest",
+      "--test-dir",
+      "build/gap-hash-host",
+      "-R",
+      "^rc_canonical_hash$",
+      "--timeout",
+      "30",
+      "--output-on-failure"
+    ],
+    "exit_code": 0
+  }
+]

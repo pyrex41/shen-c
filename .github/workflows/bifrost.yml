@@ -1,0 +1,62 @@
+name: Bifrost CLI corpus
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  corpus:
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            cc: clang-18
+            ar: llvm-ar-18
+          - os: macos-latest
+            cc: clang
+            ar: ar
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: shen-c
+      - uses: actions/checkout@v4
+        with:
+          repository: pyrex41/bifrost
+          ref: def3047a41f948494c2eedd34b07110fb8a87e16
+          path: bifrost
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.27.x'
+          cache: false
+      - name: Build native CLI
+        env:
+          CC: ${{ matrix.cc }}
+          AR: ${{ matrix.ar }}
+        run: make -C shen-c CC="$CC" AR="$AR" -j2
+      - name: Run unchanged pinned CLI corpus
+        working-directory: bifrost
+        env:
+          BIFROST_SHEN_C: ${{ github.workspace }}/shen-c/bin/shen-c
+        run: |
+          go run . --impls shen-c --json > corpus.json
+          python3 - <<'PYTHON'
+          import collections, json
+          from pathlib import Path
+          data = json.JSONDecoder().raw_decode(Path('corpus.json').read_text())[0]
+          counts = collections.Counter(row.get('impls', {}).get('shen-c', {}).get('status', 'KERNEL_SKIP')
+                                       for row in data['cases'].values())
+          assert data['available'] == ['shen-c'], data['available']
+          assert len(data['cases']) == 74, len(data['cases'])
+          assert counts == {'PASS': 70, 'SKIP': 2, 'KERNEL_SKIP': 2}, counts
+          print('Pinned CLI corpus:', dict(counts))
+          PYTHON
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: bifrost-${{ matrix.os }}
+          path: bifrost/corpus.json
+          if-no-files-found: warn

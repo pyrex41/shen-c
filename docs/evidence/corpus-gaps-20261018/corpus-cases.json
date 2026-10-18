@@ -1,0 +1,738 @@
+{
+  "available": [
+    "shen-c"
+  ],
+  "cases": {
+    "append": {
+      "verdict": "PASS",
+      "detail": "",
+      "impls": {
+        "shen-c": {
+          "status": "PASS",
+          "norm": "[1 2 3 4]"
+        }
+      }
+    },
+    "bigint-2pow53-plus-1": {
+      "verdict": "PASS",
+      "detail": "",
+      "impls": {
+        "shen-c": {
+          "status": "PASS",
+          "norm": "9007199254740993"
+        }
+      }
+    },
+    "bigint-2pow63-ordered": {
+      "verdict": "PASS",
+      "detail": "",
+      "impls": {
+        "shen-c": {
+          "status": "PASS",
+          "norm": "Integer overflow"
+        }
+      }
+    },
+    "boolean-intern-true": {
+      "verdict": "PASS",
+      "detail": "",
+      "impls": {
+        "shen-c": {
+          "status": "PASS",
+          "norm": "true"
+        }
+      }
+    },
+    "boolean-number": {
+      "verdict": "PASS",
+      "detail": "",
+      "impls": {
+        "shen-c": {
+          "status": "PASS",
+          "norm": "false"
+        }
+      }
+    },
+    "boolean-true": {
+      "verdict": "PASS",
+      "detail": "",
+      "impls": {
+        "shen-c": {
+          "status": "PASS",
+          "norm": "true"
+        }
+      }
+    },
+    "bounded-tail-sum-file": {
+      "verdict": "PASS",
+      "detail": "",
+      "impls": {
+        "shen-c": {
+          "status": "PASS",
+          "norm": "32004000"
+        }
+      }
+    },
+    "closure-curried": {
+      "verdict": "PASS",
+      "detail": "",
+      "impls": {
+        "shen-c": {
+          "status": "PASS",
+          "norm": "7"
+        }
+      }
+    },
+    "closure-simple": {
+      "verdict": "PASS",
+      "detail": "",
+      "impls": {
+        "shen-c": {
+          "status": "PASS",
+          "norm": "42"
+        }
+      }
+    },
+    "comparison": {
+      "verdict": "PASS",
+      "detail": "",
+      "impls": {
+        "shen-c": {
+          "status": "PASS",
+          "norm": "true"
+        }
+      }
+    },
+    "element-no": {
+      "verdict": "PASS",
+      "detail": "",
+      "impls": {
+        "shen-c": {
+          "status": "PASS",
+          "norm": "false"
+        }
+      }
+    },
+    "element-yes": {
+      "verdict": "PASS",
+      "detail": "",
+      "impls": {
+        "shen-c": {
+          "status": "PASS",
+          "norm": "true"
+        }
+      }
+    },
+    "empty-cons": {
+      "verdict": "PASS",
+      "detail": "",
+      "impls": {
+        "shen-c": {
+          "status": "PASS",
+          "norm": "false"
+        }
+      }
+    },
+    "empty-nil": {
+      "verdict": "PASS",
+      "detail": "",
+      "impls": {
+        "shen-c": {
+          "status": "PASS",
+          "norm": "true"
+        }
+      }
+    },
+    "eq-false-intern-false": {
+      "verdict": "PASS",
+      "detail": "",
+      "impls": {
+        "shen-c": {
+          "status": "PASS",
+          "norm": "true"
+        }
+      }
+    },
+    "eq-int-float": {
+      "verdict": "PASS",
+      "detail": "",
+      "impls": {
+        "shen-c": {
+          "status": "PASS",
+          "norm": "true"
+        }
+      }
+    },
+    "eq-nil": {
+      "verdict": "PASS",
+      "detail": "",
+      "impls": {
+        "shen-c": {
+          "status": "PASS",
+          "norm": "true"
+        }
+      }
+    },
+    "eq-true-intern-true": {
+      "verdict": "PASS",
+      "detail": "",
+      "impls": {
+        "shen-c": {
+          "status": "PASS",
+          "norm": "true"
+        }
+      }
+    },
+    "error-message-head": {
+      "verdict": "PASS",
+      "detail": "",
+      "impls": {
+        "shen-c": {
+          "status": "PASS",
+          "norm": "head expects a non-empty list"
+        }
+      }
+    },
+    "eval-prints-value": {
+      "verdict": "PASS",
+      "detail": "",
+      "impls": {
+        "shen-c": {
+          "status": "PASS",
+          "norm": "42"
+        }
+      }
+    },
+    "fix-point": {
+      "verdict": "PASS",
+      "detail": "",
+      "impls": {
+        "shen-c": {
+          "status": "PASS",
+          "norm": "128"
+        }
+      }
+    },
+    "float-add-clean": {
+      "verdict": "PASS",
+      "detail": "",
+      "impls": {
+        "shen-c": {
+          "status": "PASS",
+          "norm": "4.75"
+        }
+      }
+    },
+    "float-add-imprecise": {
+      "verdict": "PASS",
+      "detail": "",
+      "impls": {
+        "shen-c": {
+          "status": "PASS",
+          "norm": "0.3"
+        }
+      }
+    },
+    "freeze-in-lambda": {
+      "verdict": "PASS",
+      "detail": "",
+      "impls": {
+        "shen-c": {
+          "status": "PASS",
+          "norm": "7"
+        }
+      }
+    },
+    "freeze-thaw": {
+      "verdict": "PASS",
+      "detail": "",
+      "impls": {
+        "shen-c": {
+          "status": "PASS",
+          "norm": "9"
+        }
+      }
+    },
+    "hash-agrees-with-equality": {
+      "verdict": "PASS",
+      "detail": "",
+      "impls": {
+        "shen-c": {
+          "status": "PASS",
+          "norm": "true"
+        }
+      }
+    },
+    "hdstr": {
+      "verdict": "PASS",
+      "detail": "",
+      "impls": {
+        "shen-c": {
+          "status": "PASS",
+          "norm": "a"
+        }
+      }
+    },
+    "hush-file-write": {
+      "verdict": "PASS",
+      "detail": "written <- shen-c",
+      "impls": {
+        "shen-c": {
+          "status": "PASS",
+          "norm": "written"
+        }
+      }
+    },
+    "int-div-exact": {
+      "verdict": "PASS",
+      "detail": "",
+      "impls": {
+        "shen-c": {
+          "status": "PASS",
+          "norm": "2"
+        }
+      }
+    },
+    "int-div-to-float": {
+      "verdict": "PASS",
+      "detail": "",
+      "impls": {
+        "shen-c": {
+          "status": "PASS",
+          "norm": "2.5"
+        }
+      }
+    },
+    "int-div-zero": {
+      "verdict": "PASS",
+      "detail": "",
+      "impls": {
+        "shen-c": {
+          "status": "PASS",
+          "norm": "divide-by-zero"
+        }
+      }
+    },
+    "int-mul": {
+      "verdict": "PASS",
+      "detail": "",
+      "impls": {
+        "shen-c": {
+          "status": "PASS",
+          "norm": "42"
+        }
+      }
+    },
+    "integer-float-frac": {
+      "verdict": "PASS",
+      "detail": "",
+      "impls": {
+        "shen-c": {
+          "status": "PASS",
+          "norm": "false"
+        }
+      }
+    },
+    "integer-float-integral": {
+      "verdict": "PASS",
+      "detail": "",
+      "impls": {
+        "shen-c": {
+          "status": "PASS",
+          "norm": "true"
+        }
+      }
+    },
+    "integer-int": {
+      "verdict": "PASS",
+      "detail": "",
+      "impls": {
+        "shen-c": {
+          "status": "PASS",
+          "norm": "true"
+        }
+      }
+    },
+    "length": {
+      "verdict": "PASS",
+      "detail": "",
+      "impls": {
+        "shen-c": {
+          "status": "PASS",
+          "norm": "5"
+        }
+      }
+    },
+    "lineread-eof-no-newline": {
+      "verdict": "PASS",
+      "detail": "",
+      "impls": {
+        "shen-c": {
+          "status": "PASS",
+          "norm": "[[hello [+ 1 2]] [last line no newline]]"
+        }
+      }
+    },
+    "load-toplevel-echo": {
+      "verdict": "PASS",
+      "detail": "",
+      "impls": {
+        "shen-c": {
+          "status": "PASS",
+          "norm": "\"PROBE\"\n42\nloaded"
+        }
+      }
+    },
+    "map-square": {
+      "verdict": "PASS",
+      "detail": "",
+      "impls": {
+        "shen-c": {
+          "status": "PASS",
+          "norm": "[1 4 9 16]"
+        }
+      }
+    },
+    "n-to-string": {
+      "verdict": "PASS",
+      "detail": "",
+      "impls": {
+        "shen-c": {
+          "status": "PASS",
+          "norm": "A"
+        }
+      }
+    },
+    "namespace-externals-expression": {
+      "verdict": "PASS",
+      "detail": "SKIPPED: every implementation reported an unavailable capability (exit 3)",
+      "impls": {
+        "shen-c": {
+          "status": "SKIP",
+          "norm": "BIFROST-SKIP: namespaces extension not booted"
+        }
+      }
+    },
+    "not-false": {
+      "verdict": "PASS",
+      "detail": "",
+      "impls": {
+        "shen-c": {
+          "status": "PASS",
+          "norm": "true"
+        }
+      }
+    },
+    "prolog-grandparent": {
+      "verdict": "PASS",
+      "detail": "",
+      "impls": {
+        "shen-c": {
+          "status": "PASS",
+          "norm": "bart"
+        }
+      }
+    },
+    "put-get-property-vector": {
+      "verdict": "PASS",
+      "detail": "",
+      "impls": {
+        "shen-c": {
+          "status": "PASS",
+          "norm": "42"
+        }
+      }
+    },
+    "read-eof-no-newline": {
+      "verdict": "PASS",
+      "detail": "",
+      "impls": {
+        "shen-c": {
+          "status": "PASS",
+          "norm": "[[+ 40 2] 42]"
+        }
+      }
+    },
+    "recursion-fib-file": {
+      "verdict": "PASS",
+      "detail": "",
+      "impls": {
+        "shen-c": {
+          "status": "PASS",
+          "norm": "6765"
+        }
+      }
+    },
+    "reverse": {
+      "verdict": "PASS",
+      "detail": "",
+      "impls": {
+        "shen-c": {
+          "status": "PASS",
+          "norm": "[5 4 3 2 1]"
+        }
+      }
+    },
+    "source-form-before-macros": {
+      "verdict": "PASS",
+      "detail": "SKIPPED: every implementation reported an unavailable capability (exit 3)",
+      "impls": {
+        "shen-c": {
+          "status": "SKIP",
+          "norm": "BIFROST-SKIP: source-form handlers not booted"
+        }
+      }
+    },
+    "stdin-eof-clean-exit": {
+      "verdict": "PASS",
+      "detail": "",
+      "impls": {
+        "shen-c": {
+          "status": "PASS",
+          "norm": "Shen, www.shenlanguage.org, copyright (C) 2010-2026, Mark Tarver\nversion: S43.1, language: C, platform: C 0.1\nport Shen/C RC, ported by Tatsuya Tsuda; RC backend contributors\n\n(0-)"
+        }
+      }
+    },
+    "string-concat": {
+      "verdict": "PASS",
+      "detail": "",
+      "impls": {
+        "shen-c": {
+          "status": "PASS",
+          "norm": "foobar"
+        }
+      }
+    },
+    "string-to-n": {
+      "verdict": "PASS",
+      "detail": "",
+      "impls": {
+        "shen-c": {
+          "status": "PASS",
+          "norm": "65"
+        }
+      }
+    },
+    "subtraction": {
+      "verdict": "PASS",
+      "detail": "",
+      "impls": {
+        "shen-c": {
+          "status": "PASS",
+          "norm": "42"
+        }
+      }
+    },
+    "symbol-ident": {
+      "verdict": "PASS",
+      "detail": "",
+      "impls": {
+        "shen-c": {
+          "status": "PASS",
+          "norm": "true"
+        }
+      }
+    },
+    "symbol-intern-true": {
+      "verdict": "PASS",
+      "detail": "",
+      "impls": {
+        "shen-c": {
+          "status": "PASS",
+          "norm": "false"
+        }
+      }
+    },
+    "symbol-not-boolean": {
+      "verdict": "PASS",
+      "detail": "",
+      "impls": {
+        "shen-c": {
+          "status": "PASS",
+          "norm": "false"
+        }
+      }
+    },
+    "tail-call-countdown": {
+      "verdict": "PASS",
+      "detail": "",
+      "impls": {
+        "shen-c": {
+          "status": "PASS",
+          "norm": "done"
+        }
+      }
+    },
+    "tlstr": {
+      "verdict": "PASS",
+      "detail": "",
+      "impls": {
+        "shen-c": {
+          "status": "PASS",
+          "norm": "ello"
+        }
+      }
+    },
+    "trap-cps-script": {
+      "verdict": "PASS",
+      "detail": "",
+      "impls": {
+        "shen-c": {
+          "status": "PASS",
+          "norm": "true"
+        }
+      }
+    },
+    "trap-error-catches": {
+      "verdict": "PASS",
+      "detail": "",
+      "impls": {
+        "shen-c": {
+          "status": "PASS",
+          "norm": "CAUGHT"
+        }
+      }
+    },
+    "trap-error-message": {
+      "verdict": "PASS",
+      "detail": "",
+      "impls": {
+        "shen-c": {
+          "status": "PASS",
+          "norm": "boom"
+        }
+      }
+    },
+    "trap-error-operand-raises": {
+      "verdict": "PASS",
+      "detail": "",
+      "impls": {
+        "shen-c": {
+          "status": "PASS",
+          "norm": "42"
+        }
+      }
+    },
+    "trap-error-value-uses-exn": {
+      "verdict": "PASS",
+      "detail": "",
+      "impls": {
+        "shen-c": {
+          "status": "PASS",
+          "norm": "caught"
+        }
+      }
+    },
+    "tuple-fst": {
+      "verdict": "PASS",
+      "detail": "",
+      "impls": {
+        "shen-c": {
+          "status": "PASS",
+          "norm": "1"
+        }
+      }
+    },
+    "tuple-not-vector": {
+      "verdict": "PASS",
+      "detail": "",
+      "impls": {
+        "shen-c": {
+          "status": "PASS",
+          "norm": "false"
+        }
+      }
+    },
+    "tuple-snd": {
+      "verdict": "PASS",
+      "detail": "",
+      "impls": {
+        "shen-c": {
+          "status": "PASS",
+          "norm": "2"
+        }
+      }
+    },
+    "tuple?": {
+      "verdict": "PASS",
+      "detail": "",
+      "impls": {
+        "shen-c": {
+          "status": "PASS",
+          "norm": "true"
+        }
+      }
+    },
+    "variable-lower": {
+      "verdict": "PASS",
+      "detail": "",
+      "impls": {
+        "shen-c": {
+          "status": "PASS",
+          "norm": "false"
+        }
+      }
+    },
+    "variable-upper": {
+      "verdict": "PASS",
+      "detail": "",
+      "impls": {
+        "shen-c": {
+          "status": "PASS",
+          "norm": "true"
+        }
+      }
+    },
+    "vector-limit": {
+      "verdict": "PASS",
+      "detail": "",
+      "impls": {
+        "shen-c": {
+          "status": "PASS",
+          "norm": "3"
+        }
+      }
+    },
+    "vector-roundtrip": {
+      "verdict": "PASS",
+      "detail": "",
+      "impls": {
+        "shen-c": {
+          "status": "PASS",
+          "norm": "9"
+        }
+      }
+    },
+    "version-banner-contains": {
+      "verdict": "PASS",
+      "detail": "skipped: no matching kernels",
+      "impls": {}
+    },
+    "version-expr-42.2": {
+      "verdict": "PASS",
+      "detail": "skipped: no matching kernels",
+      "impls": {}
+    },
+    "version-expr-43.1": {
+      "verdict": "PASS",
+      "detail": "",
+      "impls": {
+        "shen-c": {
+          "status": "PASS",
+          "norm": "43.1"
+        }
+      }
+    },
+    "version-probe-43.1": {
+      "verdict": "PASS",
+      "detail": "",
+      "impls": {
+        "shen-c": {
+          "status": "PASS",
+          "norm": "43.1"
+        }
+      }
+    }
+  },
+  "skipped": {}
+}

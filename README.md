@@ -57,6 +57,21 @@ while bounded evaluation plans separately reduce repeated syntax classification
 and lexical lookup. See the [compiler guide](docs/RC-BACKEND.md) and
 [implementation record](docs/performance/rc-prepared-evaluator-20261017.md).
 
+## String and vector work
+
+The experimental [`perf/string-vector-fusion` branch](https://github.com/pyrex41/shen-c/tree/perf/string-vector-fusion)
+constructs concatenated strings (`cn`, used by `@s`) directly in their final
+buffer, removing a temporary allocation and a second copy. Focused concatenation
+probes used **20–32% less CPU**; complete-suite timing was effectively unchanged.
+
+An optional `tlstr` prototype shares immutable string storage, with a
+bounded retention policy. An 8 KiB scan copied **4,701 bytes instead of
+33.6 MB**, but this did not improve the complete suite, so sharing stays off
+by default. Mutable vector tails (`tlv`) need independent storage to preserve
+aliases; fusing `@s`/`@v` chains into one fresh final allocation is the next
+candidate, and remains unimplemented. See the
+[measurements and semantic controls](https://github.com/pyrex41/shen-c/blob/perf/string-vector-fusion/docs/performance/string-vector-fusion-20261018.md).
+
 ## Build
 
 A C17 compiler, Make, Python 3.9 or newer, and an archiver are sufficient. Nix is optional.
@@ -89,8 +104,10 @@ ctest --test-dir build --output-on-failure
 ./bin/shen-c script FILE ARGUMENTS
 ```
 
-The script receives `[FILE | ARGUMENTS]` in `*argv*`. `eval -q` quiets
-language output to stdout while retaining explicit file writes.
+The script receives `[FILE | ARGUMENTS]` in `*argv*`. Ordinary script loads
+print program output without echoing each form's return value; `eval -l` keeps
+its interactive load output. `eval -q` quiets language output to stdout while
+retaining explicit file writes.
 
 ## Compile applications
 
