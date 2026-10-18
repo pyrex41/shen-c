@@ -60,15 +60,15 @@ and lexical lookup. See the [compiler guide](docs/RC-BACKEND.md) and
 ## String and vector work
 
 The experimental [`perf/string-vector-fusion` branch](https://github.com/pyrex41/shen-c/tree/perf/string-vector-fusion)
-constructs concatenated strings directly in their final buffer, removing a
-temporary allocation and a second copy. Focused concatenation probes used
-**20–32% less CPU**; complete-suite timing was effectively unchanged.
+constructs concatenated strings (`cn`, used by `@s`) directly in their final
+buffer, removing a temporary allocation and a second copy. Focused concatenation
+probes used **20–32% less CPU**; complete-suite timing was effectively unchanged.
 
-An optional string-tail prototype shares immutable backing storage, with a
+An optional `tlstr` prototype shares immutable string storage, with a
 bounded retention policy. An 8 KiB scan copied **4,701 bytes instead of
 33.6 MB**, but this did not improve the complete suite, so sharing stays off
-by default. Mutable vector tails need independent storage to preserve aliases;
-compiler fusion that allocates a fresh final string or vector once is the next
+by default. Mutable vector tails (`tlv`) need independent storage to preserve
+aliases; fusing `@s`/`@v` chains into one fresh final allocation is the next
 candidate, and remains unimplemented. See the
 [measurements and semantic controls](https://github.com/pyrex41/shen-c/blob/perf/string-vector-fusion/docs/performance/string-vector-fusion-20261018.md).
 
