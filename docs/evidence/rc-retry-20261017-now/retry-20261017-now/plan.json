@@ -1,0 +1,6 @@
+{
+  "scope": "Retry unchanged frozen ten-pair comparison on user request; retain all samples and record host activity. No builds or profiles launched by this session during timing.",
+  "source_head": "bb9997738f9704ec0eaf73505f83d832b2e18cd7",
+  "config": "<OPT_ROOT>/evidence/rc/opt-20261017/final-freeze/final-config.json",
+  "quiet_host_requirement": "Assess independently from numerical acceptance; existing compiler and Defender activity observed before timing."
+}

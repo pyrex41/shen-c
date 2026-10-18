@@ -6,6 +6,15 @@ Boehm comparator is a detached worktree at 97aa8e1.
 
 ## Written implementation plan
 
+Latest user-requested frozen retry (October 17, 01:48 UTC October 18):
+**0.8818 / 0.8326 CPU ratios**, **10/10 CPU wins**, **20 x 136/0**,
+and maximum RSS **+3.91%** versus the unchanged baseline. All numerical gates
+pass again. [Retry evidence and commands](../performance/rc-43.1-final-20261017.md#user-requested-frozen-retry-2026-10-17)
+retain all samples. Concurrent unrelated Shen work, Defender and browser
+activity were observed, so this retry explicitly does **not meet** the strict
+quiet-host condition; the complete finish line remains OPEN. Code is unchanged
+from `8e01579`; existing correctness/build/platform qualification still applies.
+
 Latest checkpoint: [43.1 final measured qualification](../performance/rc-43.1-final-20261017.md).
 Code `8e01579` is pushed on `perf/shen-43.1-prepared-eval`. Two frozen five-pair
 CPU ratios are **0.8811 / 0.8360**, with **10/10 CPU wins**, twenty complete 136/0
