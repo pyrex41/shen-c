@@ -276,6 +276,24 @@
       "raw_sha256": "b99e2f4e6f17febcf1472859ddc2ef5c05565dc6f48904e262739f42b8069aa5",
       "published_path": "assertions-source.json",
       "published_sha256": "b99e2f4e6f17febcf1472859ddc2ef5c05565dc6f48904e262739f42b8069aa5"
+    },
+    {
+      "raw_path": "evidence/rc/corpus-gaps-20261018/corpus-ci.json",
+      "raw_sha256": "bafc225a9b6a2ed86e917c985249c36d16d3cd12a19c4f8761539aa80937b6e2",
+      "published_path": "corpus-ci.json",
+      "published_sha256": "bafc225a9b6a2ed86e917c985249c36d16d3cd12a19c4f8761539aa80937b6e2"
+    },
+    {
+      "raw_path": "evidence/rc/corpus-gaps-20261018/bifrost-adapter-ci.json",
+      "raw_sha256": "b21590ac2a25c2a6774af996ec6448a716fec5f1dff46b7ccd3f75f754b6a04a",
+      "published_path": "bifrost-adapter-ci.json",
+      "published_sha256": "b21590ac2a25c2a6774af996ec6448a716fec5f1dff46b7ccd3f75f754b6a04a"
+    },
+    {
+      "raw_path": "evidence/rc/corpus-gaps-20261018/qualification-ci.json",
+      "raw_sha256": "4e9cb74879105534eb463415613b8ca2e60ecc7dd81099cea87f5898663cd4e9",
+      "published_path": "qualification-ci.json",
+      "published_sha256": "4e9cb74879105534eb463415613b8ca2e60ecc7dd81099cea87f5898663cd4e9"
     }
   ]
 }

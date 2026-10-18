@@ -41,7 +41,7 @@ identities provide a generic fallback on redefinition. Ordinary string/number
 printing is unchanged, and nonnumeric keys avoid the dependency-check loop.
 Owned and borrowed compiler paths retain their C ownership contracts.
 
-| Check on Darwin arm64, Apple Clang 21 | Result |
+| Check (Darwin arm64 / Apple Clang 21 unless stated) | Result |
 |---|---|
 | Complete unchanged Bifrost CLI corpus | **70 executed PASS, 0 FAIL, 2 capability skips, 2 kernel skips** |
 | Fatal ASan/UBSan runtime tests, default and boxed | **25/25 each** |
@@ -50,7 +50,9 @@ Owned and borrowed compiler paths retain their C ownership contracts.
 | Fresh compiler/CLI, source compilation, native controls | **258 checks PASS**, canonical receipt verified |
 | Hash boundaries, both callback ABIs, redefinitions | PASS, including Int64 bounds, signed zero, mixed-key put/get, custom kernel bodies |
 | CMake hash regression, host SDK 27 | PASS under fatal ASan/UBSan |
-| New pinned full-corpus Linux/macOS workflow | Added; remote status is separate from local receipts |
+| Pinned full-corpus Linux/macOS CI at `97758d5` | **PASS**, [run 39159931780](https://github.com/pyrex41/shen-c/actions/runs/39159931780) |
+| Complete Linux Clang/GCC, macOS Clang and fatal sanitizer CI at `97758d5` | **PASS**, [run 39159931894](https://github.com/pyrex41/shen-c/actions/runs/39159931894) |
+| Bifrost native adapter Linux/macOS CI at `9ddd2d0` | **PASS**, [run 39160171330](https://github.com/pyrex41/bifrost/actions/runs/39160171330); released v0.3.0 pin unchanged |
 
 The first CMake attempt mixed the Nix 14.4 SDK with the host sanitizer runtime
 and stalled in ASan initialization before `main`. Its stack sample and failed
