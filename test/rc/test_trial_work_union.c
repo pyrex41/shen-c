@@ -26,7 +26,7 @@ int main(void) {
 #endif
  RcStats before=rc_stats(c);
  assert(before.live_objects==N+1&&before.live_bytes==baseline.live_bytes+N*header);
- assert(before.retain_calls-baseline.retain_calls==N-1);
+ assert(before.retain_calls-baseline.retain_calls==(rc_stats_counts_ownership()?N-1:0));
  /* Every pair has its own residual C root; its trial is consumed while the
   * other roots still await discovery. Their work links form a second chain. */
  for(int repeat=0;repeat<8;repeat++) {
@@ -47,7 +47,7 @@ int main(void) {
  RcStats after=rc_stats(c);
  assert(after.live_objects==1&&after.live_bytes==baseline.live_bytes);
  assert(after.total_frees-before.total_frees==N);
- assert(after.release_calls-releases==2*N-1);
+ assert(after.release_calls-releases==(rc_stats_counts_ownership()?2*N-1:0));
  rc_release(cycle);rc_collect(c);after=rc_stats(c);
  assert(after.live_objects==0&&after.live_bytes==0);
  assert(after.cycle_objects_freed==1&&after.total_allocations==after.total_frees);

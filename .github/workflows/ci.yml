@@ -33,6 +33,8 @@ jobs:
         run: |
           nix develop -c make CC=${{ matrix.cc }} -j2
           nix develop -c make CC=${{ matrix.cc }} test
+      - name: RC unit tests with diagnostic ownership counters
+        run: nix develop -c make CC=${{ matrix.cc }} counters
       - name: Standalone CLI and compiler artifact audit
         run: |
           nix develop -c ./bin/shen-c --version

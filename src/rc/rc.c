@@ -25,6 +25,12 @@
 #endif
 
 #define RC_OBJECT_CACHE_LIMIT 1024
+/* Per-operation retain/release counters cost a context load and a write on
+ * every count change. Release builds omit them; diagnostic builds define
+ * SHEN_RC_STATS_COUNTERS=1. All other statistics are always maintained. */
+#ifndef SHEN_RC_STATS_COUNTERS
+#define SHEN_RC_STATS_COUNTERS 0
+#endif
 
 /* Normalized completion guards: boolean already validates context. Context
  * followed by boolean keeps context's earlier diagnostic; a later context
@@ -235,7 +241,9 @@ RcContext *rc_context_new_with_policy(RcCyclePolicy policy) {
 bool rc_context_is_acyclic(const RcContext *ctx) { return ctx && ctx->acyclic; }
 RcValue *rc_retain(RcValue *v) {
     if (is_counted(v)) {
+#if SHEN_RC_STATS_COUNTERS
         v->ctx->stats.retain_calls++;
+#endif
         v->refs++;
     }
     return v;
@@ -310,7 +318,9 @@ static void release_edge(RcValue *v, void *data) {
     if (!is_counted(v)) return;
     RcValue **work = data;
     if (!v->refs) abort();
+#if SHEN_RC_STATS_COUNTERS
     v->ctx->stats.release_calls++;
+#endif
     if (--v->refs == 0) { v->work = *work; *work = v; }
 }
 void rc_release(RcValue *v) {
@@ -392,6 +402,7 @@ void rc_safepoint(RcContext *ctx) {
 void rc_set_collection_interval(RcContext *ctx, size_t n) {
     if (ctx) { ctx->collection_interval = n; ctx->adaptive_collection = false; }
 }
+bool rc_stats_counts_ownership(void) { return SHEN_RC_STATS_COUNTERS != 0; }
 RcStats rc_stats(const RcContext *ctx) {
     RcStats result = {0};
     if (ctx) {

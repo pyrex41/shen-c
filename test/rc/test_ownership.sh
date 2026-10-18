@@ -46,7 +46,9 @@ with tempfile.TemporaryDirectory(prefix='shen-rc-ownership.') as tmp:
     inp = work / 'input'; inp.mkdir()
     (inp / 'kernel.kl').write_text('')
     (inp / 'user.kl').write_text(source + '\n'.join(x[1] for x in cases) + '\n')
-    env = dict(os.environ, SHEN_C_HOME=str(root))
+    # Retain/release totals need a counting runtime; release builds omit them.
+    cppflags = (os.environ.get('CPPFLAGS', '') + ' -DSHEN_RC_STATS_COUNTERS=1').strip()
+    env = dict(os.environ, SHEN_C_HOME=str(root), CPPFLAGS=cppflags)
     metrics = {}
     for mode, flags in [('conservative', ['--conservative-ownership']), ('optimized', [])]:
         dest = work / mode

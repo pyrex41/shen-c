@@ -11,9 +11,10 @@ $(RC_TOOL_BIN)/shen-c: $(RC_TOOL_BIN)/shen-rc
 rc: all
 rc-test: test
 rc-sanitize: sanitize
+rc-counters: counters
 rc-acyclic: acyclic
 
 certify:
 	scripts/certify-rc.sh
 
-.PHONY: rc rc-test rc-sanitize rc-acyclic certify
+.PHONY: rc rc-test rc-sanitize rc-counters rc-acyclic certify

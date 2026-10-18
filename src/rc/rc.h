@@ -50,7 +50,9 @@ typedef struct {
     size_t system_allocations, system_frees;
     /* Actual managed-value reference count increments/decrements, including
      * internal edge operations; ownership transfers do not increment these.
-     * Immortal values (including interned symbols) are never counted. */
+     * Immortal values (including interned symbols) are never counted. Only
+     * builds with SHEN_RC_STATS_COUNTERS=1 maintain these two fields; others
+     * leave them zero (see rc_stats_counts_ownership). */
     size_t retain_calls, release_calls;
     size_t pair_allocations, pair_reuse_attempts, pair_reuses, pair_reuse_misses;
     size_t pair_tail_transfers, pair_tail_shares;
@@ -75,6 +77,8 @@ void rc_set_collection_interval(RcContext *ctx, size_t allocations);
 void rc_collect(RcContext *ctx);
 void rc_safepoint(RcContext *ctx);
 RcStats rc_stats(const RcContext *ctx);
+/* Whether this runtime was built to count retain_calls/release_calls. */
+bool rc_stats_counts_ownership(void);
 RcValue *rc_retain(RcValue *value);
 void rc_release(RcValue *value);
 RcType rc_type(const RcValue *value);
