@@ -165,7 +165,8 @@ string-copy counters need not be byte-identical across complete suite runs.
 | CMake, B views on, fatal ASan/UBSan | Both new tests pass; other CMake tests not rerun here |
 | Native emitted suffix escape + vector/closure cycle | Two cycle objects reclaimed with 255-byte suffix rooted; exact bytes/NUL pass |
 | Existing emitted controls, B views on, fatal ASan/UBSan + ownership verification | Semantics 87/87; ownership 20 differential cases; callee 18 differential cases; primitive and Prolog controls pass |
-| New candidate Linux/Nix/remote CI qualification | UNKNOWN |
+| Default views off, Linux Clang/GCC, macOS Clang and fatal sanitizer CI | Four jobs PASS at `9bbed9a` |
+| Opt-in views on, Linux/Nix/remote CI qualification | UNKNOWN |
 
 Tests cover aliases, borrowed/owned calls, partial application, errors, pooled
 reuse, backing retention, closure escape and unreachable mixed cycles. The
@@ -176,6 +177,11 @@ returns a partial application. Both attempts and the final host-hook check
 are retained. Native string printing also required a quoted-output oracle,
 unlike the CLI's bare string display. No runtime defect was found in these
 control corrections.
+
+The subsequent [default-mode CI receipt](../evidence/string-vector-fusion-20261018/default-ci.json)
+records [run 39153714725](https://github.com/pyrex41/shen-c/actions/runs/39153714725).
+Those jobs exercise the default configuration and do not qualify opt-in views
+on Linux or Nix.
 
 Earlier one-warmup probes crossed a preparation threshold in one small vector
 case; they remain under `initial-warmup`. Final counts and timings use four

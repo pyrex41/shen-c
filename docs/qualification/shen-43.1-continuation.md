@@ -10,7 +10,8 @@ timings and full generated-kernel sanitizers. Direct-buffer `cn` improves its
 focused probes but leaves suite CPU flat; bounded string suffix views remain
 opt-in with no suite gain established. Fresh-vector/string builder fusion is
 the next proposed candidate. This is separate from the released qualification;
-new candidate Linux/Nix/remote CI qualification remains UNKNOWN.
+default-mode Linux/macOS/sanitizer CI now passes; opt-in views on Linux/Nix/CI
+remain UNKNOWN.
 
 ## Written implementation plan
 
