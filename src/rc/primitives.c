@@ -140,13 +140,7 @@ static RcValue *primitive_op(RcContext *c,RcValue *self,enum Op op,
   rc_fusion_record(c,RC_FUSION_TAILS,1);
   rc_fusion_record(c,RC_FUSION_TAIL_BYTES,rc_text_length(a)-1);
   return rc_string_n(c,rc_text(a)+1,rc_text_length(a)-1);
- case P_CN:{
-  if(rc_type(a)!=RC_STRING||rc_type(b)!=RC_STRING)return rc_error(c,"cn requires strings");
-  size_t n=rc_text_length(a),m=rc_text_length(b);if(n>SIZE_MAX-m-1)return rc_error(c,"String too large");
-  rc_fusion_record(c,RC_FUSION_CONCATS,1);
-  rc_fusion_record(c,RC_FUSION_CONCAT_TEMP_BYTES,n+m);
-  char *s=malloc(n+m+1);if(!s)return rc_error(c,"Out of memory");memcpy(s,rc_text(a),n);memcpy(s+n,rc_text(b),m);
-  RcValue *r=rc_string_n(c,s,n+m);free(s);return r;}
+ case P_CN:return rc_string_concat(c,a,b);
  case P_STR:return atom_string(c,a);
  case P_STRING:return truth(c,rc_type(a)==RC_STRING);
  case P_NSTR:{if(!integer_arg(a,&i)||i<0||i>255)return rc_error(c,"Byte must be integer 0..255");char byte=(char)i;return rc_string_n(c,&byte,1);}

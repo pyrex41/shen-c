@@ -1,6 +1,9 @@
 #ifndef SHEN_RC_INTERNAL_H
 #define SHEN_RC_INTERNAL_H
 #include "rc.h"
+/* Original cn primitive only: borrowed same-context strings, owned result.
+ * Allocate the final payload once, preserving embedded NULs and aliases. */
+RcValue *rc_string_concat(RcContext *,const RcValue *,const RcValue *);
 /* Exploration counters compile away in production. These count payload work,
  * not exclusive CPU time; reset only in diagnostic drivers between phases. */
 typedef enum {

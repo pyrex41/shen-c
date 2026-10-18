@@ -607,11 +607,8 @@ int64_t rc_integer_value(const RcValue *v) {
     if (!isfinite(n) || n < -9223372036854775808.0 || n >= 9223372036854775808.0) return 0;
     return (int64_t)n;
 }
-static RcValue *text_value(RcContext *ctx, RcType type, const char *text, size_t n) {
-    if (!text || n == SIZE_MAX) return rc_error(ctx, "invalid text length");
-    char *copy = malloc(n + 1);
-    if (!copy) return rc_error(ctx, "out of memory");
-    memcpy(copy, text, n); copy[n] = '\0';
+static RcValue *text_buffer(RcContext *ctx,RcType type,char *copy,size_t n) {
+    copy[n]='\0';
     RcValue *v = allocate(ctx, type, n + 1);
     if (!v) { free(copy); return NULL; }
     v->as.text.data = copy; v->as.text.length = n;
@@ -621,6 +618,24 @@ static RcValue *text_value(RcContext *ctx, RcType type, const char *text, size_t
         rc_fusion_record(ctx,RC_FUSION_STRING_COPIES,n);
     }
     return v;
+}
+static RcValue *text_value(RcContext *ctx, RcType type, const char *text, size_t n) {
+    if (!text || n == SIZE_MAX) return rc_error(ctx, "invalid text length");
+    char *copy = malloc(n + 1);
+    if (!copy) return rc_error(ctx, "out of memory");
+    memcpy(copy,text,n);
+    return text_buffer(ctx,type,copy,n);
+}
+RcValue *rc_string_concat(RcContext *ctx,const RcValue *a,const RcValue *b) {
+    if(!belongs(ctx,a)||!belongs(ctx,b)||rc_type(a)!=RC_STRING||rc_type(b)!=RC_STRING)
+        return rc_error(ctx,"cn requires strings");
+    size_t n=rc_text_length(a),m=rc_text_length(b);
+    if(m==SIZE_MAX||n>SIZE_MAX-m-1)return rc_error(ctx,"String too large");
+    rc_fusion_record(ctx,RC_FUSION_CONCATS,1);
+    char *copy=malloc(n+m+1);
+    if(!copy)return rc_error(ctx,"Out of memory");
+    memcpy(copy,rc_text(a),n);memcpy(copy+n,rc_text(b),m);
+    return text_buffer(ctx,RC_STRING,copy,n+m);
 }
 RcValue *rc_string_n(RcContext *ctx, const char *s, size_t n) { return text_value(ctx, RC_STRING, s, n); }
 RcValue *rc_string(RcContext *ctx, const char *s) { return s ? rc_string_n(ctx, s, strlen(s)) : rc_error(ctx, "NULL string"); }
