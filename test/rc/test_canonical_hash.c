@@ -13,10 +13,15 @@ static RcValue *call(RcContext *ctx, RcValue *fn, RcValue *arg) {
 }
 static RcValue *old_hashkey(RcContext *ctx, RcValue *self, size_t argc, RcValue **args) {
     (void)self; (void)argc;
-    return rc_integer(ctx, rc_type(args[0]) == RC_NUMBER && rc_number_is_exact_integer(args[0]) ? 17 : 23);
+    RcValue *arg=args[0]; args[0]=NULL;
+    RcValue *result=rc_integer(ctx, rc_type(arg) == RC_NUMBER && rc_number_is_exact_integer(arg) ? 17 : 23);
+    rc_release(arg); return result;
 }
 static RcValue *always_false(RcContext *ctx, RcValue *self, size_t argc, RcValue *const *args) {
     (void)self; (void)argc; (void)args; return rc_false(ctx);
+}
+static RcValue *dummy_dependency(RcContext *ctx, RcValue *self, size_t argc, RcValue *const *args) {
+    (void)self; (void)argc; (void)args; return rc_nil();
 }
 static void same_hash(RcContext *ctx, RcValue *fn, RcValue *a, RcValue *b) {
     RcValue *ha = call(ctx, fn, a), *hb = call(ctx, fn, b);
@@ -28,6 +33,13 @@ static void same_hash(RcContext *ctx, RcValue *fn, RcValue *a, RcValue *b) {
 int main(void) {
     RcContext *ctx = rc_context_new();
     assert(ctx && rc_install_primitives(ctx));
+    const char *dependency_names[]={"explode","shen.app","map","string->n","shen.prodbutzero"};
+    const size_t dependency_arities[]={1,3,2,1,2};
+    for (size_t i=0;i<sizeof(dependency_names)/sizeof(*dependency_names);i++) {
+        RcValue *s=rc_symbol(ctx,dependency_names[i]);
+        RcValue *f=rc_closure(ctx,dependency_arities[i],dummy_dependency,0,NULL);
+        assert(s&&f&&rc_function_set(ctx,s,f)); rc_release(f); rc_release(s);
+    }
     RcValue *hash_name = rc_symbol(ctx, "shen.hashkey");
     RcValue *original = rc_closure_owned(ctx, 1, old_hashkey, 0, NULL);
     assert(hash_name && original && rc_function_set(ctx, hash_name, original));

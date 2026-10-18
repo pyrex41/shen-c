@@ -16,7 +16,7 @@ typedef struct Program Program;
 typedef struct { Program *owner; char *p; size_t n, cap; } Buf;
 typedef struct { const char *name; int slot; } Binding;
 typedef struct Allocation { struct Allocation *prev,*next; max_align_t align; unsigned char data[]; } Allocation;
-typedef struct ModuleDef { size_t symbol; int id,arity; bool exact_hashkey; struct ModuleDef *next; } ModuleDef;
+typedef struct ModuleDef { size_t symbol; int id,arity; bool exact_hashkey,kernel_phase; struct ModuleDef *next; } ModuleDef;
 typedef struct ModuleCall { size_t symbol; struct ModuleCall *next; } ModuleCall;
 struct Program { RcEmitOptions options; RcContext *ctx; jmp_buf failure; Allocation *allocations; Buf functions,literals,transparent_do,pvar_identities; const char **symbols; size_t nsymbols,symbol_capacity; ModuleDef *module_defs; ModuleCall *module_calls; bool user_phase,drop_range_used,drop_range_emitted,transparent_do_used,lazyderef_used; RcValue *metadata_root; int next,next_literal; long defuns, lambdas, tops; };
 static _Noreturn void bad(Program *p,const char *message) { rc_error(p->ctx,"%s",message); longjmp(p->failure,1); }
@@ -281,12 +281,17 @@ static bool exact_hashkey(Program *p,RcValue *params,RcValue *body) {
  if(count(p,params)!=1||!is_symbol(first(params))||!is_pair(body)||!named(first(body),"let"))return false;
  RcValue *la=rest(body);if(count(p,la)!=3)return false;
  RcValue *letvar=at(p,la,0),*map=at(p,la,1),*result=at(p,la,2);
+ static const char *const reserved[]={"let","lambda","map","explode","string->n","shen.prodbutzero","shen.app","str","number?"};
+ for(size_t i=0;i<sizeof(reserved)/sizeof(*reserved);i++)
+  if(named(first(params),reserved[i])||named(letvar,reserved[i]))return false;
  if(!is_symbol(letvar)||!is_pair(map)||!named(first(map),"map"))return false;
  RcValue *ma=rest(map);if(count(p,ma)!=2)return false;
  RcValue *lambda=at(p,ma,0),*explode=at(p,ma,1);
  if(!is_pair(lambda)||!named(first(lambda),"lambda"))return false;
  RcValue *lca=rest(lambda);if(count(p,lca)!=2||!is_symbol(at(p,lca,0)))return false;
  RcValue *lambda_param=at(p,lca,0),*string_n=at(p,lca,1);
+ if(rc_equal(lambda_param,first(params))||rc_equal(lambda_param,letvar))return false;
+ for(size_t i=0;i<sizeof(reserved)/sizeof(*reserved);i++)if(named(lambda_param,reserved[i]))return false;
  if(!is_pair(string_n)||!named(first(string_n),"string->n")||count(p,rest(string_n))!=1||
     !rc_equal(at(p,rest(string_n),0),lambda_param))return false;
  if(!is_pair(explode)||!named(first(explode),"explode")||count(p,rest(explode))!=1||
@@ -517,7 +522,8 @@ static int expr_inner(RcEmitFn *f,RcValue *x,int tail,const Live *after){
   int id=compile(p,second(args),at(p,args,2),NULL,0,0),t=fresh(f),cl=fresh(f);
   { ModuleDef *d=alloc(p,sizeof(*d));
     *d=(ModuleDef){symbol_index(f,name(first(args))),id,count(p,second(args)),
-                   named(first(args),"shen.hashkey")&&exact_hashkey(p,second(args),at(p,args,2)),p->module_defs};
+                   named(first(args),"shen.hashkey")&&exact_hashkey(p,second(args),at(p,args,2)),
+                   !p->user_phase,p->module_defs};
     p->module_defs=d;
   }
   symbol_slot(f,t,name(first(args)));check(f,t);
@@ -840,18 +846,18 @@ bool rc_emit_program(RcContext *ctx,FILE *out,RcValue *const *kernel,size_t nker
   fputs("  if(!rc_install_primitives(ctx) || !rc_install_eval(ctx)) return false;\n",out);
   if(installs.p) fputs(installs.p,out);
   fputs("  if(!rc_install_overwrites(ctx)) return false;\n",out);
-  if(kt.p) fputs(kt.p,out);
   if(!options->conservative_ownership) {
     int hash_id=-1;
     for(ModuleDef *d=p->module_defs;d;d=d->next)
-      if(!strcmp(p->symbols[d->symbol],"shen.hashkey")&&d->exact_hashkey) { hash_id=d->id; break; }
+      if(d->kernel_phase&&!strcmp(p->symbols[d->symbol],"shen.hashkey")&&d->exact_hashkey) { hash_id=d->id; break; }
     if(hash_id>=0) fprintf(out,"  if(!rc_install_numeric_hash_owned(ctx,rc_native_%d)) return false;\n",hash_id);
   } else {
     int hash_id=-1;
     for(ModuleDef *d=p->module_defs;d;d=d->next)
-      if(!strcmp(p->symbols[d->symbol],"shen.hashkey")&&d->exact_hashkey) { hash_id=d->id; break; }
+      if(d->kernel_phase&&!strcmp(p->symbols[d->symbol],"shen.hashkey")&&d->exact_hashkey) { hash_id=d->id; break; }
     if(hash_id>=0) fprintf(out,"  if(!rc_install_numeric_hash_borrowed(ctx,rc_native_%d)) return false;\n",hash_id);
   }
+  if(kt.p) fputs(kt.p,out);
   if(options->init_name&&*options->init_name) {
     Buf init={.owner=p}; quoted(&init,options->init_name);
     fprintf(out,"  { RcValue *fn=rc_symbol(ctx,%s); if(!fn) return false; RcValue *v=rc_apply(ctx,fn,0,NULL); rc_release(fn); if(!v) return false; rc_release(v); }\n",init.p);
