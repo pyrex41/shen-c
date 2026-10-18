@@ -208,6 +208,26 @@ try:
     script = empty / 'script with spaces.shen'
     script.write_text('(output "CLI-SCRIPT-ARG=~A~%" (hd (tl (value *argv*))))\n')
     cli_case('script-argv', ['script', str(script), 'argument-marker'], contains='CLI-SCRIPT-ARG=argument-marker')
+    quiet_script = empty / 'script-result-quiet.shen'
+    quiet_script.write_text('(output "CLI-SCRIPT-OUTPUT~%" )\n')
+    quiet_output = cli_case('script-result-quiet', ['script', str(quiet_script)], contains='CLI-SCRIPT-OUTPUT')
+    check(quiet_output.count('CLI-SCRIPT-OUTPUT') == 1 and '"CLI-SCRIPT-OUTPUT' not in quiet_output,
+          'CLI script does not echo its final string result')
+    redefine_script = empty / 'script-redefinition.shen'
+    redefine_script.write_text('(define shen.shen->kl X -> 42)\n(output "SHOULD-NOT-RUN~%")\n')
+    redefine_output = cli_case('script-redefinition', ['script', str(redefine_script)])
+    check('SHOULD-NOT-RUN' not in redefine_output,
+          'CLI script resolves shen.shen->kl after a preceding redefinition')
+    nested = empty / 'nested.shen'
+    nested.write_text('(output "NESTED~%")\n')
+    outer = empty / 'outer.shen'
+    outer.write_text('(load "nested.shen")\n(output "OUTER~%")\n')
+    nested_output = cli_case('script-nested-load', ['script', str(outer)], contains='NESTED')
+    check(nested_output.count('NESTED') == 1 and nested_output.count('OUTER') == 1,
+          'CLI nested script preserves program output without result echoes')
+    error_script = empty / 'script-error.shen'
+    error_script.write_text('(simple-error "script-error")\n')
+    cli_case('script-error', ['script', str(error_script)], fail=True)
     loaded = empty / 'loaded.shen'
     loaded.write_text('(set *toolchain-loaded* 42)\n')
     # Load may print its own normal progress; the subsequent expression is decisive.
