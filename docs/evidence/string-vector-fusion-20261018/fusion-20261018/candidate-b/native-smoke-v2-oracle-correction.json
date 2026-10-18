@@ -1,0 +1,7 @@
+{
+  "native_output": "PASS: exact quoted suffix bytes, length255",
+  "previous_oracle": "incorrectly expected bare CLI format; generated native programs print strings with quotes",
+  "collection_control": "shen.gc is redefined by prolog.kl as a two-argument function; zero-argument application returns a partial function, not collector execution. Host wrapper calls rc_collect with the native result rooted.",
+  "sanitizer": "fatal ASan/UBSan; no runtime diagnostic observed in v2 stderr",
+  "scope": "Does not claim v2 shen.gc invokes the collector."
+}

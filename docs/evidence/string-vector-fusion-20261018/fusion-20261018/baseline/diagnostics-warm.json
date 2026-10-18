@@ -1,0 +1,588 @@
+{
+  "scope": "diagnostic payload counts only; no performance credit",
+  "warmup": "four complete calls before counter reset; avoids the one-call small-input promotion artifact retained under initial-warmup",
+  "probe_sha256": "1bfb2ad970f9fc50a4b53bb372b538cea4c1a7f9921a33bd84e2900c78c01979",
+  "lowered_forms_sha256": "d214f388aff51abf02f67e642aab02af96511d3cfd6387e4d0e401af34e14014",
+  "runs": [
+    {
+      "mode": "concat",
+      "size": 16,
+      "iterations": 1,
+      "cpu_seconds": 1e-06,
+      "allocations": 1,
+      "retains": 3,
+      "releases": 4,
+      "counters": {
+        "strings": 1,
+        "string_payload_bytes": 33,
+        "string_copy_bytes": 32,
+        "concat_calls": 1,
+        "concat_temporary_bytes": 32,
+        "tail_calls": 0,
+        "tail_copy_bytes": 0,
+        "vectors": 0,
+        "vector_slots": 0,
+        "vector_get_calls": 0,
+        "vector_set_calls": 0
+      },
+      "command": [
+        "evidence/rc/fusion-20261018/baseline/probe-diag-warm",
+        "evidence/rc/fusion-20261018/probes.kl",
+        "concat",
+        "16",
+        "1"
+      ]
+    },
+    {
+      "mode": "concat",
+      "size": 256,
+      "iterations": 1,
+      "cpu_seconds": 1e-06,
+      "allocations": 1,
+      "retains": 3,
+      "releases": 4,
+      "counters": {
+        "strings": 1,
+        "string_payload_bytes": 513,
+        "string_copy_bytes": 512,
+        "concat_calls": 1,
+        "concat_temporary_bytes": 512,
+        "tail_calls": 0,
+        "tail_copy_bytes": 0,
+        "vectors": 0,
+        "vector_slots": 0,
+        "vector_get_calls": 0,
+        "vector_set_calls": 0
+      },
+      "command": [
+        "evidence/rc/fusion-20261018/baseline/probe-diag-warm",
+        "evidence/rc/fusion-20261018/probes.kl",
+        "concat",
+        "256",
+        "1"
+      ]
+    },
+    {
+      "mode": "concat",
+      "size": 4096,
+      "iterations": 1,
+      "cpu_seconds": 7e-06,
+      "allocations": 1,
+      "retains": 3,
+      "releases": 4,
+      "counters": {
+        "strings": 1,
+        "string_payload_bytes": 8193,
+        "string_copy_bytes": 8192,
+        "concat_calls": 1,
+        "concat_temporary_bytes": 8192,
+        "tail_calls": 0,
+        "tail_copy_bytes": 0,
+        "vectors": 0,
+        "vector_slots": 0,
+        "vector_get_calls": 0,
+        "vector_set_calls": 0
+      },
+      "command": [
+        "evidence/rc/fusion-20261018/baseline/probe-diag-warm",
+        "evidence/rc/fusion-20261018/probes.kl",
+        "concat",
+        "4096",
+        "1"
+      ]
+    },
+    {
+      "mode": "string-scan",
+      "size": 128,
+      "iterations": 1,
+      "cpu_seconds": 1.8e-05,
+      "allocations": 384,
+      "retains": 1798,
+      "releases": 2182,
+      "counters": {
+        "strings": 256,
+        "string_payload_bytes": 8384,
+        "string_copy_bytes": 8128,
+        "concat_calls": 0,
+        "concat_temporary_bytes": 0,
+        "tail_calls": 128,
+        "tail_copy_bytes": 8128,
+        "vectors": 0,
+        "vector_slots": 0,
+        "vector_get_calls": 0,
+        "vector_set_calls": 0
+      },
+      "command": [
+        "evidence/rc/fusion-20261018/baseline/probe-diag-warm",
+        "evidence/rc/fusion-20261018/probes.kl",
+        "string-scan",
+        "128",
+        "1"
+      ]
+    },
+    {
+      "mode": "string-scan",
+      "size": 512,
+      "iterations": 1,
+      "cpu_seconds": 7.6e-05,
+      "allocations": 1536,
+      "retains": 7174,
+      "releases": 8710,
+      "counters": {
+        "strings": 1024,
+        "string_payload_bytes": 131840,
+        "string_copy_bytes": 130816,
+        "concat_calls": 0,
+        "concat_temporary_bytes": 0,
+        "tail_calls": 512,
+        "tail_copy_bytes": 130816,
+        "vectors": 0,
+        "vector_slots": 0,
+        "vector_get_calls": 0,
+        "vector_set_calls": 0
+      },
+      "command": [
+        "evidence/rc/fusion-20261018/baseline/probe-diag-warm",
+        "evidence/rc/fusion-20261018/probes.kl",
+        "string-scan",
+        "512",
+        "1"
+      ]
+    },
+    {
+      "mode": "string-scan",
+      "size": 2048,
+      "iterations": 1,
+      "cpu_seconds": 0.000317,
+      "allocations": 6144,
+      "retains": 28678,
+      "releases": 34822,
+      "counters": {
+        "strings": 4096,
+        "string_payload_bytes": 2100224,
+        "string_copy_bytes": 2096128,
+        "concat_calls": 0,
+        "concat_temporary_bytes": 0,
+        "tail_calls": 2048,
+        "tail_copy_bytes": 2096128,
+        "vectors": 0,
+        "vector_slots": 0,
+        "vector_get_calls": 0,
+        "vector_set_calls": 0
+      },
+      "command": [
+        "evidence/rc/fusion-20261018/baseline/probe-diag-warm",
+        "evidence/rc/fusion-20261018/probes.kl",
+        "string-scan",
+        "2048",
+        "1"
+      ]
+    },
+    {
+      "mode": "string-scan",
+      "size": 8192,
+      "iterations": 1,
+      "cpu_seconds": 0.001411,
+      "allocations": 24576,
+      "retains": 114694,
+      "releases": 139270,
+      "counters": {
+        "strings": 16384,
+        "string_payload_bytes": 33566720,
+        "string_copy_bytes": 33550336,
+        "concat_calls": 0,
+        "concat_temporary_bytes": 0,
+        "tail_calls": 8192,
+        "tail_copy_bytes": 33550336,
+        "vectors": 0,
+        "vector_slots": 0,
+        "vector_get_calls": 0,
+        "vector_set_calls": 0
+      },
+      "command": [
+        "evidence/rc/fusion-20261018/baseline/probe-diag-warm",
+        "evidence/rc/fusion-20261018/probes.kl",
+        "string-scan",
+        "8192",
+        "1"
+      ]
+    },
+    {
+      "mode": "string-rebuild",
+      "size": 16,
+      "iterations": 1,
+      "cpu_seconds": 5e-06,
+      "allocations": 112,
+      "retains": 327,
+      "releases": 439,
+      "counters": {
+        "strings": 64,
+        "string_payload_bytes": 336,
+        "string_copy_bytes": 272,
+        "concat_calls": 16,
+        "concat_temporary_bytes": 136,
+        "tail_calls": 16,
+        "tail_copy_bytes": 120,
+        "vectors": 0,
+        "vector_slots": 0,
+        "vector_get_calls": 0,
+        "vector_set_calls": 0
+      },
+      "command": [
+        "evidence/rc/fusion-20261018/baseline/probe-diag-warm",
+        "evidence/rc/fusion-20261018/probes.kl",
+        "string-rebuild",
+        "16",
+        "1"
+      ]
+    },
+    {
+      "mode": "string-rebuild",
+      "size": 64,
+      "iterations": 1,
+      "cpu_seconds": 2.1e-05,
+      "allocations": 448,
+      "retains": 1287,
+      "releases": 1735,
+      "counters": {
+        "strings": 256,
+        "string_payload_bytes": 4416,
+        "string_copy_bytes": 4160,
+        "concat_calls": 64,
+        "concat_temporary_bytes": 2080,
+        "tail_calls": 64,
+        "tail_copy_bytes": 2016,
+        "vectors": 0,
+        "vector_slots": 0,
+        "vector_get_calls": 0,
+        "vector_set_calls": 0
+      },
+      "command": [
+        "evidence/rc/fusion-20261018/baseline/probe-diag-warm",
+        "evidence/rc/fusion-20261018/probes.kl",
+        "string-rebuild",
+        "64",
+        "1"
+      ]
+    },
+    {
+      "mode": "string-rebuild",
+      "size": 256,
+      "iterations": 1,
+      "cpu_seconds": 7e-05,
+      "allocations": 1792,
+      "retains": 5127,
+      "releases": 6919,
+      "counters": {
+        "strings": 1024,
+        "string_payload_bytes": 66816,
+        "string_copy_bytes": 65792,
+        "concat_calls": 256,
+        "concat_temporary_bytes": 32896,
+        "tail_calls": 256,
+        "tail_copy_bytes": 32640,
+        "vectors": 0,
+        "vector_slots": 0,
+        "vector_get_calls": 0,
+        "vector_set_calls": 0
+      },
+      "command": [
+        "evidence/rc/fusion-20261018/baseline/probe-diag-warm",
+        "evidence/rc/fusion-20261018/probes.kl",
+        "string-rebuild",
+        "256",
+        "1"
+      ]
+    },
+    {
+      "mode": "string-build",
+      "size": 16,
+      "iterations": 1,
+      "cpu_seconds": 4e-06,
+      "allocations": 48,
+      "retains": 164,
+      "releases": 212,
+      "counters": {
+        "strings": 16,
+        "string_payload_bytes": 152,
+        "string_copy_bytes": 136,
+        "concat_calls": 16,
+        "concat_temporary_bytes": 136,
+        "tail_calls": 0,
+        "tail_copy_bytes": 0,
+        "vectors": 0,
+        "vector_slots": 0,
+        "vector_get_calls": 0,
+        "vector_set_calls": 0
+      },
+      "command": [
+        "evidence/rc/fusion-20261018/baseline/probe-diag-warm",
+        "evidence/rc/fusion-20261018/probes.kl",
+        "string-build",
+        "16",
+        "1"
+      ]
+    },
+    {
+      "mode": "string-build",
+      "size": 64,
+      "iterations": 1,
+      "cpu_seconds": 1.1e-05,
+      "allocations": 192,
+      "retains": 644,
+      "releases": 836,
+      "counters": {
+        "strings": 64,
+        "string_payload_bytes": 2144,
+        "string_copy_bytes": 2080,
+        "concat_calls": 64,
+        "concat_temporary_bytes": 2080,
+        "tail_calls": 0,
+        "tail_copy_bytes": 0,
+        "vectors": 0,
+        "vector_slots": 0,
+        "vector_get_calls": 0,
+        "vector_set_calls": 0
+      },
+      "command": [
+        "evidence/rc/fusion-20261018/baseline/probe-diag-warm",
+        "evidence/rc/fusion-20261018/probes.kl",
+        "string-build",
+        "64",
+        "1"
+      ]
+    },
+    {
+      "mode": "string-build",
+      "size": 256,
+      "iterations": 1,
+      "cpu_seconds": 4e-05,
+      "allocations": 768,
+      "retains": 2564,
+      "releases": 3332,
+      "counters": {
+        "strings": 256,
+        "string_payload_bytes": 33152,
+        "string_copy_bytes": 32896,
+        "concat_calls": 256,
+        "concat_temporary_bytes": 32896,
+        "tail_calls": 0,
+        "tail_copy_bytes": 0,
+        "vectors": 0,
+        "vector_slots": 0,
+        "vector_get_calls": 0,
+        "vector_set_calls": 0
+      },
+      "command": [
+        "evidence/rc/fusion-20261018/baseline/probe-diag-warm",
+        "evidence/rc/fusion-20261018/probes.kl",
+        "string-build",
+        "256",
+        "1"
+      ]
+    },
+    {
+      "mode": "vector-scan",
+      "size": 16,
+      "iterations": 1,
+      "cpu_seconds": 3e-05,
+      "allocations": 293,
+      "retains": 3448,
+      "releases": 3741,
+      "counters": {
+        "strings": 0,
+        "string_payload_bytes": 0,
+        "string_copy_bytes": 0,
+        "concat_calls": 0,
+        "concat_temporary_bytes": 0,
+        "tail_calls": 0,
+        "tail_copy_bytes": 0,
+        "vectors": 47,
+        "vector_slots": 287,
+        "vector_get_calls": 169,
+        "vector_set_calls": 407
+      },
+      "command": [
+        "evidence/rc/fusion-20261018/baseline/probe-diag-warm",
+        "evidence/rc/fusion-20261018/probes.kl",
+        "vector-scan",
+        "16",
+        "1"
+      ]
+    },
+    {
+      "mode": "vector-scan",
+      "size": 64,
+      "iterations": 1,
+      "cpu_seconds": 0.000316,
+      "allocations": 2717,
+      "retains": 49120,
+      "releases": 51837,
+      "counters": {
+        "strings": 0,
+        "string_payload_bytes": 0,
+        "string_copy_bytes": 0,
+        "concat_calls": 0,
+        "concat_temporary_bytes": 0,
+        "tail_calls": 0,
+        "tail_copy_bytes": 0,
+        "vectors": 191,
+        "vector_slots": 4223,
+        "vector_get_calls": 2209,
+        "vector_set_calls": 6239
+      },
+      "command": [
+        "evidence/rc/fusion-20261018/baseline/probe-diag-warm",
+        "evidence/rc/fusion-20261018/probes.kl",
+        "vector-scan",
+        "64",
+        "1"
+      ]
+    },
+    {
+      "mode": "vector-scan",
+      "size": 256,
+      "iterations": 1,
+      "cpu_seconds": 0.00454,
+      "allocations": 35453,
+      "retains": 761728,
+      "releases": 797181,
+      "counters": {
+        "strings": 0,
+        "string_payload_bytes": 0,
+        "string_copy_bytes": 0,
+        "concat_calls": 0,
+        "concat_temporary_bytes": 0,
+        "tail_calls": 0,
+        "tail_copy_bytes": 0,
+        "vectors": 767,
+        "vector_slots": 66047,
+        "vector_get_calls": 33409,
+        "vector_set_calls": 98687
+      },
+      "command": [
+        "evidence/rc/fusion-20261018/baseline/probe-diag-warm",
+        "evidence/rc/fusion-20261018/probes.kl",
+        "vector-scan",
+        "256",
+        "1"
+      ]
+    },
+    {
+      "mode": "vector-scan",
+      "size": 1024,
+      "iterations": 1,
+      "cpu_seconds": 0.071463,
+      "allocations": 535037,
+      "retains": 12090880,
+      "releases": 12625917,
+      "counters": {
+        "strings": 0,
+        "string_payload_bytes": 0,
+        "string_copy_bytes": 0,
+        "concat_calls": 0,
+        "concat_temporary_bytes": 0,
+        "tail_calls": 0,
+        "tail_copy_bytes": 0,
+        "vectors": 3071,
+        "vector_slots": 1050623,
+        "vector_get_calls": 526849,
+        "vector_set_calls": 1574399
+      },
+      "command": [
+        "evidence/rc/fusion-20261018/baseline/probe-diag-warm",
+        "evidence/rc/fusion-20261018/probes.kl",
+        "vector-scan",
+        "1024",
+        "1"
+      ]
+    },
+    {
+      "mode": "vector-build",
+      "size": 16,
+      "iterations": 1,
+      "cpu_seconds": 2.2e-05,
+      "allocations": 232,
+      "retains": 2599,
+      "releases": 2831,
+      "counters": {
+        "strings": 0,
+        "string_payload_bytes": 0,
+        "string_copy_bytes": 0,
+        "concat_calls": 0,
+        "concat_temporary_bytes": 0,
+        "tail_calls": 0,
+        "tail_copy_bytes": 0,
+        "vectors": 17,
+        "vector_slots": 153,
+        "vector_get_calls": 136,
+        "vector_set_calls": 289
+      },
+      "command": [
+        "evidence/rc/fusion-20261018/baseline/probe-diag-warm",
+        "evidence/rc/fusion-20261018/probes.kl",
+        "vector-build",
+        "16",
+        "1"
+      ]
+    },
+    {
+      "mode": "vector-build",
+      "size": 64,
+      "iterations": 1,
+      "cpu_seconds": 0.000266,
+      "allocations": 2464,
+      "retains": 38023,
+      "releases": 40487,
+      "counters": {
+        "strings": 0,
+        "string_payload_bytes": 0,
+        "string_copy_bytes": 0,
+        "concat_calls": 0,
+        "concat_temporary_bytes": 0,
+        "tail_calls": 0,
+        "tail_copy_bytes": 0,
+        "vectors": 65,
+        "vector_slots": 2145,
+        "vector_get_calls": 2080,
+        "vector_set_calls": 4225
+      },
+      "command": [
+        "evidence/rc/fusion-20261018/baseline/probe-diag-warm",
+        "evidence/rc/fusion-20261018/probes.kl",
+        "vector-build",
+        "64",
+        "1"
+      ]
+    },
+    {
+      "mode": "vector-build",
+      "size": 256,
+      "iterations": 1,
+      "cpu_seconds": 0.003777,
+      "allocations": 34432,
+      "retains": 594439,
+      "releases": 628871,
+      "counters": {
+        "strings": 0,
+        "string_payload_bytes": 0,
+        "string_copy_bytes": 0,
+        "concat_calls": 0,
+        "concat_temporary_bytes": 0,
+        "tail_calls": 0,
+        "tail_copy_bytes": 0,
+        "vectors": 257,
+        "vector_slots": 33153,
+        "vector_get_calls": 32896,
+        "vector_set_calls": 66049
+      },
+      "command": [
+        "evidence/rc/fusion-20261018/baseline/probe-diag-warm",
+        "evidence/rc/fusion-20261018/probes.kl",
+        "vector-build",
+        "256",
+        "1"
+      ]
+    }
+  ]
+}

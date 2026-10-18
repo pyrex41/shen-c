@@ -1,0 +1,3310 @@
+{
+  "scope": "Exploratory phase CPU (user plus system), including oracle and result release; setup, input allocation, source loading and four warmup calls excluded. Not a whole-suite or quiet-host performance claim.",
+  "frozen_sha256": {
+    "<OPT_ROOT>/evidence/rc/fusion-20261018/baseline/probe-warm": "fc79d7954004cff825b2d01df9c2c1be3922fbbabb559b9b606bff1b6e89fff5",
+    "<OPT_ROOT>/evidence/rc/fusion-20261018/candidate-a/probe": "753c1beb3ea79cff3a75690356b5f400ca747fe78ade75c71fdf77224e39ea6e",
+    "<OPT_ROOT>/evidence/rc/fusion-20261018/probes.kl": "d214f388aff51abf02f67e642aab02af96511d3cfd6387e4d0e401af34e14014"
+  },
+  "runs": [
+    {
+      "case": "concat",
+      "size": 16,
+      "repetition": 1,
+      "label": "baseline",
+      "command": [
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/baseline/probe-warm",
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/probes.kl",
+        "concat",
+        "16",
+        "500000"
+      ],
+      "exit": 0,
+      "process_wall_seconds": 0.2814045,
+      "stdout_sha256": "97cfa94637edbe8431472391ac02c627932dfddbe9ed70623018589a842935e2",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": {
+        "mode": "concat",
+        "size": 16,
+        "iterations": 500000,
+        "cpu_seconds": 0.018461,
+        "allocations": 500000,
+        "retains": 1500000,
+        "releases": 2000000,
+        "counters": {
+          "strings": 0,
+          "string_payload_bytes": 0,
+          "string_copy_bytes": 0,
+          "concat_calls": 0,
+          "concat_temporary_bytes": 0,
+          "tail_calls": 0,
+          "tail_copy_bytes": 0,
+          "vectors": 0,
+          "vector_slots": 0,
+          "vector_get_calls": 0,
+          "vector_set_calls": 0
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "case": "concat",
+      "size": 16,
+      "repetition": 1,
+      "label": "candidate",
+      "command": [
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/candidate-a/probe",
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/probes.kl",
+        "concat",
+        "16",
+        "500000"
+      ],
+      "exit": 0,
+      "process_wall_seconds": 0.16381175000000003,
+      "stdout_sha256": "37c6a1702e62b246bf2b3aa375df5de5099d668b28ecbdf2253d61e69d281405",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": {
+        "mode": "concat",
+        "size": 16,
+        "iterations": 500000,
+        "cpu_seconds": 0.014579,
+        "allocations": 500000,
+        "retains": 1500000,
+        "releases": 2000000,
+        "counters": {
+          "strings": 0,
+          "string_payload_bytes": 0,
+          "string_copy_bytes": 0,
+          "concat_calls": 0,
+          "concat_temporary_bytes": 0,
+          "tail_calls": 0,
+          "tail_copy_bytes": 0,
+          "vectors": 0,
+          "vector_slots": 0,
+          "vector_get_calls": 0,
+          "vector_set_calls": 0
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "case": "concat",
+      "size": 16,
+      "repetition": 2,
+      "label": "candidate",
+      "command": [
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/candidate-a/probe",
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/probes.kl",
+        "concat",
+        "16",
+        "500000"
+      ],
+      "exit": 0,
+      "process_wall_seconds": 0.02786566700000004,
+      "stdout_sha256": "3947749410d7dc3dbbd90a51a57ed66bf30c2dc426215162c1b53b2b35c62548",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": {
+        "mode": "concat",
+        "size": 16,
+        "iterations": 500000,
+        "cpu_seconds": 0.014449,
+        "allocations": 500000,
+        "retains": 1500000,
+        "releases": 2000000,
+        "counters": {
+          "strings": 0,
+          "string_payload_bytes": 0,
+          "string_copy_bytes": 0,
+          "concat_calls": 0,
+          "concat_temporary_bytes": 0,
+          "tail_calls": 0,
+          "tail_copy_bytes": 0,
+          "vectors": 0,
+          "vector_slots": 0,
+          "vector_get_calls": 0,
+          "vector_set_calls": 0
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "case": "concat",
+      "size": 16,
+      "repetition": 2,
+      "label": "baseline",
+      "command": [
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/baseline/probe-warm",
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/probes.kl",
+        "concat",
+        "16",
+        "500000"
+      ],
+      "exit": 0,
+      "process_wall_seconds": 0.03372462499999995,
+      "stdout_sha256": "ee10d7bd618ecd253915f8191f709171f971006582cc5b406678700936d2c3da",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": {
+        "mode": "concat",
+        "size": 16,
+        "iterations": 500000,
+        "cpu_seconds": 0.020841,
+        "allocations": 500000,
+        "retains": 1500000,
+        "releases": 2000000,
+        "counters": {
+          "strings": 0,
+          "string_payload_bytes": 0,
+          "string_copy_bytes": 0,
+          "concat_calls": 0,
+          "concat_temporary_bytes": 0,
+          "tail_calls": 0,
+          "tail_copy_bytes": 0,
+          "vectors": 0,
+          "vector_slots": 0,
+          "vector_get_calls": 0,
+          "vector_set_calls": 0
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "case": "concat",
+      "size": 16,
+      "repetition": 3,
+      "label": "baseline",
+      "command": [
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/baseline/probe-warm",
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/probes.kl",
+        "concat",
+        "16",
+        "500000"
+      ],
+      "exit": 0,
+      "process_wall_seconds": 0.03923333299999998,
+      "stdout_sha256": "9fd88d2726c24d6fbcc57ddbe03eabacbe0c4639c20b5ace8aaa7d2a7153af20",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": {
+        "mode": "concat",
+        "size": 16,
+        "iterations": 500000,
+        "cpu_seconds": 0.018281,
+        "allocations": 500000,
+        "retains": 1500000,
+        "releases": 2000000,
+        "counters": {
+          "strings": 0,
+          "string_payload_bytes": 0,
+          "string_copy_bytes": 0,
+          "concat_calls": 0,
+          "concat_temporary_bytes": 0,
+          "tail_calls": 0,
+          "tail_copy_bytes": 0,
+          "vectors": 0,
+          "vector_slots": 0,
+          "vector_get_calls": 0,
+          "vector_set_calls": 0
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "case": "concat",
+      "size": 16,
+      "repetition": 3,
+      "label": "candidate",
+      "command": [
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/candidate-a/probe",
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/probes.kl",
+        "concat",
+        "16",
+        "500000"
+      ],
+      "exit": 0,
+      "process_wall_seconds": 0.030301374999999964,
+      "stdout_sha256": "204b5cfd534642a07c5045fb8d939163197dbb8c2fcb4b9b5682132ef8c992e8",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": {
+        "mode": "concat",
+        "size": 16,
+        "iterations": 500000,
+        "cpu_seconds": 0.016828,
+        "allocations": 500000,
+        "retains": 1500000,
+        "releases": 2000000,
+        "counters": {
+          "strings": 0,
+          "string_payload_bytes": 0,
+          "string_copy_bytes": 0,
+          "concat_calls": 0,
+          "concat_temporary_bytes": 0,
+          "tail_calls": 0,
+          "tail_copy_bytes": 0,
+          "vectors": 0,
+          "vector_slots": 0,
+          "vector_get_calls": 0,
+          "vector_set_calls": 0
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "case": "concat",
+      "size": 16,
+      "repetition": 4,
+      "label": "candidate",
+      "command": [
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/candidate-a/probe",
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/probes.kl",
+        "concat",
+        "16",
+        "500000"
+      ],
+      "exit": 0,
+      "process_wall_seconds": 0.029692041999999974,
+      "stdout_sha256": "efb5e45ab8c85d3d0d206092b399e4d22c246668cfd845ab6d81692402ab3278",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": {
+        "mode": "concat",
+        "size": 16,
+        "iterations": 500000,
+        "cpu_seconds": 0.015675,
+        "allocations": 500000,
+        "retains": 1500000,
+        "releases": 2000000,
+        "counters": {
+          "strings": 0,
+          "string_payload_bytes": 0,
+          "string_copy_bytes": 0,
+          "concat_calls": 0,
+          "concat_temporary_bytes": 0,
+          "tail_calls": 0,
+          "tail_copy_bytes": 0,
+          "vectors": 0,
+          "vector_slots": 0,
+          "vector_get_calls": 0,
+          "vector_set_calls": 0
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "case": "concat",
+      "size": 16,
+      "repetition": 4,
+      "label": "baseline",
+      "command": [
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/baseline/probe-warm",
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/probes.kl",
+        "concat",
+        "16",
+        "500000"
+      ],
+      "exit": 0,
+      "process_wall_seconds": 0.03199354200000004,
+      "stdout_sha256": "7a1f735bd49869644b2e5ed258c63af18bddcb11689a015ee62e908a9e36a90e",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": {
+        "mode": "concat",
+        "size": 16,
+        "iterations": 500000,
+        "cpu_seconds": 0.018627,
+        "allocations": 500000,
+        "retains": 1500000,
+        "releases": 2000000,
+        "counters": {
+          "strings": 0,
+          "string_payload_bytes": 0,
+          "string_copy_bytes": 0,
+          "concat_calls": 0,
+          "concat_temporary_bytes": 0,
+          "tail_calls": 0,
+          "tail_copy_bytes": 0,
+          "vectors": 0,
+          "vector_slots": 0,
+          "vector_get_calls": 0,
+          "vector_set_calls": 0
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "case": "concat",
+      "size": 16,
+      "repetition": 5,
+      "label": "baseline",
+      "command": [
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/baseline/probe-warm",
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/probes.kl",
+        "concat",
+        "16",
+        "500000"
+      ],
+      "exit": 0,
+      "process_wall_seconds": 0.03440633300000007,
+      "stdout_sha256": "d48b1ec1a25d5c05cd2b2c4ce1683ca2b4386ff54a355a5090bb967429c8eae4",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": {
+        "mode": "concat",
+        "size": 16,
+        "iterations": 500000,
+        "cpu_seconds": 0.019823,
+        "allocations": 500000,
+        "retains": 1500000,
+        "releases": 2000000,
+        "counters": {
+          "strings": 0,
+          "string_payload_bytes": 0,
+          "string_copy_bytes": 0,
+          "concat_calls": 0,
+          "concat_temporary_bytes": 0,
+          "tail_calls": 0,
+          "tail_copy_bytes": 0,
+          "vectors": 0,
+          "vector_slots": 0,
+          "vector_get_calls": 0,
+          "vector_set_calls": 0
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "case": "concat",
+      "size": 16,
+      "repetition": 5,
+      "label": "candidate",
+      "command": [
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/candidate-a/probe",
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/probes.kl",
+        "concat",
+        "16",
+        "500000"
+      ],
+      "exit": 0,
+      "process_wall_seconds": 0.02982979200000002,
+      "stdout_sha256": "62d305d38a4ff851d7bc3a8bb7a959eb87a9d11a7ba82ae221c1fb4abffd91e3",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": {
+        "mode": "concat",
+        "size": 16,
+        "iterations": 500000,
+        "cpu_seconds": 0.015913,
+        "allocations": 500000,
+        "retains": 1500000,
+        "releases": 2000000,
+        "counters": {
+          "strings": 0,
+          "string_payload_bytes": 0,
+          "string_copy_bytes": 0,
+          "concat_calls": 0,
+          "concat_temporary_bytes": 0,
+          "tail_calls": 0,
+          "tail_copy_bytes": 0,
+          "vectors": 0,
+          "vector_slots": 0,
+          "vector_get_calls": 0,
+          "vector_set_calls": 0
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "case": "concat",
+      "size": 256,
+      "repetition": 1,
+      "label": "baseline",
+      "command": [
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/baseline/probe-warm",
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/probes.kl",
+        "concat",
+        "256",
+        "131072"
+      ],
+      "exit": 0,
+      "process_wall_seconds": 0.025017500000000026,
+      "stdout_sha256": "ec875e638a46d1be4856ffd2e13b50ab558a5074caecf918ea77342ec72d48b0",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": {
+        "mode": "concat",
+        "size": 256,
+        "iterations": 131072,
+        "cpu_seconds": 0.008947,
+        "allocations": 131072,
+        "retains": 393216,
+        "releases": 524288,
+        "counters": {
+          "strings": 0,
+          "string_payload_bytes": 0,
+          "string_copy_bytes": 0,
+          "concat_calls": 0,
+          "concat_temporary_bytes": 0,
+          "tail_calls": 0,
+          "tail_copy_bytes": 0,
+          "vectors": 0,
+          "vector_slots": 0,
+          "vector_get_calls": 0,
+          "vector_set_calls": 0
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "case": "concat",
+      "size": 256,
+      "repetition": 1,
+      "label": "candidate",
+      "command": [
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/candidate-a/probe",
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/probes.kl",
+        "concat",
+        "256",
+        "131072"
+      ],
+      "exit": 0,
+      "process_wall_seconds": 0.021835625000000025,
+      "stdout_sha256": "c426d38bb7dfa2894513e53a9ed6c338a68b49c38d523a67d89cb908fe751d3b",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": {
+        "mode": "concat",
+        "size": 256,
+        "iterations": 131072,
+        "cpu_seconds": 0.006441,
+        "allocations": 131072,
+        "retains": 393216,
+        "releases": 524288,
+        "counters": {
+          "strings": 0,
+          "string_payload_bytes": 0,
+          "string_copy_bytes": 0,
+          "concat_calls": 0,
+          "concat_temporary_bytes": 0,
+          "tail_calls": 0,
+          "tail_copy_bytes": 0,
+          "vectors": 0,
+          "vector_slots": 0,
+          "vector_get_calls": 0,
+          "vector_set_calls": 0
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "case": "concat",
+      "size": 256,
+      "repetition": 2,
+      "label": "candidate",
+      "command": [
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/candidate-a/probe",
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/probes.kl",
+        "concat",
+        "256",
+        "131072"
+      ],
+      "exit": 0,
+      "process_wall_seconds": 0.019619040999999893,
+      "stdout_sha256": "e630892325c20fcb454605ad6060b42ba5eaca94166fc333e23c17bd5f4b41d1",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": {
+        "mode": "concat",
+        "size": 256,
+        "iterations": 131072,
+        "cpu_seconds": 0.006076,
+        "allocations": 131072,
+        "retains": 393216,
+        "releases": 524288,
+        "counters": {
+          "strings": 0,
+          "string_payload_bytes": 0,
+          "string_copy_bytes": 0,
+          "concat_calls": 0,
+          "concat_temporary_bytes": 0,
+          "tail_calls": 0,
+          "tail_copy_bytes": 0,
+          "vectors": 0,
+          "vector_slots": 0,
+          "vector_get_calls": 0,
+          "vector_set_calls": 0
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "case": "concat",
+      "size": 256,
+      "repetition": 2,
+      "label": "baseline",
+      "command": [
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/baseline/probe-warm",
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/probes.kl",
+        "concat",
+        "256",
+        "131072"
+      ],
+      "exit": 0,
+      "process_wall_seconds": 0.022679166000000084,
+      "stdout_sha256": "30a872b3ce5891b35eaf26783d967f18b545ade8d94e1ca67b2f16d4fac82b37",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": {
+        "mode": "concat",
+        "size": 256,
+        "iterations": 131072,
+        "cpu_seconds": 0.009168,
+        "allocations": 131072,
+        "retains": 393216,
+        "releases": 524288,
+        "counters": {
+          "strings": 0,
+          "string_payload_bytes": 0,
+          "string_copy_bytes": 0,
+          "concat_calls": 0,
+          "concat_temporary_bytes": 0,
+          "tail_calls": 0,
+          "tail_copy_bytes": 0,
+          "vectors": 0,
+          "vector_slots": 0,
+          "vector_get_calls": 0,
+          "vector_set_calls": 0
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "case": "concat",
+      "size": 256,
+      "repetition": 3,
+      "label": "baseline",
+      "command": [
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/baseline/probe-warm",
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/probes.kl",
+        "concat",
+        "256",
+        "131072"
+      ],
+      "exit": 0,
+      "process_wall_seconds": 0.023566124999999882,
+      "stdout_sha256": "6261be425d182352af4ebdb10b67d26dc043c25713c29a345e7ad89ecea6c19a",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": {
+        "mode": "concat",
+        "size": 256,
+        "iterations": 131072,
+        "cpu_seconds": 0.009494,
+        "allocations": 131072,
+        "retains": 393216,
+        "releases": 524288,
+        "counters": {
+          "strings": 0,
+          "string_payload_bytes": 0,
+          "string_copy_bytes": 0,
+          "concat_calls": 0,
+          "concat_temporary_bytes": 0,
+          "tail_calls": 0,
+          "tail_copy_bytes": 0,
+          "vectors": 0,
+          "vector_slots": 0,
+          "vector_get_calls": 0,
+          "vector_set_calls": 0
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "case": "concat",
+      "size": 256,
+      "repetition": 3,
+      "label": "candidate",
+      "command": [
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/candidate-a/probe",
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/probes.kl",
+        "concat",
+        "256",
+        "131072"
+      ],
+      "exit": 0,
+      "process_wall_seconds": 0.022331667,
+      "stdout_sha256": "8c61e2bb3ac455179aaea49243964ac8794f92bfd91dff29553c3a1967621482",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": {
+        "mode": "concat",
+        "size": 256,
+        "iterations": 131072,
+        "cpu_seconds": 0.006095,
+        "allocations": 131072,
+        "retains": 393216,
+        "releases": 524288,
+        "counters": {
+          "strings": 0,
+          "string_payload_bytes": 0,
+          "string_copy_bytes": 0,
+          "concat_calls": 0,
+          "concat_temporary_bytes": 0,
+          "tail_calls": 0,
+          "tail_copy_bytes": 0,
+          "vectors": 0,
+          "vector_slots": 0,
+          "vector_get_calls": 0,
+          "vector_set_calls": 0
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "case": "concat",
+      "size": 256,
+      "repetition": 4,
+      "label": "candidate",
+      "command": [
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/candidate-a/probe",
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/probes.kl",
+        "concat",
+        "256",
+        "131072"
+      ],
+      "exit": 0,
+      "process_wall_seconds": 0.02099812499999998,
+      "stdout_sha256": "37dba4371032d51111000ef0c71eef2813d22d06f71236cc7d8c4515f84e2449",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": {
+        "mode": "concat",
+        "size": 256,
+        "iterations": 131072,
+        "cpu_seconds": 0.006416,
+        "allocations": 131072,
+        "retains": 393216,
+        "releases": 524288,
+        "counters": {
+          "strings": 0,
+          "string_payload_bytes": 0,
+          "string_copy_bytes": 0,
+          "concat_calls": 0,
+          "concat_temporary_bytes": 0,
+          "tail_calls": 0,
+          "tail_copy_bytes": 0,
+          "vectors": 0,
+          "vector_slots": 0,
+          "vector_get_calls": 0,
+          "vector_set_calls": 0
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "case": "concat",
+      "size": 256,
+      "repetition": 4,
+      "label": "baseline",
+      "command": [
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/baseline/probe-warm",
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/probes.kl",
+        "concat",
+        "256",
+        "131072"
+      ],
+      "exit": 0,
+      "process_wall_seconds": 0.022658959000000145,
+      "stdout_sha256": "f2fb251c4391761ecfb66ea4bbcb6659a45965ca4ac201d5e99ac0d81d356e99",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": {
+        "mode": "concat",
+        "size": 256,
+        "iterations": 131072,
+        "cpu_seconds": 0.008909,
+        "allocations": 131072,
+        "retains": 393216,
+        "releases": 524288,
+        "counters": {
+          "strings": 0,
+          "string_payload_bytes": 0,
+          "string_copy_bytes": 0,
+          "concat_calls": 0,
+          "concat_temporary_bytes": 0,
+          "tail_calls": 0,
+          "tail_copy_bytes": 0,
+          "vectors": 0,
+          "vector_slots": 0,
+          "vector_get_calls": 0,
+          "vector_set_calls": 0
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "case": "concat",
+      "size": 256,
+      "repetition": 5,
+      "label": "baseline",
+      "command": [
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/baseline/probe-warm",
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/probes.kl",
+        "concat",
+        "256",
+        "131072"
+      ],
+      "exit": 0,
+      "process_wall_seconds": 0.02291587500000003,
+      "stdout_sha256": "f74e864ed46121bab3f02c239e8c23b8a8f6c795e233519bb31ee1c246544c1c",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": {
+        "mode": "concat",
+        "size": 256,
+        "iterations": 131072,
+        "cpu_seconds": 0.008501,
+        "allocations": 131072,
+        "retains": 393216,
+        "releases": 524288,
+        "counters": {
+          "strings": 0,
+          "string_payload_bytes": 0,
+          "string_copy_bytes": 0,
+          "concat_calls": 0,
+          "concat_temporary_bytes": 0,
+          "tail_calls": 0,
+          "tail_copy_bytes": 0,
+          "vectors": 0,
+          "vector_slots": 0,
+          "vector_get_calls": 0,
+          "vector_set_calls": 0
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "case": "concat",
+      "size": 256,
+      "repetition": 5,
+      "label": "candidate",
+      "command": [
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/candidate-a/probe",
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/probes.kl",
+        "concat",
+        "256",
+        "131072"
+      ],
+      "exit": 0,
+      "process_wall_seconds": 0.018781584000000073,
+      "stdout_sha256": "5470711322ecb4769cd92e35bfa26bfe77734285f19f7038391489bbaf9450dd",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": {
+        "mode": "concat",
+        "size": 256,
+        "iterations": 131072,
+        "cpu_seconds": 0.005822,
+        "allocations": 131072,
+        "retains": 393216,
+        "releases": 524288,
+        "counters": {
+          "strings": 0,
+          "string_payload_bytes": 0,
+          "string_copy_bytes": 0,
+          "concat_calls": 0,
+          "concat_temporary_bytes": 0,
+          "tail_calls": 0,
+          "tail_copy_bytes": 0,
+          "vectors": 0,
+          "vector_slots": 0,
+          "vector_get_calls": 0,
+          "vector_set_calls": 0
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "case": "concat",
+      "size": 4096,
+      "repetition": 1,
+      "label": "baseline",
+      "command": [
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/baseline/probe-warm",
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/probes.kl",
+        "concat",
+        "4096",
+        "32768"
+      ],
+      "exit": 0,
+      "process_wall_seconds": 0.024977166999999856,
+      "stdout_sha256": "be2a093e44167b49979115169609127fdf5a59340c7440b85782ff60af6fb627",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": {
+        "mode": "concat",
+        "size": 4096,
+        "iterations": 32768,
+        "cpu_seconds": 0.011673,
+        "allocations": 32768,
+        "retains": 98304,
+        "releases": 131072,
+        "counters": {
+          "strings": 0,
+          "string_payload_bytes": 0,
+          "string_copy_bytes": 0,
+          "concat_calls": 0,
+          "concat_temporary_bytes": 0,
+          "tail_calls": 0,
+          "tail_copy_bytes": 0,
+          "vectors": 0,
+          "vector_slots": 0,
+          "vector_get_calls": 0,
+          "vector_set_calls": 0
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "case": "concat",
+      "size": 4096,
+      "repetition": 1,
+      "label": "candidate",
+      "command": [
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/candidate-a/probe",
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/probes.kl",
+        "concat",
+        "4096",
+        "32768"
+      ],
+      "exit": 0,
+      "process_wall_seconds": 0.022109208000000047,
+      "stdout_sha256": "58a0d7d8fdd2ea79541aafd5ac6c2ae24d067a4438d3d13e7087a17ff44d975d",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": {
+        "mode": "concat",
+        "size": 4096,
+        "iterations": 32768,
+        "cpu_seconds": 0.008648,
+        "allocations": 32768,
+        "retains": 98304,
+        "releases": 131072,
+        "counters": {
+          "strings": 0,
+          "string_payload_bytes": 0,
+          "string_copy_bytes": 0,
+          "concat_calls": 0,
+          "concat_temporary_bytes": 0,
+          "tail_calls": 0,
+          "tail_copy_bytes": 0,
+          "vectors": 0,
+          "vector_slots": 0,
+          "vector_get_calls": 0,
+          "vector_set_calls": 0
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "case": "concat",
+      "size": 4096,
+      "repetition": 2,
+      "label": "candidate",
+      "command": [
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/candidate-a/probe",
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/probes.kl",
+        "concat",
+        "4096",
+        "32768"
+      ],
+      "exit": 0,
+      "process_wall_seconds": 0.021307374999999906,
+      "stdout_sha256": "1c2031898d24b0424aa9ec528e599607fde5b9b3b82545530294e05edf6f6f34",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": {
+        "mode": "concat",
+        "size": 4096,
+        "iterations": 32768,
+        "cpu_seconds": 0.008615,
+        "allocations": 32768,
+        "retains": 98304,
+        "releases": 131072,
+        "counters": {
+          "strings": 0,
+          "string_payload_bytes": 0,
+          "string_copy_bytes": 0,
+          "concat_calls": 0,
+          "concat_temporary_bytes": 0,
+          "tail_calls": 0,
+          "tail_copy_bytes": 0,
+          "vectors": 0,
+          "vector_slots": 0,
+          "vector_get_calls": 0,
+          "vector_set_calls": 0
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "case": "concat",
+      "size": 4096,
+      "repetition": 2,
+      "label": "baseline",
+      "command": [
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/baseline/probe-warm",
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/probes.kl",
+        "concat",
+        "4096",
+        "32768"
+      ],
+      "exit": 0,
+      "process_wall_seconds": 0.02674537499999996,
+      "stdout_sha256": "fdc60cb2a24d67d34e316c1d3d9945454043d77406a1ab6a9304422975e73697",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": {
+        "mode": "concat",
+        "size": 4096,
+        "iterations": 32768,
+        "cpu_seconds": 0.012679,
+        "allocations": 32768,
+        "retains": 98304,
+        "releases": 131072,
+        "counters": {
+          "strings": 0,
+          "string_payload_bytes": 0,
+          "string_copy_bytes": 0,
+          "concat_calls": 0,
+          "concat_temporary_bytes": 0,
+          "tail_calls": 0,
+          "tail_copy_bytes": 0,
+          "vectors": 0,
+          "vector_slots": 0,
+          "vector_get_calls": 0,
+          "vector_set_calls": 0
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "case": "concat",
+      "size": 4096,
+      "repetition": 3,
+      "label": "baseline",
+      "command": [
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/baseline/probe-warm",
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/probes.kl",
+        "concat",
+        "4096",
+        "32768"
+      ],
+      "exit": 0,
+      "process_wall_seconds": 0.026021000000000072,
+      "stdout_sha256": "0d9913e05a350b4f4e229cd5535a538a09c0b8b04f4f4d0a048c63a0d237f756",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": {
+        "mode": "concat",
+        "size": 4096,
+        "iterations": 32768,
+        "cpu_seconds": 0.012532,
+        "allocations": 32768,
+        "retains": 98304,
+        "releases": 131072,
+        "counters": {
+          "strings": 0,
+          "string_payload_bytes": 0,
+          "string_copy_bytes": 0,
+          "concat_calls": 0,
+          "concat_temporary_bytes": 0,
+          "tail_calls": 0,
+          "tail_copy_bytes": 0,
+          "vectors": 0,
+          "vector_slots": 0,
+          "vector_get_calls": 0,
+          "vector_set_calls": 0
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "case": "concat",
+      "size": 4096,
+      "repetition": 3,
+      "label": "candidate",
+      "command": [
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/candidate-a/probe",
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/probes.kl",
+        "concat",
+        "4096",
+        "32768"
+      ],
+      "exit": 0,
+      "process_wall_seconds": 0.022930540999999804,
+      "stdout_sha256": "7bfea1e08e9570d71b25e654d18dfc1e9e8dcfb32ab5bf8a61bbe36a72f78617",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": {
+        "mode": "concat",
+        "size": 4096,
+        "iterations": 32768,
+        "cpu_seconds": 0.009193,
+        "allocations": 32768,
+        "retains": 98304,
+        "releases": 131072,
+        "counters": {
+          "strings": 0,
+          "string_payload_bytes": 0,
+          "string_copy_bytes": 0,
+          "concat_calls": 0,
+          "concat_temporary_bytes": 0,
+          "tail_calls": 0,
+          "tail_copy_bytes": 0,
+          "vectors": 0,
+          "vector_slots": 0,
+          "vector_get_calls": 0,
+          "vector_set_calls": 0
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "case": "concat",
+      "size": 4096,
+      "repetition": 4,
+      "label": "candidate",
+      "command": [
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/candidate-a/probe",
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/probes.kl",
+        "concat",
+        "4096",
+        "32768"
+      ],
+      "exit": 0,
+      "process_wall_seconds": 0.023276249999999887,
+      "stdout_sha256": "fabc3829589580385a2d80e15f2c5e34ee3a3771c323cd824ffb5cd2c04d3777",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": {
+        "mode": "concat",
+        "size": 4096,
+        "iterations": 32768,
+        "cpu_seconds": 0.009274,
+        "allocations": 32768,
+        "retains": 98304,
+        "releases": 131072,
+        "counters": {
+          "strings": 0,
+          "string_payload_bytes": 0,
+          "string_copy_bytes": 0,
+          "concat_calls": 0,
+          "concat_temporary_bytes": 0,
+          "tail_calls": 0,
+          "tail_copy_bytes": 0,
+          "vectors": 0,
+          "vector_slots": 0,
+          "vector_get_calls": 0,
+          "vector_set_calls": 0
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "case": "concat",
+      "size": 4096,
+      "repetition": 4,
+      "label": "baseline",
+      "command": [
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/baseline/probe-warm",
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/probes.kl",
+        "concat",
+        "4096",
+        "32768"
+      ],
+      "exit": 0,
+      "process_wall_seconds": 0.028248542000000043,
+      "stdout_sha256": "f8036c874b3707f3c804cc52e53a8a1ebb520d39d6c85e8cefd16a057a6dbccc",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": {
+        "mode": "concat",
+        "size": 4096,
+        "iterations": 32768,
+        "cpu_seconds": 0.011737,
+        "allocations": 32768,
+        "retains": 98304,
+        "releases": 131072,
+        "counters": {
+          "strings": 0,
+          "string_payload_bytes": 0,
+          "string_copy_bytes": 0,
+          "concat_calls": 0,
+          "concat_temporary_bytes": 0,
+          "tail_calls": 0,
+          "tail_copy_bytes": 0,
+          "vectors": 0,
+          "vector_slots": 0,
+          "vector_get_calls": 0,
+          "vector_set_calls": 0
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "case": "concat",
+      "size": 4096,
+      "repetition": 5,
+      "label": "baseline",
+      "command": [
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/baseline/probe-warm",
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/probes.kl",
+        "concat",
+        "4096",
+        "32768"
+      ],
+      "exit": 0,
+      "process_wall_seconds": 0.025139041999999945,
+      "stdout_sha256": "94dedd5040d26fd64be7a2fc563aee85e5028460ae9a066fe038bbe9c7fd4646",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": {
+        "mode": "concat",
+        "size": 4096,
+        "iterations": 32768,
+        "cpu_seconds": 0.011778,
+        "allocations": 32768,
+        "retains": 98304,
+        "releases": 131072,
+        "counters": {
+          "strings": 0,
+          "string_payload_bytes": 0,
+          "string_copy_bytes": 0,
+          "concat_calls": 0,
+          "concat_temporary_bytes": 0,
+          "tail_calls": 0,
+          "tail_copy_bytes": 0,
+          "vectors": 0,
+          "vector_slots": 0,
+          "vector_get_calls": 0,
+          "vector_set_calls": 0
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "case": "concat",
+      "size": 4096,
+      "repetition": 5,
+      "label": "candidate",
+      "command": [
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/candidate-a/probe",
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/probes.kl",
+        "concat",
+        "4096",
+        "32768"
+      ],
+      "exit": 0,
+      "process_wall_seconds": 0.021574208000000095,
+      "stdout_sha256": "b151140e509f842695ca4f43b7d6c7f1e330723e8874bfe5d8a94510b540a7bb",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": {
+        "mode": "concat",
+        "size": 4096,
+        "iterations": 32768,
+        "cpu_seconds": 0.00871,
+        "allocations": 32768,
+        "retains": 98304,
+        "releases": 131072,
+        "counters": {
+          "strings": 0,
+          "string_payload_bytes": 0,
+          "string_copy_bytes": 0,
+          "concat_calls": 0,
+          "concat_temporary_bytes": 0,
+          "tail_calls": 0,
+          "tail_copy_bytes": 0,
+          "vectors": 0,
+          "vector_slots": 0,
+          "vector_get_calls": 0,
+          "vector_set_calls": 0
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "case": "string-scan",
+      "size": 2048,
+      "repetition": 1,
+      "label": "baseline",
+      "command": [
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/baseline/probe-warm",
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/probes.kl",
+        "string-scan",
+        "2048",
+        "128"
+      ],
+      "exit": 0,
+      "process_wall_seconds": 0.05260454200000009,
+      "stdout_sha256": "bbbd85d0c8341051938a3ba6dcef4c26836fdaeec2034adb6f15ba36eb2ba55a",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": {
+        "mode": "string-scan",
+        "size": 2048,
+        "iterations": 128,
+        "cpu_seconds": 0.038343,
+        "allocations": 786432,
+        "retains": 3670784,
+        "releases": 4457216,
+        "counters": {
+          "strings": 0,
+          "string_payload_bytes": 0,
+          "string_copy_bytes": 0,
+          "concat_calls": 0,
+          "concat_temporary_bytes": 0,
+          "tail_calls": 0,
+          "tail_copy_bytes": 0,
+          "vectors": 0,
+          "vector_slots": 0,
+          "vector_get_calls": 0,
+          "vector_set_calls": 0
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "case": "string-scan",
+      "size": 2048,
+      "repetition": 1,
+      "label": "candidate",
+      "command": [
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/candidate-a/probe",
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/probes.kl",
+        "string-scan",
+        "2048",
+        "128"
+      ],
+      "exit": 0,
+      "process_wall_seconds": 0.05521579100000018,
+      "stdout_sha256": "4f9d37644c067b8d78e2bc511d77628a247562739593047876c3ad9e5ee4f32f",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": {
+        "mode": "string-scan",
+        "size": 2048,
+        "iterations": 128,
+        "cpu_seconds": 0.039022,
+        "allocations": 786432,
+        "retains": 3670784,
+        "releases": 4457216,
+        "counters": {
+          "strings": 0,
+          "string_payload_bytes": 0,
+          "string_copy_bytes": 0,
+          "concat_calls": 0,
+          "concat_temporary_bytes": 0,
+          "tail_calls": 0,
+          "tail_copy_bytes": 0,
+          "vectors": 0,
+          "vector_slots": 0,
+          "vector_get_calls": 0,
+          "vector_set_calls": 0
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "case": "string-scan",
+      "size": 2048,
+      "repetition": 2,
+      "label": "candidate",
+      "command": [
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/candidate-a/probe",
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/probes.kl",
+        "string-scan",
+        "2048",
+        "128"
+      ],
+      "exit": 0,
+      "process_wall_seconds": 0.05361724999999984,
+      "stdout_sha256": "f44032527cf95848c70b5dbce2fc9a4520cf1978de06bba1ac27ca81b315aec0",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": {
+        "mode": "string-scan",
+        "size": 2048,
+        "iterations": 128,
+        "cpu_seconds": 0.037939,
+        "allocations": 786432,
+        "retains": 3670784,
+        "releases": 4457216,
+        "counters": {
+          "strings": 0,
+          "string_payload_bytes": 0,
+          "string_copy_bytes": 0,
+          "concat_calls": 0,
+          "concat_temporary_bytes": 0,
+          "tail_calls": 0,
+          "tail_copy_bytes": 0,
+          "vectors": 0,
+          "vector_slots": 0,
+          "vector_get_calls": 0,
+          "vector_set_calls": 0
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "case": "string-scan",
+      "size": 2048,
+      "repetition": 2,
+      "label": "baseline",
+      "command": [
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/baseline/probe-warm",
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/probes.kl",
+        "string-scan",
+        "2048",
+        "128"
+      ],
+      "exit": 0,
+      "process_wall_seconds": 0.05402929199999962,
+      "stdout_sha256": "539af41df0faad24e8045591b795d739919857c4e662e241133281d4fe6db581",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": {
+        "mode": "string-scan",
+        "size": 2048,
+        "iterations": 128,
+        "cpu_seconds": 0.038063,
+        "allocations": 786432,
+        "retains": 3670784,
+        "releases": 4457216,
+        "counters": {
+          "strings": 0,
+          "string_payload_bytes": 0,
+          "string_copy_bytes": 0,
+          "concat_calls": 0,
+          "concat_temporary_bytes": 0,
+          "tail_calls": 0,
+          "tail_copy_bytes": 0,
+          "vectors": 0,
+          "vector_slots": 0,
+          "vector_get_calls": 0,
+          "vector_set_calls": 0
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "case": "string-scan",
+      "size": 2048,
+      "repetition": 3,
+      "label": "baseline",
+      "command": [
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/baseline/probe-warm",
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/probes.kl",
+        "string-scan",
+        "2048",
+        "128"
+      ],
+      "exit": 0,
+      "process_wall_seconds": 0.056054042000000415,
+      "stdout_sha256": "855891e6d594b25d6f48b8555fc69aac4cf21ceea4c44bf8297ca4d6fc3414df",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": {
+        "mode": "string-scan",
+        "size": 2048,
+        "iterations": 128,
+        "cpu_seconds": 0.040758,
+        "allocations": 786432,
+        "retains": 3670784,
+        "releases": 4457216,
+        "counters": {
+          "strings": 0,
+          "string_payload_bytes": 0,
+          "string_copy_bytes": 0,
+          "concat_calls": 0,
+          "concat_temporary_bytes": 0,
+          "tail_calls": 0,
+          "tail_copy_bytes": 0,
+          "vectors": 0,
+          "vector_slots": 0,
+          "vector_get_calls": 0,
+          "vector_set_calls": 0
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "case": "string-scan",
+      "size": 2048,
+      "repetition": 3,
+      "label": "candidate",
+      "command": [
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/candidate-a/probe",
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/probes.kl",
+        "string-scan",
+        "2048",
+        "128"
+      ],
+      "exit": 0,
+      "process_wall_seconds": 0.05938054199999998,
+      "stdout_sha256": "f0898ece4dd7367a71a1390516322cf285b240aef845aff17553f9a50da8d1f3",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": {
+        "mode": "string-scan",
+        "size": 2048,
+        "iterations": 128,
+        "cpu_seconds": 0.038766,
+        "allocations": 786432,
+        "retains": 3670784,
+        "releases": 4457216,
+        "counters": {
+          "strings": 0,
+          "string_payload_bytes": 0,
+          "string_copy_bytes": 0,
+          "concat_calls": 0,
+          "concat_temporary_bytes": 0,
+          "tail_calls": 0,
+          "tail_copy_bytes": 0,
+          "vectors": 0,
+          "vector_slots": 0,
+          "vector_get_calls": 0,
+          "vector_set_calls": 0
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "case": "string-scan",
+      "size": 2048,
+      "repetition": 4,
+      "label": "candidate",
+      "command": [
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/candidate-a/probe",
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/probes.kl",
+        "string-scan",
+        "2048",
+        "128"
+      ],
+      "exit": 0,
+      "process_wall_seconds": 0.05385879199999977,
+      "stdout_sha256": "ea7867a5ca30031000406d881bb6ff3fc3ecb15c7eabf2ffb88582ea11a8a144",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": {
+        "mode": "string-scan",
+        "size": 2048,
+        "iterations": 128,
+        "cpu_seconds": 0.038508,
+        "allocations": 786432,
+        "retains": 3670784,
+        "releases": 4457216,
+        "counters": {
+          "strings": 0,
+          "string_payload_bytes": 0,
+          "string_copy_bytes": 0,
+          "concat_calls": 0,
+          "concat_temporary_bytes": 0,
+          "tail_calls": 0,
+          "tail_copy_bytes": 0,
+          "vectors": 0,
+          "vector_slots": 0,
+          "vector_get_calls": 0,
+          "vector_set_calls": 0
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "case": "string-scan",
+      "size": 2048,
+      "repetition": 4,
+      "label": "baseline",
+      "command": [
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/baseline/probe-warm",
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/probes.kl",
+        "string-scan",
+        "2048",
+        "128"
+      ],
+      "exit": 0,
+      "process_wall_seconds": 0.05312279100000028,
+      "stdout_sha256": "ae0cf695a332029bab6e224047ae9e8d5ac6def611fab9364ef8f1e373054c48",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": {
+        "mode": "string-scan",
+        "size": 2048,
+        "iterations": 128,
+        "cpu_seconds": 0.038265,
+        "allocations": 786432,
+        "retains": 3670784,
+        "releases": 4457216,
+        "counters": {
+          "strings": 0,
+          "string_payload_bytes": 0,
+          "string_copy_bytes": 0,
+          "concat_calls": 0,
+          "concat_temporary_bytes": 0,
+          "tail_calls": 0,
+          "tail_copy_bytes": 0,
+          "vectors": 0,
+          "vector_slots": 0,
+          "vector_get_calls": 0,
+          "vector_set_calls": 0
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "case": "string-scan",
+      "size": 2048,
+      "repetition": 5,
+      "label": "baseline",
+      "command": [
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/baseline/probe-warm",
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/probes.kl",
+        "string-scan",
+        "2048",
+        "128"
+      ],
+      "exit": 0,
+      "process_wall_seconds": 0.05438024999999991,
+      "stdout_sha256": "12ef88d1d080cc34d199b74c1223b600d1cbea251d45a859fde664c55555a61c",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": {
+        "mode": "string-scan",
+        "size": 2048,
+        "iterations": 128,
+        "cpu_seconds": 0.038952,
+        "allocations": 786432,
+        "retains": 3670784,
+        "releases": 4457216,
+        "counters": {
+          "strings": 0,
+          "string_payload_bytes": 0,
+          "string_copy_bytes": 0,
+          "concat_calls": 0,
+          "concat_temporary_bytes": 0,
+          "tail_calls": 0,
+          "tail_copy_bytes": 0,
+          "vectors": 0,
+          "vector_slots": 0,
+          "vector_get_calls": 0,
+          "vector_set_calls": 0
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "case": "string-scan",
+      "size": 2048,
+      "repetition": 5,
+      "label": "candidate",
+      "command": [
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/candidate-a/probe",
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/probes.kl",
+        "string-scan",
+        "2048",
+        "128"
+      ],
+      "exit": 0,
+      "process_wall_seconds": 0.05413716699999993,
+      "stdout_sha256": "565a12199680a23f4fa44d0e86a8ebca8e0137da93e465e5838f3c7a1efc46ba",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": {
+        "mode": "string-scan",
+        "size": 2048,
+        "iterations": 128,
+        "cpu_seconds": 0.038901,
+        "allocations": 786432,
+        "retains": 3670784,
+        "releases": 4457216,
+        "counters": {
+          "strings": 0,
+          "string_payload_bytes": 0,
+          "string_copy_bytes": 0,
+          "concat_calls": 0,
+          "concat_temporary_bytes": 0,
+          "tail_calls": 0,
+          "tail_copy_bytes": 0,
+          "vectors": 0,
+          "vector_slots": 0,
+          "vector_get_calls": 0,
+          "vector_set_calls": 0
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "case": "string-rebuild",
+      "size": 256,
+      "repetition": 1,
+      "label": "baseline",
+      "command": [
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/baseline/probe-warm",
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/probes.kl",
+        "string-rebuild",
+        "256",
+        "256"
+      ],
+      "exit": 0,
+      "process_wall_seconds": 0.033501208999999754,
+      "stdout_sha256": "f77de3d9b22f6b24ce1efbbc130ff87186631a1f02a14e8afd171e137c3ec558",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": {
+        "mode": "string-rebuild",
+        "size": 256,
+        "iterations": 256,
+        "cpu_seconds": 0.019023,
+        "allocations": 458752,
+        "retains": 1312512,
+        "releases": 1771264,
+        "counters": {
+          "strings": 0,
+          "string_payload_bytes": 0,
+          "string_copy_bytes": 0,
+          "concat_calls": 0,
+          "concat_temporary_bytes": 0,
+          "tail_calls": 0,
+          "tail_copy_bytes": 0,
+          "vectors": 0,
+          "vector_slots": 0,
+          "vector_get_calls": 0,
+          "vector_set_calls": 0
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "case": "string-rebuild",
+      "size": 256,
+      "repetition": 1,
+      "label": "candidate",
+      "command": [
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/candidate-a/probe",
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/probes.kl",
+        "string-rebuild",
+        "256",
+        "256"
+      ],
+      "exit": 0,
+      "process_wall_seconds": 0.03150783300000004,
+      "stdout_sha256": "57f9261cd86e9362c4af8162280544e0f47161e73495d5eb37df11819c4be8b4",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": {
+        "mode": "string-rebuild",
+        "size": 256,
+        "iterations": 256,
+        "cpu_seconds": 0.016997,
+        "allocations": 458752,
+        "retains": 1312512,
+        "releases": 1771264,
+        "counters": {
+          "strings": 0,
+          "string_payload_bytes": 0,
+          "string_copy_bytes": 0,
+          "concat_calls": 0,
+          "concat_temporary_bytes": 0,
+          "tail_calls": 0,
+          "tail_copy_bytes": 0,
+          "vectors": 0,
+          "vector_slots": 0,
+          "vector_get_calls": 0,
+          "vector_set_calls": 0
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "case": "string-rebuild",
+      "size": 256,
+      "repetition": 2,
+      "label": "candidate",
+      "command": [
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/candidate-a/probe",
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/probes.kl",
+        "string-rebuild",
+        "256",
+        "256"
+      ],
+      "exit": 0,
+      "process_wall_seconds": 0.031167084000000234,
+      "stdout_sha256": "e204899a2434ae41e2d7502776cf6942caa9542984a2500a0e3712bdf8e3f159",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": {
+        "mode": "string-rebuild",
+        "size": 256,
+        "iterations": 256,
+        "cpu_seconds": 0.016668,
+        "allocations": 458752,
+        "retains": 1312512,
+        "releases": 1771264,
+        "counters": {
+          "strings": 0,
+          "string_payload_bytes": 0,
+          "string_copy_bytes": 0,
+          "concat_calls": 0,
+          "concat_temporary_bytes": 0,
+          "tail_calls": 0,
+          "tail_copy_bytes": 0,
+          "vectors": 0,
+          "vector_slots": 0,
+          "vector_get_calls": 0,
+          "vector_set_calls": 0
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "case": "string-rebuild",
+      "size": 256,
+      "repetition": 2,
+      "label": "baseline",
+      "command": [
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/baseline/probe-warm",
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/probes.kl",
+        "string-rebuild",
+        "256",
+        "256"
+      ],
+      "exit": 0,
+      "process_wall_seconds": 0.03190241600000032,
+      "stdout_sha256": "009024214b26d14064c096fb39001cc916482569259985f019f20af3143f5b97",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": {
+        "mode": "string-rebuild",
+        "size": 256,
+        "iterations": 256,
+        "cpu_seconds": 0.017491,
+        "allocations": 458752,
+        "retains": 1312512,
+        "releases": 1771264,
+        "counters": {
+          "strings": 0,
+          "string_payload_bytes": 0,
+          "string_copy_bytes": 0,
+          "concat_calls": 0,
+          "concat_temporary_bytes": 0,
+          "tail_calls": 0,
+          "tail_copy_bytes": 0,
+          "vectors": 0,
+          "vector_slots": 0,
+          "vector_get_calls": 0,
+          "vector_set_calls": 0
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "case": "string-rebuild",
+      "size": 256,
+      "repetition": 3,
+      "label": "baseline",
+      "command": [
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/baseline/probe-warm",
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/probes.kl",
+        "string-rebuild",
+        "256",
+        "256"
+      ],
+      "exit": 0,
+      "process_wall_seconds": 0.0334995410000003,
+      "stdout_sha256": "4f6c9eb4319aa2466fda7a6cafe34bbc0f86f4d10f69ebdc17488819282889d4",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": {
+        "mode": "string-rebuild",
+        "size": 256,
+        "iterations": 256,
+        "cpu_seconds": 0.017209,
+        "allocations": 458752,
+        "retains": 1312512,
+        "releases": 1771264,
+        "counters": {
+          "strings": 0,
+          "string_payload_bytes": 0,
+          "string_copy_bytes": 0,
+          "concat_calls": 0,
+          "concat_temporary_bytes": 0,
+          "tail_calls": 0,
+          "tail_copy_bytes": 0,
+          "vectors": 0,
+          "vector_slots": 0,
+          "vector_get_calls": 0,
+          "vector_set_calls": 0
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "case": "string-rebuild",
+      "size": 256,
+      "repetition": 3,
+      "label": "candidate",
+      "command": [
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/candidate-a/probe",
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/probes.kl",
+        "string-rebuild",
+        "256",
+        "256"
+      ],
+      "exit": 0,
+      "process_wall_seconds": 0.029344374999999978,
+      "stdout_sha256": "f1ee209c1e958a325df9daf8320276170d8ef8c66173513e1b137bafe790ae5c",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": {
+        "mode": "string-rebuild",
+        "size": 256,
+        "iterations": 256,
+        "cpu_seconds": 0.015656,
+        "allocations": 458752,
+        "retains": 1312512,
+        "releases": 1771264,
+        "counters": {
+          "strings": 0,
+          "string_payload_bytes": 0,
+          "string_copy_bytes": 0,
+          "concat_calls": 0,
+          "concat_temporary_bytes": 0,
+          "tail_calls": 0,
+          "tail_copy_bytes": 0,
+          "vectors": 0,
+          "vector_slots": 0,
+          "vector_get_calls": 0,
+          "vector_set_calls": 0
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "case": "string-rebuild",
+      "size": 256,
+      "repetition": 4,
+      "label": "candidate",
+      "command": [
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/candidate-a/probe",
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/probes.kl",
+        "string-rebuild",
+        "256",
+        "256"
+      ],
+      "exit": 0,
+      "process_wall_seconds": 0.03173795899999998,
+      "stdout_sha256": "46a2d8eb5b926d1f8d1079480967a5fbab82e0eadab21b172fff7f77cf5cf22f",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": {
+        "mode": "string-rebuild",
+        "size": 256,
+        "iterations": 256,
+        "cpu_seconds": 0.017131,
+        "allocations": 458752,
+        "retains": 1312512,
+        "releases": 1771264,
+        "counters": {
+          "strings": 0,
+          "string_payload_bytes": 0,
+          "string_copy_bytes": 0,
+          "concat_calls": 0,
+          "concat_temporary_bytes": 0,
+          "tail_calls": 0,
+          "tail_copy_bytes": 0,
+          "vectors": 0,
+          "vector_slots": 0,
+          "vector_get_calls": 0,
+          "vector_set_calls": 0
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "case": "string-rebuild",
+      "size": 256,
+      "repetition": 4,
+      "label": "baseline",
+      "command": [
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/baseline/probe-warm",
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/probes.kl",
+        "string-rebuild",
+        "256",
+        "256"
+      ],
+      "exit": 0,
+      "process_wall_seconds": 0.0320545000000001,
+      "stdout_sha256": "63407cef7f7e2994685f4a650dbece891bf5ff3a883e31413dc7dd804316c116",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": {
+        "mode": "string-rebuild",
+        "size": 256,
+        "iterations": 256,
+        "cpu_seconds": 0.017466,
+        "allocations": 458752,
+        "retains": 1312512,
+        "releases": 1771264,
+        "counters": {
+          "strings": 0,
+          "string_payload_bytes": 0,
+          "string_copy_bytes": 0,
+          "concat_calls": 0,
+          "concat_temporary_bytes": 0,
+          "tail_calls": 0,
+          "tail_copy_bytes": 0,
+          "vectors": 0,
+          "vector_slots": 0,
+          "vector_get_calls": 0,
+          "vector_set_calls": 0
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "case": "string-rebuild",
+      "size": 256,
+      "repetition": 5,
+      "label": "baseline",
+      "command": [
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/baseline/probe-warm",
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/probes.kl",
+        "string-rebuild",
+        "256",
+        "256"
+      ],
+      "exit": 0,
+      "process_wall_seconds": 0.03168745900000003,
+      "stdout_sha256": "9dbd445f812622ca7b97580c06ab6b043fb3147e4250b8b89d073272c222f91d",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": {
+        "mode": "string-rebuild",
+        "size": 256,
+        "iterations": 256,
+        "cpu_seconds": 0.017495,
+        "allocations": 458752,
+        "retains": 1312512,
+        "releases": 1771264,
+        "counters": {
+          "strings": 0,
+          "string_payload_bytes": 0,
+          "string_copy_bytes": 0,
+          "concat_calls": 0,
+          "concat_temporary_bytes": 0,
+          "tail_calls": 0,
+          "tail_copy_bytes": 0,
+          "vectors": 0,
+          "vector_slots": 0,
+          "vector_get_calls": 0,
+          "vector_set_calls": 0
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "case": "string-rebuild",
+      "size": 256,
+      "repetition": 5,
+      "label": "candidate",
+      "command": [
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/candidate-a/probe",
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/probes.kl",
+        "string-rebuild",
+        "256",
+        "256"
+      ],
+      "exit": 0,
+      "process_wall_seconds": 0.030857375000000076,
+      "stdout_sha256": "69f02fb2021d81deccfa1dbcdc18cb84a4e50f05ee3a31e50f6853ee74c8163c",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": {
+        "mode": "string-rebuild",
+        "size": 256,
+        "iterations": 256,
+        "cpu_seconds": 0.016596,
+        "allocations": 458752,
+        "retains": 1312512,
+        "releases": 1771264,
+        "counters": {
+          "strings": 0,
+          "string_payload_bytes": 0,
+          "string_copy_bytes": 0,
+          "concat_calls": 0,
+          "concat_temporary_bytes": 0,
+          "tail_calls": 0,
+          "tail_copy_bytes": 0,
+          "vectors": 0,
+          "vector_slots": 0,
+          "vector_get_calls": 0,
+          "vector_set_calls": 0
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "case": "string-build",
+      "size": 256,
+      "repetition": 1,
+      "label": "baseline",
+      "command": [
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/baseline/probe-warm",
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/probes.kl",
+        "string-build",
+        "256",
+        "256"
+      ],
+      "exit": 0,
+      "process_wall_seconds": 0.031104291999999756,
+      "stdout_sha256": "2de86e0892a5c9e9078a5bf8b931e4563726ccabb78b53509620ff714b0f141e",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": {
+        "mode": "string-build",
+        "size": 256,
+        "iterations": 256,
+        "cpu_seconds": 0.009618,
+        "allocations": 196608,
+        "retains": 656384,
+        "releases": 852992,
+        "counters": {
+          "strings": 0,
+          "string_payload_bytes": 0,
+          "string_copy_bytes": 0,
+          "concat_calls": 0,
+          "concat_temporary_bytes": 0,
+          "tail_calls": 0,
+          "tail_copy_bytes": 0,
+          "vectors": 0,
+          "vector_slots": 0,
+          "vector_get_calls": 0,
+          "vector_set_calls": 0
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "case": "string-build",
+      "size": 256,
+      "repetition": 1,
+      "label": "candidate",
+      "command": [
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/candidate-a/probe",
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/probes.kl",
+        "string-build",
+        "256",
+        "256"
+      ],
+      "exit": 0,
+      "process_wall_seconds": 0.02352249999999989,
+      "stdout_sha256": "cd9e95c827b781d021c978ab06d634cbab4f671ac4ffbeabb35b65f3a2d77b9e",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": {
+        "mode": "string-build",
+        "size": 256,
+        "iterations": 256,
+        "cpu_seconds": 0.009229,
+        "allocations": 196608,
+        "retains": 656384,
+        "releases": 852992,
+        "counters": {
+          "strings": 0,
+          "string_payload_bytes": 0,
+          "string_copy_bytes": 0,
+          "concat_calls": 0,
+          "concat_temporary_bytes": 0,
+          "tail_calls": 0,
+          "tail_copy_bytes": 0,
+          "vectors": 0,
+          "vector_slots": 0,
+          "vector_get_calls": 0,
+          "vector_set_calls": 0
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "case": "string-build",
+      "size": 256,
+      "repetition": 2,
+      "label": "candidate",
+      "command": [
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/candidate-a/probe",
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/probes.kl",
+        "string-build",
+        "256",
+        "256"
+      ],
+      "exit": 0,
+      "process_wall_seconds": 0.02309091700000021,
+      "stdout_sha256": "68bf64a41381e7f0be47a83ca5b655c037f630bfec8f697ba4c2d283ac3e3000",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": {
+        "mode": "string-build",
+        "size": 256,
+        "iterations": 256,
+        "cpu_seconds": 0.00917,
+        "allocations": 196608,
+        "retains": 656384,
+        "releases": 852992,
+        "counters": {
+          "strings": 0,
+          "string_payload_bytes": 0,
+          "string_copy_bytes": 0,
+          "concat_calls": 0,
+          "concat_temporary_bytes": 0,
+          "tail_calls": 0,
+          "tail_copy_bytes": 0,
+          "vectors": 0,
+          "vector_slots": 0,
+          "vector_get_calls": 0,
+          "vector_set_calls": 0
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "case": "string-build",
+      "size": 256,
+      "repetition": 2,
+      "label": "baseline",
+      "command": [
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/baseline/probe-warm",
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/probes.kl",
+        "string-build",
+        "256",
+        "256"
+      ],
+      "exit": 0,
+      "process_wall_seconds": 0.027729333000000356,
+      "stdout_sha256": "34693b150ef2287acc213558923670cea580b52b684a0a91cae24317c66adc30",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": {
+        "mode": "string-build",
+        "size": 256,
+        "iterations": 256,
+        "cpu_seconds": 0.009789,
+        "allocations": 196608,
+        "retains": 656384,
+        "releases": 852992,
+        "counters": {
+          "strings": 0,
+          "string_payload_bytes": 0,
+          "string_copy_bytes": 0,
+          "concat_calls": 0,
+          "concat_temporary_bytes": 0,
+          "tail_calls": 0,
+          "tail_copy_bytes": 0,
+          "vectors": 0,
+          "vector_slots": 0,
+          "vector_get_calls": 0,
+          "vector_set_calls": 0
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "case": "string-build",
+      "size": 256,
+      "repetition": 3,
+      "label": "baseline",
+      "command": [
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/baseline/probe-warm",
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/probes.kl",
+        "string-build",
+        "256",
+        "256"
+      ],
+      "exit": 0,
+      "process_wall_seconds": 0.024227124999999905,
+      "stdout_sha256": "908c2a5ce4814228df08c7b3aa55d6ab482c082184da1714ffe7060a100ff055",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": {
+        "mode": "string-build",
+        "size": 256,
+        "iterations": 256,
+        "cpu_seconds": 0.010296,
+        "allocations": 196608,
+        "retains": 656384,
+        "releases": 852992,
+        "counters": {
+          "strings": 0,
+          "string_payload_bytes": 0,
+          "string_copy_bytes": 0,
+          "concat_calls": 0,
+          "concat_temporary_bytes": 0,
+          "tail_calls": 0,
+          "tail_copy_bytes": 0,
+          "vectors": 0,
+          "vector_slots": 0,
+          "vector_get_calls": 0,
+          "vector_set_calls": 0
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "case": "string-build",
+      "size": 256,
+      "repetition": 3,
+      "label": "candidate",
+      "command": [
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/candidate-a/probe",
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/probes.kl",
+        "string-build",
+        "256",
+        "256"
+      ],
+      "exit": 0,
+      "process_wall_seconds": 0.024951458000000315,
+      "stdout_sha256": "1f90c3e3ce726a99119f10dd98f30ba5bc9b5026b0643c3c070f6947c6d03f8f",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": {
+        "mode": "string-build",
+        "size": 256,
+        "iterations": 256,
+        "cpu_seconds": 0.00873,
+        "allocations": 196608,
+        "retains": 656384,
+        "releases": 852992,
+        "counters": {
+          "strings": 0,
+          "string_payload_bytes": 0,
+          "string_copy_bytes": 0,
+          "concat_calls": 0,
+          "concat_temporary_bytes": 0,
+          "tail_calls": 0,
+          "tail_copy_bytes": 0,
+          "vectors": 0,
+          "vector_slots": 0,
+          "vector_get_calls": 0,
+          "vector_set_calls": 0
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "case": "string-build",
+      "size": 256,
+      "repetition": 4,
+      "label": "candidate",
+      "command": [
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/candidate-a/probe",
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/probes.kl",
+        "string-build",
+        "256",
+        "256"
+      ],
+      "exit": 0,
+      "process_wall_seconds": 0.022936000000000067,
+      "stdout_sha256": "8b127c648508eab6873eca2db3280b3d5e69afaff2ab66fb87604f20c803a8e5",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": {
+        "mode": "string-build",
+        "size": 256,
+        "iterations": 256,
+        "cpu_seconds": 0.009029,
+        "allocations": 196608,
+        "retains": 656384,
+        "releases": 852992,
+        "counters": {
+          "strings": 0,
+          "string_payload_bytes": 0,
+          "string_copy_bytes": 0,
+          "concat_calls": 0,
+          "concat_temporary_bytes": 0,
+          "tail_calls": 0,
+          "tail_copy_bytes": 0,
+          "vectors": 0,
+          "vector_slots": 0,
+          "vector_get_calls": 0,
+          "vector_set_calls": 0
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "case": "string-build",
+      "size": 256,
+      "repetition": 4,
+      "label": "baseline",
+      "command": [
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/baseline/probe-warm",
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/probes.kl",
+        "string-build",
+        "256",
+        "256"
+      ],
+      "exit": 0,
+      "process_wall_seconds": 0.024971374999999796,
+      "stdout_sha256": "9fd7a1889e8ef8ae515a081a6a1ca063b6d40c76ae83cded0eee86b7b6c7fe72",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": {
+        "mode": "string-build",
+        "size": 256,
+        "iterations": 256,
+        "cpu_seconds": 0.01051,
+        "allocations": 196608,
+        "retains": 656384,
+        "releases": 852992,
+        "counters": {
+          "strings": 0,
+          "string_payload_bytes": 0,
+          "string_copy_bytes": 0,
+          "concat_calls": 0,
+          "concat_temporary_bytes": 0,
+          "tail_calls": 0,
+          "tail_copy_bytes": 0,
+          "vectors": 0,
+          "vector_slots": 0,
+          "vector_get_calls": 0,
+          "vector_set_calls": 0
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "case": "string-build",
+      "size": 256,
+      "repetition": 5,
+      "label": "baseline",
+      "command": [
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/baseline/probe-warm",
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/probes.kl",
+        "string-build",
+        "256",
+        "256"
+      ],
+      "exit": 0,
+      "process_wall_seconds": 0.024528708000000066,
+      "stdout_sha256": "175b449f8d3515689cce5062439b2af8a72309e84d9111c110e3561bb0487f8c",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": {
+        "mode": "string-build",
+        "size": 256,
+        "iterations": 256,
+        "cpu_seconds": 0.010213,
+        "allocations": 196608,
+        "retains": 656384,
+        "releases": 852992,
+        "counters": {
+          "strings": 0,
+          "string_payload_bytes": 0,
+          "string_copy_bytes": 0,
+          "concat_calls": 0,
+          "concat_temporary_bytes": 0,
+          "tail_calls": 0,
+          "tail_copy_bytes": 0,
+          "vectors": 0,
+          "vector_slots": 0,
+          "vector_get_calls": 0,
+          "vector_set_calls": 0
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "case": "string-build",
+      "size": 256,
+      "repetition": 5,
+      "label": "candidate",
+      "command": [
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/candidate-a/probe",
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/probes.kl",
+        "string-build",
+        "256",
+        "256"
+      ],
+      "exit": 0,
+      "process_wall_seconds": 0.023074916000000112,
+      "stdout_sha256": "cacfefc140176c4cdcb94a44b5cc2474f000d1ee631df1ada88a5f7990ec2b46",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": {
+        "mode": "string-build",
+        "size": 256,
+        "iterations": 256,
+        "cpu_seconds": 0.009215,
+        "allocations": 196608,
+        "retains": 656384,
+        "releases": 852992,
+        "counters": {
+          "strings": 0,
+          "string_payload_bytes": 0,
+          "string_copy_bytes": 0,
+          "concat_calls": 0,
+          "concat_temporary_bytes": 0,
+          "tail_calls": 0,
+          "tail_copy_bytes": 0,
+          "vectors": 0,
+          "vector_slots": 0,
+          "vector_get_calls": 0,
+          "vector_set_calls": 0
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "case": "vector-scan",
+      "size": 256,
+      "repetition": 1,
+      "label": "baseline",
+      "command": [
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/baseline/probe-warm",
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/probes.kl",
+        "vector-scan",
+        "256",
+        "16"
+      ],
+      "exit": 0,
+      "process_wall_seconds": 0.10991808299999972,
+      "stdout_sha256": "dc1e3d139398130996f465b57985646289b13b3f03d939177517895e9f22c027",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": {
+        "mode": "vector-scan",
+        "size": 256,
+        "iterations": 16,
+        "cpu_seconds": 0.076665,
+        "allocations": 567248,
+        "retains": 12187648,
+        "releases": 12754896,
+        "counters": {
+          "strings": 0,
+          "string_payload_bytes": 0,
+          "string_copy_bytes": 0,
+          "concat_calls": 0,
+          "concat_temporary_bytes": 0,
+          "tail_calls": 0,
+          "tail_copy_bytes": 0,
+          "vectors": 0,
+          "vector_slots": 0,
+          "vector_get_calls": 0,
+          "vector_set_calls": 0
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "case": "vector-scan",
+      "size": 256,
+      "repetition": 1,
+      "label": "candidate",
+      "command": [
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/candidate-a/probe",
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/probes.kl",
+        "vector-scan",
+        "256",
+        "16"
+      ],
+      "exit": 0,
+      "process_wall_seconds": 0.11323266699999923,
+      "stdout_sha256": "e4f166c0d8e9d506c26db5416208ec9eb0d5a6e7f1c7fd2c0e1b5eecf8d725fd",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": {
+        "mode": "vector-scan",
+        "size": 256,
+        "iterations": 16,
+        "cpu_seconds": 0.074745,
+        "allocations": 567248,
+        "retains": 12187648,
+        "releases": 12754896,
+        "counters": {
+          "strings": 0,
+          "string_payload_bytes": 0,
+          "string_copy_bytes": 0,
+          "concat_calls": 0,
+          "concat_temporary_bytes": 0,
+          "tail_calls": 0,
+          "tail_copy_bytes": 0,
+          "vectors": 0,
+          "vector_slots": 0,
+          "vector_get_calls": 0,
+          "vector_set_calls": 0
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "case": "vector-scan",
+      "size": 256,
+      "repetition": 2,
+      "label": "candidate",
+      "command": [
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/candidate-a/probe",
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/probes.kl",
+        "vector-scan",
+        "256",
+        "16"
+      ],
+      "exit": 0,
+      "process_wall_seconds": 0.11061862499999986,
+      "stdout_sha256": "768c06c3f808626361d2c815fe2205689ad71147b092aa8fdd23345a322f44a4",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": {
+        "mode": "vector-scan",
+        "size": 256,
+        "iterations": 16,
+        "cpu_seconds": 0.077104,
+        "allocations": 567248,
+        "retains": 12187648,
+        "releases": 12754896,
+        "counters": {
+          "strings": 0,
+          "string_payload_bytes": 0,
+          "string_copy_bytes": 0,
+          "concat_calls": 0,
+          "concat_temporary_bytes": 0,
+          "tail_calls": 0,
+          "tail_copy_bytes": 0,
+          "vectors": 0,
+          "vector_slots": 0,
+          "vector_get_calls": 0,
+          "vector_set_calls": 0
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "case": "vector-scan",
+      "size": 256,
+      "repetition": 2,
+      "label": "baseline",
+      "command": [
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/baseline/probe-warm",
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/probes.kl",
+        "vector-scan",
+        "256",
+        "16"
+      ],
+      "exit": 0,
+      "process_wall_seconds": 0.11231220799999964,
+      "stdout_sha256": "9db63d7d04797633fbf7f0f710a77ce0416acf16dbd39c9f41eb968c367a2097",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": {
+        "mode": "vector-scan",
+        "size": 256,
+        "iterations": 16,
+        "cpu_seconds": 0.077363,
+        "allocations": 567248,
+        "retains": 12187648,
+        "releases": 12754896,
+        "counters": {
+          "strings": 0,
+          "string_payload_bytes": 0,
+          "string_copy_bytes": 0,
+          "concat_calls": 0,
+          "concat_temporary_bytes": 0,
+          "tail_calls": 0,
+          "tail_copy_bytes": 0,
+          "vectors": 0,
+          "vector_slots": 0,
+          "vector_get_calls": 0,
+          "vector_set_calls": 0
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "case": "vector-scan",
+      "size": 256,
+      "repetition": 3,
+      "label": "baseline",
+      "command": [
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/baseline/probe-warm",
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/probes.kl",
+        "vector-scan",
+        "256",
+        "16"
+      ],
+      "exit": 0,
+      "process_wall_seconds": 0.11035370799999988,
+      "stdout_sha256": "0693f9833a8d010b03dd1e75feeaf071f099ea1dcd3aec4e8b248d64981dbe4a",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": {
+        "mode": "vector-scan",
+        "size": 256,
+        "iterations": 16,
+        "cpu_seconds": 0.076986,
+        "allocations": 567248,
+        "retains": 12187648,
+        "releases": 12754896,
+        "counters": {
+          "strings": 0,
+          "string_payload_bytes": 0,
+          "string_copy_bytes": 0,
+          "concat_calls": 0,
+          "concat_temporary_bytes": 0,
+          "tail_calls": 0,
+          "tail_copy_bytes": 0,
+          "vectors": 0,
+          "vector_slots": 0,
+          "vector_get_calls": 0,
+          "vector_set_calls": 0
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "case": "vector-scan",
+      "size": 256,
+      "repetition": 3,
+      "label": "candidate",
+      "command": [
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/candidate-a/probe",
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/probes.kl",
+        "vector-scan",
+        "256",
+        "16"
+      ],
+      "exit": 0,
+      "process_wall_seconds": 0.1167015410000003,
+      "stdout_sha256": "da8776c9fa2ccdd0e3828f1f24ff9e010770b62fb0586d6a0e2b6c40a35fb4d9",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": {
+        "mode": "vector-scan",
+        "size": 256,
+        "iterations": 16,
+        "cpu_seconds": 0.077756,
+        "allocations": 567248,
+        "retains": 12187648,
+        "releases": 12754896,
+        "counters": {
+          "strings": 0,
+          "string_payload_bytes": 0,
+          "string_copy_bytes": 0,
+          "concat_calls": 0,
+          "concat_temporary_bytes": 0,
+          "tail_calls": 0,
+          "tail_copy_bytes": 0,
+          "vectors": 0,
+          "vector_slots": 0,
+          "vector_get_calls": 0,
+          "vector_set_calls": 0
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "case": "vector-scan",
+      "size": 256,
+      "repetition": 4,
+      "label": "candidate",
+      "command": [
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/candidate-a/probe",
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/probes.kl",
+        "vector-scan",
+        "256",
+        "16"
+      ],
+      "exit": 0,
+      "process_wall_seconds": 0.11054266699999982,
+      "stdout_sha256": "fce0f3d45d53f931dcf13813b6d262d4430db97c9e90633deb65c6a49871037e",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": {
+        "mode": "vector-scan",
+        "size": 256,
+        "iterations": 16,
+        "cpu_seconds": 0.077595,
+        "allocations": 567248,
+        "retains": 12187648,
+        "releases": 12754896,
+        "counters": {
+          "strings": 0,
+          "string_payload_bytes": 0,
+          "string_copy_bytes": 0,
+          "concat_calls": 0,
+          "concat_temporary_bytes": 0,
+          "tail_calls": 0,
+          "tail_copy_bytes": 0,
+          "vectors": 0,
+          "vector_slots": 0,
+          "vector_get_calls": 0,
+          "vector_set_calls": 0
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "case": "vector-scan",
+      "size": 256,
+      "repetition": 4,
+      "label": "baseline",
+      "command": [
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/baseline/probe-warm",
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/probes.kl",
+        "vector-scan",
+        "256",
+        "16"
+      ],
+      "exit": 0,
+      "process_wall_seconds": 0.10974708300000025,
+      "stdout_sha256": "73890b3001f50a4fae762702f3302d7848ba3cb7e1c94b4a7baa17455d5bd8d1",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": {
+        "mode": "vector-scan",
+        "size": 256,
+        "iterations": 16,
+        "cpu_seconds": 0.076625,
+        "allocations": 567248,
+        "retains": 12187648,
+        "releases": 12754896,
+        "counters": {
+          "strings": 0,
+          "string_payload_bytes": 0,
+          "string_copy_bytes": 0,
+          "concat_calls": 0,
+          "concat_temporary_bytes": 0,
+          "tail_calls": 0,
+          "tail_copy_bytes": 0,
+          "vectors": 0,
+          "vector_slots": 0,
+          "vector_get_calls": 0,
+          "vector_set_calls": 0
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "case": "vector-scan",
+      "size": 256,
+      "repetition": 5,
+      "label": "baseline",
+      "command": [
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/baseline/probe-warm",
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/probes.kl",
+        "vector-scan",
+        "256",
+        "16"
+      ],
+      "exit": 0,
+      "process_wall_seconds": 0.1103411250000006,
+      "stdout_sha256": "f7b870fe568b89cd61c4994480cbf21c3125779b445bf439625a6f1b14366fdb",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": {
+        "mode": "vector-scan",
+        "size": 256,
+        "iterations": 16,
+        "cpu_seconds": 0.077456,
+        "allocations": 567248,
+        "retains": 12187648,
+        "releases": 12754896,
+        "counters": {
+          "strings": 0,
+          "string_payload_bytes": 0,
+          "string_copy_bytes": 0,
+          "concat_calls": 0,
+          "concat_temporary_bytes": 0,
+          "tail_calls": 0,
+          "tail_copy_bytes": 0,
+          "vectors": 0,
+          "vector_slots": 0,
+          "vector_get_calls": 0,
+          "vector_set_calls": 0
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "case": "vector-scan",
+      "size": 256,
+      "repetition": 5,
+      "label": "candidate",
+      "command": [
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/candidate-a/probe",
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/probes.kl",
+        "vector-scan",
+        "256",
+        "16"
+      ],
+      "exit": 0,
+      "process_wall_seconds": 0.10890574999999991,
+      "stdout_sha256": "b6bfb980810cf239b050e4c37b4ff09cbb6226d167fb0a65ebd02be458f6b984",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": {
+        "mode": "vector-scan",
+        "size": 256,
+        "iterations": 16,
+        "cpu_seconds": 0.075674,
+        "allocations": 567248,
+        "retains": 12187648,
+        "releases": 12754896,
+        "counters": {
+          "strings": 0,
+          "string_payload_bytes": 0,
+          "string_copy_bytes": 0,
+          "concat_calls": 0,
+          "concat_temporary_bytes": 0,
+          "tail_calls": 0,
+          "tail_copy_bytes": 0,
+          "vectors": 0,
+          "vector_slots": 0,
+          "vector_get_calls": 0,
+          "vector_set_calls": 0
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "case": "vector-build",
+      "size": 256,
+      "repetition": 1,
+      "label": "baseline",
+      "command": [
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/baseline/probe-warm",
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/probes.kl",
+        "vector-build",
+        "256",
+        "16"
+      ],
+      "exit": 0,
+      "process_wall_seconds": 0.09122195800000021,
+      "stdout_sha256": "27ea54a17e1170925d4413cea942865bfd91bb8b3af663cc7c218a54c8f48f32",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": {
+        "mode": "vector-build",
+        "size": 256,
+        "iterations": 16,
+        "cpu_seconds": 0.061249,
+        "allocations": 550912,
+        "retains": 9511024,
+        "releases": 10061936,
+        "counters": {
+          "strings": 0,
+          "string_payload_bytes": 0,
+          "string_copy_bytes": 0,
+          "concat_calls": 0,
+          "concat_temporary_bytes": 0,
+          "tail_calls": 0,
+          "tail_copy_bytes": 0,
+          "vectors": 0,
+          "vector_slots": 0,
+          "vector_get_calls": 0,
+          "vector_set_calls": 0
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "case": "vector-build",
+      "size": 256,
+      "repetition": 1,
+      "label": "candidate",
+      "command": [
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/candidate-a/probe",
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/probes.kl",
+        "vector-build",
+        "256",
+        "16"
+      ],
+      "exit": 0,
+      "process_wall_seconds": 0.09075833400000022,
+      "stdout_sha256": "ca4386affb1d27f422620c01d1ef8de0b0a3705176ec17737ce76928fe634a2f",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": {
+        "mode": "vector-build",
+        "size": 256,
+        "iterations": 16,
+        "cpu_seconds": 0.061673,
+        "allocations": 550912,
+        "retains": 9511024,
+        "releases": 10061936,
+        "counters": {
+          "strings": 0,
+          "string_payload_bytes": 0,
+          "string_copy_bytes": 0,
+          "concat_calls": 0,
+          "concat_temporary_bytes": 0,
+          "tail_calls": 0,
+          "tail_copy_bytes": 0,
+          "vectors": 0,
+          "vector_slots": 0,
+          "vector_get_calls": 0,
+          "vector_set_calls": 0
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "case": "vector-build",
+      "size": 256,
+      "repetition": 2,
+      "label": "candidate",
+      "command": [
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/candidate-a/probe",
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/probes.kl",
+        "vector-build",
+        "256",
+        "16"
+      ],
+      "exit": 0,
+      "process_wall_seconds": 0.09121637500000013,
+      "stdout_sha256": "a265ef1a0e6aaab07d445e2798c90863160cb3e60ccb34bdf3ef73cafed701d1",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": {
+        "mode": "vector-build",
+        "size": 256,
+        "iterations": 16,
+        "cpu_seconds": 0.061251,
+        "allocations": 550912,
+        "retains": 9511024,
+        "releases": 10061936,
+        "counters": {
+          "strings": 0,
+          "string_payload_bytes": 0,
+          "string_copy_bytes": 0,
+          "concat_calls": 0,
+          "concat_temporary_bytes": 0,
+          "tail_calls": 0,
+          "tail_copy_bytes": 0,
+          "vectors": 0,
+          "vector_slots": 0,
+          "vector_get_calls": 0,
+          "vector_set_calls": 0
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "case": "vector-build",
+      "size": 256,
+      "repetition": 2,
+      "label": "baseline",
+      "command": [
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/baseline/probe-warm",
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/probes.kl",
+        "vector-build",
+        "256",
+        "16"
+      ],
+      "exit": 0,
+      "process_wall_seconds": 0.09255266700000053,
+      "stdout_sha256": "a82933a35ea40d0247f81faef5b3d4f54611fb3e742a02266c1d0d10cda053cb",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": {
+        "mode": "vector-build",
+        "size": 256,
+        "iterations": 16,
+        "cpu_seconds": 0.062211,
+        "allocations": 550912,
+        "retains": 9511024,
+        "releases": 10061936,
+        "counters": {
+          "strings": 0,
+          "string_payload_bytes": 0,
+          "string_copy_bytes": 0,
+          "concat_calls": 0,
+          "concat_temporary_bytes": 0,
+          "tail_calls": 0,
+          "tail_copy_bytes": 0,
+          "vectors": 0,
+          "vector_slots": 0,
+          "vector_get_calls": 0,
+          "vector_set_calls": 0
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "case": "vector-build",
+      "size": 256,
+      "repetition": 3,
+      "label": "baseline",
+      "command": [
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/baseline/probe-warm",
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/probes.kl",
+        "vector-build",
+        "256",
+        "16"
+      ],
+      "exit": 0,
+      "process_wall_seconds": 0.09145245800000001,
+      "stdout_sha256": "7d859f85cb73e47473ebc91443f6f1db9ab610df4a4044cc4c06c4f2e0d9d19c",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": {
+        "mode": "vector-build",
+        "size": 256,
+        "iterations": 16,
+        "cpu_seconds": 0.061593,
+        "allocations": 550912,
+        "retains": 9511024,
+        "releases": 10061936,
+        "counters": {
+          "strings": 0,
+          "string_payload_bytes": 0,
+          "string_copy_bytes": 0,
+          "concat_calls": 0,
+          "concat_temporary_bytes": 0,
+          "tail_calls": 0,
+          "tail_copy_bytes": 0,
+          "vectors": 0,
+          "vector_slots": 0,
+          "vector_get_calls": 0,
+          "vector_set_calls": 0
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "case": "vector-build",
+      "size": 256,
+      "repetition": 3,
+      "label": "candidate",
+      "command": [
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/candidate-a/probe",
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/probes.kl",
+        "vector-build",
+        "256",
+        "16"
+      ],
+      "exit": 0,
+      "process_wall_seconds": 0.09377283400000014,
+      "stdout_sha256": "0f73848cca2794b62215c38af71d8c8975cab0737c4499cd9637779d8cd8d467",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": {
+        "mode": "vector-build",
+        "size": 256,
+        "iterations": 16,
+        "cpu_seconds": 0.065655,
+        "allocations": 550912,
+        "retains": 9511024,
+        "releases": 10061936,
+        "counters": {
+          "strings": 0,
+          "string_payload_bytes": 0,
+          "string_copy_bytes": 0,
+          "concat_calls": 0,
+          "concat_temporary_bytes": 0,
+          "tail_calls": 0,
+          "tail_copy_bytes": 0,
+          "vectors": 0,
+          "vector_slots": 0,
+          "vector_get_calls": 0,
+          "vector_set_calls": 0
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "case": "vector-build",
+      "size": 256,
+      "repetition": 4,
+      "label": "candidate",
+      "command": [
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/candidate-a/probe",
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/probes.kl",
+        "vector-build",
+        "256",
+        "16"
+      ],
+      "exit": 0,
+      "process_wall_seconds": 0.0940088750000001,
+      "stdout_sha256": "233dcda3b8b62dd9b11919f86b965450dd73c5a7b9a4374d9d2bf6020bcb1216",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": {
+        "mode": "vector-build",
+        "size": 256,
+        "iterations": 16,
+        "cpu_seconds": 0.063678,
+        "allocations": 550912,
+        "retains": 9511024,
+        "releases": 10061936,
+        "counters": {
+          "strings": 0,
+          "string_payload_bytes": 0,
+          "string_copy_bytes": 0,
+          "concat_calls": 0,
+          "concat_temporary_bytes": 0,
+          "tail_calls": 0,
+          "tail_copy_bytes": 0,
+          "vectors": 0,
+          "vector_slots": 0,
+          "vector_get_calls": 0,
+          "vector_set_calls": 0
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "case": "vector-build",
+      "size": 256,
+      "repetition": 4,
+      "label": "baseline",
+      "command": [
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/baseline/probe-warm",
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/probes.kl",
+        "vector-build",
+        "256",
+        "16"
+      ],
+      "exit": 0,
+      "process_wall_seconds": 0.09170829200000075,
+      "stdout_sha256": "b570717ac03755f223fca06ee91fba9317f8dfd4ec66301952f45ef7f0d6e360",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": {
+        "mode": "vector-build",
+        "size": 256,
+        "iterations": 16,
+        "cpu_seconds": 0.061868,
+        "allocations": 550912,
+        "retains": 9511024,
+        "releases": 10061936,
+        "counters": {
+          "strings": 0,
+          "string_payload_bytes": 0,
+          "string_copy_bytes": 0,
+          "concat_calls": 0,
+          "concat_temporary_bytes": 0,
+          "tail_calls": 0,
+          "tail_copy_bytes": 0,
+          "vectors": 0,
+          "vector_slots": 0,
+          "vector_get_calls": 0,
+          "vector_set_calls": 0
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "case": "vector-build",
+      "size": 256,
+      "repetition": 5,
+      "label": "baseline",
+      "command": [
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/baseline/probe-warm",
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/probes.kl",
+        "vector-build",
+        "256",
+        "16"
+      ],
+      "exit": 0,
+      "process_wall_seconds": 0.09207841599999966,
+      "stdout_sha256": "2470c032d6472a8805dd11d5a4cdd7cf6c8087f8f6d4ae85bc25b6a59dd9781e",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": {
+        "mode": "vector-build",
+        "size": 256,
+        "iterations": 16,
+        "cpu_seconds": 0.060941,
+        "allocations": 550912,
+        "retains": 9511024,
+        "releases": 10061936,
+        "counters": {
+          "strings": 0,
+          "string_payload_bytes": 0,
+          "string_copy_bytes": 0,
+          "concat_calls": 0,
+          "concat_temporary_bytes": 0,
+          "tail_calls": 0,
+          "tail_copy_bytes": 0,
+          "vectors": 0,
+          "vector_slots": 0,
+          "vector_get_calls": 0,
+          "vector_set_calls": 0
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "case": "vector-build",
+      "size": 256,
+      "repetition": 5,
+      "label": "candidate",
+      "command": [
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/candidate-a/probe",
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/probes.kl",
+        "vector-build",
+        "256",
+        "16"
+      ],
+      "exit": 0,
+      "process_wall_seconds": 0.09291941700000006,
+      "stdout_sha256": "98f12fec66f80463c8841895c5bb97f2ced7b59bfd533b24e612f79d8f7d53d4",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": {
+        "mode": "vector-build",
+        "size": 256,
+        "iterations": 16,
+        "cpu_seconds": 0.064137,
+        "allocations": 550912,
+        "retains": 9511024,
+        "releases": 10061936,
+        "counters": {
+          "strings": 0,
+          "string_payload_bytes": 0,
+          "string_copy_bytes": 0,
+          "concat_calls": 0,
+          "concat_temporary_bytes": 0,
+          "tail_calls": 0,
+          "tail_copy_bytes": 0,
+          "vectors": 0,
+          "vector_slots": 0,
+          "vector_get_calls": 0,
+          "vector_set_calls": 0
+        }
+      },
+      "status": "PASS"
+    }
+  ],
+  "repetitions": 5,
+  "summary": [
+    {
+      "case": "concat",
+      "size": 16,
+      "paired_cpu_ratios": [
+        0.7897188668002816,
+        0.6932968667530349,
+        0.920518571194136,
+        0.8415203736511516,
+        0.8027543762296322
+      ],
+      "median_paired_cpu_ratio": 0.8027543762296322
+    },
+    {
+      "case": "concat",
+      "size": 256,
+      "paired_cpu_ratios": [
+        0.7199061137811557,
+        0.662739965095986,
+        0.641984411207078,
+        0.7201706139858569,
+        0.6848606046347488
+      ],
+      "median_paired_cpu_ratio": 0.6848606046347488
+    },
+    {
+      "case": "concat",
+      "size": 4096,
+      "paired_cpu_ratios": [
+        0.7408549644478711,
+        0.6794699897468255,
+        0.7335620810724545,
+        0.7901508051461191,
+        0.739514348785872
+      ],
+      "median_paired_cpu_ratio": 0.739514348785872
+    },
+    {
+      "case": "string-scan",
+      "size": 2048,
+      "paired_cpu_ratios": [
+        1.0177085778368933,
+        0.9967422431232431,
+        0.9511261592816134,
+        1.0063504508036065,
+        0.998690696241528
+      ],
+      "median_paired_cpu_ratio": 0.998690696241528
+    },
+    {
+      "case": "string-rebuild",
+      "size": 256,
+      "paired_cpu_ratios": [
+        0.8934973453188246,
+        0.952947230004002,
+        0.9097565227497241,
+        0.9808198786213215,
+        0.9486138896827665
+      ],
+      "median_paired_cpu_ratio": 0.9486138896827665
+    },
+    {
+      "case": "string-build",
+      "size": 256,
+      "paired_cpu_ratios": [
+        0.9595550010397171,
+        0.9367657574828888,
+        0.8479020979020979,
+        0.8590865842055185,
+        0.9022814060511113
+      ],
+      "median_paired_cpu_ratio": 0.9022814060511113
+    },
+    {
+      "case": "vector-scan",
+      "size": 256,
+      "paired_cpu_ratios": [
+        0.9749559773038545,
+        0.9966521463748821,
+        1.0100018185124569,
+        1.012659053833605,
+        0.9769933897954969
+      ],
+      "median_paired_cpu_ratio": 0.9966521463748821
+    },
+    {
+      "case": "vector-build",
+      "size": 256,
+      "paired_cpu_ratios": [
+        1.0069225620010123,
+        0.9845686454164054,
+        1.0659490526520872,
+        1.0292558350035559,
+        1.0524441673093647
+      ],
+      "median_paired_cpu_ratio": 1.0292558350035559
+    }
+  ],
+  "status": "PASS"
+}

@@ -1,0 +1,23 @@
+{
+  "scope": "Native kernel and user expression compiled with fatal ASan/UBSan and emitted ownership verification. C host roots native result, collects unreachable vector/closure cycle, verifies all 255 suffix bytes and NUL. No Shen-level gc call is credited as collector execution.",
+  "flags": "-O1 -g -DSHEN_RC_STRING_SLICES=1 -DSHEN_RC_FUSION_DIAGNOSTICS=1 -DSHEN_RC_VERIFY_OWNERSHIP=1 -fsanitize=address,undefined -fno-sanitize-recover=all -fno-omit-frame-pointer -std=c17",
+  "environment": {
+    "ASAN_OPTIONS": "abort_on_error=1",
+    "UBSAN_OPTIONS": "halt_on_error=1",
+    "SHEN_RC_FUSION_STATS": "1"
+  },
+  "result": {
+    "status": "PASS",
+    "cycle_freed_delta": 2,
+    "escaped_suffix_length": 255,
+    "string_views": 1
+  },
+  "source_build_receipt_sha256": "d4cbabc8524f3758d773400f96a18934b1877aecf5fff6ce35552b90efcc3518",
+  "artifacts_sha256": {
+    "evidence/rc/fusion-20261018/candidate-b/native-smoke-host": "9ad5c4cef14c9d37e020f59690923eee9a8900491ab4765d82701f278d633681",
+    "evidence/rc/fusion-20261018/candidate-b/native-smoke-host.c": "fb89471d8055a745ce225f6b155c1b20a9e044f3318d38b40196eecf8641af84",
+    "evidence/rc/fusion-20261018/candidate-b/native-smoke-v2/app.c": "b621d66185117bc7f958de4df2b5f2f7c6e54bf668f7f73883b8e223189b9ea4",
+    "evidence/rc/fusion-20261018/candidate-b/native-smoke-host.out": "e7ba595a711eeec0aade632ecba45965c9b0261f0bea19acb732cecf946d6fdd",
+    "evidence/rc/fusion-20261018/candidate-b/native-smoke-host.err": "ead8a924d5397d3ff949f29c89d33f910dc87ce42f90e24863be0fb1b94f263f"
+  }
+}

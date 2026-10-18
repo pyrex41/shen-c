@@ -1,0 +1,23 @@
+[
+  {
+    "name": "vector-copy-aliases",
+    "expression": "(let V (vector 2) A (vector-> V 1 10) B (vector-> V 2 20) T (tlv V) R (@v (hdv V) T) C (vector-> V 2 99) Snapshot (<-vector R 2) D (vector-> R 2 77) [Snapshot (<-vector V 2) (<-vector T 1) (<-vector R 2)])",
+    "expected": "[20 99 20 77]",
+    "actual": "[20 99 20 77]",
+    "status": "PASS"
+  },
+  {
+    "name": "vector-hole",
+    "expression": "(let V (vector 2) T (tlv V) (trap-error (<-vector T 1) (/. E \"missing\")))",
+    "expected": "missing",
+    "actual": "missing",
+    "status": "PASS"
+  },
+  {
+    "name": "string-alias",
+    "expression": "(let S \"abcd\" T (tlstr S) R (@s (hdstr S) T) [S T R])",
+    "expected": "[abcd bcd abcd]",
+    "actual": "[abcd bcd abcd]",
+    "status": "PASS"
+  }
+]

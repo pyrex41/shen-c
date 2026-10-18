@@ -4,6 +4,14 @@ Source of intent: user plan, 2026-10-16. Historical S42 checkpoint at 0b74f9d
 is preserved. Work is isolated on feat/shen-43.1-qualification; historical
 Boehm comparator is a detached worktree at 97aa8e1.
 
+Follow-up exploration, 2026-10-18: [string/vector copying and fusion](../performance/string-vector-fusion-20261018.md)
+records isolated candidates `ae24940` and `770c39b`, diagnostic counts, matched
+timings and full generated-kernel sanitizers. Direct-buffer `cn` improves its
+focused probes but leaves suite CPU flat; bounded string suffix views remain
+opt-in with no suite gain established. Fresh-vector/string builder fusion is
+the next proposed candidate. This is separate from the released qualification;
+new candidate Linux/Nix/remote CI qualification remains UNKNOWN.
+
 ## Written implementation plan
 
 **Latest qualification: PASS in the user-accepted host window.** After the user

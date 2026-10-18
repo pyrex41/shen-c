@@ -1,0 +1,6 @@
+{
+  "attempt": "vector-hole",
+  "observed": "missing",
+  "initial_expected": "\"missing\"",
+  "reason": "CLI prints string bytes without quotation marks; corrected display oracle, not a language failure."
+}

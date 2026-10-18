@@ -1,0 +1,42 @@
+{
+  "git_head": "770c39bd908b9cbc46add68f7e0d70832a2aa175",
+  "host": "macOS-27.0.1-arm64-arm-64bit",
+  "compiler": "/usr/bin/cc Apple Clang21.0.0",
+  "flags": "-O3 -g -std=c17 -flto=thin -DSHEN_RC_STRING_SLICES=1",
+  "sources": {
+    "src/rc/eval.c": "5d49c8bd17cb29737538745776a7f8dad6f395e9d09e489e6886bae73961709f",
+    "src/rc/rc.c": "4ea5bb6c66d78d22b301fb41c3e1cde9c1eb60c04bc38f26305e188c92580414",
+    "src/rc/emit.c": "e4f56a44159e0a691d397b958770c39e8350519bc30d21b1067e09979166a03b",
+    "src/rc/primitives.c": "f68e82c703fa20bb0ef90bb36632246ed7c9d290cc5858f5d2c7a665d8246add",
+    "src/rc/read.c": "f61444980f2d34d3986f9640103b3478501c4d368f6c2dd5058a4b39b3143667",
+    "src/rc/main.c": "ab8acf1869eb6f6751cf454d107dfe6cf400f267562b758341115582893ee4d1",
+    "src/rc/rc_internal.h": "cec325c07eee2d1666e5dba6326d0e09a5a9a5d6e9f6dbf1b9a1b9bd93ca6790",
+    "src/rc/eval.h": "40840e20cb00334a7032ef11aec08ce6a0846912ae05dfb0d08e894ba7ad2e15",
+    "src/rc/primitives.h": "ad9a5b0483d68a1829b6a0557d9b71b0f0ab240b67ec152ab2f0e4f3c87782d2",
+    "src/rc/rc.h": "b77320047d47b013b5064b44d749e80fab11319769145d9e6a676371d9990aec",
+    "src/rc/emit.h": "ae1946b669f771941b12a706316a28090aefd126f54cc687fa00a3b10b322a9f",
+    "src/rc/eval_plan.h": "91c896c000ff381922ccd5fa72420aab6cc8f87f1f8b7851d97c69142f167af4",
+    "src/rc/read.h": "71fb3e8ce757174ee47dde95f732200ae1b023c66f8164ac0a4d82ebb241fea5",
+    "test/rc/bench_string_vector.c": "70a702de479e76c714a8091df09ac517c28690a0df8aeee15a34dcbe6f50e736",
+    "scripts/benchmark-string-vector.py": "0b11d7de97179f1bced8889cab3336843af92ce57edf0c632d7b4a9febafbb89",
+    "scripts/benchmark-rc.py": "4c23aee050112f7b3bd3c502f2f4dfb8cd9d50dd9b67623ac3daebca28751c11",
+    "scripts/release_manifest.py": "19b1dd8d4a0a6fc412247143bfcba0ab68d9c96e15a63e1c806d7a81347eb96a"
+  },
+  "binaries": {
+    "<OPT_ROOT>/evidence/rc/fusion-20261018/candidate-b/shen-c": "91d9983a35ad5dd1dd15107aaa6d3738e9b37083c1e3037eb2c7b4b2008aa93e",
+    "<OPT_ROOT>/evidence/rc/fusion-20261018/candidate-b/shen-c-diag": "ac4e9cf6471945e41ff901983424a276e594de3a80ceb552d0374779dcd85818",
+    "<OPT_ROOT>/evidence/rc/fusion-20261018/candidate-b/probe": "5df054990553a5ec4fe55c54c9caae2ecd649e5d706795d3476a03643caa8340",
+    "<OPT_ROOT>/evidence/rc/fusion-20261018/candidate-b/probe-diag": "df3d3f3ab83c8b5f835acef4be6f5922a68d81eb73fa82a9a8d87f1bc348d1db"
+  },
+  "shared_kernel_object": {
+    "path": "<HOME>/projects/shen-c-release-0.3.0/obj/rc/kernel.o",
+    "sha256": "b57112d3570688aef59d09d29dcb8806eadeacd1fc8236fa2b47a39aa2c49a3e"
+  },
+  "qualification_receipt_sha256": "f9f0674f16a9bd6d4f5975f99ce9aa03ed17b16037f80b010fe2045a3050d64f",
+  "diagnostic_extra_flag": "-DSHEN_RC_FUSION_DIAGNOSTICS=1",
+  "scope": "Exploratory opt-in string suffix views on top of candidate A; release binaries use the same unchanged generated kernel and main objects.",
+  "shared_main_object": {
+    "path": "<HOME>/projects/shen-c-release-0.3.0/obj/rc/main.o",
+    "sha256": "2755097558a1fe3458b330252b8a038a91238ec262f8798a85accedcb74860cc"
+  }
+}

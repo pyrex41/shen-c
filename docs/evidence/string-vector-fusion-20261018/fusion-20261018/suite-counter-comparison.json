@@ -1,0 +1,42 @@
+{
+  "runs": [
+    {
+      "label": "baseline",
+      "counters": {
+        "strings": 2002527,
+        "string_payload_bytes": 10574386,
+        "string_copy_bytes": 8571859,
+        "concat_calls": 136107,
+        "concat_temporary_bytes": 2030698,
+        "tail_calls": 414988,
+        "tail_copy_bytes": 3631000,
+        "vectors": 2282015,
+        "vector_slots": 5128075,
+        "vector_get_calls": 11670376,
+        "vector_set_calls": 13667711
+      }
+    },
+    {
+      "label": "candidate",
+      "counters": {
+        "strings": 2002527,
+        "string_payload_bytes": 10574491,
+        "string_copy_bytes": 8571964,
+        "concat_calls": 136107,
+        "concat_temporary_bytes": 0,
+        "tail_calls": 414988,
+        "tail_copy_bytes": 3631000,
+        "vectors": 2282015,
+        "vector_slots": 5128075,
+        "vector_get_calls": 11670376,
+        "vector_set_calls": 13667711
+      }
+    }
+  ],
+  "timing_text_bytes": [
+    5593,
+    5628
+  ],
+  "non_timing_output_identical": true,
+  "note": "Printed floating-point Shen timing strings vary in length, so exact total string-copy-byte equality is not a semantic acceptance condition. Targeted phase counters match exactly."
+}

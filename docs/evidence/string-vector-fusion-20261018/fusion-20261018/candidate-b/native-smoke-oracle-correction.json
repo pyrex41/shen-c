@@ -1,0 +1,5 @@
+{
+  "initial_attempt": "native-smoke",
+  "status": "FAILED_CONTROL_SETUP",
+  "reason": "Port exposes shen.gc, not gc. Original source/build/output retained; corrected fixture rerun as native-smoke-v2."
+}

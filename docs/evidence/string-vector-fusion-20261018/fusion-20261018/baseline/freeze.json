@@ -1,0 +1,34 @@
+{
+  "git_head": "075378049b1b38ae463eb53ec37b7446e18170ec",
+  "host": "macOS-27.0.1-arm64-arm-64bit",
+  "compiler": "Apple clang version 21.0.0 (clang-2100.3.34.2)\nTarget: arm64-apple-darwin27.0.0\nThread model: posix\nInstalledDir: /Library/Developer/CommandLineTools/usr/bin\n",
+  "flags": "-O3 -g -flto=thin -std=c17; diagnostic build additionally -DSHEN_RC_FUSION_DIAGNOSTICS=1",
+  "sources": {
+    "src/rc/eval.c": "5d49c8bd17cb29737538745776a7f8dad6f395e9d09e489e6886bae73961709f",
+    "src/rc/rc.c": "6a4797f3be729501046eaafab9ce84d1f2bbdb32c619cb740971f3b7aa3b5f8a",
+    "src/rc/emit.c": "e4f56a44159e0a691d397b958770c39e8350519bc30d21b1067e09979166a03b",
+    "src/rc/primitives.c": "33c851ee14f939a9c6eae56551ab79585e4bf11b4a353500ce7aaa7fefc696f0",
+    "src/rc/read.c": "f61444980f2d34d3986f9640103b3478501c4d368f6c2dd5058a4b39b3143667",
+    "src/rc/main.c": "ab8acf1869eb6f6751cf454d107dfe6cf400f267562b758341115582893ee4d1",
+    "src/rc/rc_internal.h": "f5b3b73d158f346d8859cc3f6f34d9a009479446c5ce5af2426bf685fa8e58ce",
+    "src/rc/eval.h": "40840e20cb00334a7032ef11aec08ce6a0846912ae05dfb0d08e894ba7ad2e15",
+    "src/rc/primitives.h": "ad9a5b0483d68a1829b6a0557d9b71b0f0ab240b67ec152ab2f0e4f3c87782d2",
+    "src/rc/rc.h": "b77320047d47b013b5064b44d749e80fab11319769145d9e6a676371d9990aec",
+    "src/rc/emit.h": "ae1946b669f771941b12a706316a28090aefd126f54cc687fa00a3b10b322a9f",
+    "src/rc/eval_plan.h": "91c896c000ff381922ccd5fa72420aab6cc8f87f1f8b7851d97c69142f167af4",
+    "src/rc/read.h": "71fb3e8ce757174ee47dde95f732200ae1b023c66f8164ac0a4d82ebb241fea5",
+    "test/rc/bench_string_vector.c": "70a702de479e76c714a8091df09ac517c28690a0df8aeee15a34dcbe6f50e736",
+    "test/rc/fusion-probes.shen": "d0b92f17305b4f7076173f4bb80efb13a973a9bf91ac5dac52f8120a28650055"
+  },
+  "artifacts": {
+    "<OPT_ROOT>/evidence/rc/fusion-20261018/baseline/probe-warm": "fc79d7954004cff825b2d01df9c2c1be3922fbbabb559b9b606bff1b6e89fff5",
+    "<OPT_ROOT>/evidence/rc/fusion-20261018/baseline/probe-diag-warm": "1bfb2ad970f9fc50a4b53bb372b538cea4c1a7f9921a33bd84e2900c78c01979",
+    "<OPT_ROOT>/evidence/rc/fusion-20261018/baseline/shen-c": "402d44a001cfd88283d4b03332cbd9560e5dc289d1847e80762998d99c794085",
+    "<OPT_ROOT>/evidence/rc/fusion-20261018/baseline/shen-c-diag": "84142cd1775a1c8a8838cf472d7c8cf015ca909688020f5d3242ff94e4da6918",
+    "<OPT_ROOT>/evidence/rc/fusion-20261018/probes.kl": "d214f388aff51abf02f67e642aab02af96511d3cfd6387e4d0e401af34e14014",
+    "<HOME>/projects/shen-c-release-0.3.0/obj/rc/kernel.o": "b57112d3570688aef59d09d29dcb8806eadeacd1fc8236fa2b47a39aa2c49a3e",
+    "<HOME>/projects/shen-c-release-0.3.0/obj/rc/main.o": "2755097558a1fe3458b330252b8a038a91238ec262f8798a85accedcb74860cc"
+  },
+  "kernel_generated_c_sha256": "1c97f40cc3574dff23696b13cad8ad9c62af2a2080e5e84b0e436c4fd096c544",
+  "scope": "Exploration baseline. Same generated kernel/main objects reused read-only for all runtime candidates; generated C matches frozen 43.1 checkpoint. No new product performance claim."
+}

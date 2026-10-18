@@ -1,0 +1,88 @@
+{
+  "scope": "Five existing emitted controls against unchanged released emitter and current opt-in runtime; not complete CLI/platform qualification",
+  "builder_sha256": "e5e7cc64039117d760c0ca88f26c32e41536f6cc35f5bd6debe667a43b599b2b",
+  "flags": "-O1 -g -DSHEN_RC_STRING_SLICES=1 -DSHEN_RC_VERIFY_OWNERSHIP=1 -fsanitize=address,undefined -fno-sanitize-recover=all -fno-omit-frame-pointer",
+  "sources_sha256": {
+    "src/rc/eval.c": "5d49c8bd17cb29737538745776a7f8dad6f395e9d09e489e6886bae73961709f",
+    "src/rc/rc.c": "4ea5bb6c66d78d22b301fb41c3e1cde9c1eb60c04bc38f26305e188c92580414",
+    "src/rc/rc_internal.h": "cec325c07eee2d1666e5dba6326d0e09a5a9a5d6e9f6dbf1b9a1b9bd93ca6790",
+    "src/rc/emit.c": "e4f56a44159e0a691d397b958770c39e8350519bc30d21b1067e09979166a03b",
+    "src/rc/primitives.c": "f68e82c703fa20bb0ef90bb36632246ed7c9d290cc5858f5d2c7a665d8246add",
+    "src/rc/read.c": "f61444980f2d34d3986f9640103b3478501c4d368f6c2dd5058a4b39b3143667",
+    "src/rc/eval.h": "40840e20cb00334a7032ef11aec08ce6a0846912ae05dfb0d08e894ba7ad2e15",
+    "src/rc/main.c": "ab8acf1869eb6f6751cf454d107dfe6cf400f267562b758341115582893ee4d1",
+    "src/rc/primitives.h": "ad9a5b0483d68a1829b6a0557d9b71b0f0ab240b67ec152ab2f0e4f3c87782d2",
+    "src/rc/rc.h": "b77320047d47b013b5064b44d749e80fab11319769145d9e6a676371d9990aec",
+    "src/rc/emit.h": "ae1946b669f771941b12a706316a28090aefd126f54cc687fa00a3b10b322a9f",
+    "src/rc/eval_plan.h": "91c896c000ff381922ccd5fa72420aab6cc8f87f1f8b7851d97c69142f167af4",
+    "src/rc/read.h": "71fb3e8ce757174ee47dde95f732200ae1b023c66f8164ac0a4d82ebb241fea5"
+  },
+  "runs": [
+    {
+      "name": "semantics",
+      "command": [
+        "sh",
+        "<OPT_ROOT>/test/rc/test_semantics.sh",
+        "<HOME>/projects/shen-c-release-0.3.0/bin/rc-build"
+      ],
+      "exit": 0,
+      "seconds": 4.1997568339999996,
+      "script_sha256": "2e947c83641aa898d6a733c1e681b1c6d6cedbaa1b362b560b12031b183b3c2a",
+      "log_sha256": "a123819087a3589215316381e9cf57b3f21c93fdc9e08867acf4b03e11454281",
+      "status": "PASS"
+    },
+    {
+      "name": "ownership",
+      "command": [
+        "sh",
+        "<OPT_ROOT>/test/rc/test_ownership.sh",
+        "<HOME>/projects/shen-c-release-0.3.0/bin/rc-build"
+      ],
+      "exit": 0,
+      "seconds": 2.334876125,
+      "script_sha256": "a37e5e9c0a387780e2c8f9d65f3524dde552bcd50f0c612a3b3a7f38bff02d0e",
+      "log_sha256": "e41a9c601507897f761dc17084c87605a54ca7446f301e8d28987ddae41c9f00",
+      "status": "PASS"
+    },
+    {
+      "name": "callee",
+      "command": [
+        "sh",
+        "<OPT_ROOT>/test/rc/test_callee.sh",
+        "<HOME>/projects/shen-c-release-0.3.0/bin/rc-build"
+      ],
+      "exit": 0,
+      "seconds": 2.3261034169999997,
+      "script_sha256": "8c8a80ca698262a0913653e162d929851ec4db4d67f5c74905782aa26161f456",
+      "log_sha256": "0ada8984a47584e7c88fda1c0abb6b0a180900dd1b2f08a12bd7ec7e4a7ee16a",
+      "status": "PASS"
+    },
+    {
+      "name": "primitive_fast",
+      "command": [
+        "sh",
+        "<OPT_ROOT>/test/rc/test_primitive_fast.sh",
+        "<HOME>/projects/shen-c-release-0.3.0/bin/rc-build"
+      ],
+      "exit": 0,
+      "seconds": 1.0594372499999984,
+      "script_sha256": "2e48007e6d96ef561f47ea8140ddceb39deba7bca868c245adb133b9f4977fc9",
+      "log_sha256": "2dbcf006a47dca292145ea53e80f5f82b55604b2dc001eb264c3656f53bad2a6",
+      "status": "PASS"
+    },
+    {
+      "name": "prolog_fast",
+      "command": [
+        "sh",
+        "<OPT_ROOT>/test/rc/test_prolog_fast.sh",
+        "<HOME>/projects/shen-c-release-0.3.0/bin/rc-build"
+      ],
+      "exit": 0,
+      "seconds": 82.05679533300001,
+      "script_sha256": "dab8f5710a8b9df1e9ac0b941bb0c7d1d2d46e2374f4a75316a82cd2b0229217",
+      "log_sha256": "87d980469d3f10ee14700905fe6e070afbde6502b1f3ebf46d3aed48dace168a",
+      "status": "PASS"
+    }
+  ],
+  "status": "PASS"
+}

@@ -1,0 +1,16 @@
+{
+  "cases": [
+    {
+      "label": "baseline-diag",
+      "argv": [
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/baseline/shen-c-diag",
+        "script",
+        "runme.shen"
+      ],
+      "env": {
+        "SHEN_RC_FUSION_STATS": "1"
+      }
+    }
+  ],
+  "repetitions": 1
+}

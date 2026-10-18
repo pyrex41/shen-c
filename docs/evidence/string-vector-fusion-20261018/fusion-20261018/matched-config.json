@@ -1,0 +1,66 @@
+{
+  "cases": [
+    {
+      "label": "baseline",
+      "argv": [
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/baseline/shen-c",
+        "script",
+        "runme.shen"
+      ],
+      "env": {},
+      "dependency_sha256": {
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/baseline/freeze.json": "79aadd8ff51a01228c55023f19bb4519f6ffc9fb345e2574a467b180eed00c03",
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/candidate-a/freeze.json": "b4fb0cce210a15ae39f362806cefd371338956b39baba16b0f1ac709de0b13b6",
+        "<OPT_ROOT>/src/rc/eval.c": "5d49c8bd17cb29737538745776a7f8dad6f395e9d09e489e6886bae73961709f",
+        "<OPT_ROOT>/src/rc/rc.c": "3cff750532350df3cab2490c2f4707b172dfedd75040a02fd99d3300b2470bff",
+        "<OPT_ROOT>/src/rc/emit.c": "e4f56a44159e0a691d397b958770c39e8350519bc30d21b1067e09979166a03b",
+        "<OPT_ROOT>/src/rc/primitives.c": "6f4922b339d4aa72ce7f9399e8928b0e5e8522a04625136c1a4b7512ab7dc9d1",
+        "<OPT_ROOT>/src/rc/read.c": "f61444980f2d34d3986f9640103b3478501c4d368f6c2dd5058a4b39b3143667",
+        "<OPT_ROOT>/src/rc/main.c": "ab8acf1869eb6f6751cf454d107dfe6cf400f267562b758341115582893ee4d1",
+        "<OPT_ROOT>/src/rc/rc_internal.h": "e4ef0b350dba9e5169d09340a407ebeccc4cec5676c32b61354049b9283dfbc9",
+        "<OPT_ROOT>/src/rc/eval.h": "40840e20cb00334a7032ef11aec08ce6a0846912ae05dfb0d08e894ba7ad2e15",
+        "<OPT_ROOT>/src/rc/primitives.h": "ad9a5b0483d68a1829b6a0557d9b71b0f0ab240b67ec152ab2f0e4f3c87782d2",
+        "<OPT_ROOT>/src/rc/rc.h": "b77320047d47b013b5064b44d749e80fab11319769145d9e6a676371d9990aec",
+        "<OPT_ROOT>/src/rc/emit.h": "ae1946b669f771941b12a706316a28090aefd126f54cc687fa00a3b10b322a9f",
+        "<OPT_ROOT>/src/rc/eval_plan.h": "91c896c000ff381922ccd5fa72420aab6cc8f87f1f8b7851d97c69142f167af4",
+        "<OPT_ROOT>/src/rc/read.h": "71fb3e8ce757174ee47dde95f732200ae1b023c66f8164ac0a4d82ebb241fea5",
+        "<OPT_ROOT>/test/rc/bench_string_vector.c": "70a702de479e76c714a8091df09ac517c28690a0df8aeee15a34dcbe6f50e736",
+        "<OPT_ROOT>/scripts/benchmark-string-vector.py": "0b11d7de97179f1bced8889cab3336843af92ce57edf0c632d7b4a9febafbb89",
+        "<OPT_ROOT>/scripts/benchmark-rc.py": "4c23aee050112f7b3bd3c502f2f4dfb8cd9d50dd9b67623ac3daebca28751c11",
+        "<OPT_ROOT>/scripts/release_manifest.py": "19b1dd8d4a0a6fc412247143bfcba0ab68d9c96e15a63e1c806d7a81347eb96a"
+      }
+    },
+    {
+      "label": "candidate",
+      "argv": [
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/candidate-a/shen-c",
+        "script",
+        "runme.shen"
+      ],
+      "env": {},
+      "dependency_sha256": {
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/baseline/freeze.json": "79aadd8ff51a01228c55023f19bb4519f6ffc9fb345e2574a467b180eed00c03",
+        "<OPT_ROOT>/evidence/rc/fusion-20261018/candidate-a/freeze.json": "b4fb0cce210a15ae39f362806cefd371338956b39baba16b0f1ac709de0b13b6",
+        "<OPT_ROOT>/src/rc/eval.c": "5d49c8bd17cb29737538745776a7f8dad6f395e9d09e489e6886bae73961709f",
+        "<OPT_ROOT>/src/rc/rc.c": "3cff750532350df3cab2490c2f4707b172dfedd75040a02fd99d3300b2470bff",
+        "<OPT_ROOT>/src/rc/emit.c": "e4f56a44159e0a691d397b958770c39e8350519bc30d21b1067e09979166a03b",
+        "<OPT_ROOT>/src/rc/primitives.c": "6f4922b339d4aa72ce7f9399e8928b0e5e8522a04625136c1a4b7512ab7dc9d1",
+        "<OPT_ROOT>/src/rc/read.c": "f61444980f2d34d3986f9640103b3478501c4d368f6c2dd5058a4b39b3143667",
+        "<OPT_ROOT>/src/rc/main.c": "ab8acf1869eb6f6751cf454d107dfe6cf400f267562b758341115582893ee4d1",
+        "<OPT_ROOT>/src/rc/rc_internal.h": "e4ef0b350dba9e5169d09340a407ebeccc4cec5676c32b61354049b9283dfbc9",
+        "<OPT_ROOT>/src/rc/eval.h": "40840e20cb00334a7032ef11aec08ce6a0846912ae05dfb0d08e894ba7ad2e15",
+        "<OPT_ROOT>/src/rc/primitives.h": "ad9a5b0483d68a1829b6a0557d9b71b0f0ab240b67ec152ab2f0e4f3c87782d2",
+        "<OPT_ROOT>/src/rc/rc.h": "b77320047d47b013b5064b44d749e80fab11319769145d9e6a676371d9990aec",
+        "<OPT_ROOT>/src/rc/emit.h": "ae1946b669f771941b12a706316a28090aefd126f54cc687fa00a3b10b322a9f",
+        "<OPT_ROOT>/src/rc/eval_plan.h": "91c896c000ff381922ccd5fa72420aab6cc8f87f1f8b7851d97c69142f167af4",
+        "<OPT_ROOT>/src/rc/read.h": "71fb3e8ce757174ee47dde95f732200ae1b023c66f8164ac0a4d82ebb241fea5",
+        "<OPT_ROOT>/test/rc/bench_string_vector.c": "70a702de479e76c714a8091df09ac517c28690a0df8aeee15a34dcbe6f50e736",
+        "<OPT_ROOT>/scripts/benchmark-string-vector.py": "0b11d7de97179f1bced8889cab3336843af92ce57edf0c632d7b4a9febafbb89",
+        "<OPT_ROOT>/scripts/benchmark-rc.py": "4c23aee050112f7b3bd3c502f2f4dfb8cd9d50dd9b67623ac3daebca28751c11",
+        "<OPT_ROOT>/scripts/release_manifest.py": "19b1dd8d4a0a6fc412247143bfcba0ab68d9c96e15a63e1c806d7a81347eb96a"
+      }
+    }
+  ],
+  "repetitions": 5,
+  "scope": "Exploratory candidate A versus same-code RC baseline; no Boehm or release acceptance claim"
+}
