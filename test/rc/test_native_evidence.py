@@ -10,7 +10,7 @@ table = 'static const char *const rc_module_symbol_names[]={"proof", "eval-kl"};
 def function(name, body):
     return 'static RcValue *%s(RcContext *ctx,RcValue *self,size_t argc,RcValue **argv) {\n%s\n}\n' % (name, body)
 registration = function('rc_native_body_0', '''
- t[0]=rc_retain(symbols[0]);
+ t[0]=symbols[0];
  t[1]=rc_closure_owned(ctx,1,rc_native_1,0,NULL);
  if(!rc_function_set(ctx,t[0],t[1])) goto cleanup;
 ''')
@@ -22,6 +22,8 @@ body = function('rc_native_body_1', ' t[0]=rc_retain(argv[0]); return t[0];')
 source = table + registration + wrapper + body
 evidence = native_definition_evidence(source, 'proof')
 assert evidence['callback'] == 'rc_native_1' and evidence['body'] == 'rc_native_body_1'
+# Output from before immortal symbols retained the table entry.
+assert native_definition_evidence(source.replace('t[0]=symbols[0]', 't[0]=rc_retain(symbols[0])'), 'proof') == evidence
 controls = {
     'interpreted delegated body': source.replace('rc_retain(argv[0])', 'rc_eval(ctx,argv[0])'),
     'cached eval-kl forwarding': source.replace('rc_retain(argv[0])', 'rc_apply(ctx,symbols[1],0,NULL)'),
@@ -31,7 +33,7 @@ controls = {
     'duplicate body': source + body,
     'wrong wrapper body': source.replace('return rc_native_body_1(ctx,self,argv)', 'return rc_native_body_7(ctx,self,argv)'),
     'unchecked wrapper': source.replace('if(argc!=1)', 'if(argc!=2)'),
-    'unknown symbol mapping': source.replace('rc_retain(symbols[0])', 'unknown_symbol(ctx)'),
+    'unknown symbol mapping': source.replace('t[0]=symbols[0]', 't[0]=unknown_symbol(ctx)'),
     'unknown callback mapping': source.replace('rc_closure_owned(ctx,1,rc_native_1,0,NULL)', 'unknown_function(ctx)'),
     'out of range symbol': source.replace('symbols[0]', 'symbols[99]'),
     'empty delegated body': source.replace(body, function('rc_native_body_1', ' return NULL;')),
@@ -47,7 +49,7 @@ for name, candidate in controls.items():
     else:
         raise AssertionError('negative control accepted: ' + name)
 direct_registration = function('rc_native_0', registration.split('{', 1)[1].rsplit('}', 1)[0]
-                               .replace('rc_retain(symbols[0])', 'rc_symbol(ctx,"proof")'))
+                               .replace('t[0]=symbols[0]', 't[0]=rc_symbol(ctx,"proof")'))
 direct_body = function('rc_native_1', 'if(argc!=1) return rc_error(ctx,"native arity mismatch");\n t[0]=rc_retain(argv[0]); return t[0];')
 assert native_definition_evidence(direct_registration+direct_body, 'proof')['body'] == 'rc_native_1'
 try:

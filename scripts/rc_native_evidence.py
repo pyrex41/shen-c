@@ -76,9 +76,10 @@ def _symbols(source):
 
 
 def _symbol_value(expression, names):
-    cached = re.fullmatch(r'rc_retain\(symbols\[(\d+)\]\)', expression.strip())
+    # Immortal symbols are loaded directly; older output retained them.
+    cached = re.fullmatch(r'(?:rc_retain\(symbols\[(\d+)\]\)|symbols\[(\d+)\])', expression.strip())
     if cached:
-        index = int(cached[1])
+        index = int(cached[1] or cached[2])
         if index >= len(names):
             raise ValueError('compiled symbol index out of range')
         return names[index]

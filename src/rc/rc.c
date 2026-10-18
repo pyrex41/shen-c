@@ -112,7 +112,12 @@ struct RcContext {
     char *error;
     bool collecting, error_active, adaptive_collection, acyclic;
 };
-static RcValue nil_value = {.type = RC_NIL, .refs = SIZE_MAX};
+/* Immortal values carry this sentinel count. Retain/release skip them with
+ * one test; they are freed only at context teardown. Interned symbols are
+ * immortal because the intern table already keeps them alive until then. A
+ * counted object would need 2^64-1 owners to reach the sentinel. */
+#define RC_IMMORTAL SIZE_MAX
+static RcValue nil_value = {.type = RC_NIL, .refs = RC_IMMORTAL};
 
 #if SHEN_RC_IMMEDIATE_INTEGERS
 _Static_assert(_Alignof(RcValue) >= 2, "heap values must have a clear low bit");
@@ -134,6 +139,10 @@ static int64_t immediate_integer(const RcValue *v) {
 }
 static bool is_heap(const RcValue *v) {
     return v && v != &nil_value && !is_immediate(v);
+}
+/* Nil carries the immortal sentinel, so one test also covers it. */
+static bool is_counted(const RcValue *v) {
+    return v && !is_immediate(v) && v->refs != RC_IMMORTAL;
 }
 static bool may_reach_vector(const RcValue *v) {
     return is_heap(v) && v->reaches_vector;
@@ -225,8 +234,7 @@ RcContext *rc_context_new_with_policy(RcCyclePolicy policy) {
 }
 bool rc_context_is_acyclic(const RcContext *ctx) { return ctx && ctx->acyclic; }
 RcValue *rc_retain(RcValue *v) {
-    if (is_heap(v)) {
-        if (v->refs == SIZE_MAX) abort();
+    if (is_counted(v)) {
         v->ctx->stats.retain_calls++;
         v->refs++;
     }
@@ -299,7 +307,7 @@ static void raw_free(RcValue *v) {
     }
 }
 static void release_edge(RcValue *v, void *data) {
-    if (!is_heap(v)) return;
+    if (!is_counted(v)) return;
     RcValue **work = data;
     if (!v->refs) abort();
     v->ctx->stats.release_calls++;
@@ -625,7 +633,7 @@ RcValue *rc_symbol(RcContext *ctx, const char *name) {
     if (ctx->symbol_capacity) {
         size_t bucket = (size_t)hash & (ctx->symbol_capacity - 1);
         for (RcValue *v = ctx->symbols[bucket]; v; v = v->as.text.intern_next)
-            if (v->as.text.hash == hash && !strcmp(v->as.text.data, name)) return rc_retain(v);
+            if (v->as.text.hash == hash && !strcmp(v->as.text.data, name)) return v;
     }
     if (!ctx->symbol_capacity || ctx->symbol_count >= ctx->symbol_capacity - ctx->symbol_capacity / 4) {
         size_t capacity = ctx->symbol_capacity ? ctx->symbol_capacity * 2 : 64;
@@ -637,8 +645,11 @@ RcValue *rc_symbol(RcContext *ctx, const char *name) {
     size_t bucket = (size_t)hash & (ctx->symbol_capacity - 1);
     v->as.text.global = NULL; v->as.text.function = NULL;
     v->as.text.hash = hash;
+    /* The intern table roots every symbol until teardown, so its count can
+     * never decide a lifetime. The returned owner is the immortal itself. */
+    v->refs = RC_IMMORTAL;
     v->as.text.intern_next = ctx->symbols[bucket];
-    ctx->symbols[bucket] = rc_retain(v); ctx->symbol_count++;
+    ctx->symbols[bucket] = v; ctx->symbol_count++;
     /* Only a new interned identity needs name comparisons. These borrowed
      * pointers live exactly as long as the context's intern-table roots. */
     if (!strcmp(name, "true")) ctx->true_symbol = v;
@@ -671,10 +682,10 @@ RcValue *const *rc_symbol_table(RcContext *ctx, const RcSymbolTable *table) {
 const char *rc_text(const RcValue *v) { return v && (rc_type(v) == RC_STRING || rc_type(v) == RC_SYMBOL) ? v->as.text.data : NULL; }
 size_t rc_text_length(const RcValue *v) { return v && (rc_type(v) == RC_STRING || rc_type(v) == RC_SYMBOL) ? v->as.text.length : 0; }
 RcValue *rc_true(RcContext *ctx) {
-    return ctx && ctx->true_symbol ? rc_retain(ctx->true_symbol) : rc_symbol(ctx, "true");
+    return ctx && ctx->true_symbol ? ctx->true_symbol : rc_symbol(ctx, "true");
 }
 RcValue *rc_false(RcContext *ctx) {
-    return ctx && ctx->false_symbol ? rc_retain(ctx->false_symbol) : rc_symbol(ctx, "false");
+    return ctx && ctx->false_symbol ? ctx->false_symbol : rc_symbol(ctx, "false");
 }
 bool rc_is_true(const RcValue *v) { return rc_type(v) == RC_SYMBOL && v == v->ctx->true_symbol; }
 bool rc_is_false(const RcValue *v) { return rc_type(v) == RC_SYMBOL && v == v->ctx->false_symbol; }

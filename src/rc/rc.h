@@ -49,7 +49,8 @@ typedef struct {
     size_t cached_objects, cached_bytes, peak_cached_bytes;
     size_t system_allocations, system_frees;
     /* Actual managed-value reference count increments/decrements, including
-     * internal edge operations; ownership transfers do not increment these. */
+     * internal edge operations; ownership transfers do not increment these.
+     * Immortal values (including interned symbols) are never counted. */
     size_t retain_calls, release_calls;
     size_t pair_allocations, pair_reuse_attempts, pair_reuses, pair_reuse_misses;
     size_t pair_tail_transfers, pair_tail_shares;
@@ -77,7 +78,8 @@ RcStats rc_stats(const RcContext *ctx);
 RcValue *rc_retain(RcValue *value);
 void rc_release(RcValue *value);
 RcType rc_type(const RcValue *value);
-/* Immortal values (nil and immediate integers) report SIZE_MAX. */
+/* Immortal values (nil, immediate integers and interned symbols) report
+ * SIZE_MAX. Retaining or releasing them changes nothing and is not counted. */
 size_t rc_refcount(const RcValue *value);
 RcValue *rc_nil(void); /* Immortal singleton; release is harmless. */
 bool rc_is_nil(const RcValue *value);
@@ -101,6 +103,7 @@ bool rc_number_is_int64(const RcValue *value);
 int64_t rc_integer_value(const RcValue *value);
 RcValue *rc_string(RcContext *ctx, const char *text);
 RcValue *rc_string_n(RcContext *ctx, const char *text, size_t length);
+/* Interned and immortal: the result may be released, but need not be. */
 RcValue *rc_symbol(RcContext *ctx, const char *name);
 /* Immutable compiled-module descriptor; descriptor and names must have static
  * storage duration. The returned array and its symbol values are borrowed from

@@ -348,9 +348,11 @@ static size_t symbol_index(RcEmitFn *f,const char *name) {
  }
  return p->symbols[p->nsymbols]=name,p->nsymbols++;
 }
+/* Interned symbols are immortal: the table pointer is already an owner, and
+ * the slot's later release is a no-op. */
 static void symbol_slot(RcEmitFn *f,int slot,const char *name) {
  size_t index=symbol_index(f,name);
- put(&f->code,"  t[%d]=rc_retain(symbols[%zu]);\n",slot,index);
+ put(&f->code,"  t[%d]=symbols[%zu];\n",slot,index);
 }
 static size_t module_call(RcEmitFn *f,const char *name){
  size_t symbol=symbol_index(f,name);
