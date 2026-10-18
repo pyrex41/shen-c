@@ -1,0 +1,35 @@
+name: Bifrost CLI corpus
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  corpus:
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: shen-c
+      - uses: actions/checkout@v4
+        with:
+          repository: pyrex41/bifrost
+          ref: def3047a41f948494c2eedd34b07110fb8a87e16
+          path: bifrost
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.27.x'
+          cache: false
+      - name: Build native CLI
+        run: make -C shen-c CC=clang -j2
+      - name: Run unchanged pinned CLI corpus
+        working-directory: bifrost
+        env:
+          BIFROST_SHEN_C: ${{ github.workspace }}/shen-c/bin/shen-c
+        run: go run . --impls shen-c
