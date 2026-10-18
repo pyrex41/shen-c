@@ -1,5 +1,8 @@
 #include "primitives.h"
 #include "rc.h"
+#ifdef NDEBUG
+#undef NDEBUG
+#endif
 #include <assert.h>
 #include <inttypes.h>
 #include <stdio.h>
