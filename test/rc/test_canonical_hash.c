@@ -17,6 +17,10 @@ static RcValue *old_hashkey(RcContext *ctx, RcValue *self, size_t argc, RcValue 
     RcValue *result=rc_integer(ctx, rc_type(arg) == RC_NUMBER && rc_number_is_exact_integer(arg) ? 17 : 23);
     rc_release(arg); return result;
 }
+static RcValue *old_hashkey_borrowed(RcContext *ctx, RcValue *self, size_t argc, RcValue *const *args) {
+    (void)self; (void)argc;
+    return rc_integer(ctx, rc_type(args[0]) == RC_NUMBER && rc_number_is_exact_integer(args[0]) ? 17 : 23);
+}
 static RcValue *always_false(RcContext *ctx, RcValue *self, size_t argc, RcValue *const *args) {
     (void)self; (void)argc; (void)args; return rc_false(ctx);
 }
@@ -31,7 +35,7 @@ static void same_hash(RcContext *ctx, RcValue *fn, RcValue *a, RcValue *b) {
     rc_release(ha); rc_release(hb);
 }
 
-int main(void) {
+static void exercise(bool borrowed) {
     RcContext *ctx = rc_context_new();
     assert(ctx && rc_install_primitives(ctx));
     const char *dependency_names[]={"explode","shen.app","map","string->n","shen.prodbutzero"};
@@ -42,9 +46,11 @@ int main(void) {
         assert(s&&f&&rc_function_set(ctx,s,f)); rc_release(f); rc_release(s);
     }
     RcValue *hash_name = rc_symbol(ctx, "shen.hashkey");
-    RcValue *original = rc_closure_owned(ctx, 1, old_hashkey, 0, NULL);
+    RcValue *original = borrowed ? rc_closure(ctx, 1, old_hashkey_borrowed, 0, NULL)
+                                 : rc_closure_owned(ctx, 1, old_hashkey, 0, NULL);
     assert(hash_name && original && rc_function_set(ctx, hash_name, original));
-    assert(rc_install_numeric_hash_owned(ctx, old_hashkey));
+    assert(borrowed ? rc_install_numeric_hash_borrowed(ctx, old_hashkey_borrowed)
+                    : rc_install_numeric_hash_owned(ctx, old_hashkey));
     RcValue *fn = rc_function_get(ctx, hash_name);
     assert(fn && !rc_has_error(ctx));
 
@@ -78,6 +84,11 @@ int main(void) {
     rc_release(min_float); rc_release(min); rc_release(two53_float); rc_release(two53);
     rc_release(minus_zero); rc_release(zero); rc_release(one_float); rc_release(one);
     rc_release(fn); rc_release(original); rc_release(hash_name); rc_context_free(ctx);
-    puts("canonical numeric hash wrapper: equality, printing, bounds, fallback PASS");
+}
+
+int main(void) {
+    exercise(false);
+    exercise(true);
+    puts("canonical numeric hash wrapper: owned/borrowed equality, printing, bounds, fallback PASS");
     return 0;
 }

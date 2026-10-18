@@ -11,7 +11,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        include:
+          - os: ubuntu-latest
+            cc: clang-18
+            ar: llvm-ar-18
+          - os: macos-latest
+            cc: clang
+            ar: ar
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -27,7 +33,10 @@ jobs:
           go-version: '1.27.x'
           cache: false
       - name: Build native CLI
-        run: make -C shen-c CC=clang -j2
+        env:
+          CC: ${{ matrix.cc }}
+          AR: ${{ matrix.ar }}
+        run: make -C shen-c CC="$CC" AR="$AR" -j2
       - name: Run unchanged pinned CLI corpus
         working-directory: bifrost
         env:
