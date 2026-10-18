@@ -1,0 +1,50 @@
+{
+  "numerical_acceptance": "PASS",
+  "execution_audit": "PASS",
+  "runtime_checkpoint": "8e01579c238ad6bf2aef18492bb47cf389cbbeed",
+  "source_head": "74336ee0ae7e6a8da4f4cb6da2020cf4e7fdfea8",
+  "config_sha256": "a00b8659c889e27227157ad9744123389f0d0278c92ca7621dcbda841d5a2fe9",
+  "result_sha256": "72035f1bfd5b978b8412f2ae0e826eceb192bc14ae780bb479c7b5621c710dff",
+  "host_samples_sha256": "10391bdea1c8e77a996ae6bdcdb3a29742db620ce272044f8797114cf7361f6a",
+  "suite_results": "20 x 136/0, all 36 reports and exact redirect output in every execution",
+  "batches": [
+    {
+      "user_seconds": 0.8227571115973741,
+      "sys_seconds": 1.0,
+      "wall_seconds": 0.8218884120171673,
+      "instructions": 1.0875375833612708,
+      "cycles": 0.8180339535046417,
+      "max_rss_bytes": 0.49255238576117144
+    },
+    {
+      "user_seconds": 0.8568281938325991,
+      "sys_seconds": 0.6666666666666667,
+      "wall_seconds": 0.9193899782135077,
+      "instructions": 1.120877834427373,
+      "cycles": 0.8471895581118,
+      "max_rss_bytes": 0.43550902205390957
+    }
+  ],
+  "cpu_wins": 10,
+  "max_rc_rss_bytes": 32079872,
+  "rc_baseline_rss_bytes": 30982144,
+  "rss_ratio": 1.0354309888947646,
+  "host_window": {
+    "status": "COMPETING_JOBS_OBSERVED",
+    "user_instruction": "quiet enough now",
+    "snapshot_count": 20,
+    "snapshot_presence_counts": {
+      "beam.smp": 10,
+      "/bin/java": 3,
+      "/host.test": 12,
+      "(compile)": 0,
+      "/clang": 0,
+      "shen-go/shen": 0,
+      "mediaanalysisd": 20,
+      "wdavdaemon": 20
+    },
+    "scope": "User-accepted ordinary service load; no claim of zero background CPU. Process presence and ps estimated CPU are sampled, not exclusive accounting.",
+    "session_work": "No builds, profiles or diagnostic counters launched during timing."
+  },
+  "retention": "Both attempts retained in full. Earlier publications unchanged."
+}

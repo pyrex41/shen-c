@@ -30,3 +30,11 @@ Measured continuation: B3 passes the exploratory memory gate; C1 native conditio
 E2 and F1 improve matched CPU; G1 was reverted after 0/3 wins despite fewer instructions. Freeze F1 for the ten-pair gate and remaining CLI/build/platform qualification.
 
 Frozen F1 now passes ten paired numerical gates (0.8811/0.8360 CPU, 10 wins, RSS +3.49%), complete correctness and all four CI lanes. Final report: `../performance/rc-43.1-final-20261017.md`. Strict quiet-host provenance remains UNKNOWN; no further product optimization is needed to meet the recorded numerical target.
+
+Final accepted-window continuation: the user said "quiet enough now". A fresh
+unchanged frozen run passes CPU **0.8364 / 0.8345**, ten wins, twenty complete
+136/0 suites, improved wall time and RSS **+3.49%**. No competing build/test jobs
+appeared in nineteen sampled process records; ordinary Defender/macOS services
+remained active. Qualification is **PASS for that user-accepted host window**,
+superseding the prior OPEN operational condition without claiming an isolated
+machine. Both new attempts are retained in `docs/evidence/rc-accepted-window-20261017/`.

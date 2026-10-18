@@ -6,6 +6,19 @@ Boehm comparator is a detached worktree at 97aa8e1.
 
 ## Written implementation plan
 
+**Latest qualification: PASS in the user-accepted host window.** After the user
+said "quiet enough now", the final frozen run passed at **0.8364 / 0.8345**
+paired CPU ratios, **10/10 wins**, **20 x 136/0**, improved wall time, and
+maximum RSS **+3.49%** versus the unchanged RC baseline, below Boehm in every
+pair. Nineteen snapshots show no audited competing build/test/other Shen jobs;
+ordinary Defender/macOS services remain recorded. User acceptance closes the
+operational host-window condition; no claim of background-service-free timing
+is made. Both attempts from this request are retained, including the first
+with briefly competing VM/test jobs. Code `8e01579` and its full correctness,
+Make/CMake/Nix and four-lane CI qualification are unchanged.
+[Latest results, evidence and reproduction](../performance/rc-43.1-final-20261017.md#accepted-host-window-2026-10-17).
+This supersedes the OPEN host-window status in the historical checkpoints below.
+
 Latest user-requested frozen retry (October 17, 01:48 UTC October 18):
 **0.8818 / 0.8326 CPU ratios**, **10/10 CPU wins**, **20 x 136/0**,
 and maximum RSS **+3.91%** versus the unchanged baseline. All numerical gates
