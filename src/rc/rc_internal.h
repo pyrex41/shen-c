@@ -1,6 +1,13 @@
 #ifndef SHEN_RC_INTERNAL_H
 #define SHEN_RC_INTERNAL_H
 #include "rc.h"
+/* Experimental suffix sharing. Off by default until separately qualified. */
+#ifndef SHEN_RC_STRING_SLICES
+#define SHEN_RC_STRING_SLICES 0
+#endif
+#if SHEN_RC_STRING_SLICES
+RcValue *rc_string_tail_view(RcContext *,const RcValue *);
+#endif
 /* Original cn primitive only: borrowed same-context strings, owned result.
  * Allocate the final payload once, preserving embedded NULs and aliases. */
 RcValue *rc_string_concat(RcContext *,const RcValue *,const RcValue *);
@@ -11,13 +18,15 @@ typedef enum {
  RC_FUSION_CONCATS, RC_FUSION_CONCAT_TEMP_BYTES,
  RC_FUSION_TAILS, RC_FUSION_TAIL_BYTES,
  RC_FUSION_VECTORS, RC_FUSION_VECTOR_SLOTS,
- RC_FUSION_VECTOR_GETS, RC_FUSION_VECTOR_SETS, RC_FUSION_COUNT
+ RC_FUSION_VECTOR_GETS, RC_FUSION_VECTOR_SETS,
+ RC_FUSION_STRING_VIEWS, RC_FUSION_TAIL_SHARED_BYTES, RC_FUSION_COUNT
 } RcFusionCounter;
 typedef struct { size_t count[RC_FUSION_COUNT]; } RcFusionStats;
 static inline const char *rc_fusion_name(size_t i) {
  static const char *const names[]={"strings","string_payload_bytes","string_copy_bytes",
   "concat_calls","concat_temporary_bytes","tail_calls","tail_copy_bytes",
-  "vectors","vector_slots","vector_get_calls","vector_set_calls"};
+  "vectors","vector_slots","vector_get_calls","vector_set_calls",
+  "string_views","tail_shared_bytes"};
  return i<RC_FUSION_COUNT ? names[i] : "invalid";
 }
 #ifdef SHEN_RC_FUSION_DIAGNOSTICS

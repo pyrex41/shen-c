@@ -136,10 +136,14 @@ static RcValue *primitive_op(RcContext *c,RcValue *self,enum Op op,
   if(rc_type(a)!=RC_STRING||!integer_arg(b,&i)||i<0||(uint64_t)i>=rc_text_length(a))return rc_error(c,"String position out of range");
   return rc_string_n(c,rc_text(a)+(size_t)i,1);
  case P_TLSTR:
+#if SHEN_RC_STRING_SLICES
+  return rc_string_tail_view(c,a);
+#else
   if(rc_type(a)!=RC_STRING||!rc_text_length(a))return rc_error(c,"tlstr requires nonempty string");
   rc_fusion_record(c,RC_FUSION_TAILS,1);
   rc_fusion_record(c,RC_FUSION_TAIL_BYTES,rc_text_length(a)-1);
   return rc_string_n(c,rc_text(a)+1,rc_text_length(a)-1);
+#endif
  case P_CN:return rc_string_concat(c,a,b);
  case P_STR:return atom_string(c,a);
  case P_STRING:return truth(c,rc_type(a)==RC_STRING);

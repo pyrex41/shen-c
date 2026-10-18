@@ -49,7 +49,15 @@ struct RcValue {
         struct { double real; int64_t integer; bool exact; } number;
         struct {
             char *data; size_t length; uint64_t hash;
-            RcValue *intern_next, *global, *function;
+            RcValue *intern_next;
+#if SHEN_RC_STRING_SLICES
+            /* Symbols use global; strings use owner. Views point directly to
+             * an owning string, never another view; no chain can accumulate. */
+            union { RcValue *global, *owner; };
+#else
+            RcValue *global;
+#endif
+            RcValue *function;
         } text;
         struct { RcValue *head, *tail; size_t proper_length; RcValue *eval_plan; size_t eval_calls; } pair;
         struct { RcValue **items; size_t length; } vector;
@@ -238,6 +246,9 @@ RcValue *rc_retain(RcValue *v) {
 typedef void (*EdgeFn)(RcValue *, void *);
 static void edges(RcValue *v, EdgeFn fn, void *data) {
     switch (rc_type(v)) {
+#if SHEN_RC_STRING_SLICES
+    case RC_STRING: if(v->as.text.hash)fn(v->as.text.owner,data); break;
+#endif
     case RC_PAIR: fn(v->as.pair.head, data); fn(v->as.pair.tail, data); if(v->as.pair.eval_plan)fn(v->as.pair.eval_plan,data); break;
     case RC_VECTOR:
         for (size_t i = 0; i < v->as.vector.length; ++i) fn(v->as.vector.items[i], data);
@@ -265,6 +276,9 @@ static void unlink_object(RcValue *v) {
     ctx->stats.live_bytes -= v->bytes;
     ctx->stats.total_frees++;
     switch (rc_type(v)) {
+#if SHEN_RC_STRING_SLICES
+    case RC_STRING: ctx->graph_slots -= v->as.text.hash!=0; break;
+#endif
     case RC_PAIR: ctx->graph_slots -= 2+(v->as.pair.eval_plan!=NULL); break;
     case RC_VECTOR:
         ctx->graph_slots -= v->as.vector.length;
@@ -281,7 +295,14 @@ static void unlink_object(RcValue *v) {
 }
 static void raw_free(RcValue *v) {
     switch (rc_type(v)) {
+#if SHEN_RC_STRING_SLICES
+    /* Use an integer tag: a dead owner's storage may already be freed during
+     * cycle destruction, so do not inspect its dangling pointer to classify. */
+    case RC_STRING: if(!v->as.text.hash)free(v->as.text.data); break;
+    case RC_SYMBOL: free(v->as.text.data); break;
+#else
     case RC_STRING: case RC_SYMBOL: free(v->as.text.data); break;
+#endif
     case RC_VECTOR: free(v->as.vector.items); break;
     case RC_ENV: if (v->as.env.count > 1) free(v->as.env.keys); break;
     case RC_CLOSURE: free(v->as.closure.captures); free(v->as.closure.bound); break;
@@ -612,6 +633,10 @@ static RcValue *text_buffer(RcContext *ctx,RcType type,char *copy,size_t n) {
     RcValue *v = allocate(ctx, type, n + 1);
     if (!v) { free(copy); return NULL; }
     v->as.text.data = copy; v->as.text.length = n;
+#if SHEN_RC_STRING_SLICES
+    v->as.text.owner=NULL;
+    if(type==RC_STRING)v->as.text.hash=0;
+#endif
     if(type==RC_STRING) {
         rc_fusion_record(ctx,RC_FUSION_STRINGS,1);
         rc_fusion_record(ctx,RC_FUSION_STRING_BYTES,n+1);
@@ -639,6 +664,31 @@ RcValue *rc_string_concat(RcContext *ctx,const RcValue *a,const RcValue *b) {
 }
 RcValue *rc_string_n(RcContext *ctx, const char *s, size_t n) { return text_value(ctx, RC_STRING, s, n); }
 RcValue *rc_string(RcContext *ctx, const char *s) { return s ? rc_string_n(ctx, s, strlen(s)) : rc_error(ctx, "NULL string"); }
+#if SHEN_RC_STRING_SLICES
+RcValue *rc_string_tail_view(RcContext *ctx,const RcValue *text) {
+    if(!belongs(ctx,text)||rc_type(text)!=RC_STRING||!text->as.text.length)
+        return rc_error(ctx,"tlstr requires nonempty string");
+    size_t n=text->as.text.length-1;
+    rc_fusion_record(ctx,RC_FUSION_TAILS,1);
+    RcValue *owner=text->as.text.hash ? text->as.text.owner : (RcValue *)text;
+    size_t capacity=owner->as.text.length;
+    /* Copy small suffixes and whenever backing storage exceeds 4x the new
+     * length. This bounds escaped-view retention and makes a shrinking walk
+     * copy geometrically, rather than on every character. All views end at
+     * the original terminator, preserving the borrowed C-string contract. */
+    if(n>=64&&n>=capacity/4+(capacity%4!=0)) {
+        RcValue *view=allocate(ctx,RC_STRING,0);if(!view)return NULL;
+        view->as.text.data=text->as.text.data+1;view->as.text.length=n;
+        view->as.text.owner=rc_retain(owner);view->as.text.hash=1;ctx->graph_slots++;
+        rc_fusion_record(ctx,RC_FUSION_STRINGS,1);
+        rc_fusion_record(ctx,RC_FUSION_STRING_VIEWS,1);
+        rc_fusion_record(ctx,RC_FUSION_TAIL_SHARED_BYTES,n);
+        return view;
+    }
+    rc_fusion_record(ctx,RC_FUSION_TAIL_BYTES,n);
+    return rc_string_n(ctx,text->as.text.data+1,n);
+}
+#endif
 static uint64_t symbol_hash(const char *name) {
     uint64_t hash = UINT64_C(14695981039346656037);
     for (const unsigned char *p = (const unsigned char *)name; *p; ++p) {
@@ -876,6 +926,9 @@ static bool would_create_cycle(RcContext *ctx, RcValue *target, RcValue *item, s
         RcValue *v = search.work; search.work = v->work;
         size_t width = 0;
         switch (v->type) {
+#if SHEN_RC_STRING_SLICES
+        case RC_STRING: width = v->as.text.hash!=0; break;
+#endif
         case RC_PAIR: width = 2+(v->as.pair.eval_plan!=NULL); break;
         case RC_VECTOR: width = v->as.vector.length; break;
         case RC_CLOSURE: width = v->as.closure.capture_count + v->as.closure.bound_count; break;

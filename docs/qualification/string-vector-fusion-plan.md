@@ -22,6 +22,12 @@ the pinned 43.1 kernel/suite bytes and earlier worktrees.
    retention; guarded string-builder/cursor lowering; fresh vector builders;
    vector fusion requiring uniqueness/effect and alias proofs. Identify what
    each can change asymptotically and which guarantees remain unimplemented.
+6. Candidate B explores suffix sharing behind `SHEN_RC_STRING_SLICES=1`, off
+   by default. Views have a single direct owning-string edge, preserve NUL
+   termination, copy below 64 bytes or above 4x backing retention, and remain
+   visible to exact cycle accounting. Qualify owner escape, pooled reuse,
+   mixed cycles and full generated-kernel sanitizers before timing. This is
+   the string-decomposition experiment, not general compiler fusion.
 
 ## Semantic constraints
 
