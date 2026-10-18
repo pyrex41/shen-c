@@ -108,6 +108,9 @@ struct RcContext {
     RcValue *prolog_guard_keys[3];
     unsigned prolog_guard_mask;
     RcStats stats;
+#ifdef SHEN_RC_FUSION_DIAGNOSTICS
+    RcFusionStats fusion;
+#endif
     size_t collection_interval, since_collection, graph_slots, visit_epoch, cycle_sources;
     char *error;
     bool collecting, error_active, adaptive_collection, acyclic;
@@ -394,6 +397,14 @@ RcStats rc_stats(const RcContext *ctx) {
 }
 void rc_context_free(RcContext *ctx) {
     if (!ctx) return;
+#ifdef SHEN_RC_FUSION_DIAGNOSTICS
+    if (getenv("SHEN_RC_FUSION_STATS")) {
+        fputs("RC_FUSION {",stderr);
+        for(size_t i=0;i<RC_FUSION_COUNT;i++)
+            fprintf(stderr,"%s\"%s\":%zu",i?",":"",rc_fusion_name(i),ctx->fusion.count[i]);
+        fputs("}\n",stderr);
+    }
+#endif
     while (ctx->compiled_symbols) {
         RcResolvedSymbols *next = ctx->compiled_symbols->next;
         free(ctx->compiled_symbols);
@@ -410,6 +421,18 @@ void rc_context_free(RcContext *ctx) {
     }
     free(ctx->error); free(ctx);
 }
+#ifdef SHEN_RC_FUSION_DIAGNOSTICS
+void rc_fusion_record(RcContext *ctx,RcFusionCounter counter,size_t amount) {
+    if(ctx&&(unsigned)counter<RC_FUSION_COUNT) {
+        size_t *n=&ctx->fusion.count[counter];
+        *n=amount>SIZE_MAX-*n ? SIZE_MAX : *n+amount;
+    }
+}
+RcFusionStats rc_fusion_stats(const RcContext *ctx) {
+    RcFusionStats empty={{0}};return ctx ? ctx->fusion : empty;
+}
+void rc_fusion_reset(RcContext *ctx) { if(ctx)memset(&ctx->fusion,0,sizeof(ctx->fusion)); }
+#endif
 RcType rc_type(const RcValue *v) { return is_immediate(v) ? RC_NUMBER : v ? v->type : RC_NIL; }
 size_t rc_refcount(const RcValue *v) { return is_immediate(v) ? SIZE_MAX : v ? v->refs : 0; }
 RcValue *rc_nil(void) { return &nil_value; }
@@ -592,6 +615,11 @@ static RcValue *text_value(RcContext *ctx, RcType type, const char *text, size_t
     RcValue *v = allocate(ctx, type, n + 1);
     if (!v) { free(copy); return NULL; }
     v->as.text.data = copy; v->as.text.length = n;
+    if(type==RC_STRING) {
+        rc_fusion_record(ctx,RC_FUSION_STRINGS,1);
+        rc_fusion_record(ctx,RC_FUSION_STRING_BYTES,n+1);
+        rc_fusion_record(ctx,RC_FUSION_STRING_COPIES,n);
+    }
     return v;
 }
 RcValue *rc_string_n(RcContext *ctx, const char *s, size_t n) { return text_value(ctx, RC_STRING, s, n); }
@@ -797,11 +825,14 @@ RcValue *rc_vector(RcContext *ctx, size_t length) {
     RcValue *v = allocate(ctx, RC_VECTOR, length * sizeof(*items));
     if (!v) { free(items); return NULL; }
     v->as.vector.items = items; v->as.vector.length = length;
+    rc_fusion_record(ctx,RC_FUSION_VECTORS,1);
+    rc_fusion_record(ctx,RC_FUSION_VECTOR_SLOTS,length);
     v->reaches_vector = true;
     return v;
 }
 size_t rc_vector_length(const RcValue *v) { return v && rc_type(v) == RC_VECTOR ? v->as.vector.length : 0; }
 RcValue *rc_vector_get(RcContext *ctx, RcValue *v, size_t i) {
+    rc_fusion_record(ctx,RC_FUSION_VECTOR_GETS,1);
     return v && rc_type(v) == RC_VECTOR && i < v->as.vector.length ? rc_retain(v->as.vector.items[i]) : rc_error(ctx, "absvector index out of bounds");
 }
 typedef struct {
@@ -847,6 +878,7 @@ static bool would_create_cycle(RcContext *ctx, RcValue *target, RcValue *item, s
     return search.found;
 }
 bool rc_vector_set(RcContext *ctx, RcValue *v, size_t i, RcValue *item) {
+    rc_fusion_record(ctx,RC_FUSION_VECTOR_SETS,1);
     if (!belongs(ctx, v) || rc_type(v) != RC_VECTOR || i >= v->as.vector.length || !belongs(ctx, item)) { rc_error(ctx, "invalid absvector assignment"); return false; }
     /* Immutable graph nodes conservatively record whether they reach a vector.
      * Their flags cannot gain paths while aliased: pair rewriting requires
