@@ -32,4 +32,22 @@ jobs:
         working-directory: bifrost
         env:
           BIFROST_SHEN_C: ${{ github.workspace }}/shen-c/bin/shen-c
-        run: go run . --impls shen-c
+        run: |
+          go run . --impls shen-c --json > corpus.json
+          python3 - <<'PYTHON'
+          import collections, json
+          from pathlib import Path
+          data = json.JSONDecoder().raw_decode(Path('corpus.json').read_text())[0]
+          counts = collections.Counter(row.get('impls', {}).get('shen-c', {}).get('status', 'KERNEL_SKIP')
+                                       for row in data['cases'].values())
+          assert data['available'] == ['shen-c'], data['available']
+          assert len(data['cases']) == 74, len(data['cases'])
+          assert counts == {'PASS': 70, 'SKIP': 2, 'KERNEL_SKIP': 2}, counts
+          print('Pinned CLI corpus:', dict(counts))
+          PYTHON
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: bifrost-${{ matrix.os }}
+          path: bifrost/corpus.json
+          if-no-files-found: warn

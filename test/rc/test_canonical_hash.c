@@ -24,6 +24,7 @@ static RcValue *dummy_dependency(RcContext *ctx, RcValue *self, size_t argc, RcV
     (void)self; (void)argc; (void)args; return rc_nil();
 }
 static void same_hash(RcContext *ctx, RcValue *fn, RcValue *a, RcValue *b) {
+    assert(rc_equal(a, b));
     RcValue *ha = call(ctx, fn, a), *hb = call(ctx, fn, b);
     assert(rc_number_is_exact_integer(ha) && rc_number_is_exact_integer(hb));
     assert(rc_integer_value(ha) == rc_integer_value(hb));
@@ -54,6 +55,12 @@ int main(void) {
     RcValue *min = rc_integer(ctx, INT64_MIN), *min_float = rc_number(ctx, (double)INT64_MIN);
     same_hash(ctx, fn, one, one_float); same_hash(ctx, fn, zero, minus_zero);
     same_hash(ctx, fn, two53, two53_float); same_hash(ctx, fn, min, min_float);
+
+    RcValue *max = rc_integer(ctx, INT64_MAX), *rounded_max = rc_number(ctx, (double)INT64_MAX);
+    assert(!rc_equal(max, rounded_max));
+    RcValue *unchanged = call(ctx, fn, rounded_max);
+    assert(rc_integer_value(unchanged) == 23); rc_release(unchanged);
+    rc_release(rounded_max); rc_release(max);
 
     RcValue *str_name = rc_symbol(ctx, "str"), *str_fn = rc_function_get(ctx, str_name);
     RcValue *printed = call(ctx, str_fn, one_float);

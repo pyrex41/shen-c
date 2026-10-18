@@ -104,8 +104,10 @@ ctest --test-dir build --output-on-failure
 ./bin/shen-c script FILE ARGUMENTS
 ```
 
-The script receives `[FILE | ARGUMENTS]` in `*argv*`. `eval -q` quiets
-language output to stdout while retaining explicit file writes.
+The script receives `[FILE | ARGUMENTS]` in `*argv*`. Ordinary script loads
+print program output without echoing each form's return value; `eval -l` keeps
+its interactive load output. `eval -q` quiets language output to stdout while
+retaining explicit file writes.
 
 ## Compile applications
 

@@ -190,6 +190,13 @@ try:
     cli_case('kernel-version', ['eval', '-e', '(version)'], release['kernel_version'])
     cli_case('arithmetic', ['eval', '-e', '(+ 20 22)'], '42')
     cli_case('strings', ['eval', '-e', '(= (@s "foo" "bar") "foobar")'], 'true')
+    cli_case('numeric-hash-equality', ['eval', '-e',
+             '(and (= (hash 1 1000000) (hash 1.0 1000000)) '
+             '(and (= (hash 0 1000000) (hash -0.0 1000000)) '
+             '(= (hash 9007199254740992 1000000) (hash 9007199254740992.0 1000000))))'], 'true')
+    cli_case('numeric-property-key', ['eval', '-e',
+             '(do (put 1.0 shen-c.hash-test 42 (value *property-vector*)) '
+             '(get 1 shen-c.hash-test (value *property-vector*)))'], '42')
     cli_case('string-tail', ['eval', '-e', '(= (tlstr "hello") "ello")'], 'true')
     cli_case('mutable-self-cycle', ['eval', '-e', '(let V (absvector 1) (do (address-> V 0 V) (= V (<-address V 0))))'], 'true')
     cli_case('trap', ['eval', '-e', '(trap-error (simple-error "boom") (lambda E (= (error-to-string E) "boom")))'], 'true')
@@ -228,6 +235,24 @@ try:
     error_script = empty / 'script-error.shen'
     error_script.write_text('(simple-error "script-error")\n')
     cli_case('script-error', ['script', str(error_script)], fail=True)
+    hash_script = empty / 'hash-formatting.shen'
+    hash_script.write_text('(define shen-c.hash-guard-control -> (output "HASH-GUARD=~A~%" (shen.hashkey 1.0)))\n'
+                           '(eval-kl [defun explode [x] [if [= [str x] "1.0"] [cons "A" []] [cons "B" []]]])\n'
+                           '(shen-c.hash-guard-control)\n')
+    cli_case('hash-redefined-explode', ['script', str(hash_script)], contains='HASH-GUARD=65')
+    # A same-named custom kernel body must keep its own semantics in both ABIs.
+    for conservative in (False, True):
+        mode = 'borrowed' if conservative else 'owned'
+        case = out / ('custom-hash-' + mode)
+        source = case / 'input'
+        source.mkdir(parents=True)
+        (source / 'kernel.kl').write_text('(defun shen.hashkey (x) 99)\n')
+        (source / 'user.kl').write_text('(shen.hashkey 1.0)\n')
+        command = [builder] + (['--conservative-ownership'] if conservative else []) + [source, case / 'app']
+        run('custom-hash-' + mode + '-build', command, timeout=120)
+        _, stdout, _ = run('custom-hash-' + mode + '-run', [case / 'app/app'],
+                           env=dict(base_env, SHEN_RC_PRINT='1'), timeout=30)
+        check(stdout.strip() == '99', 'custom kernel hash body preserved in ' + mode + ' emitter')
     loaded = empty / 'loaded.shen'
     loaded.write_text('(set *toolchain-loaded* 42)\n')
     # Load may print its own normal progress; the subsequent expression is decisive.
