@@ -22,7 +22,8 @@ is developed separately from its `23a2f39` native RC integration checkpoint.
 
 The two Shen-C corpus failures are fixed on `fix/bifrost-corpus-gaps`.
 Production sources were frozen at `5e44057`; `32db412` adds both-ABI test
-coverage and matched CI tool selection. Vendor kernel, Shen sources, release
+coverage and matched CI tool selection; `97758d5` keeps assertions enabled
+under Release `NDEBUG` builds, with an additional executed control. Vendor kernel, Shen sources, release
 manifest, suite and Bifrost goldens remain unchanged. These are post-v0.3.0
 changes; the v0.3.0 tag and installation pin have not moved.
 

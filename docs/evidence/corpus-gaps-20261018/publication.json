@@ -258,6 +258,24 @@
       "raw_sha256": "7e332bcee418f7d700927c946d36341f0651d6d90997b58d3d5441dec96b2e74",
       "published_path": "toolchain/37-custom-hash-borrowed-run.out.gz",
       "published_sha256": "e8e6658aa2107c12346d096f531b9b4b5255ba712dc155faa712a8ded379a15b"
+    },
+    {
+      "raw_path": "evidence/rc/corpus-gaps-20261018/assertions-release.json",
+      "raw_sha256": "550934654ce4ea04521a655566787cd733c7970f2450b7772f5da607572c4077",
+      "published_path": "assertions-release.json",
+      "published_sha256": "550934654ce4ea04521a655566787cd733c7970f2450b7772f5da607572c4077"
+    },
+    {
+      "raw_path": "evidence/rc/corpus-gaps-20261018/assertions-release.log",
+      "raw_sha256": "b80c6b3dd4debf8184a63f7f0855f1440a1ff40a0474a445e3adff224bee37ce",
+      "published_path": "assertions-release.log.gz",
+      "published_sha256": "ec319ffc4fa4e06b7d76cfeed4d11d1de48077204124d4299ba5de69ad94e108"
+    },
+    {
+      "raw_path": "evidence/rc/corpus-gaps-20261018/assertions-source.json",
+      "raw_sha256": "b99e2f4e6f17febcf1472859ddc2ef5c05565dc6f48904e262739f42b8069aa5",
+      "published_path": "assertions-source.json",
+      "published_sha256": "b99e2f4e6f17febcf1472859ddc2ef5c05565dc6f48904e262739f42b8069aa5"
     }
   ]
 }

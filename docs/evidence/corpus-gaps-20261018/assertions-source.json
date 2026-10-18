@@ -1,0 +1,6 @@
+{
+  "test_source_sha256": "3d161d4e8a9ca2cc565e2c3a4406c0a79d1dcfc3a1057099ddaaa457bde353c6",
+  "release_test_binary_sha256": "e3cb12140254caec4590c6e2c8a4f3156d68b7ab1ad41782de0409efdd4ceb40",
+  "runtime_library_sha256": "c04a6905b8037454ee2e475544d1c8974ce2ba5ff120051910b0b51f5117dba3",
+  "note": "Same regression with assertions explicitly enabled under -DNDEBUG; both owned and borrowed callbacks execute."
+}
