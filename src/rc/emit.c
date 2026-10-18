@@ -16,7 +16,7 @@ typedef struct Program Program;
 typedef struct { Program *owner; char *p; size_t n, cap; } Buf;
 typedef struct { const char *name; int slot; } Binding;
 typedef struct Allocation { struct Allocation *prev,*next; max_align_t align; unsigned char data[]; } Allocation;
-typedef struct ModuleDef { size_t symbol; int id,arity; struct ModuleDef *next; } ModuleDef;
+typedef struct ModuleDef { size_t symbol; int id,arity; bool exact_hashkey; struct ModuleDef *next; } ModuleDef;
 typedef struct ModuleCall { size_t symbol; struct ModuleCall *next; } ModuleCall;
 struct Program { RcEmitOptions options; RcContext *ctx; jmp_buf failure; Allocation *allocations; Buf functions,literals,transparent_do,pvar_identities; const char **symbols; size_t nsymbols,symbol_capacity; ModuleDef *module_defs; ModuleCall *module_calls; bool user_phase,drop_range_used,drop_range_emitted,transparent_do_used,lazyderef_used; RcValue *metadata_root; int next,next_literal; long defuns, lambdas, tops; };
 static _Noreturn void bad(Program *p,const char *message) { rc_error(p->ctx,"%s",message); longjmp(p->failure,1); }
@@ -277,6 +277,25 @@ static bool exact_second_identity(RcValue *params,RcValue *body,int arity) {
  return arity==2&&is_symbol(body)&&is_symbol(first(params))&&is_symbol(second(params))&&
         !strcmp(name(body),name(second(params)))&&strcmp(name(first(params)),name(second(params)));
 }
+static bool exact_hashkey(Program *p,RcValue *params,RcValue *body) {
+ if(count(p,params)!=1||!is_symbol(first(params))||!is_pair(body)||!named(first(body),"let"))return false;
+ RcValue *la=rest(body);if(count(p,la)!=3)return false;
+ RcValue *letvar=at(p,la,0),*map=at(p,la,1),*result=at(p,la,2);
+ if(!is_symbol(letvar)||!is_pair(map)||!named(first(map),"map"))return false;
+ RcValue *ma=rest(map);if(count(p,ma)!=2)return false;
+ RcValue *lambda=at(p,ma,0),*explode=at(p,ma,1);
+ if(!is_pair(lambda)||!named(first(lambda),"lambda"))return false;
+ RcValue *lca=rest(lambda);if(count(p,lca)!=2||!is_symbol(at(p,lca,0)))return false;
+ RcValue *lambda_param=at(p,lca,0),*string_n=at(p,lca,1);
+ if(!is_pair(string_n)||!named(first(string_n),"string->n")||count(p,rest(string_n))!=1||
+    !rc_equal(at(p,rest(string_n),0),lambda_param))return false;
+ if(!is_pair(explode)||!named(first(explode),"explode")||count(p,rest(explode))!=1||
+    !rc_equal(at(p,rest(explode),0),first(params)))return false;
+ if(!is_pair(result)||!named(first(result),"shen.prodbutzero")||count(p,rest(result))!=2||
+    !rc_equal(at(p,rest(result),0),letvar))return false;
+ RcValue *one=at(p,rest(result),1);
+ return rc_type(one)==RC_NUMBER&&rc_number_is_exact_integer(one)&&rc_integer_value(one)==1;
+}
 /* Mode 2 only permits guarded self recursion through pending transparent do
  * calls. Its ordinary fallback must finish before invoking those do calls. */
 static const char *call_api(RcEmitFn *f,int tail){return optimize(f)?(tail==1?"rc_tailcall_owned_args":"rc_apply_rooted_owned_args"):(tail==1?"rc_tailcall":"rc_apply");}
@@ -496,7 +515,11 @@ static int expr_inner(RcEmitFn *f,RcValue *x,int tail,const Live *after){
  if(special&&named(head,"defun")){
   if(count(p,args)!=3||!is_symbol(first(args)))bad(p,"rc emit: defun shape");
   int id=compile(p,second(args),at(p,args,2),NULL,0,0),t=fresh(f),cl=fresh(f);
-  if(optimize(f)){ModuleDef *d=alloc(p,sizeof(*d));*d=(ModuleDef){symbol_index(f,name(first(args))),id,count(p,second(args)),p->module_defs};p->module_defs=d;}
+  { ModuleDef *d=alloc(p,sizeof(*d));
+    *d=(ModuleDef){symbol_index(f,name(first(args))),id,count(p,second(args)),
+                   named(first(args),"shen.hashkey")&&exact_hashkey(p,second(args),at(p,args,2)),p->module_defs};
+    p->module_defs=d;
+  }
   symbol_slot(f,t,name(first(args)));check(f,t);
   if(exact_second_identity(second(args),at(p,args,2),count(p,second(args))))
    put(&f->code,"  t[%d]=%s(ctx,rc_native_%d,0,NULL);\n",cl,p->options.conservative_ownership?"rc_closure_return_second":"rc_closure_return_second_owned",id);
@@ -818,6 +841,17 @@ bool rc_emit_program(RcContext *ctx,FILE *out,RcValue *const *kernel,size_t nker
   if(installs.p) fputs(installs.p,out);
   fputs("  if(!rc_install_overwrites(ctx)) return false;\n",out);
   if(kt.p) fputs(kt.p,out);
+  if(!options->conservative_ownership) {
+    int hash_id=-1;
+    for(ModuleDef *d=p->module_defs;d;d=d->next)
+      if(!strcmp(p->symbols[d->symbol],"shen.hashkey")&&d->exact_hashkey) { hash_id=d->id; break; }
+    if(hash_id>=0) fprintf(out,"  if(!rc_install_numeric_hash_owned(ctx,rc_native_%d)) return false;\n",hash_id);
+  } else {
+    int hash_id=-1;
+    for(ModuleDef *d=p->module_defs;d;d=d->next)
+      if(!strcmp(p->symbols[d->symbol],"shen.hashkey")&&d->exact_hashkey) { hash_id=d->id; break; }
+    if(hash_id>=0) fprintf(out,"  if(!rc_install_numeric_hash_borrowed(ctx,rc_native_%d)) return false;\n",hash_id);
+  }
   if(options->init_name&&*options->init_name) {
     Buf init={.owner=p}; quoted(&init,options->init_name);
     fprintf(out,"  { RcValue *fn=rc_symbol(ctx,%s); if(!fn) return false; RcValue *v=rc_apply(ctx,fn,0,NULL); rc_release(fn); if(!v) return false; rc_release(v); }\n",init.p);

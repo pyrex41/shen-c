@@ -82,6 +82,23 @@ static RcValue *atom_string(RcContext *c,RcValue *v) {
  default:return rc_error(c,"Parameter is not an atom, closure, or stream");
  }
 }
+static RcValue *numeric_hashkey_wrapper(RcContext *c, RcValue *self,
+                                        size_t argc, RcValue *const *argv) {
+ if (argc != 1) return rc_error(c,"shen.hashkey expects one argument");
+ RcValue *target = rc_capture(self,0);
+ RcValue *number_name=rc_symbol(c,"number?"), *number_fn=number_name ? rc_function_lookup(c,number_name) : NULL;
+ bool canonical_number=number_fn && rc_builtin_identity_matches(c,RC_BUILTIN_NUMBERP,number_fn);
+ rc_release(number_fn); rc_release(number_name);
+ if (canonical_number && rc_type(argv[0]) == RC_NUMBER && !rc_number_is_exact_integer(argv[0])) {
+  double n=rc_number_value(argv[0]);
+  if(isfinite(n)&&n>=-9223372036854775808.0&&n<9223372036854775808.0&&trunc(n)==n) {
+   RcValue *integer=rc_integer(c,(int64_t)n);
+   RcValue *result=integer ? rc_apply(c,target,1,&integer) : NULL;
+   rc_release(integer); return result;
+  }
+ }
+ return rc_apply(c,target,argc,argv);
+}
 static RcValue *numeric(RcContext *c,enum Op op,RcValue *a,RcValue *b) {
  if(rc_type(a)!=RC_NUMBER||rc_type(b)!=RC_NUMBER)return rc_error(c,"Arithmetic requires numbers");
  bool ints=rc_number_is_exact_integer(a)&&rc_number_is_exact_integer(b);
@@ -554,6 +571,22 @@ static bool install(RcContext *c,const struct Primitive *p,size_t n) {
  }return true;
 }
 bool rc_install_overwrites(RcContext *c){return install(c,overwrites,sizeof overwrites/sizeof *overwrites);}
+bool rc_install_numeric_hash_owned(RcContext *c, RcNativeOwned expected) {
+ RcValue *name=rc_symbol(c,"shen.hashkey"), *original=name ? rc_function_lookup(c,name) : NULL;
+ bool match=original && rc_closure_is_owned_native(original,expected);
+ if (!match) { rc_release(original); rc_release(name); return true; }
+ RcValue *wrapper=rc_closure(c,1,numeric_hashkey_wrapper,1,&original);
+ bool ok=wrapper && rc_function_set(c,name,wrapper);
+ rc_release(wrapper); rc_release(original); rc_release(name); return ok;
+}
+bool rc_install_numeric_hash_borrowed(RcContext *c, RcNative expected) {
+ RcValue *name=rc_symbol(c,"shen.hashkey"), *original=name ? rc_function_lookup(c,name) : NULL;
+ bool match=original && rc_closure_is_native(original,expected);
+ if (!match) { rc_release(original); rc_release(name); return true; }
+ RcValue *wrapper=rc_closure(c,1,numeric_hashkey_wrapper,1,&original);
+ bool ok=wrapper && rc_function_set(c,name,wrapper);
+ rc_release(wrapper); rc_release(original); rc_release(name); return ok;
+}
 bool rc_install_primitives(RcContext *c){
  struct utsname host;
  if(uname(&host)!=0){rc_error(c,"Cannot determine host OS: %s",strerror(errno));return false;}
