@@ -38,42 +38,24 @@ remain separate from the 43.1 comparison.
 
 ## How it works
 
-The approach combines compiler knowledge about ownership with less repeated
-work in the evaluator:
+The ownership optimizations are inspired by
+[Perceus](https://www.microsoft.com/en-us/research/publication/perceus-garbage-free-reference-counting-with-reuse/),
+the reference-counting and reuse approach implemented in
+[Koka](https://koka-lang.github.io/koka/doc/book.html).
+Shen-C moves values at their last use and inserts releases where ownership ends.
+When a list cell has one owner, its storage can be reused instead of allocating
+a replacement; shared cells follow an allocation path that preserves aliases.
+This lets functional list transformations reuse memory while preserving their
+observable results. Shen-C implements these techniques in its own C runtime.
 
-- **Move values at their last use.** Generated C transfers ownership when a
-  value is no longer needed, captures only free variables, and drops values at
-  known boundaries. A uniquely owned cons cell can be reused; shared cells keep
-  their aliases intact. Certified internal call boundaries can borrow existing
-  roots and skip redundant argument copies or cleanup scans. Public borrowed
-  and owned C contracts remain unchanged.
-- **Prepare hot interpreted functions once.** Frequently used function bodies
-  get bounded evaluation plans that record expression kinds and lexical slots.
-  Repeated calls avoid walking the same syntax and searching the same names.
-  Parameter and local environments are materialized when a fallback or escaping
-  closure needs them. Cold and unsupported code uses the general evaluator.
-- **Guard specialized paths.** Native predicates and selected Prolog operations
-  avoid unnecessary temporary values and ownership work when their exact
-  preconditions hold. Runtime function guards and dependency-cache invalidation
-  preserve dynamic redefinition; uncertain cases use the general paths.
-- **Keep full graph semantics.** Reference counting handles ordinary lifetime
-  management, while exact cycle reclamation handles unreachable cyclic graphs.
-  Mutable data, shared values and escaping closures retain their semantics.
-  Reuse caches and evaluation plans have explicit bounds.
-
-Separate diagnostic runs recorded **22.7% fewer retain/release operations** and
-**7.6% fewer managed allocations** than the pre-optimization RC implementation.
-Those counters explain part of the reduced work; diagnostic timings are not
-used for the release performance claim.
-
-The ownership optimizations are inspired by Perceus and implemented directly
-in C. This is a bounded set of compiler/runtime optimizations; Koka is not a
-build dependency. The [compiler guide](docs/RC-BACKEND.md),
-[implementation record](docs/performance/rc-prepared-evaluator-20261017.md) and
-[validation record](docs/rc-validation.md) describe their scope and controls.
-Qualification includes the complete generated kernel under fatal ASan/UBSan,
-default/boxed runtime and emitted semantic controls, Make/CMake, installed Nix
-packages, and Linux Clang/GCC and macOS CI.
+[FP²: Fully in-Place Functional Programming](https://www.microsoft.com/en-us/research/publication/fp2-fully-in-place-functional-programming/)
+formalizes the stronger goal of checking that functional algorithms need no
+allocation. It is related research: Shen-C currently provides local ownership
+analysis and selective reuse, without FP²'s checker or a guarantee of execution
+without allocation. Exact cycle reclamation supports Shen's mutable graphs,
+while bounded evaluation plans separately reduce repeated syntax classification
+and lexical lookup. See the [compiler guide](docs/RC-BACKEND.md) and
+[implementation record](docs/performance/rc-prepared-evaluator-20261017.md).
 
 ## Build
 
