@@ -14,7 +14,7 @@
 #include <sys/stat.h>
 
 #ifndef SHEN_RC_VERSION
-#define SHEN_RC_VERSION "0.2.3"
+#define SHEN_RC_VERSION "0.3.0"
 #endif
 
 /* Generated from the bundled complete KL kernel by the independent RC emitter.

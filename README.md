@@ -18,16 +18,21 @@ Their implemented scope and evidence are described in
 [RC-BACKEND.md](docs/RC-BACKEND.md) and
 [the validation record](docs/rc-validation.md).
 
-The current 43.1 candidate passes all 136 suite assertions, fatal sanitizer
-qualification, Make/CMake, and the installed Darwin Nix checks. The performance
-target remains **OPEN**: two five-pair batches were 10.3% and 8.1% slower in user
-CPU than rebuilt Boehm, with about 58% lower peak RSS. Linux and remote CI remain
-unverified. See the [43.1 qualification record](docs/qualification/shen-43.1-continuation.md).
+Shen-C **0.3.0** includes the pinned Shen **43.1** kernel and complete 136-test
+suite. Qualification covers fatal sanitizers, Make/CMake, installed Nix packages,
+Linux Clang/GCC and macOS CI. In the accepted Darwin arm64 measurement window,
+two five-pair batches used **16.4% and 16.6% less user CPU than rebuilt Boehm**,
+with roughly half the peak RSS. Every suite execution passed 136/0.
+Median full-suite wall time was **3.785 seconds** for RC versus **4.510 seconds**
+for Boehm, including startup, source loading and typechecking. Background macOS
+services remained active; these are host-specific complete-implementation
+comparisons. See the [measurement and qualification report](docs/performance/rc-43.1-final-20261017.md)
+and [release notes](CHANGELOG.md).
 
 The historical four alternating full S42 pairs passed 134/0 for both implementations.
 RC remained 0.9% slower in paired wall time and 4.1% slower in paired user CPU,
 with 62.9% lower peak memory. Other host workloads affected timing; this does not
-establish parity or a speedup. Performance stays OPEN; see the
+establish parity or a speedup at that historical checkpoint; see the
 [identity-tail checkpoint](docs/performance/rc-suite-identity-tail-20261016.md)
 for matched measurements and the exact correctness qualification scope.
 

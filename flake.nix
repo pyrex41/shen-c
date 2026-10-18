@@ -59,7 +59,7 @@
       '';
       mkShenC = pkgs: cc: pkgs.stdenv.mkDerivation {
         pname = "shen-c";
-        version = "0.2.3";
+        version = "0.3.0";
         src = srcFor pkgs;
         nativeBuildInputs = [ pkgs.gnumake pkgs.python3 pkgs.makeWrapper ]
           ++ pkgs.lib.optionals (cc == "clang") [ pkgs.clang ]
@@ -99,7 +99,7 @@
         make-clang = mkShenC pkgs "clang";
         cmake-ninja = pkgs.stdenv.mkDerivation {
           pname = "shen-c-cmake";
-          version = "0.2.3";
+          version = "0.3.0";
           src = srcFor pkgs;
           nativeBuildInputs = [ pkgs.cmake pkgs.ninja pkgs.clang pkgs.gnumake pkgs.python3 pkgs.makeWrapper ];
           PKG_CONFIG = "/nonexistent/shen-rc-pkg-config";
