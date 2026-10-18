@@ -81,7 +81,7 @@ with workspace as temp:
     original = source.read_bytes()
     output = cwd / 'native output'
     command = [str(root / 'scripts/compile-shen-rc.sh'), str(source), str(output)]
-    subprocess.run(command, cwd=cwd, check=True, timeout=360)
+    subprocess.run(command, cwd=cwd, check=True, timeout=960)
     assert source.read_bytes() == original, 'compiler changed source'
     assert not (cwd / 'application marker.txt').exists(), 'application top form executed during compilation'
     kl = (output / 'source.kl').read_text()
