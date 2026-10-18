@@ -1,0 +1,542 @@
+{
+  "baseline": "e28bee990468334166765db8c1cf56bd0ea07d4e",
+  "host": "arm64 Darwin",
+  "compiler": "Apple clang 21.0.0",
+  "flags": "-O3 -flto=thin -std=c17; no sanitizer",
+  "calls_per_run": 1000000,
+  "measure": "process retired instructions from /usr/bin/time -l",
+  "balanced_runs": [
+    {
+      "repeat": 0,
+      "mode": 0,
+      "variant": "before",
+      "instructions": 259523919,
+      "output": "mode=0 calls=1000000 ns/call=20.082 allocations=0 retains=2000000 releases=2000000"
+    },
+    {
+      "repeat": 0,
+      "mode": 0,
+      "variant": "after",
+      "instructions": 167445045,
+      "output": "mode=0 calls=1000000 ns/call=13.215 allocations=0 retains=2000000 releases=2000000"
+    },
+    {
+      "repeat": 0,
+      "mode": 1,
+      "variant": "before",
+      "instructions": 238406129,
+      "output": "mode=1 calls=1000000 ns/call=17.584 allocations=0 retains=1000000 releases=1000000"
+    },
+    {
+      "repeat": 0,
+      "mode": 1,
+      "variant": "after",
+      "instructions": 147673469,
+      "output": "mode=1 calls=1000000 ns/call=11.334 allocations=0 retains=1000000 releases=1000000"
+    },
+    {
+      "repeat": 0,
+      "mode": 2,
+      "variant": "before",
+      "instructions": 250653705,
+      "output": "mode=2 calls=1000000 ns/call=18.524 allocations=1 retains=2000000 releases=2000000"
+    },
+    {
+      "repeat": 0,
+      "mode": 2,
+      "variant": "after",
+      "instructions": 158835088,
+      "output": "mode=2 calls=1000000 ns/call=11.544 allocations=1 retains=2000000 releases=2000000"
+    },
+    {
+      "repeat": 0,
+      "mode": 3,
+      "variant": "before",
+      "instructions": 225738538,
+      "output": "mode=3 calls=1000000 ns/call=16.197 allocations=1 retains=1000000 releases=1000000"
+    },
+    {
+      "repeat": 0,
+      "mode": 3,
+      "variant": "after",
+      "instructions": 134442338,
+      "output": "mode=3 calls=1000000 ns/call=11.345 allocations=1 retains=1000000 releases=1000000"
+    },
+    {
+      "repeat": 0,
+      "mode": 4,
+      "variant": "before",
+      "instructions": 252247666,
+      "output": "mode=4 calls=1000000 ns/call=19.331 allocations=1 retains=2000000 releases=2000000"
+    },
+    {
+      "repeat": 0,
+      "mode": 4,
+      "variant": "after",
+      "instructions": 158325672,
+      "output": "mode=4 calls=1000000 ns/call=11.815 allocations=1 retains=2000000 releases=2000000"
+    },
+    {
+      "repeat": 0,
+      "mode": 5,
+      "variant": "before",
+      "instructions": 330059697,
+      "output": "mode=5 calls=1000000 ns/call=25.715 allocations=1 retains=3000000 releases=3000000"
+    },
+    {
+      "repeat": 0,
+      "mode": 5,
+      "variant": "after",
+      "instructions": 228316667,
+      "output": "mode=5 calls=1000000 ns/call=19.126 allocations=1 retains=3000000 releases=3000000"
+    },
+    {
+      "repeat": 0,
+      "mode": 6,
+      "variant": "before",
+      "instructions": 244095685,
+      "output": "mode=6 calls=1000000 ns/call=21.970 allocations=0 retains=0 releases=0"
+    },
+    {
+      "repeat": 0,
+      "mode": 6,
+      "variant": "after",
+      "instructions": 175201936,
+      "output": "mode=6 calls=1000000 ns/call=15.890 allocations=0 retains=0 releases=0"
+    },
+    {
+      "repeat": 0,
+      "mode": 7,
+      "variant": "before",
+      "instructions": 246341670,
+      "output": "mode=7 calls=1000000 ns/call=22.533 allocations=0 retains=0 releases=0"
+    },
+    {
+      "repeat": 0,
+      "mode": 7,
+      "variant": "after",
+      "instructions": 173953864,
+      "output": "mode=7 calls=1000000 ns/call=16.285 allocations=0 retains=0 releases=0"
+    },
+    {
+      "repeat": 0,
+      "mode": 8,
+      "variant": "before",
+      "instructions": 247202721,
+      "output": "mode=8 calls=1000000 ns/call=23.578 allocations=0 retains=0 releases=0"
+    },
+    {
+      "repeat": 0,
+      "mode": 8,
+      "variant": "after",
+      "instructions": 175575543,
+      "output": "mode=8 calls=1000000 ns/call=16.593 allocations=0 retains=0 releases=0"
+    },
+    {
+      "repeat": 0,
+      "mode": 9,
+      "variant": "before",
+      "instructions": 250160127,
+      "output": "mode=9 calls=1000000 ns/call=28.840 allocations=0 retains=0 releases=0"
+    },
+    {
+      "repeat": 0,
+      "mode": 9,
+      "variant": "after",
+      "instructions": 180500092,
+      "output": "mode=9 calls=1000000 ns/call=17.863 allocations=0 retains=0 releases=0"
+    },
+    {
+      "repeat": 0,
+      "mode": 10,
+      "variant": "before",
+      "instructions": 271642629,
+      "output": "mode=10 calls=1000000 ns/call=27.457 allocations=1 retains=1000000 releases=1000000"
+    },
+    {
+      "repeat": 0,
+      "mode": 10,
+      "variant": "after",
+      "instructions": 199775455,
+      "output": "mode=10 calls=1000000 ns/call=19.566 allocations=1 retains=1000000 releases=1000000"
+    },
+    {
+      "repeat": 0,
+      "mode": 11,
+      "variant": "before",
+      "instructions": 271505316,
+      "output": "mode=11 calls=1000000 ns/call=25.887 allocations=0 retains=1000000 releases=1000000"
+    },
+    {
+      "repeat": 0,
+      "mode": 11,
+      "variant": "after",
+      "instructions": 202896962,
+      "output": "mode=11 calls=1000000 ns/call=18.812 allocations=0 retains=1000000 releases=1000000"
+    },
+    {
+      "repeat": 0,
+      "mode": 12,
+      "variant": "before",
+      "instructions": 270920603,
+      "output": "mode=12 calls=1000000 ns/call=26.738 allocations=1 retains=1000000 releases=1000000"
+    },
+    {
+      "repeat": 0,
+      "mode": 12,
+      "variant": "after",
+      "instructions": 200573437,
+      "output": "mode=12 calls=1000000 ns/call=21.771 allocations=1 retains=1000000 releases=1000000"
+    },
+    {
+      "repeat": 0,
+      "mode": 13,
+      "variant": "before",
+      "instructions": 270705128,
+      "output": "mode=13 calls=1000000 ns/call=27.397 allocations=0 retains=1000000 releases=1000000"
+    },
+    {
+      "repeat": 0,
+      "mode": 13,
+      "variant": "after",
+      "instructions": 199050666,
+      "output": "mode=13 calls=1000000 ns/call=18.936 allocations=0 retains=1000000 releases=1000000"
+    },
+    {
+      "repeat": 0,
+      "mode": 14,
+      "variant": "before",
+      "instructions": 327215550,
+      "output": "mode=14 calls=1000000 ns/call=32.357 allocations=0 retains=3000000 releases=3000000"
+    },
+    {
+      "repeat": 0,
+      "mode": 14,
+      "variant": "after",
+      "instructions": 333673395,
+      "output": "mode=14 calls=1000000 ns/call=31.034 allocations=0 retains=3000000 releases=3000000"
+    },
+    {
+      "repeat": 0,
+      "mode": 15,
+      "variant": "before",
+      "instructions": 461773026,
+      "output": "mode=15 calls=1000000 ns/call=39.808 allocations=1000000 retains=2000000 releases=3000000"
+    },
+    {
+      "repeat": 0,
+      "mode": 15,
+      "variant": "after",
+      "instructions": 465706607,
+      "output": "mode=15 calls=1000000 ns/call=42.678 allocations=1000000 retains=2000000 releases=3000000"
+    },
+    {
+      "repeat": 0,
+      "mode": 16,
+      "variant": "before",
+      "instructions": 658421876,
+      "output": "mode=16 calls=1000000 ns/call=59.578 allocations=1000000 retains=1000000 releases=2000000"
+    },
+    {
+      "repeat": 0,
+      "mode": 16,
+      "variant": "after",
+      "instructions": 671539075,
+      "output": "mode=16 calls=1000000 ns/call=71.348 allocations=1000000 retains=1000000 releases=2000000"
+    },
+    {
+      "repeat": 0,
+      "mode": 17,
+      "variant": "before",
+      "instructions": 257072582,
+      "output": "mode=17 calls=1000000 ns/call=20.985 allocations=0 retains=2000000 releases=2000000"
+    },
+    {
+      "repeat": 0,
+      "mode": 17,
+      "variant": "after",
+      "instructions": 277720285,
+      "output": "mode=17 calls=1000000 ns/call=23.091 allocations=0 retains=2000000 releases=2000000"
+    },
+    {
+      "repeat": 0,
+      "mode": 18,
+      "variant": "before",
+      "instructions": 133465029,
+      "output": "mode=18 calls=1000000 ns/call=12.210 allocations=0 retains=2000000 releases=2000000"
+    },
+    {
+      "repeat": 0,
+      "mode": 18,
+      "variant": "after",
+      "instructions": 134493064,
+      "output": "mode=18 calls=1000000 ns/call=12.273 allocations=0 retains=2000000 releases=2000000"
+    },
+    {
+      "repeat": 1,
+      "mode": 18,
+      "variant": "after",
+      "instructions": 134926028,
+      "output": "mode=18 calls=1000000 ns/call=12.696 allocations=0 retains=2000000 releases=2000000"
+    },
+    {
+      "repeat": 1,
+      "mode": 18,
+      "variant": "before",
+      "instructions": 134571084,
+      "output": "mode=18 calls=1000000 ns/call=13.887 allocations=0 retains=2000000 releases=2000000"
+    },
+    {
+      "repeat": 1,
+      "mode": 17,
+      "variant": "after",
+      "instructions": 280767793,
+      "output": "mode=17 calls=1000000 ns/call=27.060 allocations=0 retains=2000000 releases=2000000"
+    },
+    {
+      "repeat": 1,
+      "mode": 17,
+      "variant": "before",
+      "instructions": 258828321,
+      "output": "mode=17 calls=1000000 ns/call=26.548 allocations=0 retains=2000000 releases=2000000"
+    },
+    {
+      "repeat": 1,
+      "mode": 16,
+      "variant": "after",
+      "instructions": 675559250,
+      "output": "mode=16 calls=1000000 ns/call=66.773 allocations=1000000 retains=1000000 releases=2000000"
+    },
+    {
+      "repeat": 1,
+      "mode": 16,
+      "variant": "before",
+      "instructions": 662967672,
+      "output": "mode=16 calls=1000000 ns/call=63.325 allocations=1000000 retains=1000000 releases=2000000"
+    },
+    {
+      "repeat": 1,
+      "mode": 15,
+      "variant": "after",
+      "instructions": 467797302,
+      "output": "mode=15 calls=1000000 ns/call=45.006 allocations=1000000 retains=2000000 releases=3000000"
+    },
+    {
+      "repeat": 1,
+      "mode": 15,
+      "variant": "before",
+      "instructions": 462806922,
+      "output": "mode=15 calls=1000000 ns/call=45.840 allocations=1000000 retains=2000000 releases=3000000"
+    },
+    {
+      "repeat": 1,
+      "mode": 14,
+      "variant": "after",
+      "instructions": 333910903,
+      "output": "mode=14 calls=1000000 ns/call=32.136 allocations=0 retains=3000000 releases=3000000"
+    },
+    {
+      "repeat": 1,
+      "mode": 14,
+      "variant": "before",
+      "instructions": 329782991,
+      "output": "mode=14 calls=1000000 ns/call=31.464 allocations=0 retains=3000000 releases=3000000"
+    },
+    {
+      "repeat": 1,
+      "mode": 13,
+      "variant": "after",
+      "instructions": 200249212,
+      "output": "mode=13 calls=1000000 ns/call=19.048 allocations=0 retains=1000000 releases=1000000"
+    },
+    {
+      "repeat": 1,
+      "mode": 13,
+      "variant": "before",
+      "instructions": 273181362,
+      "output": "mode=13 calls=1000000 ns/call=26.019 allocations=0 retains=1000000 releases=1000000"
+    },
+    {
+      "repeat": 1,
+      "mode": 12,
+      "variant": "after",
+      "instructions": 202392358,
+      "output": "mode=12 calls=1000000 ns/call=18.978 allocations=1 retains=1000000 releases=1000000"
+    },
+    {
+      "repeat": 1,
+      "mode": 12,
+      "variant": "before",
+      "instructions": 270579961,
+      "output": "mode=12 calls=1000000 ns/call=25.127 allocations=1 retains=1000000 releases=1000000"
+    },
+    {
+      "repeat": 1,
+      "mode": 11,
+      "variant": "after",
+      "instructions": 202136487,
+      "output": "mode=11 calls=1000000 ns/call=22.256 allocations=0 retains=1000000 releases=1000000"
+    },
+    {
+      "repeat": 1,
+      "mode": 11,
+      "variant": "before",
+      "instructions": 271936481,
+      "output": "mode=11 calls=1000000 ns/call=23.731 allocations=0 retains=1000000 releases=1000000"
+    },
+    {
+      "repeat": 1,
+      "mode": 10,
+      "variant": "after",
+      "instructions": 198819961,
+      "output": "mode=10 calls=1000000 ns/call=16.468 allocations=1 retains=1000000 releases=1000000"
+    },
+    {
+      "repeat": 1,
+      "mode": 10,
+      "variant": "before",
+      "instructions": 269411254,
+      "output": "mode=10 calls=1000000 ns/call=26.097 allocations=1 retains=1000000 releases=1000000"
+    },
+    {
+      "repeat": 1,
+      "mode": 9,
+      "variant": "after",
+      "instructions": 179754056,
+      "output": "mode=9 calls=1000000 ns/call=19.963 allocations=0 retains=0 releases=0"
+    },
+    {
+      "repeat": 1,
+      "mode": 9,
+      "variant": "before",
+      "instructions": 249638228,
+      "output": "mode=9 calls=1000000 ns/call=26.567 allocations=0 retains=0 releases=0"
+    },
+    {
+      "repeat": 1,
+      "mode": 8,
+      "variant": "after",
+      "instructions": 176025046,
+      "output": "mode=8 calls=1000000 ns/call=18.869 allocations=0 retains=0 releases=0"
+    },
+    {
+      "repeat": 1,
+      "mode": 8,
+      "variant": "before",
+      "instructions": 246513726,
+      "output": "mode=8 calls=1000000 ns/call=22.503 allocations=0 retains=0 releases=0"
+    },
+    {
+      "repeat": 1,
+      "mode": 7,
+      "variant": "after",
+      "instructions": 173825338,
+      "output": "mode=7 calls=1000000 ns/call=16.423 allocations=0 retains=0 releases=0"
+    },
+    {
+      "repeat": 1,
+      "mode": 7,
+      "variant": "before",
+      "instructions": 244393667,
+      "output": "mode=7 calls=1000000 ns/call=22.584 allocations=0 retains=0 releases=0"
+    },
+    {
+      "repeat": 1,
+      "mode": 6,
+      "variant": "after",
+      "instructions": 173743044,
+      "output": "mode=6 calls=1000000 ns/call=14.365 allocations=0 retains=0 releases=0"
+    },
+    {
+      "repeat": 1,
+      "mode": 6,
+      "variant": "before",
+      "instructions": 242868292,
+      "output": "mode=6 calls=1000000 ns/call=20.907 allocations=0 retains=0 releases=0"
+    },
+    {
+      "repeat": 1,
+      "mode": 5,
+      "variant": "after",
+      "instructions": 226360567,
+      "output": "mode=5 calls=1000000 ns/call=18.138 allocations=1 retains=3000000 releases=3000000"
+    },
+    {
+      "repeat": 1,
+      "mode": 5,
+      "variant": "before",
+      "instructions": 331622657,
+      "output": "mode=5 calls=1000000 ns/call=27.343 allocations=1 retains=3000000 releases=3000000"
+    },
+    {
+      "repeat": 1,
+      "mode": 4,
+      "variant": "after",
+      "instructions": 160082273,
+      "output": "mode=4 calls=1000000 ns/call=14.526 allocations=1 retains=2000000 releases=2000000"
+    },
+    {
+      "repeat": 1,
+      "mode": 4,
+      "variant": "before",
+      "instructions": 252881052,
+      "output": "mode=4 calls=1000000 ns/call=21.113 allocations=1 retains=2000000 releases=2000000"
+    },
+    {
+      "repeat": 1,
+      "mode": 3,
+      "variant": "after",
+      "instructions": 132604086,
+      "output": "mode=3 calls=1000000 ns/call=10.441 allocations=1 retains=1000000 releases=1000000"
+    },
+    {
+      "repeat": 1,
+      "mode": 3,
+      "variant": "before",
+      "instructions": 225973412,
+      "output": "mode=3 calls=1000000 ns/call=17.469 allocations=1 retains=1000000 releases=1000000"
+    },
+    {
+      "repeat": 1,
+      "mode": 2,
+      "variant": "after",
+      "instructions": 158722964,
+      "output": "mode=2 calls=1000000 ns/call=12.096 allocations=1 retains=2000000 releases=2000000"
+    },
+    {
+      "repeat": 1,
+      "mode": 2,
+      "variant": "before",
+      "instructions": 252742029,
+      "output": "mode=2 calls=1000000 ns/call=19.844 allocations=1 retains=2000000 releases=2000000"
+    },
+    {
+      "repeat": 1,
+      "mode": 1,
+      "variant": "after",
+      "instructions": 146618570,
+      "output": "mode=1 calls=1000000 ns/call=12.600 allocations=0 retains=1000000 releases=1000000"
+    },
+    {
+      "repeat": 1,
+      "mode": 1,
+      "variant": "before",
+      "instructions": 236710643,
+      "output": "mode=1 calls=1000000 ns/call=18.081 allocations=0 retains=1000000 releases=1000000"
+    },
+    {
+      "repeat": 1,
+      "mode": 0,
+      "variant": "after",
+      "instructions": 165496997,
+      "output": "mode=0 calls=1000000 ns/call=13.477 allocations=0 retains=2000000 releases=2000000"
+    },
+    {
+      "repeat": 1,
+      "mode": 0,
+      "variant": "before",
+      "instructions": 256788020,
+      "output": "mode=0 calls=1000000 ns/call=21.204 allocations=0 retains=2000000 releases=2000000"
+    }
+  ]
+}

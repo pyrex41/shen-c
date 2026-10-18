@@ -1,0 +1,33 @@
+{
+  "note": "Portable copies replace local paths. Hashes describe original bytes; raw receipts are retained under evidence/rc. Initial measurements use preserved checkpoint binaries, not current source.",
+  "copies": {
+    "matched-initial.json": {
+      "raw_receipt": "evidence/rc/perf-matched-cli-20261015/result.json",
+      "raw_sha256": "05214dfd532166d0449f6954ee37dc4e5fd1d7e4ce302c3f73110582b14f7b62"
+    },
+    "cmake-release.json": {
+      "raw_receipt": "evidence/rc/perf-combined-final/receipt.json",
+      "raw_sha256": "6ea3ecd9db7e6e27b11a48488062b8500c6b9474fafac49063eacd008f321e0e"
+    },
+    "runtime-asan.json": {
+      "raw_receipt": "evidence/rc/inline-tail-review/receipt.json",
+      "raw_sha256": "f4292be337f21a2ef08caaea317037b8af702507ed35b295ede6ba54155fafa8"
+    },
+    "emitted-asan.json": {
+      "raw_receipt": "evidence/rc/perf-emitted-final/receipt.json",
+      "raw_sha256": "4b2ab01c91b3e137624ebfed91ac124db267463aed7a7083f5dffc68f0ce61a8"
+    },
+    "call-fast-candidate.json": {
+      "raw_receipt": "evidence/rc/perf-call-fast/candidate-receipt.json",
+      "raw_sha256": "c40dcbf7f27f60eec97c2b0299a2cd9a3c0b225ed71bdad76b742022c610deb8"
+    },
+    "matched-final.json": {
+      "raw_receipt": "evidence/rc/perf-final-serial-20261015/result.json",
+      "raw_sha256": "d8b2fc1ce36c47855720524ff3e0ac1a7ad640654912aa3d104b595eb7f27d07"
+    },
+    "profile-current.json": {
+      "raw_receipt": "evidence/rc/perf-combined-sample-20261015/result.json",
+      "raw_sha256": "a8b8957d2a10cc5eccf4225cac1d5b92c42f61f7d0f5087287f209ea2fc55948"
+    }
+  }
+}

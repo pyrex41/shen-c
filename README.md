@@ -1,241 +1,153 @@
 # Shen-C
 
-A [Shen](https://shenlanguage.org/) port in C17. This repository
-([`pyrex41/shen-c`](https://github.com/pyrex41/shen-c), default branch
-`main`) is a fork of [otabat/shen-c](https://github.com/otabat/shen-c).
-It boots the community **ShenOSKernel 42.2** (`*version*` is `"42.2"`,
-vendored byte-for-byte from Shen-Language/shen-sources tag `shen-42.2`;
-see `shen/src/kl/PROVENANCE.md`) and passes the kernel suite
-**passed 143 / failed 0** as `bin/shen-c` (`make certify`). The port is
-experimental.
-
-Shen is a portable functional language by [Mark Tarver](https://marktarver.com/)
-with pattern matching, macros, optional sequent-calculus types, Prolog, and
+A [Shen](https://shenlanguage.org/) implementation in C17, based on
+[otabat/shen-c](https://github.com/otabat/shen-c) and Mark Tarver's Shen 43.1
+kernel. Shen provides pattern matching, macros, optional types, Prolog, and
 Shen-YACC.
 
-**Runtime.** Boehm GC (`bdw-gc`) via Nix `pkg-config` (Homebrew paths are
-rejected). Values are tagged words: fixnum / bool / empty-list are non-pointer
-immediates; cons, symbol, and string pointers use
-`GC_register_displacement`. After a KL boot, `bin/shen-c` overwrites kernel
-defuns with generated `NativeFunction`s (rust-style `install_all`; 730 names),
-re-applies C port overwrites, then calls `(shen.initialise)`. Loaded test files still typecheck as boxed
-KL through AOT `t*`. Tails hop on a 16 MiB mmap trampoline (Darwin Boehm
-workers). Overlay-after-load is wired in `abi.c` / `emit.c` and **unplugged**
-for runme (`overlay_wrap=0`).
+**Shen-C 0.3.0 brings a native C17 compiler, the complete Shen 43.1 portable
+kernel, and reference counting with exact cycle reclamation.** The default
+compiler, standalone CLI and generated C applications have no Boehm dependency.
+The kernel is compiled to native C; source loading and explicit `eval-kl` use
+the RC evaluator. See the [release notes](CHANGELOG.md).
 
-**Bars (do not regress).**
+## Full-suite performance
 
-| Bar | How | Status |
-|-----|-----|--------|
-| Interpreter certify (42.2) | `nix develop -c make CC=clang certify` | **143 / 0** |
-| AOT runme (S42 shake) | `yes \| bin/runme-aot-app/app` from `shen/test/s42` | **134 / 0** |
+On the measured Darwin arm64 host, RC used **16.4% and 16.6% less user CPU than
+rebuilt Boehm** in two batches of five alternating pairs, winning all ten CPU
+comparisons and using roughly half the peak memory. All twenty executions
+passed the complete **136-test Shen 43.1 suite**.
 
-The AOT runme fixture (`test/fixtures/runme-aot`) and the other Yggdrasil
-fixtures are shaken from the earlier Tarver S42 kernel and still run on this
-runtime; reshaking them from 42.2 needs a 42.2 Yggdrasil host. Timings below
-are from the S42 kernel.
+| Complete suite, median of ten runs per implementation | RC | Boehm |
+|---|---:|---:|
+| Wall time | **3.785 s** | 4.510 s |
+| User CPU | **3.675 s** | 4.405 s |
 
-L interpreter typecheck is **4.244 s** / 1 177 672 inferences (Go **2.141 s** /
-1 178 236). Cold AOT is **~1.18×** Go wall, not a match. Warm
-`SHEN_C_TC_CACHE` can match Go on L-interp; it is off by default. Details:
-`docs/AOT-GAP.md`.
+These times include process startup, source loading, typechecking and test
+execution. Both implementations used the same pinned kernel, suite, compiler/SDK
+and input; each execution used a fresh writable suite copy. RC's largest peak
+RSS was 32,063,488 bytes, 3.49% above the frozen pre-optimization RC baseline
+and below Boehm in every pair. Ordinary macOS services remained active in the
+user-accepted measurement window. These are host-specific comparisons of the
+complete implementations; they do not isolate the cost of either memory manager.
 
-Tested on macOS (Apple Silicon) with Clang. Ubuntu (x86_64 / AArch64) is a
-minor supported OS. Upstream also ships an
-[iOS App Store build](https://chatolab.wordpress.com/2017/07/10/shen-programming-language-for-ios/)
-and [Shen for Android](https://chatolab.wordpress.com/2017/12/26/shen-programming-language-for-android/)
-(Tatsuya Tsuda / otabat), plus [Shen-JVM](https://github.com/otabat/shen-jvm).
+The [qualification report](docs/performance/rc-43.1-final-20261017.md) preserves
+every sample, artifact identity, reproduction command and rejected experiment.
+Historical [S42 measurements](docs/performance/rc-suite-identity-tail-20261016.md)
+remain separate from the 43.1 comparison.
 
-## Installation
+## How it works
 
-Pre-S42 release tarballs are still on
-[otabat/shen-c releases](https://github.com/otabat/shen-c/releases). S42 work
-is this fork: clone and build from source (Nix).
+The approach combines compiler knowledge about ownership with less repeated
+work in the evaluator:
 
-```
-git clone https://github.com/pyrex41/shen-c.git
-cd shen-c
-nix develop -c make CC=clang
-```
+- **Move values at their last use.** Generated C transfers ownership when a
+  value is no longer needed, captures only free variables, and drops values at
+  known boundaries. A uniquely owned cons cell can be reused; shared cells keep
+  their aliases intact. Certified internal call boundaries can borrow existing
+  roots and skip redundant argument copies or cleanup scans. Public borrowed
+  and owned C contracts remain unchanged.
+- **Prepare hot interpreted functions once.** Frequently used function bodies
+  get bounded evaluation plans that record expression kinds and lexical slots.
+  Repeated calls avoid walking the same syntax and searching the same names.
+  Parameter and local environments are materialized when a fallback or escaping
+  closure needs them. Cold and unsupported code uses the general evaluator.
+- **Guard specialized paths.** Native predicates and selected Prolog operations
+  avoid unnecessary temporary values and ownership work when their exact
+  preconditions hold. Runtime function guards and dependency-cache invalidation
+  preserve dynamic redefinition; uncertain cases use the general paths.
+- **Keep full graph semantics.** Reference counting handles ordinary lifetime
+  management, while exact cycle reclamation handles unreachable cyclic graphs.
+  Mutable data, shared values and escaping closures retain their semantics.
+  Reuse caches and evaluation plans have explicit bounds.
 
-Upstream tarball (older kernel):
+Separate diagnostic runs recorded **22.7% fewer retain/release operations** and
+**7.6% fewer managed allocations** than the pre-optimization RC implementation.
+Those counters explain part of the reduced work; diagnostic timings are not
+used for the release performance claim.
 
-```
-tar xvf shen-c-{VERSION}-{OS}-{ARCH}.tar.gz
-```
+The ownership optimizations are inspired by Perceus and implemented directly
+in C. This is a bounded set of compiler/runtime optimizations; Koka is not a
+build dependency. The [compiler guide](docs/RC-BACKEND.md),
+[implementation record](docs/performance/rc-prepared-evaluator-20261017.md) and
+[validation record](docs/rc-validation.md) describe their scope and controls.
+Qualification includes the complete generated kernel under fatal ASan/UBSan,
+default/boxed runtime and emitted semantic controls, Make/CMake, installed Nix
+packages, and Linux Clang/GCC and macOS CI.
 
-## Usage
+## Build
 
-```
-shen-c --version
-shen-c                 # REPL (stdin EOF exits)
-shen-c eval -e EXPR
-shen-c script FILE
-```
+A C17 compiler, Make, Python 3.9 or newer, and an archiver are sufficient. Nix is optional.
 
-Quit the REPL with `(exit 0)` or stdin EOF. `(value *version*)` is `"42.2"`.
-A last input line without a trailing newline is still read.
-
-## Build from source
-
-C17. `bdw-gc` must come from the Nix dev shell. KL graphs go through
-`shen_context` / `GC_malloc`.
-
-```
-nix develop -c make
-nix develop -c make test
-nix develop -c make certify
-nix develop -c cmake -G Ninja -B build && nix develop -c cmake --build build
-```
-
-`make certify` runs the ShenOSKernel 42.2 suite `shen/test/kernel/runme.shen`
-on `bin/shen-c` and writes `evidence/certify.log`. Certified means that log
-contains `passed ... 143` and `failed ... 0`.
-
-AOT of the same suite (shaken kernel + runtime load of test sidecars):
-
-```
-nix develop -c make CC=clang bin/runme-aot-app
-cd shen/test/s42 && yes | /usr/bin/time -l ../../bin/runme-aot-app/app
-```
-
-Yggdrasil C (rung 1) includes `src/c/abi.h`, links `bin/libshenc.a`, and
-registers shaken `defun`s as `NativeFunction`s via `shen_register_defun`.
-`eval-kl` stays for needs-eval shakes. `bin/yggdrasil-build` reads a shake dir
-(`kernel.kl` + user `.kl` + `yggdrasil.manifest.txt`) and writes `app.c`
-(one C function per shaken `defun`), `Makefile`, and `CMakeLists.txt`.
-Generated `main` is `shen_boot` (never `load_kl_file` of `shen/src/kl/*.kl`),
-install NativeFunctions, re-apply port overwrites, `(shen.initialise)` if the
-manifest names it, then user toplevels.
-
-`make test` builds `bin/test_abi`, `bin/test_emit`, `test/fixtures/sum`
-(kernel `id` + user `sum3` prints 42), `test/fixtures/fib-small` (self-tail
-`goto`, other tails `shen_apply`, prints 6765), Yggdrasil shakes
-`hello-ygg` / `fib-ygg` (`hello from shaken shen`, `fib 20 = 6765`), and
-`tc-ygg` (needs-eval slice: 568 kernel NativeFunctions including `types.kl` /
-`t-star`; declare tables print `inferences = 2778`). First-class AOT lambdas
-go through `shen_native_closure` / `shen_apply` (macroexpand / `map` / wrap).
-`declare` still uses `eval-kl` for signature thunks. Rung 2 is documentation
-only: `docs/option5-rung2.md` and `docs/rung2.md`.
-
-Shake a Shen program (stage 1 is the Yggdrasil host, not this interpreter):
-
-```
-# from the yggdrasil checkout; reference host shen-cl, fallback shen-go
-yggdrasil shake tests/fib.shen out/
-# or:
-../shen-cl/bin/sbcl/shen eval -q -l yggdrasil.shen -e '(yggdrasil.shake ["tests/fib.shen"] "out")'
-../shen-go/bin/shen eval -q -l yggdrasil.shen -e '(yggdrasil.shake ["tests/fib.shen"] "out")'
-```
-
-`shen-c eval -l` / `-e` exist (`*hush*` is stdout-only) but `yggdrasil.shake`
-on shen-c is unverified. Stage-1 host is shen-cl (fallback shen-go). Stage-2
-is C.
-
-```
-nix develop -c make CC=clang bin/libshenc.a bin/yggdrasil-build
-# from the yggdrasil checkout:
-yggdrasil shake tests/fib.shen out/
-SHEN_C_HOME=/path/to/shen-c nix develop /path/to/shen-c -c \
-  ./bin/yggdrasil-build out out/app-c
-./out/app-c/app
-# or: yggdrasil build tests/fib.shen out/ --target c
-# expected: fib 20 = 6765
-
-# typecheck-heavy kernel slice (needs-eval; stage-1 host shen-cl/shen-go):
-yggdrasil shake tests/tc-interp.shen out-tc/
-SHEN_C_HOME=/path/to/shen-c nix develop /path/to/shen-c -c \
-  ./bin/yggdrasil-build out-tc out-tc/app-c
-# run from the dir that contains interpreter.shen:
-(cd tests && ../out-tc/app-c/app)
-# kernel declare tables print inferences = 2778; loading interpreter.shen
-# typechecks through AOT t* (full runme is bin/runme-aot-app, 134/0).
-```
-
-AddressSanitizer and UndefinedBehaviorSanitizer:
-
-```
-nix develop -c make SANITIZE=1 test
-# Linux: ASan+UBSan. Darwin: UBSan only (ASan deadlocks Boehm GC_init).
-```
-
-A binary named `shen-c` is written to `bin/`.
-
-```
+```sh
+make CC=clang
 ./bin/shen-c --version
-./bin/shen-c
-./bin/shen-c eval -e '(+ 1 1)'
-./bin/shen-c script FILE
+./bin/shen-c eval -e '(+ 20 22)'
 ```
 
-Stdin EOF exits the REPL.
+`bin/shen-c` and `bin/shen-rc` run the same standalone implementation. The
+compiled kernel is embedded; the executable can run outside the source tree.
+`bin/rc-build` compiles KL input into native C applications.
 
-To build a release archive:
+CMake also defaults to the Boehm-free toolchain:
 
-```
-nix develop -c make release
-```
-
-
-## Run non-release build
-
-There are several ways to run a non-release build.
-
-* Run the shell script under the project root.
-```
-./shen-c
+```sh
+cmake -S . -B build
+cmake --build build
+ctest --test-dir build --output-on-failure
+./build/shen-c eval -e '(+ 20 22)'
 ```
 
-* Run Shen-C REPL by using the make command
-```
-make repl
-```
-or if rlwrap is installed
-```
-make rrepl
+## Use Shen
+
+```sh
+./bin/shen-c                       # REPL; stdin EOF exits
+./bin/shen-c eval -e EXPR
+./bin/shen-c eval -l FILE
+./bin/shen-c script FILE ARGUMENTS
 ```
 
-* Run Shen-C REPL from a compiled binary
+The script receives `[FILE | ARGUMENTS]` in `*argv*`. `eval -q` quiets
+language output to stdout while retaining explicit file writes.
 
-`bin/shen-c` finds the repo tree from its own path (`home_from_executable()`
-looks for `shen/src/kl/sys.kl`). `$SHEN_C_HOME` is an optional override, not
-required for Bifrost or for a binary that still sits in `bin/`.
+## Compile applications
 
-```
-./bin/shen-c
-env -u SHEN_C_HOME ./bin/shen-c eval -e '(version)'
-```
+See [the compiler guide](docs/RC-BACKEND.md) for Shen source compilation, KL
+manifests, generated C, ownership controls, and standalone deployment. The
+default runtime preserves mutable cycles and reclaims unreachable cycles.
+An optional acyclic-only configuration rejects writes that would create
+cycles; it is a restricted mode, not the default Shen semantics.
 
-To force a tree (or if the binary was copied away from the repo):
+## Validate
 
-```
-export SHEN_C_HOME=/path/to/shen-c
-alias shen-c='$SHEN_C_HOME/bin/shen-c'
-```
-or if rlwrap is installed
-```
-alias shen-c='rlwrap $SHEN_C_HOME/bin/shen-c'
-```
-and then
-```
-shen-c
+```sh
+make test
+make sanitize
+scripts/test-rc.sh --no-build bin/rc-build
+scripts/certify-rc.sh
 ```
 
+The certification command rebuilds a fresh Boehm-free compiler, compiles all
+14 bundled kernel modules, runs the pinned release suite in a fresh writable directory, and audits both the
+compiler and generated executable. Passing requires **136 passed, 0 failed**, all 36 intermediate reports, and the expected redirect output,
+successful process exit, matching source hashes, and no Boehm dependencies.
+Each run has bounded execution and a separate evidence directory.
+
+The [validation record](docs/rc-validation.md) distinguishes the earlier
+experimental checkpoint from the current compiler and ownership changes.
+Historical Boehm results are described in
+[LEGACY-BOEHM.md](docs/LEGACY-BOEHM.md).
 
 ## Learn Shen
-* [Official website of Shen](http://shenlanguage.org/)
-* [The Shen OS Kernel Manual](http://shenlanguage.org/learn-shen/index.html)
-* [The Official Shen Standard](http://www.shenlanguage.org/learn-shen/shendoc.htm)
-* [Shen Community Wiki](https://github.com/Shen-Language/wiki/wiki)
-* [The Book of Shen: third edition](https://www.amazon.co.uk/Book-Shen-Third-Mark-Tarver/dp/1784562130)
 
+- [Official website](https://shenlanguage.org/)
+- [Shen OS Kernel manual](https://shenlanguage.org/learn-shen/index.html)
+- [Community wiki](https://github.com/Shen-Language/wiki/wiki)
 
 ## License
 
-#### Shen
-Copyright (c) 2010-2022, Mark Tarver  
-Shen is released under the [BSD License](shen/LICENSE.txt).
+Shen: Copyright 2010–2022 Mark Tarver, [BSD license](shen/LICENSE.txt).
+Shen-C: Copyright 2022 Tatsuya Tsuda and contributors,
+[MIT license](http://www.opensource.org/licenses/MIT).
 
-#### Shen-C
-Copyright (c) 2022, Tatsuya Tsuda; S42 / AOT work on this fork.
-Shen-C is released under the [MIT License](http://www.opensource.org/licenses/MIT).
+The [43.1 continuation](docs/qualification/shen-43.1-continuation.md) records the current upgrade, matched comparator, and acceptance gates. Release manifests live in `shen/releases/`; select one with `SHEN_RELEASE_MANIFEST` for certification and source compilation, `--manifest` for benchmarks, `RC_RELEASE_MANIFEST` for Make, or `SHEN_RELEASE_MANIFEST` for CMake. Historical S42 timings remain separate.

@@ -1,0 +1,59 @@
+{
+  "repetitions": 3,
+  "source_identity": {
+    "candidate": {
+      "status": "experimental",
+      "kernel_objects_from": "8625781",
+      "flags": "/usr/bin/cc -O3 -g -flto=thin -std=c17",
+      "source_sha256": {
+        "src/rc/eval.c": "0f0e76b106f535b8b76ac72739eace2b9ed10edbae915fc93da8639e610bace6",
+        "src/rc/rc.c": "9febc1d6dd166446f328c6f31b8041ed6451edad7acb806eedfa1c2ae6bdbaf8",
+        "src/rc/rc_internal.h": "542dc7b446cc3cebd1dd9cd3f48a4241d64c9a4ac1f6990161ab8e96e6ed630c",
+        "src/rc/emit.c": "b8705439e0bbd60cc6fd3f57456351f461b973935b903761c2f4fc9cb12de05a",
+        "src/rc/primitives.c": "3e51bcb2083475e2d07d6cb0ce1b08f9d7a7ee524e74779be2c4a7781f65efc5",
+        "src/rc/read.c": "f61444980f2d34d3986f9640103b3478501c4d368f6c2dd5058a4b39b3143667",
+        "src/rc/eval.h": "40840e20cb00334a7032ef11aec08ce6a0846912ae05dfb0d08e894ba7ad2e15",
+        "src/rc/main.c": "aed4ac89c8aaf338f8519b35554effd251b04d47bbee6dbf5781343097d74275",
+        "src/rc/primitives.h": "ab8cc324d48775dded4ca6cd49eabd1a99a93fb9ff33e96862cc5243636f0a77",
+        "src/rc/rc.h": "b77320047d47b013b5064b44d749e80fab11319769145d9e6a676371d9990aec",
+        "src/rc/emit.h": "ae1946b669f771941b12a706316a28090aefd126f54cc687fa00a3b10b322a9f",
+        "src/rc/eval_plan.h": "ccd57d856d86cbd0eb3a1c10575455d270a8908af660d0030766f5c2b0044b2e",
+        "src/rc/read.h": "71fb3e8ce757174ee47dde95f732200ae1b023c66f8164ac0a4d82ebb241fea5"
+      },
+      "artifact_sha256": {
+        "bin/shen-pvm-b2": "3683161ec9b6e4e70cf8c1af61e4ee20da2d7a7821b5895ec0e65ef6fc4c7d33",
+        "bin/pvm-b2-release/libshenrc.a": "a3588f2afee780992fc21e5942cb3cfe7651207004a28353f9015637f0618172"
+      },
+      "kernel_sha256": {
+        "<RC_BASELINE_ROOT>/obj/rc/kernel.c": "dcea2e0201ecce628735b65f2e6e5939e685c8cb8ff2669e6fe297dcf308d1b2",
+        "<RC_BASELINE_ROOT>/obj/rc/kernel.o": "e9d6cadad53f73121269d37acf7bc5bcb7c71c1d5e5f9e3268df92e32a54408b",
+        "<RC_BASELINE_ROOT>/obj/rc/main.o": "ae8a1f0139130c6942511235715d7f6b6cea2296a27907e467b2ca3075e30e80"
+      },
+      "dependencies": "<OPT_ROOT>/bin/shen-pvm-b2:\n\t/usr/lib/libSystem.B.dylib (compatibility version 1.0.0, current version 1359.0.0)\n"
+    },
+    "baseline": "8625781"
+  },
+  "cases": [
+    {
+      "label": "baseline",
+      "argv": [
+        "<RC_BASELINE_ROOT>/bin/shen-rc",
+        "script",
+        "runme.shen"
+      ],
+      "env": {}
+    },
+    {
+      "label": "prepared_b2",
+      "argv": [
+        "<OPT_ROOT>/evidence/rc/opt-20261017/candidate-b2/shen-rc",
+        "script",
+        "runme.shen"
+      ],
+      "env": {},
+      "dependency_sha256": {
+        "<OPT_ROOT>/evidence/rc/opt-20261017/candidate-b2/freeze.json": "450b39f7e01bc3ddb1c88ab7e9ed1e7d83f63b58959fb525f42ca67d45b36f8f"
+      }
+    }
+  ]
+}

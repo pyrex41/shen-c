@@ -1,0 +1,173 @@
+{
+  "status": "OPEN",
+  "reason": "CPU and wall targets missed; Linux and remote CI remain UNKNOWN; quiet-host condition not established",
+  "complete_suite_executions": 20,
+  "assertions_per_execution": 136,
+  "all_intermediate_reports_zero_failures": true,
+  "performance_acceptance": {
+    "status": "OPEN",
+    "batches": [
+      {
+        "user_seconds": 1.102974828375286,
+        "wall_seconds": 1.101123595505618,
+        "max_rss_bytes": 0.4210409252669039
+      },
+      {
+        "user_seconds": 1.0812641083521446,
+        "wall_seconds": 1.0772626931567328,
+        "max_rss_bytes": 0.4211696686680009
+      }
+    ],
+    "cpu_wins": 0,
+    "paired_ratios": [
+      {
+        "user_seconds": 1.0970654627539504,
+        "wall_seconds": 1.1969026548672568,
+        "max_rss_bytes": 0.42169748273557583
+      },
+      {
+        "user_seconds": 1.093181818181818,
+        "wall_seconds": 1.0961968680089487,
+        "max_rss_bytes": 0.4210409252669039
+      },
+      {
+        "user_seconds": 1.1055045871559632,
+        "wall_seconds": 1.101123595505618,
+        "max_rss_bytes": 0.4203510331037547
+      },
+      {
+        "user_seconds": 1.102974828375286,
+        "wall_seconds": 1.100896860986547,
+        "max_rss_bytes": 0.4204797867614394
+      },
+      {
+        "user_seconds": 1.1062355658198615,
+        "wall_seconds": 1.1040723981900453,
+        "max_rss_bytes": 0.42514029180695845
+      },
+      {
+        "user_seconds": 1.1465116279069767,
+        "wall_seconds": 1.1386363636363634,
+        "max_rss_bytes": 0.42106435092407035
+      },
+      {
+        "user_seconds": 1.1073059360730593,
+        "wall_seconds": 1.1216216216216217,
+        "max_rss_bytes": 0.4211696686680009
+      },
+      {
+        "user_seconds": 1.058695652173913,
+        "wall_seconds": 1.055793991416309,
+        "max_rss_bytes": 0.4787556904400607
+      },
+      {
+        "user_seconds": 1.0169851380042463,
+        "wall_seconds": 1.0103950103950106,
+        "max_rss_bytes": 0.478030303030303
+      },
+      {
+        "user_seconds": 1.0812641083521446,
+        "wall_seconds": 1.0772626931567328,
+        "max_rss_bytes": 0.4209240337627721
+      }
+    ],
+    "rc_max_rss_vs_baseline": 1.0021152829190905
+  },
+  "summary": {
+    "rc": {
+      "wall_seconds": {
+        "min": 4.86,
+        "median": 4.905,
+        "max": 5.41
+      },
+      "user_seconds": {
+        "min": 4.79,
+        "median": 4.82,
+        "max": 4.93
+      },
+      "sys_seconds": {
+        "min": 0.01,
+        "median": 0.01,
+        "max": 0.02
+      },
+      "max_rss_bytes": {
+        "min": 30982144,
+        "median": 31014912.0,
+        "max": 31047680
+      },
+      "instructions": {
+        "min": 121019633261,
+        "median": 121028274630.0,
+        "max": 121030349452
+      },
+      "cycles": {
+        "min": 20348521884,
+        "median": 20481430188.0,
+        "max": 20648719786
+      }
+    },
+    "boehm": {
+      "wall_seconds": {
+        "min": 4.4,
+        "median": 4.465,
+        "max": 4.81
+      },
+      "user_seconds": {
+        "min": 4.3,
+        "median": 4.390000000000001,
+        "max": 4.71
+      },
+      "sys_seconds": {
+        "min": 0.01,
+        "median": 0.02,
+        "max": 0.02
+      },
+      "max_rss_bytes": {
+        "min": 64782336,
+        "median": 73621504.0,
+        "max": 73760768
+      },
+      "instructions": {
+        "min": 88351660451,
+        "median": 89030986842.0,
+        "max": 91884886032
+      },
+      "cycles": {
+        "min": 18450245812,
+        "median": 18704549523.0,
+        "max": 20037209227
+      }
+    }
+  },
+  "pre_optimization_rc_rss_bytes": 30982144,
+  "source_freeze_revision": "827a62826e4297d7ecd6e582642e747b349fa96c",
+  "artifacts": {
+    "rc": {
+      "path": "<RC_WORKTREE>/bin/shen-rc",
+      "sha256": "c1c5aeaacd96d433194ce42670ba17e6cfd4d0af21209a5ae3486475169a8829",
+      "linked_libraries": "bin/shen-rc:\n\t/usr/lib/libSystem.B.dylib (compatibility version 1.0.0, current version 1359.0.0)"
+    },
+    "boehm": {
+      "path": "<BOEHM_WORKTREE>/bin/shen-c",
+      "sha256": "c3673fd327c8c74e0485d013fb9f48f004583fa31dcdfe9f7bbcb1db3db11f3b",
+      "linked_libraries": "../shen-c-boehm-43.1/bin/shen-c:\n\t/nix/store/r9bdx29an70k9jg6jj2h1ccnpjqdbwzg-boehm-gc-8.2.12/lib/libgc.1.dylib (compatibility version 7.0.0, current version 7.6.0)\n\t/usr/lib/libSystem.B.dylib (compatibility version 1.0.0, current version 1359.0.0)"
+    },
+    "baseline": {
+      "path": "<RC_WORKTREE>/evidence/rc/frozen-baseline/shen-rc-complete",
+      "sha256": "d2e1e9aab7db9f579a6ea0e3670e354fbbb7475af45f40729194ff4fe643393c",
+      "linked_libraries": "evidence/rc/frozen-baseline/shen-rc-complete:\n\t/usr/lib/libSystem.B.dylib (compatibility version 1.0.0, current version 1359.0.0)"
+    }
+  },
+  "platform_gates": {
+    "Darwin Make": "PASS",
+    "Darwin CMake 22 CTest": "PASS",
+    "Darwin fatal ASan/UBSan default+boxed 44 runtime tests": "PASS",
+    "Darwin fatal generated-kernel full suite": "PASS",
+    "Darwin fatal emitted+metadata controls": "PASS",
+    "Darwin fresh CLI/compiler/source/optimizer acceptance": "PASS",
+    "Darwin installed Nix package": "PASS",
+    "Linux": "UNKNOWN",
+    "remote CI": "UNKNOWN",
+    "performance": "OPEN"
+  }
+}

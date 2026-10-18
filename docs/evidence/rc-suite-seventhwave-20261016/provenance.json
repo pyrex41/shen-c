@@ -1,0 +1,27 @@
+{
+  "perf-seventhwave-balanced/result.json": {
+    "raw_sha256": "0642e9740928433655e08b241a5caa28dbdee51b2772c251382e397fe04761d4",
+    "portable_sha256": "3a0dbe95c5d1f8422f559fdb1555d7024484fb49a17dcf619d72af06a86759c7",
+    "sanitization": "Home/checkout/tmp paths replaced; PATH uses <recorded-build-path>; raw source unchanged."
+  },
+  "perf-seventhwave-balanced-config.json": {
+    "raw_sha256": "904064f6c51e159c2e04f3a4adfe5ad4d1a9313eb03a2b5e294b3a886d01f104",
+    "portable_sha256": "226809bbbec64c29849df2ce155762665eeec097b3d2254b8d90a1f251293317",
+    "sanitization": "Home/checkout/tmp paths replaced; PATH uses <recorded-build-path>; raw source unchanged."
+  },
+  "seventhwave-default-ipo-build/receipt.json": {
+    "raw_sha256": "467c58eaa27be0a61e371a30419596c4359d0af423af910f3a3813fdac72515a",
+    "portable_sha256": "8c97cbc7923fb5436fbb64a3053f7e175d0be0cd38c327873fc2537663dcee45",
+    "sanitization": "Home/checkout/tmp paths replaced; PATH uses <recorded-build-path>; raw source unchanged."
+  },
+  "seventhwave-focused-asan/receipt.json": {
+    "raw_sha256": "fa36a8590ccb92768dd895f605b278bb79396e09f99f51c015d867da2547fe73",
+    "portable_sha256": "f97fa34011a3a39629651d1c9979dc90f7c8161d9f6ef40fac8df27c1bc55132",
+    "sanitization": "Home/checkout/tmp paths replaced; PATH uses <recorded-build-path>; raw source unchanged."
+  },
+  "independent-audit.json": {
+    "raw_sha256": "ed5dfa3a71d76700a067730da90d21a4663e455c7fe167274dcf5c17f3db8758",
+    "portable_sha256": "ed5dfa3a71d76700a067730da90d21a4663e455c7fe167274dcf5c17f3db8758",
+    "sanitization": "Home/checkout/tmp paths replaced; PATH uses <recorded-build-path>; raw source unchanged."
+  }
+}

@@ -1,0 +1,64 @@
+mode,label,run,instructions,real,cpu,stats
+atomic,base,0,2547237263,0.25,0.22,atomic 5000000 retains=15000000 releases=15000000 allocations=0 callbacks=0
+atomic,atomic,0,2466191858,0.36,0.21,atomic 5000000 retains=15000000 releases=15000000 allocations=0 callbacks=0
+atomic,lazy-inline,0,2416860753,0.25,0.21,atomic 5000000 retains=10000000 releases=10000000 allocations=0 callbacks=0
+atomic,lazy-inline,1,2416378715,0.24,0.22,atomic 5000000 retains=10000000 releases=10000000 allocations=0 callbacks=0
+atomic,atomic,1,2466398223,0.24,0.21,atomic 5000000 retains=15000000 releases=15000000 allocations=0 callbacks=0
+atomic,base,1,2550132281,0.31,0.21,atomic 5000000 retains=15000000 releases=15000000 allocations=0 callbacks=0
+atomic,atomic,2,2466072059,0.25,0.21,atomic 5000000 retains=15000000 releases=15000000 allocations=0 callbacks=0
+atomic,base,2,2545573118,0.24,0.22,atomic 5000000 retains=15000000 releases=15000000 allocations=0 callbacks=0
+atomic,lazy-inline,2,2415158531,0.23,0.21,atomic 5000000 retains=10000000 releases=10000000 allocations=0 callbacks=0
+effect,base,0,6249220608,0.58,0.55,effect 5000000 retains=35000000 releases=35000000 allocations=0 callbacks=5000000
+effect,atomic,0,6330790481,0.59,0.55,effect 5000000 retains=35000000 releases=35000000 allocations=0 callbacks=5000000
+effect,lazy-inline,0,6469901714,0.6,0.57,effect 5000000 retains=35000000 releases=35000000 allocations=0 callbacks=5000000
+effect,lazy-inline,1,6472984114,0.63,0.56,effect 5000000 retains=35000000 releases=35000000 allocations=0 callbacks=5000000
+effect,atomic,1,6329797753,0.56,0.53,effect 5000000 retains=35000000 releases=35000000 allocations=0 callbacks=5000000
+effect,base,1,6250340339,0.56,0.54,effect 5000000 retains=35000000 releases=35000000 allocations=0 callbacks=5000000
+effect,atomic,2,6328971123,0.55,0.53,effect 5000000 retains=35000000 releases=35000000 allocations=0 callbacks=5000000
+effect,base,2,6247947569,0.54,0.52,effect 5000000 retains=35000000 releases=35000000 allocations=0 callbacks=5000000
+effect,lazy-inline,2,6468807368,0.59,0.56,effect 5000000 retains=35000000 releases=35000000 allocations=0 callbacks=5000000
+lexical,base,0,5248672515,0.47,0.44,lexical 5000000 retains=30000000 releases=35000000 allocations=5000000 callbacks=0
+lexical,atomic,0,5190636130,0.45,0.43,lexical 5000000 retains=30000000 releases=35000000 allocations=5000000 callbacks=0
+lexical,lazy-inline,0,5264756511,0.47,0.45,lexical 5000000 retains=30000000 releases=35000000 allocations=5000000 callbacks=0
+lexical,lazy-inline,1,5263355199,0.46,0.44,lexical 5000000 retains=30000000 releases=35000000 allocations=5000000 callbacks=0
+lexical,atomic,1,5190082244,0.46,0.43,lexical 5000000 retains=30000000 releases=35000000 allocations=5000000 callbacks=0
+lexical,base,1,5251301231,0.49,0.45,lexical 5000000 retains=30000000 releases=35000000 allocations=5000000 callbacks=0
+lexical,atomic,2,5188459728,0.47,0.44,lexical 5000000 retains=30000000 releases=35000000 allocations=5000000 callbacks=0
+lexical,base,2,5248865437,0.48,0.45,lexical 5000000 retains=30000000 releases=35000000 allocations=5000000 callbacks=0
+lexical,lazy-inline,2,5264517174,0.47,0.44,lexical 5000000 retains=30000000 releases=35000000 allocations=5000000 callbacks=0
+computed,base,0,3388507730,0.35,0.29,computed 5000000 retains=25000000 releases=25000000 allocations=0 callbacks=0
+computed,atomic,0,3391484267,0.31,0.29,computed 5000000 retains=25000000 releases=25000000 allocations=0 callbacks=0
+computed,lazy-inline,0,3461805662,0.31,0.29,computed 5000000 retains=25000000 releases=25000000 allocations=0 callbacks=0
+computed,lazy-inline,1,3464410686,0.36,0.29,computed 5000000 retains=25000000 releases=25000000 allocations=0 callbacks=0
+computed,atomic,1,3393774787,0.37,0.29,computed 5000000 retains=25000000 releases=25000000 allocations=0 callbacks=0
+computed,base,1,3387289942,0.32,0.28,computed 5000000 retains=25000000 releases=25000000 allocations=0 callbacks=0
+computed,atomic,2,3391524395,0.32,0.3,computed 5000000 retains=25000000 releases=25000000 allocations=0 callbacks=0
+computed,base,2,3385822767,0.31,0.29,computed 5000000 retains=25000000 releases=25000000 allocations=0 callbacks=0
+computed,lazy-inline,2,3461674576,0.31,0.29,computed 5000000 retains=25000000 releases=25000000 allocations=0 callbacks=0
+user,base,0,3356729918,0.31,0.29,user 5000000 retains=15000000 releases=15000000 allocations=0 callbacks=5000000
+user,atomic,0,3277339982,0.29,0.27,user 5000000 retains=15000000 releases=15000000 allocations=0 callbacks=5000000
+user,lazy-inline,0,3153107340,0.31,0.28,user 5000000 retains=10000000 releases=10000000 allocations=0 callbacks=5000000
+user,lazy-inline,1,3151519404,0.31,0.28,user 5000000 retains=10000000 releases=10000000 allocations=0 callbacks=5000000
+user,atomic,1,3279038575,0.33,0.28,user 5000000 retains=15000000 releases=15000000 allocations=0 callbacks=5000000
+user,base,1,3356585962,0.3,0.28,user 5000000 retains=15000000 releases=15000000 allocations=0 callbacks=5000000
+user,atomic,2,3277686275,0.31,0.28,user 5000000 retains=15000000 releases=15000000 allocations=0 callbacks=5000000
+user,base,2,3356583093,0.3,0.28,user 5000000 retains=15000000 releases=15000000 allocations=0 callbacks=5000000
+user,lazy-inline,2,3153968545,0.29,0.27,user 5000000 retains=10000000 releases=10000000 allocations=0 callbacks=5000000
+eval-upper,base,0,9934389725,1.03,0.97,eval-upper 300000 retains=30900634 releases=36300507 allocations=5400374
+eval-upper,atomic,0,9798866962,1.09,0.95,eval-upper 300000 retains=30900634 releases=36300507 allocations=5400374
+eval-upper,lazy-inline,0,9682442685,1.03,0.96,eval-upper 300000 retains=20700631 releases=26100504 allocations=5400374
+eval-upper,lazy-inline,1,9681816663,1.01,0.93,eval-upper 300000 retains=20700631 releases=26100504 allocations=5400374
+eval-upper,atomic,1,9800342792,1.06,0.96,eval-upper 300000 retains=30900634 releases=36300507 allocations=5400374
+eval-upper,base,1,9937077846,1.11,1.0,eval-upper 300000 retains=30900634 releases=36300507 allocations=5400374
+eval-upper,atomic,2,9812822464,1.14,0.98,eval-upper 300000 retains=30900634 releases=36300507 allocations=5400374
+eval-upper,base,2,9936877617,1.08,1.02,eval-upper 300000 retains=30900634 releases=36300507 allocations=5400374
+eval-upper,lazy-inline,2,9686169498,1.06,0.98,eval-upper 300000 retains=20700631 releases=26100504 allocations=5400374
+eval-lower,base,0,13211645966,1.51,1.4,eval-lower 300000 retains=30900634 releases=36300507 allocations=5400374
+eval-lower,atomic,0,13077058669,1.45,1.37,eval-lower 300000 retains=30900634 releases=36300507 allocations=5400374
+eval-lower,lazy-inline,0,12962734514,1.48,1.34,eval-lower 300000 retains=20700631 releases=26100504 allocations=5400374
+eval-lower,lazy-inline,1,12958411823,1.36,1.3,eval-lower 300000 retains=20700631 releases=26100504 allocations=5400374
+eval-lower,atomic,1,13074855839,1.41,1.35,eval-lower 300000 retains=30900634 releases=36300507 allocations=5400374
+eval-lower,base,1,13211034563,1.44,1.36,eval-lower 300000 retains=30900634 releases=36300507 allocations=5400374
+eval-lower,atomic,2,13078518616,1.39,1.31,eval-lower 300000 retains=30900634 releases=36300507 allocations=5400374
+eval-lower,base,2,13209831515,1.36,1.31,eval-lower 300000 retains=30900634 releases=36300507 allocations=5400374
+eval-lower,lazy-inline,2,12959646579,1.44,1.34,eval-lower 300000 retains=20700631 releases=26100504 allocations=5400374

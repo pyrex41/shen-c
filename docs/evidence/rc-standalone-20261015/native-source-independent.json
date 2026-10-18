@@ -1,0 +1,190 @@
+{
+  "status": "PASS",
+  "reviewed_utc": "2026-10-15T22:06:01.762207+00:00",
+  "scope": "Independent read-only hash and registration-to-callback inspection of retained rich Shen source proof; no executable rerun and no sanitizer claim for this O2 source proof",
+  "outer_receipt_sha256": "f9389e93b6942938f56716380dbfb7560ae39b612b73c141b9440d203a8c2142",
+  "frontend_receipt_sha256": "877ef6a4290544c7499f46f33dc5a44b7f5f1722aa9366430c17f0b806ef59f3",
+  "checks": [
+    {
+      "scope": "source_sha256_before",
+      "hashes_verified": 87
+    },
+    {
+      "scope": "source_sha256_after",
+      "hashes_verified": 87
+    },
+    {
+      "scope": "binary_sha256_before",
+      "hashes_verified": 2
+    },
+    {
+      "scope": "binary_sha256_after",
+      "hashes_verified": 2
+    },
+    {
+      "scope": "kernel inputs",
+      "hashes_verified": 14
+    },
+    {
+      "scope": "retained compiler outputs",
+      "hashes_verified": 5
+    },
+    {
+      "scope": "source input",
+      "hashes_verified": 1
+    },
+    {
+      "scope": "pipeline dedicated outputs",
+      "hashes_verified": 3
+    },
+    {
+      "scope": "focused current bindings",
+      "hashes_verified": 21
+    },
+    {
+      "scope": "runtime CMake current runtime and seven test bindings",
+      "hashes_verified": 17
+    }
+  ],
+  "native_callbacks": {
+    "native-proof.sum-list": {
+      "registration": "rc_native_1899",
+      "callback": "rc_native_1900",
+      "body_sha256": "3ca997115e7b6b3ff1d1404b872997b07af4358b434f0be717b2466614cca76e",
+      "body_bytes": 4326,
+      "source_evaluator_forwarding": false,
+      "calls": [
+        "rc_apply_owned_args",
+        "rc_error",
+        "rc_function_get",
+        "rc_integer",
+        "rc_is_true",
+        "rc_nil",
+        "rc_release",
+        "rc_retain",
+        "rc_symbol",
+        "rc_tailcall_owned_args",
+        "rc_text",
+        "rc_type"
+      ]
+    },
+    "native-proof.map-list": {
+      "registration": "rc_native_1901",
+      "callback": "rc_native_1902",
+      "body_sha256": "671d77a42bd6961f1cfc4aeccd1c385e08e34c4a2c75d533edd7717cec0272ff",
+      "body_bytes": 4826,
+      "source_evaluator_forwarding": false,
+      "calls": [
+        "rc_apply_owned_args",
+        "rc_cons_call_reuse",
+        "rc_drop_range",
+        "rc_error",
+        "rc_function_get",
+        "rc_is_true",
+        "rc_nil",
+        "rc_release",
+        "rc_retain",
+        "rc_symbol",
+        "rc_tail_call_reuse",
+        "rc_tailcall_owned_args",
+        "rc_text",
+        "rc_type"
+      ]
+    },
+    "native-proof-run": {
+      "registration": "rc_native_1903",
+      "callback": "rc_native_1904",
+      "body_sha256": "1808573032c9fe3a9dae9bed27d861fdfab0b9bf6b45bb70b708d73280ec748c",
+      "body_bytes": 1233,
+      "source_evaluator_forwarding": false,
+      "calls": [
+        "rc_apply_owned_args",
+        "rc_closure_owned",
+        "rc_drop_range",
+        "rc_error",
+        "rc_function_get",
+        "rc_release",
+        "rc_symbol",
+        "rc_tailcall_owned_args",
+        "rc_type"
+      ]
+    },
+    "proof-bytes-macro": {
+      "registration": "rc_native_6",
+      "callback": "rc_native_7",
+      "body_sha256": "72172d726ac1e15ac39c5af9cf0c59bc7358b3f1b2162024c730cacdcf0a7c25",
+      "body_bytes": 5855,
+      "source_evaluator_forwarding": false,
+      "calls": [
+        "rc_apply_owned_args",
+        "rc_error",
+        "rc_function_get",
+        "rc_integer",
+        "rc_is_true",
+        "rc_nil",
+        "rc_release",
+        "rc_require_boolean",
+        "rc_retain",
+        "rc_symbol",
+        "rc_tailcall_owned_args",
+        "rc_text",
+        "rc_type"
+      ]
+    },
+    "proof-symbol-macro": {
+      "registration": "rc_native_11",
+      "callback": "rc_native_12",
+      "body_sha256": "5d93868b396ae0bf04c5275f0a11e0503c54b8371cd9de820eec72eab10725df",
+      "body_bytes": 4203,
+      "source_evaluator_forwarding": false,
+      "calls": [
+        "rc_apply_owned_args",
+        "rc_error",
+        "rc_function_get",
+        "rc_is_true",
+        "rc_nil",
+        "rc_release",
+        "rc_require_boolean",
+        "rc_retain",
+        "rc_string_n",
+        "rc_symbol",
+        "rc_tailcall_owned_args",
+        "rc_text",
+        "rc_type"
+      ]
+    },
+    "proof-inc-macro": {
+      "registration": "rc_native_16",
+      "callback": "rc_native_17",
+      "body_sha256": "5142e5f4857087b4d1ca015b970d33aec02ddcf1c80741c7509d4dbf26f57985",
+      "body_bytes": 9770,
+      "source_evaluator_forwarding": false,
+      "calls": [
+        "rc_apply_owned_args",
+        "rc_cons_call_reuse",
+        "rc_error",
+        "rc_function_get",
+        "rc_integer",
+        "rc_is_true",
+        "rc_nil",
+        "rc_release",
+        "rc_require_boolean",
+        "rc_retain",
+        "rc_symbol",
+        "rc_tail_call_reuse",
+        "rc_tailcall_owned_args",
+        "rc_text",
+        "rc_type"
+      ]
+    }
+  },
+  "notes": [
+    "Selected actual registered callback bodies contain native C operations and no source evaluator forwarding. Kernel legitimately contains evaluator code elsewhere.",
+    "Historical runtime CMake emitter bindings excluded; runtime implementation and seven C test bindings remain current."
+  ],
+  "_publication": {
+    "raw_receipt": "evidence/rc/source-final-independent.json",
+    "raw_sha256": "38e2ba65f5b3dfa0efcbc358f473b5f3dcd1c9277212d67b926ef7e38d0ad836",
+    "path_redaction": "Repository, home and temporary paths replaced; hashes describe original bytes."
+  }
+}

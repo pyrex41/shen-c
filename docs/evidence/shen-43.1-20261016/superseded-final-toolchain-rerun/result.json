@@ -1,0 +1,341 @@
+{
+  "started_utc": "2026-10-16T21:50:22.789675+00:00",
+  "scope": "fresh standalone compiler and CLI; native ownership optimizer acceptance",
+  "status": "FAIL",
+  "canonical": "UNKNOWN",
+  "evidence": "<RC_WORKTREE>/evidence/rc/final-toolchain-rerun",
+  "checks": [
+    "auditor symbol control rejected (not a runtime collector test)",
+    "optional actual GC compiler negative control exists",
+    "actual GC-linked executable rejected by artifact audit",
+    "fresh host produced by recorded build command",
+    "fresh-compiler-audit has no Boehm global symbols or direct linked dependency",
+    "fresh CLI produced from same isolated build graph",
+    "default build creates shen-c compatibility executable matching standalone CLI",
+    "fresh-cli-audit has no Boehm global symbols or direct linked dependency",
+    "CLI version-flag has no diagnostic",
+    "CLI version-flag result is present",
+    "CLI kernel-version has no diagnostic",
+    "CLI kernel-version exact result",
+    "CLI arithmetic has no diagnostic",
+    "CLI arithmetic exact result",
+    "CLI strings has no diagnostic",
+    "CLI strings exact result",
+    "CLI string-tail has no diagnostic",
+    "CLI string-tail exact result",
+    "CLI mutable-self-cycle has no diagnostic",
+    "CLI mutable-self-cycle exact result",
+    "CLI trap has no diagnostic",
+    "CLI trap exact result",
+    "CLI quiet has no diagnostic",
+    "CLI quiet exact result",
+    "CLI multiple-forms has no diagnostic",
+    "CLI multiple-forms exact result",
+    "CLI eof has no diagnostic"
+  ],
+  "cflags": "-O3 -g -flto=thin",
+  "pkg_config": "/nonexistent/rc-toolchain-pkg-config",
+  "commands": [
+    {
+      "label": "01-native-evidence-controls",
+      "command": [
+        "/Library/Developer/CommandLineTools/usr/bin/python3",
+        "<RC_WORKTREE>/test/rc/test_native_evidence.py"
+      ],
+      "exit": 0,
+      "seconds": 0.063,
+      "stdout": "01-native-evidence-controls.out",
+      "stderr": "01-native-evidence-controls.err"
+    },
+    {
+      "label": "02-checkout-revision",
+      "command": [
+        "git",
+        "rev-parse",
+        "HEAD"
+      ],
+      "exit": 0,
+      "seconds": 0.062,
+      "stdout": "02-checkout-revision.out",
+      "stderr": "02-checkout-revision.err"
+    },
+    {
+      "label": "03-compiler-version",
+      "command": [
+        "cc",
+        "--version"
+      ],
+      "exit": 0,
+      "seconds": 0.058,
+      "stdout": "03-compiler-version.out",
+      "stderr": "03-compiler-version.err"
+    },
+    {
+      "label": "04-build-auditor-control",
+      "command": [
+        "cc",
+        "-O3",
+        "-g",
+        "-flto=thin",
+        "<RC_WORKTREE>/evidence/rc/final-toolchain-rerun/auditor-control.c",
+        "-o",
+        "<RC_WORKTREE>/evidence/rc/final-toolchain-rerun/auditor-control"
+      ],
+      "exit": 0,
+      "seconds": 0.117,
+      "stdout": "04-build-auditor-control.out",
+      "stderr": "04-build-auditor-control.err"
+    },
+    {
+      "label": "05-auditor-negative-control",
+      "command": [
+        "<RC_WORKTREE>/scripts/test-rc.sh",
+        "--audit-only",
+        "<RC_WORKTREE>/evidence/rc/final-toolchain-rerun/auditor-control"
+      ],
+      "exit": 1,
+      "seconds": 0.061,
+      "stdout": "05-auditor-negative-control.out",
+      "stderr": "05-auditor-negative-control.err"
+    },
+    {
+      "label": "06-actual-gc-negative-control",
+      "command": [
+        "<RC_WORKTREE>/scripts/test-rc.sh",
+        "--audit-only",
+        "<BOEHM_WORKTREE>/bin/shen-c"
+      ],
+      "exit": 1,
+      "seconds": 0.058,
+      "stdout": "06-actual-gc-negative-control.out",
+      "stderr": "06-actual-gc-negative-control.err"
+    },
+    {
+      "label": "07-fresh-host-build",
+      "command": [
+        "make",
+        "RC_BUILD=<RC_WORKTREE>/evidence/rc/final-toolchain-rerun/fresh/obj",
+        "RC_BIN=<RC_WORKTREE>/evidence/rc/final-toolchain-rerun/fresh/runtime",
+        "RC_TOOL_BIN=<RC_WORKTREE>/evidence/rc/final-toolchain-rerun/fresh/bin",
+        "<RC_WORKTREE>/evidence/rc/final-toolchain-rerun/fresh/bin/rc-build"
+      ],
+      "exit": 0,
+      "seconds": 1.149,
+      "stdout": "07-fresh-host-build.out",
+      "stderr": "07-fresh-host-build.err"
+    },
+    {
+      "label": "08-fresh-compiler-audit",
+      "command": [
+        "<RC_WORKTREE>/scripts/test-rc.sh",
+        "--audit-only",
+        "<RC_WORKTREE>/evidence/rc/final-toolchain-rerun/fresh/bin/rc-build"
+      ],
+      "exit": 0,
+      "seconds": 0.063,
+      "stdout": "08-fresh-compiler-audit.out",
+      "stderr": "08-fresh-compiler-audit.err"
+    },
+    {
+      "label": "09-fresh-default-build",
+      "command": [
+        "make",
+        "RC_BUILD=<RC_WORKTREE>/evidence/rc/final-toolchain-rerun/fresh/obj",
+        "RC_BIN=<RC_WORKTREE>/evidence/rc/final-toolchain-rerun/fresh/runtime",
+        "RC_TOOL_BIN=<RC_WORKTREE>/evidence/rc/final-toolchain-rerun/fresh/bin"
+      ],
+      "exit": 0,
+      "seconds": 44.113,
+      "stdout": "09-fresh-default-build.out",
+      "stderr": "09-fresh-default-build.err"
+    },
+    {
+      "label": "10-fresh-cli-audit",
+      "command": [
+        "<RC_WORKTREE>/scripts/test-rc.sh",
+        "--audit-only",
+        "<RC_WORKTREE>/evidence/rc/final-toolchain-rerun/fresh/bin/shen-rc"
+      ],
+      "exit": 0,
+      "seconds": 0.061,
+      "stdout": "10-fresh-cli-audit.out",
+      "stderr": "10-fresh-cli-audit.err"
+    },
+    {
+      "label": "11-cli-version-flag",
+      "command": [
+        "<RC_WORKTREE>/evidence/rc/final-toolchain-rerun/fresh/bin/shen-rc",
+        "--version"
+      ],
+      "exit": 0,
+      "seconds": 0.277,
+      "stdout": "11-cli-version-flag.out",
+      "stderr": "11-cli-version-flag.err"
+    },
+    {
+      "label": "12-cli-kernel-version",
+      "command": [
+        "<RC_WORKTREE>/evidence/rc/final-toolchain-rerun/fresh/bin/shen-rc",
+        "eval",
+        "-e",
+        "(version)"
+      ],
+      "exit": 0,
+      "seconds": 0.062,
+      "stdout": "12-cli-kernel-version.out",
+      "stderr": "12-cli-kernel-version.err"
+    },
+    {
+      "label": "13-cli-arithmetic",
+      "command": [
+        "<RC_WORKTREE>/evidence/rc/final-toolchain-rerun/fresh/bin/shen-rc",
+        "eval",
+        "-e",
+        "(+ 20 22)"
+      ],
+      "exit": 0,
+      "seconds": 0.059,
+      "stdout": "13-cli-arithmetic.out",
+      "stderr": "13-cli-arithmetic.err"
+    },
+    {
+      "label": "14-cli-strings",
+      "command": [
+        "<RC_WORKTREE>/evidence/rc/final-toolchain-rerun/fresh/bin/shen-rc",
+        "eval",
+        "-e",
+        "(= (@s \"foo\" \"bar\") \"foobar\")"
+      ],
+      "exit": 0,
+      "seconds": 0.06,
+      "stdout": "14-cli-strings.out",
+      "stderr": "14-cli-strings.err"
+    },
+    {
+      "label": "15-cli-string-tail",
+      "command": [
+        "<RC_WORKTREE>/evidence/rc/final-toolchain-rerun/fresh/bin/shen-rc",
+        "eval",
+        "-e",
+        "(= (tlstr \"hello\") \"ello\")"
+      ],
+      "exit": 0,
+      "seconds": 0.061,
+      "stdout": "15-cli-string-tail.out",
+      "stderr": "15-cli-string-tail.err"
+    },
+    {
+      "label": "16-cli-mutable-self-cycle",
+      "command": [
+        "<RC_WORKTREE>/evidence/rc/final-toolchain-rerun/fresh/bin/shen-rc",
+        "eval",
+        "-e",
+        "(let V (absvector 1) (do (address-> V 0 V) (= V (<-address V 0))))"
+      ],
+      "exit": 0,
+      "seconds": 0.06,
+      "stdout": "16-cli-mutable-self-cycle.out",
+      "stderr": "16-cli-mutable-self-cycle.err"
+    },
+    {
+      "label": "17-cli-trap",
+      "command": [
+        "<RC_WORKTREE>/evidence/rc/final-toolchain-rerun/fresh/bin/shen-rc",
+        "eval",
+        "-e",
+        "(trap-error (simple-error \"boom\") (lambda E (= (error-to-string E) \"boom\")))"
+      ],
+      "exit": 0,
+      "seconds": 0.056,
+      "stdout": "17-cli-trap.out",
+      "stderr": "17-cli-trap.err"
+    },
+    {
+      "label": "18-cli-quiet",
+      "command": [
+        "<RC_WORKTREE>/evidence/rc/final-toolchain-rerun/fresh/bin/shen-rc",
+        "eval",
+        "-q",
+        "-e",
+        "(+ 20 22)"
+      ],
+      "exit": 0,
+      "seconds": 0.06,
+      "stdout": "18-cli-quiet.out",
+      "stderr": "18-cli-quiet.err"
+    },
+    {
+      "label": "19-cli-multiple-forms",
+      "command": [
+        "<RC_WORKTREE>/evidence/rc/final-toolchain-rerun/fresh/bin/shen-rc",
+        "eval",
+        "-e",
+        "(+ 1 1) (+ 20 22)"
+      ],
+      "exit": 0,
+      "seconds": 0.058,
+      "stdout": "19-cli-multiple-forms.out",
+      "stderr": "19-cli-multiple-forms.err"
+    },
+    {
+      "label": "20-cli-eof",
+      "command": [
+        "<RC_WORKTREE>/evidence/rc/final-toolchain-rerun/fresh/bin/shen-rc",
+        "repl"
+      ],
+      "exit": 0,
+      "seconds": 0.062,
+      "stdout": "20-cli-eof.out",
+      "stderr": "20-cli-eof.err"
+    }
+  ],
+  "source_sha256": {
+    "src/rc/emit.c": "b8705439e0bbd60cc6fd3f57456351f461b973935b903761c2f4fc9cb12de05a",
+    "src/rc/emit.h": "ae1946b669f771941b12a706316a28090aefd126f54cc687fa00a3b10b322a9f",
+    "src/rc/eval.c": "177229776becca7592459e2ee9625a97bf16cc8fc5feaffabbd3e9c5e455c3dd",
+    "src/rc/eval.h": "40840e20cb00334a7032ef11aec08ce6a0846912ae05dfb0d08e894ba7ad2e15",
+    "src/rc/main.c": "aed4ac89c8aaf338f8519b35554effd251b04d47bbee6dbf5781343097d74275",
+    "src/rc/primitives.c": "87d0d7ba8c8d4a91d54ffc1de36fbd500b352e4c9c785e9ad90056b48651d0d0",
+    "src/rc/primitives.h": "ab8cc324d48775dded4ca6cd49eabd1a99a93fb9ff33e96862cc5243636f0a77",
+    "src/rc/rc.c": "e5d89b2abe397320ba0b2e77afda975f2189af84589bc9daf7da952c155103bf",
+    "src/rc/rc.h": "b77320047d47b013b5064b44d749e80fab11319769145d9e6a676371d9990aec",
+    "src/rc/rc_internal.h": "da618b5f1687911ae775d983fc115007d81e039c8a19b3fcab92c09e9282e438",
+    "src/rc/read.c": "f61444980f2d34d3986f9640103b3478501c4d368f6c2dd5058a4b39b3143667",
+    "src/rc/read.h": "71fb3e8ce757174ee47dde95f732200ae1b023c66f8164ac0a4d82ebb241fea5",
+    "tools/rc-build.c": "66a45cff04708b3a9284a8e07e671f20a1d46da62876ad26adf056d18b7695ca",
+    "Makefile": "dee2ce14e25085f082df7541e5b13185a34d6aaac17a9b7531a59f300d287b33",
+    "Makefile.rc": "2c9ced49d12c113f8b1e2c9dc1bc1f8cada892210d524f8a3275df4a29a60aaa",
+    "scripts/compile-shen-rc.sh": "b09346f06e816cc71d7500637ac105be0e6758bf39c5bb3a4787201aa34cbb36",
+    "scripts/test-rc.sh": "186f2235e766461d2f7a55e4027c84d1834d9a880627ce63f337144e6cbd06b6",
+    "scripts/test-rc-toolchain.sh": "5ac6027395143c98f720d20344bd292607289f3edec00e0b5b421b155e15b5b1",
+    "scripts/rc_native_evidence.py": "078071afb908c4c2aa94f47bcad88b8ddfa41d2f17cf6d30c80b2327fdf69363",
+    "test/rc/test_native_evidence.py": "45579ec663fa5731e44584b2cce6eb1826ae6169dea3a1fbf4d8b315458b843c",
+    "shen/src/kl/backend.kl": "8782659640718da06da3e5ee32babfa6036d2d5c1af17d563e20d4db27b13da2",
+    "shen/src/kl/core.kl": "f2477d4151c3ecd2d76c8f2b58ec577a6dc830392e0afd342e2fdb3d1adb1a75",
+    "shen/src/kl/declarations.kl": "fa1f04b92a61167971b3b58a3785b05b79be984f123bb43b4bd03388ee29f5b7",
+    "shen/src/kl/load.kl": "56eba5b674e5085a09dfa38390b1e7f677496e0c601fd3ed6f482577bcf971c9",
+    "shen/src/kl/macros.kl": "617c70c191f07c054e6fc597006477bc57519944c0e27956336e4d72e3e8a2af",
+    "shen/src/kl/prolog.kl": "dc401f8940f7f97fbfc87157338ff8b84fd845c1101b70e6db893886aaf11c17",
+    "shen/src/kl/reader.kl": "97f008caaf51072851cc730620d9bdd816bfd1be70cb22fd502a6b3cb000b269",
+    "shen/src/kl/sequent.kl": "b1018c6d58706f78ac81cc72cf7c4712d36d1be173708ff9def26d0169ddd644",
+    "shen/src/kl/sys.kl": "97412f6584716e2418aea326c1ecf0456a77a205504d078d26936cd5b9370412",
+    "shen/src/kl/t-star.kl": "546928d3435934091fc6df6274a6c9d58ece7297c868fbe55ebe328be360159a",
+    "shen/src/kl/toplevel.kl": "7c0dae226e3fa6a9ca53bd44729774a5f6a8025f2d7fcb43a58ae0e7a2bc46c2",
+    "shen/src/kl/track.kl": "6130a32d6e5c7afed98f20dfbc68eaf7f68c6e2e714114852514d4f604c8ff3f",
+    "shen/src/kl/types.kl": "8b6db3592b829f08a0f35367733adf7c2e686220be699a16b392b4cce4a77c3c",
+    "shen/src/kl/writer.kl": "a1da3d9a287d0d4d78f87517ff11b2ca7690a01bf412dd72178f29ef6e7a4a0d",
+    "shen/src/kl/yacc.kl": "192880765a29ae6801ef9088a7511e4477be998e6c16ab82f3cc3a2087727f00"
+  },
+  "checkout_revision": "827a62826e4297d7ecd6e582642e747b349fa96c",
+  "compiler_version": "Apple clang version 21.0.0 (clang-2100.3.34.2)\nTarget: arm64-apple-darwin27.0.0\nThread model: posix\nInstalledDir: /Library/Developer/CommandLineTools/usr/bin\n",
+  "gc_negative_control_sha256": "5b34193281bd0063a9b6bb6b47eed5a1a753243bd7fcbbebdb3b696846a1f097",
+  "host_build": "PASS",
+  "fresh_builder": "<RC_WORKTREE>/evidence/rc/final-toolchain-rerun/fresh/bin/rc-build",
+  "builder_sha256": "3d04c5d197caa30227497d0a18a37756bccc57f1fe590c3429a2d8e8e62f1b14",
+  "compiler_audit": "PASS",
+  "cli_build": "PASS",
+  "default_make_without_pkg_config": "PASS",
+  "cli_sha256": "90d49757e3bdd7bca3fe75a235fc561283155ab6ccd05e19c80a3e01f190e7cb",
+  "reason": "21-cli-list-without-final-newline exceeded timeout/output budget",
+  "source_unchanged": true
+}

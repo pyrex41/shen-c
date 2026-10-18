@@ -1,0 +1,256 @@
+{
+  "baseline": "4eb6b7c483a3543abdcdc5f35fa7a29753ff1e0f",
+  "host": "arm64 Darwin",
+  "compiler": "Apple clang 21.0.0",
+  "flags": "-O2 -g -std=c17; no LTO or sanitizers",
+  "calls_per_run": 3000000,
+  "measure": "process retired instructions from /usr/bin/time -l",
+  "balanced_leaf_runs": [
+    {
+      "repeat": 0,
+      "op": 0,
+      "variant": "before",
+      "instructions": 886437850,
+      "cycles": 146341669,
+      "output": "op=0 tiny=0 calls=3000000 ns/call=24.521 allocations=0 retains=6000000 releases=6000000"
+    },
+    {
+      "repeat": 0,
+      "op": 0,
+      "variant": "after",
+      "instructions": 627598131,
+      "cycles": 115283868,
+      "output": "op=0 tiny=1 calls=3000000 ns/call=18.748 allocations=0 retains=6000000 releases=6000000"
+    },
+    {
+      "repeat": 0,
+      "op": 1,
+      "variant": "before",
+      "instructions": 828331095,
+      "cycles": 165047587,
+      "output": "op=1 tiny=0 calls=3000000 ns/call=24.599 allocations=0 retains=3000000 releases=3000000"
+    },
+    {
+      "repeat": 0,
+      "op": 1,
+      "variant": "after",
+      "instructions": 570946688,
+      "cycles": 118053495,
+      "output": "op=1 tiny=1 calls=3000000 ns/call=17.298 allocations=0 retains=3000000 releases=3000000"
+    },
+    {
+      "repeat": 0,
+      "op": 2,
+      "variant": "before",
+      "instructions": 866673305,
+      "cycles": 160657700,
+      "output": "op=2 tiny=0 calls=3000000 ns/call=25.379 allocations=1 retains=6000000 releases=6000000"
+    },
+    {
+      "repeat": 0,
+      "op": 2,
+      "variant": "after",
+      "instructions": 602435698,
+      "cycles": 106487669,
+      "output": "op=2 tiny=1 calls=3000000 ns/call=17.967 allocations=1 retains=6000000 releases=6000000"
+    },
+    {
+      "repeat": 0,
+      "op": 3,
+      "variant": "before",
+      "instructions": 801320858,
+      "cycles": 148271982,
+      "output": "op=3 tiny=0 calls=3000000 ns/call=25.927 allocations=1 retains=3000000 releases=3000000"
+    },
+    {
+      "repeat": 0,
+      "op": 3,
+      "variant": "after",
+      "instructions": 536475663,
+      "cycles": 101583821,
+      "output": "op=3 tiny=1 calls=3000000 ns/call=17.571 allocations=1 retains=3000000 releases=3000000"
+    },
+    {
+      "repeat": 0,
+      "op": 4,
+      "variant": "before",
+      "instructions": 867847676,
+      "cycles": 154113297,
+      "output": "op=4 tiny=0 calls=3000000 ns/call=26.568 allocations=1 retains=6000000 releases=6000000"
+    },
+    {
+      "repeat": 0,
+      "op": 4,
+      "variant": "after",
+      "instructions": 602492488,
+      "cycles": 101519367,
+      "output": "op=4 tiny=1 calls=3000000 ns/call=17.347 allocations=1 retains=6000000 releases=6000000"
+    },
+    {
+      "repeat": 0,
+      "op": 5,
+      "variant": "before",
+      "instructions": 1155252645,
+      "cycles": 202308412,
+      "output": "op=5 tiny=0 calls=3000000 ns/call=34.539 allocations=1 retains=9000000 releases=9000000"
+    },
+    {
+      "repeat": 0,
+      "op": 5,
+      "variant": "after",
+      "instructions": 855816629,
+      "cycles": 154483780,
+      "output": "op=5 tiny=1 calls=3000000 ns/call=25.831 allocations=1 retains=9000000 releases=9000000"
+    },
+    {
+      "repeat": 0,
+      "op": 6,
+      "variant": "before",
+      "instructions": 984033575,
+      "cycles": 197843197,
+      "output": "op=6 tiny=0 calls=3000000 ns/call=35.413 allocations=0 retains=0 releases=0"
+    },
+    {
+      "repeat": 0,
+      "op": 6,
+      "variant": "after",
+      "instructions": 969515226,
+      "cycles": 187250623,
+      "output": "op=6 tiny=1 calls=3000000 ns/call=33.115 allocations=0 retains=0 releases=0"
+    },
+    {
+      "repeat": 1,
+      "op": 6,
+      "variant": "after",
+      "instructions": 970172892,
+      "cycles": 190973852,
+      "output": "op=6 tiny=1 calls=3000000 ns/call=33.623 allocations=0 retains=0 releases=0"
+    },
+    {
+      "repeat": 1,
+      "op": 6,
+      "variant": "before",
+      "instructions": 986991835,
+      "cycles": 206124111,
+      "output": "op=6 tiny=0 calls=3000000 ns/call=34.578 allocations=0 retains=0 releases=0"
+    },
+    {
+      "repeat": 1,
+      "op": 5,
+      "variant": "after",
+      "instructions": 857655231,
+      "cycles": 148799196,
+      "output": "op=5 tiny=1 calls=3000000 ns/call=24.684 allocations=1 retains=9000000 releases=9000000"
+    },
+    {
+      "repeat": 1,
+      "op": 5,
+      "variant": "before",
+      "instructions": 1157303590,
+      "cycles": 192078591,
+      "output": "op=5 tiny=0 calls=3000000 ns/call=33.994 allocations=1 retains=9000000 releases=9000000"
+    },
+    {
+      "repeat": 1,
+      "op": 4,
+      "variant": "after",
+      "instructions": 603900494,
+      "cycles": 103769931,
+      "output": "op=4 tiny=1 calls=3000000 ns/call=17.754 allocations=1 retains=6000000 releases=6000000"
+    },
+    {
+      "repeat": 1,
+      "op": 4,
+      "variant": "before",
+      "instructions": 869153715,
+      "cycles": 148573745,
+      "output": "op=4 tiny=0 calls=3000000 ns/call=26.434 allocations=1 retains=6000000 releases=6000000"
+    },
+    {
+      "repeat": 1,
+      "op": 3,
+      "variant": "after",
+      "instructions": 538206537,
+      "cycles": 109405557,
+      "output": "op=3 tiny=1 calls=3000000 ns/call=17.454 allocations=1 retains=3000000 releases=3000000"
+    },
+    {
+      "repeat": 1,
+      "op": 3,
+      "variant": "before",
+      "instructions": 802784398,
+      "cycles": 143112683,
+      "output": "op=3 tiny=0 calls=3000000 ns/call=24.878 allocations=1 retains=3000000 releases=3000000"
+    },
+    {
+      "repeat": 1,
+      "op": 2,
+      "variant": "after",
+      "instructions": 605357060,
+      "cycles": 101983241,
+      "output": "op=2 tiny=1 calls=3000000 ns/call=17.038 allocations=1 retains=6000000 releases=6000000"
+    },
+    {
+      "repeat": 1,
+      "op": 2,
+      "variant": "before",
+      "instructions": 868551745,
+      "cycles": 145530229,
+      "output": "op=2 tiny=0 calls=3000000 ns/call=25.306 allocations=1 retains=6000000 releases=6000000"
+    },
+    {
+      "repeat": 1,
+      "op": 1,
+      "variant": "after",
+      "instructions": 569535196,
+      "cycles": 101687747,
+      "output": "op=1 tiny=1 calls=3000000 ns/call=17.874 allocations=0 retains=3000000 releases=3000000"
+    },
+    {
+      "repeat": 1,
+      "op": 1,
+      "variant": "before",
+      "instructions": 828636184,
+      "cycles": 140010316,
+      "output": "op=1 tiny=0 calls=3000000 ns/call=24.395 allocations=0 retains=3000000 releases=3000000"
+    },
+    {
+      "repeat": 1,
+      "op": 0,
+      "variant": "after",
+      "instructions": 626262167,
+      "cycles": 101495421,
+      "output": "op=0 tiny=1 calls=3000000 ns/call=17.548 allocations=0 retains=6000000 releases=6000000"
+    },
+    {
+      "repeat": 1,
+      "op": 0,
+      "variant": "before",
+      "instructions": 884624927,
+      "cycles": 139570064,
+      "output": "op=0 tiny=0 calls=3000000 ns/call=25.155 allocations=0 retains=6000000 releases=6000000"
+    }
+  ],
+  "identical_generic_caller_control": [
+    {
+      "variant": "before",
+      "instructions": 984976110,
+      "output": "op=6 tiny=0 calls=3000000 ns/call=32.057 allocations=0 retains=0 releases=0"
+    },
+    {
+      "variant": "after",
+      "instructions": 984769630,
+      "output": "op=6 tiny=0 calls=3000000 ns/call=28.112 allocations=0 retains=0 releases=0"
+    },
+    {
+      "variant": "after",
+      "instructions": 984429372,
+      "output": "op=6 tiny=0 calls=3000000 ns/call=29.843 allocations=0 retains=0 releases=0"
+    },
+    {
+      "variant": "before",
+      "instructions": 984754653,
+      "output": "op=6 tiny=0 calls=3000000 ns/call=31.545 allocations=0 retains=0 releases=0"
+    }
+  ]
+}

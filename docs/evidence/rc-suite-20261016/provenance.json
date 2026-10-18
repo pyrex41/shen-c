@@ -1,0 +1,32 @@
+{
+  "perf-fifthwave-balanced/result.json": {
+    "raw_sha256": "909c8eee27a53b9e15a1da036fc6cb8fa51082504d9b23c00ef9d7e71e5e29aa",
+    "portable_sha256": "ee43aca7489ab82dea7d867daeaba2cf8f9ef4643be009bd4f4a770dc65b9428",
+    "sanitization": "Checkout/home prefixes replaced; temporary artifact paths use <artifacts>/; PATH values use <recorded-build-path>. Original receipt bytes remain bound by raw_sha256."
+  },
+  "perf-fifthwave-balanced-config.json": {
+    "raw_sha256": "c4c0b7bd022d206c1a8eb3abfb498098fa0d84f7aa1c2992074936b750875807",
+    "portable_sha256": "97e78e568ad8753dbe4f2376eb971dc7bd9887ad5fc4a52c746e1f097119817d",
+    "sanitization": "Checkout/home prefixes replaced; temporary artifact paths use <artifacts>/; PATH values use <recorded-build-path>. Original receipt bytes remain bound by raw_sha256."
+  },
+  "fifthwave-default-ipo-build/receipt.json": {
+    "raw_sha256": "927182c6f056f5a22c757a4adbed0e56c1d6a8d271ed787ffd69943270b015e3",
+    "portable_sha256": "951c0da5320d5a0a21da5286c3954e14ab68ad769f4180ba0049117805c3cfd0",
+    "sanitization": "Checkout/home prefixes replaced; temporary artifact paths use <artifacts>/; PATH values use <recorded-build-path>. Original receipt bytes remain bound by raw_sha256."
+  },
+  "fifth-wave-asan/receipt.json": {
+    "raw_sha256": "3cc859ba7b846711a63bb366478d880166991d0b565582194a09bd5102142575",
+    "portable_sha256": "5de8500bfda8dfc7b3bd70361b8e75a65c9e97344db25a3fdc2003dc0a6fe18f",
+    "sanitization": "Checkout/home prefixes replaced; temporary artifact paths use <artifacts>/; PATH values use <recorded-build-path>. Original receipt bytes remain bound by raw_sha256."
+  },
+  "fifth-wave-asan/summary.json": {
+    "raw_sha256": "9c1496086dfde5b4284072871ffaf265b5f4beb7de514b26944c8e56e0f70150",
+    "portable_sha256": "2473f193717ff72c83e3e55540ee48e6c673338831a3596cc76bbeaeed537c6f",
+    "sanitization": "Checkout/home prefixes replaced; temporary artifact paths use <artifacts>/; PATH values use <recorded-build-path>. Original receipt bytes remain bound by raw_sha256."
+  },
+  "fifthwave-make/receipt.json": {
+    "raw_sha256": "d09e234ad665205e2ff5b426eb313387bd91f95f94ef88580ccaca5d3fd78c15",
+    "portable_sha256": "58eaaffd933482becee451ba353f42d0c660835e086cf442396930eb96096155",
+    "sanitization": "Checkout/home prefixes replaced; temporary artifact paths use <artifacts>/; PATH values use <recorded-build-path>. Original receipt bytes remain bound by raw_sha256."
+  }
+}

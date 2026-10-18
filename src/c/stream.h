@@ -22,7 +22,6 @@ extern KLObject* std_error_stream_object;
 extern size_t read_buffer_allocation_size;
 extern char* read_buffer;
 extern size_t read_buffer_position ;
-extern bool stdin_line_pending;
 
 inline void initialize_shen_c_home_path (char* home_path)
 {
@@ -224,11 +223,7 @@ inline bool is_kl_stream_equal (KLObject* left_object, KLObject* right_object)
   return left_object == right_object;
 }
 
-/* Bytes are 0..255; -1 is end of stream. On stdin, EOF directly after a
- * newline (or before any input) exits the REPL cleanly, as before. EOF in
- * the middle of a line returns -1 once so the kernel reader (42.1+) still
- * reads a final line that has no trailing newline; the next EOF exits. */
-inline int read_byte (FILE* file)
+inline char read_byte (FILE* file)
 {
   int c = getc(file);
 
@@ -236,20 +231,13 @@ inline int read_byte (FILE* file)
     if (ferror(file) != 0)
       throw_kl_exception("Failed to read a byte from stream");
 
-    if (file == stdin) {
-      if (!stdin_line_pending)
-        exit(0);
-
-      stdin_line_pending = false;
-    }
+    if (file == stdin)
+      exit(0);
 
     return -1;
   }
 
-  if (file == stdin)
-    stdin_line_pending = (c != '\n');
-
-  return c;
+  return (char)c;
 }
 
 inline KLObject* read_kl_stream_byte (KLObject* stream_object)

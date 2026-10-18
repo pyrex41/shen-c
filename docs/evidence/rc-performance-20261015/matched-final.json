@@ -1,0 +1,185 @@
+{
+  "scope": "Serial fresh combined RC candidate1, preserved Boehm repeat2, combined RC candidate2; unchanged matched suite/input; no sampling",
+  "cwd": "${REPO}/shen/test/s42",
+  "stdin_sha256": "bf6eed56b72b14fd154e46197c114b4dcf57c122c9a9e9863e7dec418e805503",
+  "suite_sha256": {
+    "shen/test/s42/classes-defaults.shen": "79420c9e16a9c059535b9f0dd4ddddb74e045dc5f555d35ebe7842ca2c818ae9",
+    "shen/test/s42/einsteins-riddle.shen": "08a744fbbceea58fcdbf65d7d34dde875aedf2b01ce95cce5ad1df646670ddc1",
+    "shen/test/s42/bubble version 2.shen": "e4a5b661aab2d8747810d309ce8b2b9a49012d7aacea6eb1edac575ed5895268",
+    "shen/test/s42/n queens.axioms": "0aac311dac215fec69254f2c7ad40f728a5e8001029a3927649b295b6ded36bf",
+    "shen/test/s42/calculator.shen": "fb8759dfad26a3eae7fb0d62ed7f32121a70a0e67c5c36e7a57f938295a99768",
+    "shen/test/s42/runme.kl": "f2717f216aab82344ae83e2ba1c0dde9161a5a7db059211948fc51e57ecbe81f",
+    "shen/test/s42/prime.shen": "19d83566659b20b5f5fd1863953b62cc20e0013c4456c4b8f4febb560b84fd5c",
+    "shen/test/s42/cartprod.shen": "660303cd9d0b526db8fbdb551c39c1409e136d33934640738ee58ac40080c9cc",
+    "shen/test/s42/semantic net.shen": "5e461278bacb97e80b37ded4c4534255dd3008b7b112efd4bfbf3a83276de179",
+    "shen/test/s42/prologinterp.shen": "163b6d7d3f9ac155b907df9bc2b7b4c12917d7b4f918e014fe228f0c6c801c4d",
+    "shen/test/s42/call.shen": "19229b2344385ae52ebba51e88a666f1197ed6679a12ce9091160ac78a09bebc",
+    "shen/test/s42/classes-inheritance.shen": "5d0cbea0d03bf88e90119caea86e216163e32ec5aff7086d125395121f602c5c",
+    "shen/test/s42/harness.shen": "bd50977482acce2b39da2958c951c48d0fb504d483c48f136e9e0fed8be2d215",
+    "shen/test/s42/structures-typed.shen": "3bcfaa3b451db55cc807c8a9ea251c8e45aafec7d845e6148e38f8d6aa4b0380",
+    "shen/test/s42/stack.shen": "a2792157d41221eefa0ccdbd7f624b23360517b4b96df108d6348fa73a45e087",
+    "shen/test/s42/proplog version 2.shen": "14f3927e746c9ddca2b5e8c4888ef743ab52a0d15e59c32d362b69d3b9a6b775",
+    "shen/test/s42/c-minus.shen": "3848baf9d2966ce7cecaaef7d93c3ebad51636134aa8c582674110415bfd7169",
+    "shen/test/s42/powerset.shen": "5fd0d1fed33120cea1301dec13ddf38c9dfbba7e855dc09bee74fec653dbb2c1",
+    "shen/test/s42/tableauprolog.shen": "f92b4638bcc1ab0e58d34344ef0ca95b5b11127a9883501c66f0ae672b7501da",
+    "shen/test/s42/classes-untyped.shen": "75f6b8430e523491eddafafb3dce151fc61fe918c9e99cc1ffa03ae7e91209f1",
+    "shen/test/s42/nreverseprolog.shen": "fff50a34728a49ae8ecf16fb247570bee63e93b23cb0fa06c59706f9ef3be01a",
+    "shen/test/s42/minim.shen": "78d1f3947e46dfb135fb20fe8049f1cc5416928d533fe0fe54ce6e10fe496be3",
+    "shen/test/s42/search.shen": "897e9a0423110a6369ce84166d940090720f2b740e2ec6ec54c593522eb52126",
+    "shen/test/s42/lisp.shen": "cf851edbc9b6c0559071912fc9546f5341b0433e989c24d4b751423bbb6c999f",
+    "shen/test/s42/README": "5a85d222b775f3e43f00f1f65754fb6c8baa49acd6614fdd2d39eb892b77f616",
+    "shen/test/s42/proof assistant.shen": "7bd0f3033682e9d6b319169da46215535b4c22a0a62e1fcfd87fd5ab734d7f3d",
+    "shen/test/s42/n queens-r.shen": "160e1ee7bb31383db881c9cb63de80a87c306237514e8860c842b1d577d07d4e",
+    "shen/test/s42/streams.shen": "95f7a750a674b83727d124cbe24b5fd3399deef897b2f1e7c6dfb16a71b48c59",
+    "shen/test/s42/change.shen": "dea9151266f5eb5c051df4c5eab810eb9ba6f4ba6598575fdd2647e19fff856d",
+    "shen/test/s42/depth.kl": "cd500c696a0c23d5c3c13076a230f732375f265dc860a6a6654b78a9aac29fc3",
+    "shen/test/s42/binary.shen": "114ed5d2425f01c3d1ee44de3a2cf06baccecfa00cf083754246393117fb04d1",
+    "shen/test/s42/parser.shen": "ba9f85c413f2ba275c3bb195427d610e7df1cb1b9ebceeb52451e2240fe1a35c",
+    "shen/test/s42/montague.shen": "69f5b894ad34a10e14f95b070a3a5150a20342331c5f9a7cc024242b48f0e932",
+    "shen/test/s42/classes-typed.shen": "ff4489fa6a6912451533b1cb4387cb5e8a619bc9ce1652f8bed7d1735c011c66",
+    "shen/test/s42/spreadsheet.shen": "5e47262e494a28582f06128e94a63085809a7fde7091d6a4a15e80785c2fd267",
+    "shen/test/s42/qmachine.shen": "b9ad5d064343ea4bb8e024e99dd0df835f6ba10cfa8330e93848f3de41f093da",
+    "shen/test/s42/parsetest.shen": "6c317f33c39880aff8b2441e9a642f444bc29beb288ceb5340edcbdc8fd500ce",
+    "shen/test/s42/metaprog.shen": "7bcfa0a70ae5add3b582299cf1862b8bef7da2f0f14917f9eccea05bce441bf5",
+    "shen/test/s42/proplog version 1.shen": "ed3051ea979912bf28a78d07f99edb71c2a086941d7e00c4cdf210b945bcf815",
+    "shen/test/s42/cut.shen": "0896d67791dc18a06a3204516c564feb6fac6300938d497eab1acefaff49a8d1",
+    "shen/test/s42/n queens-axioms.shen": "28d087dd8692843ed31b12629124a383111367ede66e21b7a4b20b6ebc14661e",
+    "shen/test/s42/unification.shen": "ed5c8eee494bb9d57b949d6f6a6f9ee2579a2e425d52697eb698aa24f9e8761a",
+    "shen/test/s42/qmachine.kl": "748fad4d8b09eefd80577b6eb082c08d759c6614c6226526f951e5495bfe1145",
+    "shen/test/s42/kerneltests.shen": "58f4bdca8f72e06981300a2b3b37f2d00744b92a1fb82974d8f08eeae9ee595d",
+    "shen/test/s42/n queens.kl": "5f1c6f8d0bf0baeeaeead09e7e9b075a46ad6e2b04595dea5c1c9f58de2492eb",
+    "shen/test/s42/yacc.shen": "97c3445a9e932e8fb3f5b0c4d15dff898fc3c1ae45da41df1ade664b020b1247",
+    "shen/test/s42/n queens.shen": "ec90464825b5634ae34d2ecc9dc4252e7846a2e8436868515364d01d42e12467",
+    "shen/test/s42/interpreter.shen": "795756fa345ba3644c14973e9c30c9d979a0585e7aed3860b56d8bb54444cd0c",
+    "shen/test/s42/propcalcprolog.shen": "00a181dfed9f7d74437a1b158723cdf5c907b5c091d6e6a416f803531e349ae6",
+    "shen/test/s42/bubble version 1.shen": "7d85ffe10e9b3941c3e81f38c34b9378405a17857f1d04c7cad0e18b03006bf4",
+    "shen/test/s42/findall.shen": "56e335bd8cde2e9192248fba9e23f4924fce0faa39f498a0479f6a99b078e82c",
+    "shen/test/s42/strings.shen": "8fa36fff77e2565453ee421bead9506a3b65185c48f8d70fa5850c94020f1183",
+    "shen/test/s42/mutual.shen": "577228e3e6310c556dbb5275fa87e8211a5d5b9bab516d743c469de544521a1b",
+    "shen/test/s42/depth-isolate.shen": "e003cc1ac63c4806d4c2e6daf59bf7710281b5dcb7034ee68d42e2d8c4273cd9",
+    "shen/test/s42/secd1.shen": "a66e4911fea80f05e03f10893d3a36aa73e34bf31e6929803817f7d34bfb70be",
+    "shen/test/s42/fork.shen": "9699edfab9600f1c211d02ef3b207cfd764d717ea5159e25d1d138e27fc5c232",
+    "shen/test/s42/totalprolog.shen": "82f4d3d7fff06607519a7eac0235036f3b0c8c0f540af46d01b77df56e38c7f5",
+    "shen/test/s42/depth.shen": "fa66c7fa22eaad06998cbf1ce0056bcb8190352b1bca2836b3ea185534542a1c",
+    "shen/test/s42/structures-untyped.shen": "d927c1c72f544a05b1eb7340da958d83550856c6d1fde6845f54b77aa31d2864",
+    "shen/test/s42/runme.shen": "8bec79fcd7294e0b39bf9478ffa8e921e18d1ffb01945250e65f104ebab35144",
+    "shen/test/s42/parseprolog.shen": "6354f0139371b51885c667641362f36bd44e58820b6fac7e48bb358ec441c808",
+    "shen/test/s42/prolog.shen": "2de1e10d6a379e9d50461f9e5c4d28061614f09b22b0332ba7d56031bc226fdb",
+    "shen/test/s42/extensions/harness.shen": "f9b97123491b961f78955c1f5808e247517a6eb9efe167d40aba4d0a295d5a95",
+    "shen/test/s42/extensions/runme.shen": "f7645557cbcc7c3f89758c255530d9f734937b3b37eec823d110ffdb38d99307",
+    "shen/test/s42/extensions/programmable-pattern-matching/code.shen": "9b03dbdf5dad91f10eb38cfe935f4a1140c592e4fa85cb4f4b60feacdeaef018",
+    "shen/test/s42/extensions/programmable-pattern-matching/tests.shen": "ee55ebfef90649a8db7bc6e4863476ffe058fd9ce7b5147a83f242e82e45097b",
+    "shen/test/s42/extensions/programmable-pattern-matching/setup.shen": "8dbd3bb9f74b4feb6c9a399faac7e1f61754508a47d42f604ef3e070f45a474d"
+  },
+  "build_receipt_sha256": "6ea3ecd9db7e6e27b11a48488062b8500c6b9474fafac49063eacd008f321e0e",
+  "started_utc": "2026-10-15T22:51:02.437237+00:00",
+  "runs": [
+    {
+      "name": "candidate1",
+      "command": [
+        "${TMP}/shen-rc-perf-combined-20261015/shen-rc",
+        "script",
+        "runme.shen"
+      ],
+      "timed_command": [
+        "/usr/bin/time",
+        "-l",
+        "${TMP}/shen-rc-perf-combined-20261015/shen-rc",
+        "script",
+        "runme.shen"
+      ],
+      "binary_sha256_before": "c8de0c1d98499653629395f5ee932a4cc8a81d3816b39410483f1cfb9f911cdf",
+      "status": "PASS",
+      "exit": 0,
+      "wrapper_wall_seconds": 71.063,
+      "binary_sha256_after": "c8de0c1d98499653629395f5ee932a4cc8a81d3816b39410483f1cfb9f911cdf",
+      "timing": "       70.88 real        64.86 user         0.74 sys\n            49758208  maximum resident set size\n                   0  average shared memory size\n                   0  average unshared data size\n                   0  average unshared stack size\n                3209  page reclaims\n                   1  page faults\n                   0  swaps\n                   0  block input operations\n                   0  block output operations\n                   0  messages sent\n                   0  messages received\n                   0  signals received\n                   9  voluntary context switches\n              107301  involuntary context switches\n        454345602801  instructions retired\n        142681576740  cycles elapsed\n            45531544  peak memory footprint\n",
+      "passed": [
+        "passed ... 134"
+      ],
+      "failed": [
+        "failed ... 0"
+      ],
+      "wall_seconds": 70.88,
+      "user_seconds": 64.86,
+      "sys_seconds": 0.74,
+      "max_rss_bytes": 49758208,
+      "stdout_sha256": "48033e4e0537c6bb0601f008c0c46b89e8e866f8ebdb1ebd4546702693f4434a",
+      "stderr_sha256": "c66436d3399379c47ef9e48cea6703d74e38023bdcf1c5bccd3f396ac4162f9e"
+    },
+    {
+      "name": "boehm-repeat2",
+      "command": [
+        "${LEGACY_REPO}/bin/shen-c",
+        "script",
+        "runme.shen"
+      ],
+      "timed_command": [
+        "/usr/bin/time",
+        "-l",
+        "/usr/bin/env",
+        "DYLD_LIBRARY_PATH=/nix/store/8i56a458i5chq614wjnqwiya5fih7nyk-boehm-gc-8.2.12/lib",
+        "${LEGACY_REPO}/bin/shen-c",
+        "script",
+        "runme.shen"
+      ],
+      "binary_sha256_before": "31e544aef211caca5c150e685986d98cae0ed2f63eac2f0a70f59de3f4463b8e",
+      "status": "PASS",
+      "collector": {
+        "path": "/nix/store/8i56a458i5chq614wjnqwiya5fih7nyk-boehm-gc-8.2.12/lib/libgc.1.dylib",
+        "sha256": "2bc9e33340793f29e695c07ba82f6d2ef33770a81bda96789fc95a32da4acff9"
+      },
+      "exit": 0,
+      "wrapper_wall_seconds": 12.647,
+      "binary_sha256_after": "31e544aef211caca5c150e685986d98cae0ed2f63eac2f0a70f59de3f4463b8e",
+      "timing": "       12.54 real        12.00 user         0.08 sys\n            82935808  maximum resident set size\n                   0  average shared memory size\n                   0  average unshared data size\n                   0  average unshared stack size\n                5438  page reclaims\n                   4  page faults\n                   0  swaps\n                   0  block input operations\n                   0  block output operations\n                   0  messages sent\n                   0  messages received\n                   0  signals received\n                  10  voluntary context switches\n                9939  involuntary context switches\n        107622056001  instructions retired\n         24331820231  cycles elapsed\n            80871928  peak memory footprint\n",
+      "passed": [
+        "passed ... 134"
+      ],
+      "failed": [
+        "failed ... 0"
+      ],
+      "wall_seconds": 12.54,
+      "user_seconds": 12.0,
+      "sys_seconds": 0.08,
+      "max_rss_bytes": 82935808,
+      "stdout_sha256": "2cd4e4d341369b292b948236f6c4531b737be292d4135238023544822fa87f8d",
+      "stderr_sha256": "c436f27bde52b926b0faf0edf6bcfe8d0e600404e71030d27b4e5ee792b78210"
+    },
+    {
+      "name": "candidate2",
+      "command": [
+        "${TMP}/shen-rc-perf-combined-20261015/shen-rc",
+        "script",
+        "runme.shen"
+      ],
+      "timed_command": [
+        "/usr/bin/time",
+        "-l",
+        "${TMP}/shen-rc-perf-combined-20261015/shen-rc",
+        "script",
+        "runme.shen"
+      ],
+      "binary_sha256_before": "c8de0c1d98499653629395f5ee932a4cc8a81d3816b39410483f1cfb9f911cdf",
+      "status": "PASS",
+      "exit": 0,
+      "wrapper_wall_seconds": 57.256,
+      "binary_sha256_after": "c8de0c1d98499653629395f5ee932a4cc8a81d3816b39410483f1cfb9f911cdf",
+      "timing": "       57.09 real        55.55 user         0.38 sys\n            48562176  maximum resident set size\n                   0  average shared memory size\n                   0  average unshared data size\n                   0  average unshared stack size\n                3252  page reclaims\n                   1  page faults\n                   0  swaps\n                   0  block input operations\n                   0  block output operations\n                   0  messages sent\n                   0  messages received\n                   0  signals received\n                  10  voluntary context switches\n               61884  involuntary context switches\n        453651383239  instructions retired\n        116752243303  cycles elapsed\n            45957552  peak memory footprint\n",
+      "passed": [
+        "passed ... 134"
+      ],
+      "failed": [
+        "failed ... 0"
+      ],
+      "wall_seconds": 57.09,
+      "user_seconds": 55.55,
+      "sys_seconds": 0.38,
+      "max_rss_bytes": 48562176,
+      "stdout_sha256": "83ad6bda3297d24da5b01a2b4fadbcfea476fff368f73e3552b4a18a9d657108",
+      "stderr_sha256": "56b4f3e01f2e1ccba93a7507a766e2a70d119e00c01b0cbcf81979a495a9bd55"
+    }
+  ],
+  "suite_unchanged": true,
+  "ended_utc": "2026-10-15T22:53:23.554313+00:00"
+}

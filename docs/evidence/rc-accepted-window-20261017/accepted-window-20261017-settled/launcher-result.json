@@ -1,0 +1,12 @@
+{
+  "command": [
+    "python3",
+    "scripts/benchmark-rc.py",
+    "--config",
+    "<OPT_ROOT>/evidence/rc/opt-20261017/final-freeze/final-config.json",
+    "--out",
+    "<OPT_ROOT>/evidence/rc/accepted-window-20261017-settled/benchmark"
+  ],
+  "exit_code": 0,
+  "elapsed_seconds": 89.507
+}

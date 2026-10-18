@@ -1,0 +1,99 @@
+{
+  "scope": "diagnostic counters only; kernel -O0, runtime -O2, no performance credit",
+  "commands": [
+    [
+      "/usr/bin/cc",
+      "-O2",
+      "-g",
+      "-std=c17",
+      "-I<OPT_ROOT>/evidence/rc/opt-20261017/diagnostic-baseline-total/sources",
+      "-c",
+      "<OPT_ROOT>/evidence/rc/opt-20261017/diagnostic-baseline-total/sources/rc.c",
+      "-o",
+      "<OPT_ROOT>/evidence/rc/opt-20261017/diagnostic-baseline-total/rc.o"
+    ],
+    [
+      "/usr/bin/cc",
+      "-O2",
+      "-g",
+      "-std=c17",
+      "-I<OPT_ROOT>/evidence/rc/opt-20261017/diagnostic-baseline-total/sources",
+      "-c",
+      "<OPT_ROOT>/evidence/rc/opt-20261017/diagnostic-baseline-total/sources/primitives.c",
+      "-o",
+      "<OPT_ROOT>/evidence/rc/opt-20261017/diagnostic-baseline-total/primitives.o"
+    ],
+    [
+      "/usr/bin/cc",
+      "-O2",
+      "-g",
+      "-std=c17",
+      "-I<OPT_ROOT>/evidence/rc/opt-20261017/diagnostic-baseline-total/sources",
+      "-c",
+      "<OPT_ROOT>/evidence/rc/opt-20261017/diagnostic-baseline-total/sources/eval.c",
+      "-o",
+      "<OPT_ROOT>/evidence/rc/opt-20261017/diagnostic-baseline-total/eval.o"
+    ],
+    [
+      "/usr/bin/cc",
+      "-O2",
+      "-g",
+      "-std=c17",
+      "-I<OPT_ROOT>/evidence/rc/opt-20261017/diagnostic-baseline-total/sources",
+      "-c",
+      "<OPT_ROOT>/evidence/rc/opt-20261017/diagnostic-baseline-total/sources/read.c",
+      "-o",
+      "<OPT_ROOT>/evidence/rc/opt-20261017/diagnostic-baseline-total/read.o"
+    ],
+    [
+      "/usr/bin/cc",
+      "-O2",
+      "-g",
+      "-std=c17",
+      "-I<OPT_ROOT>/evidence/rc/opt-20261017/diagnostic-baseline-total/sources",
+      "-c",
+      "<OPT_ROOT>/evidence/rc/opt-20261017/diagnostic-baseline-total/sources/main.c",
+      "-o",
+      "<OPT_ROOT>/evidence/rc/opt-20261017/diagnostic-baseline-total/main.o"
+    ],
+    [
+      "/usr/bin/cc",
+      "-O0",
+      "-g",
+      "-std=c17",
+      "-I<OPT_ROOT>/evidence/rc/opt-20261017/diagnostic-baseline-total/sources",
+      "-c",
+      "<RC_BASELINE_ROOT>/obj/rc/kernel.c",
+      "-o",
+      "<OPT_ROOT>/evidence/rc/opt-20261017/diagnostic-baseline-total/kernel.o"
+    ],
+    [
+      "/usr/bin/cc",
+      "<OPT_ROOT>/evidence/rc/opt-20261017/diagnostic-baseline-total/rc.o",
+      "<OPT_ROOT>/evidence/rc/opt-20261017/diagnostic-baseline-total/primitives.o",
+      "<OPT_ROOT>/evidence/rc/opt-20261017/diagnostic-baseline-total/eval.o",
+      "<OPT_ROOT>/evidence/rc/opt-20261017/diagnostic-baseline-total/read.o",
+      "<OPT_ROOT>/evidence/rc/opt-20261017/diagnostic-baseline-total/main.o",
+      "<OPT_ROOT>/evidence/rc/opt-20261017/diagnostic-baseline-total/kernel.o",
+      "-lm",
+      "-o",
+      "<OPT_ROOT>/evidence/rc/opt-20261017/diagnostic-baseline-total/shen-counts"
+    ]
+  ],
+  "source_sha256": {
+    "eval.c": "177229776becca7592459e2ee9625a97bf16cc8fc5feaffabbd3e9c5e455c3dd",
+    "rc.c": "e5d89b2abe397320ba0b2e77afda975f2189af84589bc9daf7da952c155103bf",
+    "rc_internal.h": "da618b5f1687911ae775d983fc115007d81e039c8a19b3fcab92c09e9282e438",
+    "emit.c": "b8705439e0bbd60cc6fd3f57456351f461b973935b903761c2f4fc9cb12de05a",
+    "primitives.c": "3e51bcb2083475e2d07d6cb0ce1b08f9d7a7ee524e74779be2c4a7781f65efc5",
+    "read.c": "f61444980f2d34d3986f9640103b3478501c4d368f6c2dd5058a4b39b3143667",
+    "eval.h": "40840e20cb00334a7032ef11aec08ce6a0846912ae05dfb0d08e894ba7ad2e15",
+    "main.c": "4d4b3892f167bc2c8c1fb46a33ac4229c2d23d8ae5edf8fe05e758e059c1b437",
+    "primitives.h": "ab8cc324d48775dded4ca6cd49eabd1a99a93fb9ff33e96862cc5243636f0a77",
+    "rc.h": "b77320047d47b013b5064b44d749e80fab11319769145d9e6a676371d9990aec",
+    "emit.h": "ae1946b669f771941b12a706316a28090aefd126f54cc687fa00a3b10b322a9f",
+    "read.h": "71fb3e8ce757174ee47dde95f732200ae1b023c66f8164ac0a4d82ebb241fea5"
+  },
+  "kernel_sha256": "dcea2e0201ecce628735b65f2e6e5939e685c8cb8ff2669e6fe297dcf308d1b2",
+  "binary_sha256": "b9b4a95a01cd60ad5555c479d1a4e0d86446d07432c7923faf6f7d320185b3de"
+}

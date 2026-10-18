@@ -1,0 +1,103 @@
+{
+  "date": "2026-10-16",
+  "baseline_commit": "4eb6b7c483a3543abdcdc5f35fa7a29753ff1e0f",
+  "source_sha256": {
+    "src/rc/emit.c": "0a807b0cbaf35799fa67534f5ae7c0efe8ee684b7c723ba70dcfbec6a125368e",
+    "src/rc/rc.c": "e0ed91f97e3d8b0d297a07185539f50f00aaf69a4ad3edc483d16eb9e028917d",
+    "src/rc/rc.h": "90a6d8eb74adb1c32bac860771e3f79e8a9876e12e3b984ff08d3e8c51050275",
+    "test/rc/test_apply_fast.c": "1883222490366e3c1e517cfff57d0034aa545d007b5b247450173cbb5f18b837",
+    "test/rc/test_semantics.sh": "2e947c83641aa898d6a733c1e681b1c6d6cedbaa1b362b560b12031b183b3c2a"
+  },
+  "scope": "Guarded direct calls to source module callbacks for non-tail or transparent-do self-only call positions; general tail calls retain trampoline dispatch.",
+  "validation": {
+    "fatal_sanitizers": {
+      "flags": "-O1 -g -fsanitize=address,undefined -fno-sanitize-recover=all -fno-omit-frame-pointer",
+      "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1"
+    },
+    "emitted_semantics": {
+      "result": "PASS",
+      "cases": 87,
+      "new_cases": 6,
+      "artifact_no_boehm_audit": "PASS"
+    },
+    "test_apply_fast": {
+      "result": "PASS",
+      "includes": "compiled callback identity/arity/capture/bound guards; owned leftovers; active errors; returned tail requests and boolean guards"
+    },
+    "ownership": {
+      "result": "PASS",
+      "cases": 20,
+      "optimized_pair_reuses": 102
+    },
+    "null_cleanup": {
+      "result": "PASS",
+      "ownership_modes": 2
+    },
+    "large_frames": {
+      "result": "PASS",
+      "assertions": 4,
+      "generated_C_bytes": 90540
+    }
+  },
+  "generated_kernel_source": {
+    "C_compilation": "NOT RUN",
+    "sha256": "00a7af64c86b80d3df0e9fe8451bf5b6c60861e3b87c737f56e055fe73c4968a",
+    "C_bytes": 7345409,
+    "helper_functions": 500,
+    "helpers_with_compiled_candidate": 477,
+    "guard_sites": 477,
+    "native1463_named_compiled_calls": 12,
+    "native1463_generic_calls": 2,
+    "native1463_self_loop_guard": 1
+  },
+  "microbenchmark": {
+    "scope": "single emitted known-module non-tail call microbenchmark; excludes compilation; not full kernel or Boehm comparison",
+    "iterations": 1000000,
+    "baseline_commit": "4eb6b7c483a3543abdcdc5f35fa7a29753ff1e0f",
+    "samples_seconds": {
+      "baseline": [
+        0.18153250000614207,
+        0.17062254100164864,
+        0.1692925420065876,
+        0.1740143339993665,
+        0.17391916598717216
+      ],
+      "compiled_dispatch": [
+        0.15151437500026077,
+        0.15692837499955203,
+        0.29087900000740774,
+        0.16516287501144689,
+        0.1574151249951683
+      ]
+    },
+    "median_seconds": {
+      "baseline": 0.17391916598717216,
+      "compiled_dispatch": 0.1574151249951683
+    },
+    "speedup": 1.1048440611568326,
+    "source": "(defun ident (X) X)\n(defun count (N A) (if (= N 0) A (count (- N 1) (+ A (ident 1)))))\n(count 1000000 0)\n",
+    "compiler": "Apple clang 21.0.0",
+    "CFLAGS": "-O3 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk",
+    "ordering": "one warmup then five paired samples, alternating variant order",
+    "instructions_retired_single_process_probes": {
+      "baseline": 1628609691,
+      "compiled_dispatch": 1438551834,
+      "note": "Separate time -l process counters; execution times from these probes are not used."
+    },
+    "artifact_sha256": {
+      "baseline": {
+        "app.c": "4572768782c228528685a546d15063cdf86c5f499c4c62eba95553e611aaf289",
+        "app": "73ecedbdd1671c27f1dc6cd47a489ed928d757df4003a1a735ee8ee58613e88d"
+      },
+      "self_loop": {
+        "app.c": "6cebee1739a19289ed15e4468cc3f2940a41dbad3dc86d2a2609fd1766511540",
+        "app": "95f862eba7a57fca0c27e95dc8907de4fb9700442e3beffe187c91f5850c5982"
+      }
+    }
+  },
+  "remaining": [
+    "Full kernel C compilation and canonical suite belong to integration.",
+    "Scoped microbenchmark is not a full-product or Boehm comparison."
+  ]
+}

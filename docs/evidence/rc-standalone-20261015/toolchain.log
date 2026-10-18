@@ -1,0 +1,6 @@
+Waiting for completed canonical receipt: evidence/rc/certify-20261015T215639.575778Z/result.json
+Starting: ['scripts/test-rc-toolchain.sh', '--canonical-receipt', 'evidence/rc/certify-20261015T215639.575778Z/result.json']
+RC toolchain PASS: fresh audited compiler/CLI, CLI smoke, native optimizer controls
+Canonical: PASS
+Evidence: ${REPO}/evidence/rc/toolchain-20261015T221249.934445Z
+exit 0

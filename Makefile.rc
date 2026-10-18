@@ -1,0 +1,119 @@
+# Standalone compiler, CLI and runtime: no pkg-config, Nix, or Boehm dependency.
+.DEFAULT_GOAL := all
+CC ?= cc
+AR ?= ar
+RC_BUILD ?= obj/rc
+RC_BIN ?= bin/rc
+RC_TOOL_BIN ?= bin
+RC_CFLAGS ?= $(if $(strip $(CFLAGS)),$(CFLAGS),-O3 -g)
+RC_CPPFLAGS ?= $(CPPFLAGS)
+override RC_CFLAGS += -std=c17 -Wall -Wextra -Wpedantic -Isrc/rc
+RC_LDFLAGS ?= $(LDFLAGS)
+RC_LDLIBS ?= -lm
+RC_SANITIZE ?= 0
+RC_ACYCLIC_ONLY ?= 0
+# auto falls back if this compiler/archive/link combination cannot use LTO.
+# Set RC_LTO=0 to disable, RC_LTO=1 to require it, or RC_LTO_FLAGS to
+# override the compiler-specific flag (the override is still link-probed).
+RC_LTO ?= auto
+ifneq ($(words $(RC_LTO)),1)
+$(error RC_LTO must be 0, auto, or 1)
+endif
+ifeq ($(filter 0 auto 1,$(RC_LTO)),)
+$(error RC_LTO must be 0, auto, or 1)
+endif
+RC_LTO_BUILD_GOALS := $(filter-out clean,$(if $(MAKECMDGOALS),$(MAKECMDGOALS),all))
+ifneq ($(strip $(RC_LTO_BUILD_GOALS)),)
+ifneq ($(RC_SANITIZE),1)
+ifneq ($(RC_LTO),0)
+# Quote each environment value as one shell word, including embedded apostrophes.
+rc_shell_quote = '$(subst ','"'"',$(1))'
+RC_LTO_PROBE := $(shell CC=$(call rc_shell_quote,$(CC)) AR=$(call rc_shell_quote,$(AR)) RC_PROBE_CFLAGS=$(call rc_shell_quote,$(RC_CPPFLAGS) $(RC_CFLAGS)) RC_PROBE_LDFLAGS=$(call rc_shell_quote,$(RC_LDFLAGS)) RC_PROBE_LDLIBS=$(call rc_shell_quote,$(RC_LDLIBS)) RC_PROBE_FLAGS=$(call rc_shell_quote,$(RC_LTO_FLAGS)) sh src/rc/probe-lto.sh)
+ifneq ($(RC_LTO_PROBE),)
+override RC_CFLAGS += $(RC_LTO_PROBE)
+override RC_LDFLAGS += $(RC_LTO_PROBE)
+else
+ifeq ($(RC_LTO),1)
+$(error RC_LTO=1 requested but compiler/archive/link LTO probe failed)
+endif
+$(info Shen RC: LTO unavailable; building without LTO)
+endif
+endif
+endif
+endif
+ifeq ($(RC_ACYCLIC_ONLY),1)
+override RC_CFLAGS += -DSHEN_RC_ACYCLIC_ONLY
+endif
+ifeq ($(RC_SANITIZE),1)
+override RC_CFLAGS += -O1 -fsanitize=address,undefined -fno-sanitize-recover=all -fno-omit-frame-pointer
+override RC_LDFLAGS += -fsanitize=address,undefined
+endif
+RC_SOURCES := src/rc/rc.c src/rc/primitives.c src/rc/eval.c src/rc/read.c
+RC_OBJECTS := $(patsubst src/rc/%.c,$(RC_BUILD)/%.o,$(RC_SOURCES))
+ifeq ($(RC_ACYCLIC_ONLY),1)
+RC_TESTS := test_acyclic
+else
+RC_TESTS := test_cycles test_primitives test_eval test_env test_bool_tail test_apply_fast test_object_cache test_immediates test_collection test_reuse test_acyclic test_symbols test_primitive_fast test_equal test_canonical_primitives test_canonical_numeric test_canonical_cons test_generic_builtin_tag test_trial_work_union test_callee test_identity_tail test_list_length test_eval_plan test_rooted_call
+endif
+RC_TEST_BINS := $(addprefix $(RC_BIN)/,$(RC_TESTS))
+
+RC_RELEASE_MANIFEST ?= shen/releases/s43.1.json
+RC_KERNEL_INPUTS := $(shell python3 scripts/release_manifest.py --manifest $(RC_RELEASE_MANIFEST) --kernel-inputs)
+ifeq ($(strip $(RC_KERNEL_INPUTS)),)
+$(error Release manifest validation failed)
+endif
+RC_KERNEL_DIR := $(patsubst %/,%,$(dir $(firstword $(RC_KERNEL_INPUTS))))
+
+$(RC_BUILD)/release.h: FORCE_RELEASE $(RC_RELEASE_MANIFEST) scripts/release_manifest.py $(RC_KERNEL_INPUTS) | $(RC_BUILD)
+	python3 scripts/release_manifest.py --manifest $(RC_RELEASE_MANIFEST) --header $@
+
+
+all: $(RC_TOOL_BIN)/rc-build $(RC_TOOL_BIN)/shen-rc
+
+runtime: $(RC_BIN)/libshenrc.a
+
+$(sort $(RC_BUILD) $(RC_BIN) $(RC_TOOL_BIN)):
+	mkdir -p $@
+
+$(RC_BUILD)/%.o: src/rc/%.c $(wildcard src/rc/*.h) | $(RC_BUILD)
+	$(CC) $(RC_CPPFLAGS) $(RC_CFLAGS) -c $< -o $@
+
+$(RC_BIN)/libshenrc.a: $(RC_OBJECTS) | $(RC_BIN)
+	$(AR) rcs $@ $^
+
+$(RC_TOOL_BIN)/rc-build: tools/rc-build.c $(RC_BUILD)/release.h $(RC_BUILD)/emit.o $(RC_BIN)/libshenrc.a | $(RC_TOOL_BIN)
+	$(CC) $(RC_CPPFLAGS) $(RC_CFLAGS) -I$(RC_BUILD) tools/rc-build.c $(RC_BUILD)/emit.o $(RC_BIN)/libshenrc.a $(RC_LDFLAGS) $(RC_LDLIBS) -o $@
+
+$(RC_BUILD)/kernel.c: $(RC_TOOL_BIN)/rc-build $(RC_KERNEL_INPUTS) | $(RC_BUILD)
+	$(RC_TOOL_BIN)/rc-build --emit-kernel $(RC_KERNEL_DIR) $@
+
+$(RC_BUILD)/kernel.o: $(RC_BUILD)/kernel.c $(wildcard src/rc/*.h)
+	$(CC) $(RC_CPPFLAGS) $(RC_CFLAGS) -c $< -o $@
+
+$(RC_TOOL_BIN)/shen-rc: $(RC_BUILD)/main.o $(RC_BUILD)/kernel.o $(RC_BIN)/libshenrc.a | $(RC_TOOL_BIN)
+	$(CC) $(RC_CPPFLAGS) $(RC_CFLAGS) $^ $(RC_LDFLAGS) $(RC_LDLIBS) -o $@
+
+$(RC_BIN)/test_%: test/rc/test_%.c $(RC_BIN)/libshenrc.a
+	$(CC) $(RC_CPPFLAGS) $(RC_CFLAGS) $< $(RC_BIN)/libshenrc.a $(RC_LDFLAGS) $(RC_LDLIBS) -o $@
+
+test-binaries: $(RC_TEST_BINS)
+
+test: test-binaries
+	@set -e; for test in $(RC_TEST_BINS); do "$$test"; done
+
+# Separate output directories keep sanitizer objects out of release artifacts.
+sanitize:
+	$(MAKE) -f Makefile.rc RC_SANITIZE=1 RC_BUILD=obj/rc-sanitize RC_BIN=bin/rc-sanitize test
+
+acyclic:
+	$(MAKE) -f Makefile.rc RC_ACYCLIC_ONLY=1 RC_BUILD=obj/rc-acyclic RC_BIN=bin/rc-acyclic/runtime RC_TOOL_BIN=bin/rc-acyclic all test
+
+clean:
+	rm -rf $(RC_BUILD) $(RC_BIN)
+
+.PHONY: all runtime test-binaries test sanitize acyclic clean
+
+# Recheck release selection even when switching to an older manifest. The
+# generator preserves mtime when content is unchanged.
+FORCE_RELEASE:
+.PHONY: FORCE_RELEASE

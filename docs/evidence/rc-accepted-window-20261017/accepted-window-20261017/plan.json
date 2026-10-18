@@ -1,0 +1,7 @@
+{
+  "scope": "Unchanged frozen ten-pair comparison in the host window explicitly accepted by user: quiet enough now. Preserve every sample; record remaining background activity.",
+  "source_head": "74336ee0ae7e6a8da4f4cb6da2020cf4e7fdfea8",
+  "runtime_checkpoint": "8e01579c238ad6bf2aef18492bb47cf389cbbeed",
+  "config": "<OPT_ROOT>/evidence/rc/opt-20261017/final-freeze/final-config.json",
+  "host_window": "User accepted present background-service load; initial process snapshot showed no compiler or unrelated Shen workload. This is an operationally accepted window, not proof of zero background CPU."
+}

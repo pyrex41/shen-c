@@ -1,0 +1,27 @@
+{
+  "status": "PASS",
+  "scope": "Darwin installed Nix core/manifest/helper correspondence; install smoke includes source compiler and REPL",
+  "store_path": "/nix/store/668gjaapnsr937hhimpx2pcb75yx0r2q-shen-c-0.2.3",
+  "checks": {
+    "src/rc/emit.c": true,
+    "src/rc/emit.h": true,
+    "src/rc/eval.c": true,
+    "src/rc/eval.h": true,
+    "src/rc/main.c": true,
+    "src/rc/primitives.c": true,
+    "src/rc/primitives.h": true,
+    "src/rc/rc.c": true,
+    "src/rc/rc.h": true,
+    "src/rc/rc_internal.h": true,
+    "src/rc/read.c": true,
+    "src/rc/read.h": true,
+    "scripts/release_manifest.py": true,
+    "shen/releases/s43.1.json": true,
+    "compile-shen-rc.sh_except_Nix_shebang": true
+  },
+  "installed_driver_shebang": "#!/nix/store/yqk6qhawnigv832m2zhcbs25nb37r73i-bash-5.3p15/bin/sh",
+  "binaries_sha256": {
+    "shen-rc": "20c636e89e6da9d38b319e46702f294e9bcc1f82bebcb47bd25040eef52166b2",
+    "shen-c": "0efb0411f7563713b94f835e828d016cc2315e4dd83c419b8364fdc1bf858018"
+  }
+}

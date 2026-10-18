@@ -1,0 +1,98 @@
+{
+  "commands": [
+    [
+      "/usr/bin/cc",
+      "-O2",
+      "-g",
+      "-std=c17",
+      "-I<OPT_ROOT>/evidence/rc/opt-20261017/diagnostic-final/sources",
+      "-c",
+      "<OPT_ROOT>/evidence/rc/opt-20261017/diagnostic-final/sources/rc.c",
+      "-o",
+      "<OPT_ROOT>/evidence/rc/opt-20261017/diagnostic-final/rc.o"
+    ],
+    [
+      "/usr/bin/cc",
+      "-O2",
+      "-g",
+      "-std=c17",
+      "-I<OPT_ROOT>/evidence/rc/opt-20261017/diagnostic-final/sources",
+      "-c",
+      "<OPT_ROOT>/evidence/rc/opt-20261017/diagnostic-final/sources/primitives.c",
+      "-o",
+      "<OPT_ROOT>/evidence/rc/opt-20261017/diagnostic-final/primitives.o"
+    ],
+    [
+      "/usr/bin/cc",
+      "-O2",
+      "-g",
+      "-std=c17",
+      "-I<OPT_ROOT>/evidence/rc/opt-20261017/diagnostic-final/sources",
+      "-c",
+      "<OPT_ROOT>/evidence/rc/opt-20261017/diagnostic-final/sources/eval.c",
+      "-o",
+      "<OPT_ROOT>/evidence/rc/opt-20261017/diagnostic-final/eval.o"
+    ],
+    [
+      "/usr/bin/cc",
+      "-O2",
+      "-g",
+      "-std=c17",
+      "-I<OPT_ROOT>/evidence/rc/opt-20261017/diagnostic-final/sources",
+      "-c",
+      "<OPT_ROOT>/evidence/rc/opt-20261017/diagnostic-final/sources/read.c",
+      "-o",
+      "<OPT_ROOT>/evidence/rc/opt-20261017/diagnostic-final/read.o"
+    ],
+    [
+      "/usr/bin/cc",
+      "-O2",
+      "-g",
+      "-std=c17",
+      "-I<OPT_ROOT>/evidence/rc/opt-20261017/diagnostic-final/sources",
+      "-c",
+      "<OPT_ROOT>/evidence/rc/opt-20261017/diagnostic-final/sources/main.c",
+      "-o",
+      "<OPT_ROOT>/evidence/rc/opt-20261017/diagnostic-final/main.o"
+    ],
+    [
+      "/usr/bin/cc",
+      "-O0",
+      "-g",
+      "-std=c17",
+      "-I<OPT_ROOT>/evidence/rc/opt-20261017/diagnostic-final/sources",
+      "-c",
+      "<OPT_ROOT>/obj/rooted-e2-release/kernel.c",
+      "-o",
+      "<OPT_ROOT>/evidence/rc/opt-20261017/diagnostic-final/kernel.o"
+    ],
+    [
+      "/usr/bin/cc",
+      "<OPT_ROOT>/evidence/rc/opt-20261017/diagnostic-final/rc.o",
+      "<OPT_ROOT>/evidence/rc/opt-20261017/diagnostic-final/primitives.o",
+      "<OPT_ROOT>/evidence/rc/opt-20261017/diagnostic-final/eval.o",
+      "<OPT_ROOT>/evidence/rc/opt-20261017/diagnostic-final/read.o",
+      "<OPT_ROOT>/evidence/rc/opt-20261017/diagnostic-final/main.o",
+      "<OPT_ROOT>/evidence/rc/opt-20261017/diagnostic-final/kernel.o",
+      "-lm",
+      "-o",
+      "<OPT_ROOT>/evidence/rc/opt-20261017/diagnostic-final/shen-counts"
+    ]
+  ],
+  "source_sha256": {
+    "eval.c": "5d49c8bd17cb29737538745776a7f8dad6f395e9d09e489e6886bae73961709f",
+    "rc.c": "fac04e5468698f2c51096a72fb574b6e3fb792631cd8309ac110e66515868216",
+    "rc_internal.h": "397a2e0220e73ddfedff03a13fb3048d53c8c4d9ad534f730b0ddee943e1f860",
+    "emit.c": "e4f56a44159e0a691d397b958770c39e8350519bc30d21b1067e09979166a03b",
+    "primitives.c": "e745613a31beb3eea888d35a2f07a55ebc14f312a621a2dc88f4023eec0e32b1",
+    "read.c": "f61444980f2d34d3986f9640103b3478501c4d368f6c2dd5058a4b39b3143667",
+    "eval.h": "40840e20cb00334a7032ef11aec08ce6a0846912ae05dfb0d08e894ba7ad2e15",
+    "main.c": "5c3f998973d17cf8e217783350fadcfac202ec7ad089b418927c1170a61dced5",
+    "primitives.h": "ad9a5b0483d68a1829b6a0557d9b71b0f0ab240b67ec152ab2f0e4f3c87782d2",
+    "rc.h": "b77320047d47b013b5064b44d749e80fab11319769145d9e6a676371d9990aec",
+    "emit.h": "ae1946b669f771941b12a706316a28090aefd126f54cc687fa00a3b10b322a9f",
+    "eval_plan.h": "91c896c000ff381922ccd5fa72420aab6cc8f87f1f8b7851d97c69142f167af4",
+    "read.h": "71fb3e8ce757174ee47dde95f732200ae1b023c66f8164ac0a4d82ebb241fea5"
+  },
+  "kernel_sha256": "1c97f40cc3574dff23696b13cad8ad9c62af2a2080e5e84b0e436c4fd096c544"
+}

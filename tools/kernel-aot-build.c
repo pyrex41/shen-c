@@ -1,3 +1,4 @@
+/* Historical Boehm backend tool: no supported build target. See docs/LEGACY-BOEHM.md. */
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -12,8 +13,7 @@
  *   kernel-aot-build <kl-dir> <out-dir>
  *
  * Emits one C TU per boot KL file (defuns only) plus install_all.c.
- * ShenOSKernel 42.2 modules (dict.kl and init.kl included; stlib.kl is not
- * booted). Does not read interpreter.shen / prologinterp.shen.
+ * Does not read interpreter.shen / prologinterp.shen / backend.kl.
  */
 
 static const char* const KERNEL_FILES[] = {
@@ -31,8 +31,6 @@ static const char* const KERNEL_FILES[] = {
   "t-star.kl",
   "yacc.kl",
   "types.kl",
-  "dict.kl",
-  "init.kl",
   NULL
 };
 

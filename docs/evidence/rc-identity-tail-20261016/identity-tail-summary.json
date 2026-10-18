@@ -1,0 +1,21 @@
+{
+  "candidate_commit": "cf8a36fb8a0dc3be72e44e3d6f7598c443d61a33",
+  "status": "CORRECTNESS PASS; PERFORMANCE TARGET NOT MET",
+  "full_suite_runs_pass": 8,
+  "tests_per_run": 134,
+  "median_paired_ratios_rc_over_boehm": {
+    "wall_seconds": 1.0085077489412857,
+    "user_seconds": 1.041059339174346,
+    "cycles": 1.0479430221390635,
+    "instructions": 1.125760461745345,
+    "max_rss_bytes": 0.3712376416515618
+  },
+  "build_receipt_sha256": "86955123f0dde1929d991e8a09ecb1c6606e18a0a4292d8cffe95d17e5a7710d",
+  "benchmark_frozen_receipt_sha256": "5989231461f81767c6b613c65b2255ee16e4380f6094ef3c5a3079ebd15a6fc2",
+  "result_sha256": "5f73ced4c6a92ffd22206848b35bf8d565fb2c880e4053c0a7118fd1a0301e60",
+  "limitations": [
+    "Unrelated pingcx-go-factory Python verifiers each consuming about one CPU, Spotify and Defender observed. Process snapshots preserved.",
+    "Wall and CPU times vary substantially; full-program instruction count RC/B ~1.126 is stable.",
+    "No integration or source changes performed."
+  ]
+}

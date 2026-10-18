@@ -1,0 +1,284 @@
+{
+  "baseline": "3aa882f8a466cd228d59b7262428b9971f65150c",
+  "host": "arm64 Darwin",
+  "compiler": "Apple clang 21.0.0",
+  "flags": "-O2 -g -std=c17; no LTO or sanitizers",
+  "calls_per_run": 3000000,
+  "measure": "process retired instructions from /usr/bin/time -l",
+  "balanced_leaf_runs": [
+    {
+      "repeat": 0,
+      "op": 0,
+      "variant": "before",
+      "instructions": 989775663,
+      "output": "op=0 tiny=0 calls=3000000 ns/call=33.258 allocations=0 retains=0 releases=0"
+    },
+    {
+      "repeat": 0,
+      "op": 0,
+      "variant": "after",
+      "instructions": 771263666,
+      "output": "op=0 tiny=1 calls=3000000 ns/call=40.572 allocations=0 retains=0 releases=0"
+    },
+    {
+      "repeat": 0,
+      "op": 1,
+      "variant": "before",
+      "instructions": 986720640,
+      "output": "op=1 tiny=0 calls=3000000 ns/call=31.916 allocations=0 retains=0 releases=0"
+    },
+    {
+      "repeat": 0,
+      "op": 1,
+      "variant": "after",
+      "instructions": 769451925,
+      "output": "op=1 tiny=1 calls=3000000 ns/call=26.813 allocations=0 retains=0 releases=0"
+    },
+    {
+      "repeat": 0,
+      "op": 2,
+      "variant": "before",
+      "instructions": 993436220,
+      "output": "op=2 tiny=0 calls=3000000 ns/call=33.025 allocations=0 retains=0 releases=0"
+    },
+    {
+      "repeat": 0,
+      "op": 2,
+      "variant": "after",
+      "instructions": 773143921,
+      "output": "op=2 tiny=1 calls=3000000 ns/call=27.228 allocations=0 retains=0 releases=0"
+    },
+    {
+      "repeat": 0,
+      "op": 3,
+      "variant": "before",
+      "instructions": 998007079,
+      "output": "op=3 tiny=0 calls=3000000 ns/call=33.214 allocations=0 retains=0 releases=0"
+    },
+    {
+      "repeat": 0,
+      "op": 3,
+      "variant": "after",
+      "instructions": 782971202,
+      "output": "op=3 tiny=1 calls=3000000 ns/call=28.219 allocations=0 retains=0 releases=0"
+    },
+    {
+      "repeat": 0,
+      "op": 4,
+      "variant": "before",
+      "instructions": 1069180168,
+      "output": "op=4 tiny=0 calls=3000000 ns/call=34.868 allocations=1 retains=3000000 releases=3000000"
+    },
+    {
+      "repeat": 0,
+      "op": 4,
+      "variant": "after",
+      "instructions": 851979735,
+      "output": "op=4 tiny=1 calls=3000000 ns/call=28.628 allocations=1 retains=3000000 releases=3000000"
+    },
+    {
+      "repeat": 0,
+      "op": 5,
+      "variant": "before",
+      "instructions": 1070203092,
+      "output": "op=5 tiny=0 calls=3000000 ns/call=35.203 allocations=0 retains=3000000 releases=3000000"
+    },
+    {
+      "repeat": 0,
+      "op": 5,
+      "variant": "after",
+      "instructions": 853238954,
+      "output": "op=5 tiny=1 calls=3000000 ns/call=30.268 allocations=0 retains=3000000 releases=3000000"
+    },
+    {
+      "repeat": 0,
+      "op": 6,
+      "variant": "before",
+      "instructions": 1069260536,
+      "output": "op=6 tiny=0 calls=3000000 ns/call=34.709 allocations=1 retains=3000000 releases=3000000"
+    },
+    {
+      "repeat": 0,
+      "op": 6,
+      "variant": "after",
+      "instructions": 851673304,
+      "output": "op=6 tiny=1 calls=3000000 ns/call=29.078 allocations=1 retains=3000000 releases=3000000"
+    },
+    {
+      "repeat": 0,
+      "op": 7,
+      "variant": "before",
+      "instructions": 1068436074,
+      "output": "op=7 tiny=0 calls=3000000 ns/call=35.559 allocations=0 retains=3000000 releases=3000000"
+    },
+    {
+      "repeat": 0,
+      "op": 7,
+      "variant": "after",
+      "instructions": 849861309,
+      "output": "op=7 tiny=1 calls=3000000 ns/call=29.787 allocations=0 retains=3000000 releases=3000000"
+    },
+    {
+      "repeat": 0,
+      "op": 8,
+      "variant": "before",
+      "instructions": 829957394,
+      "output": "op=8 tiny=0 calls=3000000 ns/call=24.649 allocations=0 retains=3000000 releases=3000000"
+    },
+    {
+      "repeat": 0,
+      "op": 8,
+      "variant": "after",
+      "instructions": 806373329,
+      "output": "op=8 tiny=1 calls=3000000 ns/call=23.827 allocations=0 retains=3000000 releases=3000000"
+    },
+    {
+      "repeat": 1,
+      "op": 8,
+      "variant": "after",
+      "instructions": 806784823,
+      "output": "op=8 tiny=1 calls=3000000 ns/call=23.929 allocations=0 retains=3000000 releases=3000000"
+    },
+    {
+      "repeat": 1,
+      "op": 8,
+      "variant": "before",
+      "instructions": 830218602,
+      "output": "op=8 tiny=0 calls=3000000 ns/call=24.402 allocations=0 retains=3000000 releases=3000000"
+    },
+    {
+      "repeat": 1,
+      "op": 7,
+      "variant": "after",
+      "instructions": 850300193,
+      "output": "op=7 tiny=1 calls=3000000 ns/call=29.428 allocations=0 retains=3000000 releases=3000000"
+    },
+    {
+      "repeat": 1,
+      "op": 7,
+      "variant": "before",
+      "instructions": 1066282070,
+      "output": "op=7 tiny=0 calls=3000000 ns/call=35.342 allocations=0 retains=3000000 releases=3000000"
+    },
+    {
+      "repeat": 1,
+      "op": 6,
+      "variant": "after",
+      "instructions": 852064687,
+      "output": "op=6 tiny=1 calls=3000000 ns/call=29.802 allocations=1 retains=3000000 releases=3000000"
+    },
+    {
+      "repeat": 1,
+      "op": 6,
+      "variant": "before",
+      "instructions": 1068137866,
+      "output": "op=6 tiny=0 calls=3000000 ns/call=36.063 allocations=1 retains=3000000 releases=3000000"
+    },
+    {
+      "repeat": 1,
+      "op": 5,
+      "variant": "after",
+      "instructions": 850560747,
+      "output": "op=5 tiny=1 calls=3000000 ns/call=28.351 allocations=0 retains=3000000 releases=3000000"
+    },
+    {
+      "repeat": 1,
+      "op": 5,
+      "variant": "before",
+      "instructions": 1068351256,
+      "output": "op=5 tiny=0 calls=3000000 ns/call=35.672 allocations=0 retains=3000000 releases=3000000"
+    },
+    {
+      "repeat": 1,
+      "op": 4,
+      "variant": "after",
+      "instructions": 851445706,
+      "output": "op=4 tiny=1 calls=3000000 ns/call=29.108 allocations=1 retains=3000000 releases=3000000"
+    },
+    {
+      "repeat": 1,
+      "op": 4,
+      "variant": "before",
+      "instructions": 1068110527,
+      "output": "op=4 tiny=0 calls=3000000 ns/call=34.714 allocations=1 retains=3000000 releases=3000000"
+    },
+    {
+      "repeat": 1,
+      "op": 3,
+      "variant": "after",
+      "instructions": 784083295,
+      "output": "op=3 tiny=1 calls=3000000 ns/call=29.478 allocations=0 retains=0 releases=0"
+    },
+    {
+      "repeat": 1,
+      "op": 3,
+      "variant": "before",
+      "instructions": 999658007,
+      "output": "op=3 tiny=0 calls=3000000 ns/call=34.075 allocations=0 retains=0 releases=0"
+    },
+    {
+      "repeat": 1,
+      "op": 2,
+      "variant": "after",
+      "instructions": 775332813,
+      "output": "op=2 tiny=1 calls=3000000 ns/call=36.525 allocations=0 retains=0 releases=0"
+    },
+    {
+      "repeat": 1,
+      "op": 2,
+      "variant": "before",
+      "instructions": 992951091,
+      "output": "op=2 tiny=0 calls=3000000 ns/call=34.092 allocations=0 retains=0 releases=0"
+    },
+    {
+      "repeat": 1,
+      "op": 1,
+      "variant": "after",
+      "instructions": 767559304,
+      "output": "op=1 tiny=1 calls=3000000 ns/call=27.547 allocations=0 retains=0 releases=0"
+    },
+    {
+      "repeat": 1,
+      "op": 1,
+      "variant": "before",
+      "instructions": 986198730,
+      "output": "op=1 tiny=0 calls=3000000 ns/call=32.805 allocations=0 retains=0 releases=0"
+    },
+    {
+      "repeat": 1,
+      "op": 0,
+      "variant": "after",
+      "instructions": 768374261,
+      "output": "op=0 tiny=1 calls=3000000 ns/call=27.230 allocations=0 retains=0 releases=0"
+    },
+    {
+      "repeat": 1,
+      "op": 0,
+      "variant": "before",
+      "instructions": 985060486,
+      "output": "op=0 tiny=0 calls=3000000 ns/call=31.836 allocations=0 retains=0 releases=0"
+    }
+  ],
+  "identical_generic_caller_control": [
+    {
+      "variant": "before",
+      "instructions": 832865342,
+      "output": "op=8 tiny=0 calls=3000000 ns/call=33.381 allocations=0 retains=3000000 releases=3000000"
+    },
+    {
+      "variant": "after",
+      "instructions": 824576455,
+      "output": "op=8 tiny=0 calls=3000000 ns/call=29.574 allocations=0 retains=3000000 releases=3000000"
+    },
+    {
+      "variant": "after",
+      "instructions": 824652071,
+      "output": "op=8 tiny=0 calls=3000000 ns/call=66.632 allocations=0 retains=3000000 releases=3000000"
+    },
+    {
+      "variant": "before",
+      "instructions": 830236283,
+      "output": "op=8 tiny=0 calls=3000000 ns/call=33.328 allocations=0 retains=3000000 releases=3000000"
+    }
+  ]
+}

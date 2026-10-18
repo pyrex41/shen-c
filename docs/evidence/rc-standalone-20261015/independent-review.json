@@ -1,0 +1,85 @@
+{
+  "status": "PASS",
+  "reviewed_utc": "2026-10-15T22:16:34.984867+00:00",
+  "scope": "Independent current hashes, final receipt gates, sanitizer compile flags, retained audit logs and exact sanitized JSON publication checks; no executable rerun",
+  "checks": [
+    {
+      "scope": "canonical sources",
+      "count": 95,
+      "status": "PASS"
+    },
+    {
+      "scope": "canonical host/app",
+      "count": 2,
+      "status": "PASS"
+    },
+    {
+      "scope": "canonical generated files",
+      "count": 2,
+      "status": "PASS"
+    },
+    {
+      "scope": "ASan CLI source_sha256_at_build_start",
+      "count": 35,
+      "status": "PASS"
+    },
+    {
+      "scope": "ASan CLI source_sha256_at_retry_start",
+      "count": 35,
+      "status": "PASS"
+    },
+    {
+      "scope": "ASan CLI source_sha256_after",
+      "count": 35,
+      "status": "PASS"
+    },
+    {
+      "scope": "ASan CLI artifacts",
+      "count": 4,
+      "status": "PASS"
+    }
+  ],
+  "canonical": "PASS 134/0 all stages zero, source unchanged, fatal ASan/UBSan flags",
+  "asan_cli": "PASS complete kernel CLI, current artifacts/bindings, fatal sanitizer flags/runtime symbols, retained three-artifact audit PASS; no leak-check claim",
+  "public_json_exact_sanitized_copies": [
+    "native-source-build.json",
+    "native-source-independent.json",
+    "runtime-asan.json",
+    "canonical-asan.json",
+    "cmake-cli.json",
+    "nix-evaluation.json",
+    "focused.json",
+    "cmake-asan-cli.json",
+    "local-binaries.json",
+    "native-source.json"
+  ],
+  "toolchain_at_review": {
+    "receipt": "evidence/rc/toolchain-20261015T221249.934445Z/result.json",
+    "receipt_sha256": "d95e2726e6b59b07f50309fb8b3174ffb6719531e9a3a12dade26452b2c1b3f9",
+    "status": "PASS",
+    "canonical": "PASS",
+    "source_hashes_verified": 32,
+    "fresh_builder_and_cli_alias_hashes": "PASS",
+    "native_measurement_artifacts_outputs_and_stats_verified": [
+      "unique-100/conservative",
+      "unique-100/optimized",
+      "unique-1000/conservative",
+      "unique-1000/optimized",
+      "aliased-1000/conservative",
+      "aliased-1000/optimized",
+      "capture/conservative",
+      "capture/optimized",
+      "last-use/conservative",
+      "last-use/optimized"
+    ],
+    "native_shen_pipeline_output_and_hashes": "PASS",
+    "actual_gc_negative_control": "Retained exact hashed GC-linked executable rejected with Boehm diagnostic",
+    "canonical_receipt_sha256": "158ac9929360c63dc26af6690d9d52a175b9c057a11d1921b26439d6729ff705",
+    "retained_artifact_audit_logs": "PASS"
+  },
+  "_publication": {
+    "raw_receipt": "evidence/rc/final-independent.json",
+    "raw_sha256": "e7000b47565b6be55176a89b5f2a3306b8e84e7aa7f2dd78b0bab9759c053a18",
+    "path_redaction": "Repository, home and temporary paths replaced; hashes describe original bytes."
+  }
+}

@@ -1,0 +1,391 @@
+{
+  "scope": "DIAGNOSTIC ONLY: profiler overhead and phase stops; no performance credit",
+  "build_sha256": "0d89ec4f82542e721ffe5361eb0b86d3024c26690377a52bb3175ada8a0c0792",
+  "manifest_sha256": "c20ce7e0c5f98b3d427ce6db4045b6a9ac335f5d7cfd592333baee7061f69f46",
+  "stdin_sha256": "bf6eed56b72b14fd154e46197c114b4dcf57c122c9a9e9863e7dec418e805503",
+  "runs": [
+    {
+      "backend": "rc",
+      "mode": "accounting",
+      "repetition": 1,
+      "exit": 0,
+      "suite": {
+        "status": "PASS",
+        "errors": [],
+        "passed_reports": [
+          2,
+          4,
+          8,
+          10,
+          17,
+          23,
+          25,
+          29,
+          31,
+          33,
+          35,
+          38,
+          44,
+          46,
+          48,
+          52,
+          54,
+          59,
+          64,
+          70,
+          75,
+          77,
+          90,
+          95,
+          98,
+          101,
+          103,
+          108,
+          111,
+          115,
+          120,
+          125,
+          129,
+          131,
+          133,
+          136
+        ],
+        "failed_reports": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "output_sha256": {
+          "test.txt": "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824"
+        }
+      },
+      "binary_sha256": "984b275b5b106c474eb7c9f828d4a8aba06c00167c8d0a99001368a10f586bfb",
+      "phase_accounting": {
+        "exclusive_cpu": {
+          "execute": 0.2001960000000009,
+          "read": 0.7447550000000001,
+          "translate": 0.4120910000000002,
+          "other": 1.059488,
+          "typecheck": 2.5898580000000004
+        },
+        "per_load_exclusive_cpu": {
+          "": {
+            "execute": 0.00014299999999999974,
+            "other": 0.019079
+          },
+          "runme.shen": {
+            "read": 0.000549,
+            "translate": 1.2e-05,
+            "execute": 6e-06,
+            "other": 3.1e-05
+          },
+          "harness.shen": {
+            "translate": 0.0012189999999999998,
+            "execute": 1.6000000000000003e-05,
+            "read": 0.012101,
+            "other": 0.000201
+          },
+          "kerneltests.shen": {
+            "read": 0.144861,
+            "translate": 0.012670999999999997,
+            "execute": 0.196574,
+            "other": 0.000778
+          },
+          "cartprod.shen": {
+            "execute": 6e-06,
+            "read": 0.001214,
+            "translate": 0.000223,
+            "other": 6.4e-05
+          },
+          "powerset.shen": {
+            "execute": 4e-06,
+            "read": 0.001206,
+            "translate": 0.000213,
+            "other": 6.5e-05
+          },
+          "bubble version 1.shen": {
+            "execute": 2e-06,
+            "read": 0.001779,
+            "translate": 0.000315,
+            "other": 8.9e-05
+          },
+          "bubble version 2.shen": {
+            "read": 0.001176,
+            "execute": 6e-06,
+            "translate": 0.00023500000000000002,
+            "other": 7.3e-05
+          },
+          "spreadsheet.shen": {
+            "execute": 1e-05,
+            "read": 0.004433,
+            "translate": 0.0006729999999999999,
+            "other": 0.00017
+          },
+          "prime.shen": {
+            "execute": 4e-06,
+            "read": 0.001219,
+            "translate": 0.000161,
+            "other": 6.1e-05
+          },
+          "mutual.shen": {
+            "execute": 3e-06,
+            "read": 0.000817,
+            "translate": 0.000144,
+            "other": 5.8e-05
+          },
+          "change.shen": {
+            "execute": 5.999999999999999e-06,
+            "read": 0.001892,
+            "translate": 0.000288,
+            "other": 9.8e-05
+          },
+          "semantic net.shen": {
+            "execute": 1.0999999999999998e-05,
+            "read": 0.003838,
+            "translate": 0.0006309999999999999,
+            "other": 0.000204
+          },
+          "einsteins-riddle.shen": {
+            "execute": 1.7e-05,
+            "read": 0.012488,
+            "translate": 0.017351,
+            "other": 0.000183
+          },
+          "call.shen": {
+            "execute": 2e-05,
+            "read": 0.003534,
+            "translate": 0.003732,
+            "other": 0.000238
+          },
+          "cut.shen": {
+            "execute": 1.7000000000000003e-05,
+            "read": 0.003667,
+            "translate": 0.001199,
+            "other": 0.000178
+          },
+          "nreverseprolog.shen": {
+            "execute": 3e-06,
+            "read": 0.00258,
+            "translate": 0.001248,
+            "other": 7.2e-05
+          },
+          "findall.shen": {
+            "execute": 4e-06,
+            "read": 0.001579,
+            "translate": 0.0006180000000000001,
+            "other": 5.4e-05
+          },
+          "tableauprolog.shen": {
+            "execute": 2e-05,
+            "read": 0.016263,
+            "translate": 0.012823,
+            "other": 0.000245
+          },
+          "proplog version 1.shen": {
+            "execute": 4e-06,
+            "read": 0.001817,
+            "translate": 0.000363,
+            "other": 6.8e-05
+          },
+          "proplog version 2.shen": {
+            "read": 0.001912,
+            "execute": 1.2e-05,
+            "translate": 0.00044899999999999996,
+            "other": 0.000122
+          },
+          "redirect.shen": {
+            "read": 0.000945,
+            "execute": 1e-06,
+            "translate": 0.000125,
+            "other": 3.8e-05
+          },
+          "metaprog.shen": {
+            "execute": 2.2000000000000006e-05,
+            "read": 0.01149,
+            "translate": 0.001655,
+            "other": 0.00044
+          },
+          "binary.shen": {
+            "execute": 2.8e-05,
+            "translate": 0.004749000000000001,
+            "read": 0.007056,
+            "other": 3.8e-05
+          },
+          "streams.shen": {
+            "execute": 4e-06,
+            "translate": 0.003337,
+            "read": 0.005432,
+            "other": 9.9e-05
+          },
+          "calculator.shen": {
+            "execute": 1.2e-05,
+            "translate": 0.009137999999999999,
+            "read": 0.00974,
+            "other": 6.2e-05
+          },
+          "structures-untyped.shen": {
+            "execute": 6.999999999999999e-06,
+            "read": 0.005021,
+            "translate": 0.00069,
+            "other": 0.000169
+          },
+          "structures-typed.shen": {
+            "execute": 0.00033099999999999997,
+            "read": 0.00825,
+            "translate": 0.001131,
+            "other": 0.000267
+          },
+          "classes-untyped.shen": {
+            "execute": 1.5e-05,
+            "read": 0.005358,
+            "translate": 0.0007539999999999999,
+            "other": 0.000191
+          },
+          "classes-typed.shen": {
+            "execute": 0.0012550000000000003,
+            "read": 0.008887,
+            "translate": 0.00108,
+            "other": 0.0003
+          },
+          "stack.shen": {
+            "execute": 0.0008350000000000001,
+            "read": 0.002792,
+            "translate": 0.00029800000000000003,
+            "other": 0.000146
+          },
+          "yacc.shen": {
+            "execute": 4.499999999999998e-05,
+            "read": 0.023853,
+            "translate": 0.005816,
+            "other": 0.000722
+          },
+          "n queens.shen": {
+            "translate": 0.000833,
+            "execute": 1.3000000000000003e-05,
+            "read": 0.012638,
+            "typecheck": 0.002502,
+            "other": 0.000852
+          },
+          "search.shen": {
+            "execute": 2.3000000000000007e-05,
+            "read": 0.01052,
+            "typecheck": 0.004534,
+            "translate": 0.001111,
+            "other": 0.001086
+          },
+          "montague.shen": {
+            "execute": 5.9e-05,
+            "translate": 0.031561000000000006,
+            "read": 0.041455,
+            "typecheck": 0.022278,
+            "other": 0.002719
+          },
+          "c-minus.shen": {
+            "execute": 0.000278,
+            "translate": 0.15003599999999995,
+            "read": 0.183385,
+            "typecheck": 0.24975499999999998,
+            "other": 0.206916
+          },
+          "interpreter.shen": {
+            "execute": 7.499999999999993e-05,
+            "translate": 0.071313,
+            "read": 0.081732,
+            "typecheck": 2.1623550000000002,
+            "other": 0.114284
+          },
+          "proof assistant.shen": {
+            "execute": 3.100000000000001e-05,
+            "translate": 0.02475,
+            "read": 0.019579,
+            "typecheck": 0.007587000000000001,
+            "other": 0.128266
+          },
+          "qmachine.shen": {
+            "execute": 8.399999999999994e-05,
+            "translate": 0.009577,
+            "read": 0.015418,
+            "typecheck": 0.029651,
+            "other": 0.141266
+          },
+          "depth.shen": {
+            "execute": 5.999999999999999e-06,
+            "read": 0.00345,
+            "typecheck": 0.002042,
+            "translate": 0.000411,
+            "other": 0.012329
+          },
+          "secd1.shen": {
+            "execute": 2.9000000000000007e-05,
+            "translate": 0.017797999999999998,
+            "read": 0.020409,
+            "typecheck": 0.020061999999999997,
+            "other": 0.053225
+          },
+          "unification.shen": {
+            "execute": 1e-05,
+            "read": 0.00387,
+            "translate": 0.000528,
+            "other": 0.000105
+          },
+          "totalprolog.shen": {
+            "execute": 5.2e-05,
+            "read": 0.008638,
+            "translate": 0.004771,
+            "other": 9.7e-05
+          },
+          "fork.shen": {
+            "execute": 8e-06,
+            "read": 0.002446,
+            "translate": 0.001019,
+            "other": 0.000138
+          },
+          "prologinterp.shen": {
+            "execute": 8.499999999999992e-05,
+            "translate": 0.015042,
+            "read": 0.033466,
+            "typecheck": 0.08909200000000002,
+            "other": 0.373602
+          }
+        },
+        "aborted_scopes": 0,
+        "process_cpu": 5.006388
+      },
+      "focus_completed": true,
+      "status": "PASS"
+    }
+  ]
+}

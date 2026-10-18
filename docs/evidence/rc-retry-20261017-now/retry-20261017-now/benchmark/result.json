@@ -1,0 +1,4690 @@
+{
+  "scope": "Serial same-suite/input CLI benchmark; no profiling or sampling",
+  "release_manifest_sha256": "c20ce7e0c5f98b3d427ce6db4045b6a9ac335f5d7cfd592333baee7061f69f46",
+  "kernel_version": "43.1",
+  "host": {
+    "system": "Darwin",
+    "node": "Mac.lan",
+    "release": "27.0.0",
+    "version": "Darwin Kernel Version 27.0.0: Tue Aug 11 21:02:59 PDT 2026; root:xnu-13432.1.9~1/RELEASE_ARM64_T8142",
+    "machine": "arm64"
+  },
+  "source_identity": {
+    "freeze_receipt": "<OPT_ROOT>/evidence/rc/opt-20261017/final-freeze/freeze.json",
+    "sha256": "c1d33041e54a57344609b28fdebda7beda80d8f9d6680b91a58df5e318e38b23"
+  },
+  "suite": "<OPT_ROOT>/shen/test/s43.1",
+  "suite_sha256": {
+    "README": "5a85d222b775f3e43f00f1f65754fb6c8baa49acd6614fdd2d39eb892b77f616",
+    "binary.shen": "114ed5d2425f01c3d1ee44de3a2cf06baccecfa00cf083754246393117fb04d1",
+    "bubble version 1.shen": "7d85ffe10e9b3941c3e81f38c34b9378405a17857f1d04c7cad0e18b03006bf4",
+    "bubble version 2.shen": "e4a5b661aab2d8747810d309ce8b2b9a49012d7aacea6eb1edac575ed5895268",
+    "c-minus.shen": "3848baf9d2966ce7cecaaef7d93c3ebad51636134aa8c582674110415bfd7169",
+    "calculator.shen": "fb8759dfad26a3eae7fb0d62ed7f32121a70a0e67c5c36e7a57f938295a99768",
+    "call.shen": "19229b2344385ae52ebba51e88a666f1197ed6679a12ce9091160ac78a09bebc",
+    "cartprod.shen": "660303cd9d0b526db8fbdb551c39c1409e136d33934640738ee58ac40080c9cc",
+    "change.shen": "dea9151266f5eb5c051df4c5eab810eb9ba6f4ba6598575fdd2647e19fff856d",
+    "classes-defaults.shen": "79420c9e16a9c059535b9f0dd4ddddb74e045dc5f555d35ebe7842ca2c818ae9",
+    "classes-inheritance.shen": "5d0cbea0d03bf88e90119caea86e216163e32ec5aff7086d125395121f602c5c",
+    "classes-typed.shen": "ff4489fa6a6912451533b1cb4387cb5e8a619bc9ce1652f8bed7d1735c011c66",
+    "classes-untyped.shen": "75f6b8430e523491eddafafb3dce151fc61fe918c9e99cc1ffa03ae7e91209f1",
+    "cut.shen": "0896d67791dc18a06a3204516c564feb6fac6300938d497eab1acefaff49a8d1",
+    "depth.shen": "fa66c7fa22eaad06998cbf1ce0056bcb8190352b1bca2836b3ea185534542a1c",
+    "einsteins-riddle.shen": "3ac6ae9bf1997bbfdb0d478c820cc550f3b8aa9a29c70b4dd2c1de90aba86628",
+    "findall.shen": "56e335bd8cde2e9192248fba9e23f4924fce0faa39f498a0479f6a99b078e82c",
+    "fork.shen": "9699edfab9600f1c211d02ef3b207cfd764d717ea5159e25d1d138e27fc5c232",
+    "harness.shen": "bd50977482acce2b39da2958c951c48d0fb504d483c48f136e9e0fed8be2d215",
+    "interpreter.shen": "795756fa345ba3644c14973e9c30c9d979a0585e7aed3860b56d8bb54444cd0c",
+    "kerneltests.shen": "32b8a7434a38099a3483650101ee2aba9325c05e80c19f8c775d64075bf9b1b3",
+    "lisp.shen": "cf851edbc9b6c0559071912fc9546f5341b0433e989c24d4b751423bbb6c999f",
+    "metaprog.shen": "7bcfa0a70ae5add3b582299cf1862b8bef7da2f0f14917f9eccea05bce441bf5",
+    "minim.shen": "78d1f3947e46dfb135fb20fe8049f1cc5416928d533fe0fe54ce6e10fe496be3",
+    "montague.shen": "69f5b894ad34a10e14f95b070a3a5150a20342331c5f9a7cc024242b48f0e932",
+    "mutual.shen": "577228e3e6310c556dbb5275fa87e8211a5d5b9bab516d743c469de544521a1b",
+    "n queens-axioms.shen": "28d087dd8692843ed31b12629124a383111367ede66e21b7a4b20b6ebc14661e",
+    "n queens-r.shen": "160e1ee7bb31383db881c9cb63de80a87c306237514e8860c842b1d577d07d4e",
+    "n queens.axioms": "0aac311dac215fec69254f2c7ad40f728a5e8001029a3927649b295b6ded36bf",
+    "n queens.kl": "5f1c6f8d0bf0baeeaeead09e7e9b075a46ad6e2b04595dea5c1c9f58de2492eb",
+    "n queens.shen": "ec90464825b5634ae34d2ecc9dc4252e7846a2e8436868515364d01d42e12467",
+    "nreverseprolog.shen": "fff50a34728a49ae8ecf16fb247570bee63e93b23cb0fa06c59706f9ef3be01a",
+    "parseprolog.shen": "6354f0139371b51885c667641362f36bd44e58820b6fac7e48bb358ec441c808",
+    "parser.shen": "ba9f85c413f2ba275c3bb195427d610e7df1cb1b9ebceeb52451e2240fe1a35c",
+    "parsetest.shen": "6c317f33c39880aff8b2441e9a642f444bc29beb288ceb5340edcbdc8fd500ce",
+    "powerset.shen": "5fd0d1fed33120cea1301dec13ddf38c9dfbba7e855dc09bee74fec653dbb2c1",
+    "prime.shen": "19d83566659b20b5f5fd1863953b62cc20e0013c4456c4b8f4febb560b84fd5c",
+    "prolog.shen": "2de1e10d6a379e9d50461f9e5c4d28061614f09b22b0332ba7d56031bc226fdb",
+    "prologinterp.shen": "163b6d7d3f9ac155b907df9bc2b7b4c12917d7b4f918e014fe228f0c6c801c4d",
+    "proof assistant.shen": "7bd0f3033682e9d6b319169da46215535b4c22a0a62e1fcfd87fd5ab734d7f3d",
+    "propcalcprolog.shen": "00a181dfed9f7d74437a1b158723cdf5c907b5c091d6e6a416f803531e349ae6",
+    "proplog version 1.shen": "ed3051ea979912bf28a78d07f99edb71c2a086941d7e00c4cdf210b945bcf815",
+    "proplog version 2.shen": "14f3927e746c9ddca2b5e8c4888ef743ab52a0d15e59c32d362b69d3b9a6b775",
+    "qmachine.shen": "b9ad5d064343ea4bb8e024e99dd0df835f6ba10cfa8330e93848f3de41f093da",
+    "redirect.shen": "c3091ec59dd6382e07acb0e4b0cba96e4ba792964e1babf55d3ebc81b0d8c966",
+    "runme.shen": "8bec79fcd7294e0b39bf9478ffa8e921e18d1ffb01945250e65f104ebab35144",
+    "search.shen": "897e9a0423110a6369ce84166d940090720f2b740e2ec6ec54c593522eb52126",
+    "secd1.shen": "a66e4911fea80f05e03f10893d3a36aa73e34bf31e6929803817f7d34bfb70be",
+    "semantic net.shen": "5e461278bacb97e80b37ded4c4534255dd3008b7b112efd4bfbf3a83276de179",
+    "spreadsheet.shen": "5e47262e494a28582f06128e94a63085809a7fde7091d6a4a15e80785c2fd267",
+    "stack.shen": "a2792157d41221eefa0ccdbd7f624b23360517b4b96df108d6348fa73a45e087",
+    "streams.shen": "95f7a750a674b83727d124cbe24b5fd3399deef897b2f1e7c6dfb16a71b48c59",
+    "strings.shen": "8fa36fff77e2565453ee421bead9506a3b65185c48f8d70fa5850c94020f1183",
+    "structures-typed.shen": "3bcfaa3b451db55cc807c8a9ea251c8e45aafec7d845e6148e38f8d6aa4b0380",
+    "structures-untyped.shen": "d927c1c72f544a05b1eb7340da958d83550856c6d1fde6845f54b77aa31d2864",
+    "tableauprolog.shen": "f92b4638bcc1ab0e58d34344ef0ca95b5b11127a9883501c66f0ae672b7501da",
+    "test.txt": "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824",
+    "totalprolog.shen": "82f4d3d7fff06607519a7eac0235036f3b0c8c0f540af46d01b77df56e38c7f5",
+    "unification.shen": "ed5c8eee494bb9d57b949d6f6a6f9ee2579a2e425d52697eb698aa24f9e8761a",
+    "yacc.shen": "97c3445a9e932e8fb3f5b0c4d15dff898fc3c1ae45da41df1ade664b020b1247"
+  },
+  "stdin_sha256": "bf6eed56b72b14fd154e46197c114b4dcf57c122c9a9e9863e7dec418e805503",
+  "config_sha256": "a00b8659c889e27227157ad9744123389f0d0278c92ca7621dcbda841d5a2fe9",
+  "cases": [
+    {
+      "label": "rc",
+      "argv": [
+        "<OPT_ROOT>/evidence/rc/opt-20261017/candidate-f1/shen-rc",
+        "script",
+        "runme.shen"
+      ],
+      "env": {},
+      "dependency_sha256": {
+        "<OPT_ROOT>/evidence/rc/opt-20261017/final-freeze/freeze.json": "c1d33041e54a57344609b28fdebda7beda80d8f9d6680b91a58df5e318e38b23",
+        "<OPT_ROOT>/CMakeLists.txt": "72e6e9b2ab03ffabf27a14a031cf9e53e3c5bb5b75fbebd80a7384e2baf90611",
+        "<OPT_ROOT>/Makefile": "dee2ce14e25085f082df7541e5b13185a34d6aaac17a9b7531a59f300d287b33",
+        "<OPT_ROOT>/Makefile.rc": "d874d5fcc5529df1647f8fac43d59a46123573af851b57c97d6c145a3819f65a",
+        "<OPT_ROOT>/flake.lock": "d9e31dc3e98226688fe22bff7070adff78361c43e4a88dfc1484374db4f83cf8",
+        "<OPT_ROOT>/scripts/benchmark-rc.py": "4c23aee050112f7b3bd3c502f2f4dfb8cd9d50dd9b67623ac3daebca28751c11",
+        "<OPT_ROOT>/scripts/freeze-rc-benchmark.py": "bffae0da9095d1fb667631362df9d1d9f05bd52fa2cc21e5e74b4d434c0cad12",
+        "<OPT_ROOT>/scripts/release_manifest.py": "19b1dd8d4a0a6fc412247143bfcba0ab68d9c96e15a63e1c806d7a81347eb96a",
+        "<OPT_ROOT>/shen/src/kl/LICENSE": "9bd9c8cf2e1f7435485ef60ab14814913c53efcf76854f9973fbc5e678feed04",
+        "<OPT_ROOT>/shen/src/kl/backend.kl": "8782659640718da06da3e5ee32babfa6036d2d5c1af17d563e20d4db27b13da2",
+        "<OPT_ROOT>/shen/src/kl/core.kl": "f2477d4151c3ecd2d76c8f2b58ec577a6dc830392e0afd342e2fdb3d1adb1a75",
+        "<OPT_ROOT>/shen/src/kl/declarations.kl": "fa1f04b92a61167971b3b58a3785b05b79be984f123bb43b4bd03388ee29f5b7",
+        "<OPT_ROOT>/shen/src/kl/load.kl": "56eba5b674e5085a09dfa38390b1e7f677496e0c601fd3ed6f482577bcf971c9",
+        "<OPT_ROOT>/shen/src/kl/macros.kl": "617c70c191f07c054e6fc597006477bc57519944c0e27956336e4d72e3e8a2af",
+        "<OPT_ROOT>/shen/src/kl/prolog.kl": "dc401f8940f7f97fbfc87157338ff8b84fd845c1101b70e6db893886aaf11c17",
+        "<OPT_ROOT>/shen/src/kl/reader.kl": "97f008caaf51072851cc730620d9bdd816bfd1be70cb22fd502a6b3cb000b269",
+        "<OPT_ROOT>/shen/src/kl/sequent.kl": "b1018c6d58706f78ac81cc72cf7c4712d36d1be173708ff9def26d0169ddd644",
+        "<OPT_ROOT>/shen/src/kl/sys.kl": "97412f6584716e2418aea326c1ecf0456a77a205504d078d26936cd5b9370412",
+        "<OPT_ROOT>/shen/src/kl/t-star.kl": "546928d3435934091fc6df6274a6c9d58ece7297c868fbe55ebe328be360159a",
+        "<OPT_ROOT>/shen/src/kl/toplevel.kl": "7c0dae226e3fa6a9ca53bd44729774a5f6a8025f2d7fcb43a58ae0e7a2bc46c2",
+        "<OPT_ROOT>/shen/src/kl/trace.lsp": "3399c43fef191675f72f18898e3475a0883a91f1ce3d6af0535828a421c4d004",
+        "<OPT_ROOT>/shen/src/kl/track.kl": "6130a32d6e5c7afed98f20dfbc68eaf7f68c6e2e714114852514d4f604c8ff3f",
+        "<OPT_ROOT>/shen/src/kl/types.kl": "8b6db3592b829f08a0f35367733adf7c2e686220be699a16b392b4cce4a77c3c",
+        "<OPT_ROOT>/shen/src/kl/writer.kl": "a1da3d9a287d0d4d78f87517ff11b2ca7690a01bf412dd72178f29ef6e7a4a0d",
+        "<OPT_ROOT>/shen/src/kl/yacc.kl": "192880765a29ae6801ef9088a7511e4477be998e6c16ab82f3cc3a2087727f00",
+        "<OPT_ROOT>/src/rc/emit.c": "e4f56a44159e0a691d397b958770c39e8350519bc30d21b1067e09979166a03b",
+        "<OPT_ROOT>/src/rc/emit.h": "ae1946b669f771941b12a706316a28090aefd126f54cc687fa00a3b10b322a9f",
+        "<OPT_ROOT>/src/rc/eval.c": "5d49c8bd17cb29737538745776a7f8dad6f395e9d09e489e6886bae73961709f",
+        "<OPT_ROOT>/src/rc/eval.h": "40840e20cb00334a7032ef11aec08ce6a0846912ae05dfb0d08e894ba7ad2e15",
+        "<OPT_ROOT>/src/rc/eval_plan.h": "91c896c000ff381922ccd5fa72420aab6cc8f87f1f8b7851d97c69142f167af4",
+        "<OPT_ROOT>/src/rc/main.c": "aed4ac89c8aaf338f8519b35554effd251b04d47bbee6dbf5781343097d74275",
+        "<OPT_ROOT>/src/rc/primitives.c": "e745613a31beb3eea888d35a2f07a55ebc14f312a621a2dc88f4023eec0e32b1",
+        "<OPT_ROOT>/src/rc/primitives.h": "ad9a5b0483d68a1829b6a0557d9b71b0f0ab240b67ec152ab2f0e4f3c87782d2",
+        "<OPT_ROOT>/src/rc/rc.c": "981142db8a86ff6f802035f2ca69dfba1558c0aa2e5df6fe545bc8f97f0d9114",
+        "<OPT_ROOT>/src/rc/rc.h": "b77320047d47b013b5064b44d749e80fab11319769145d9e6a676371d9990aec",
+        "<OPT_ROOT>/src/rc/rc_internal.h": "397a2e0220e73ddfedff03a13fb3048d53c8c4d9ad534f730b0ddee943e1f860",
+        "<OPT_ROOT>/src/rc/read.c": "f61444980f2d34d3986f9640103b3478501c4d368f6c2dd5058a4b39b3143667",
+        "<OPT_ROOT>/src/rc/read.h": "71fb3e8ce757174ee47dde95f732200ae1b023c66f8164ac0a4d82ebb241fea5",
+        "<OPT_ROOT>/tools/rc-build.c": "dbf6c04b2b5ebbf9197061208c89aa2d781e2b261f17f8a0f04b8931f370e818",
+        "<OPT_ROOT>/obj/rooted-e2-release/kernel.c": "1c97f40cc3574dff23696b13cad8ad9c62af2a2080e5e84b0e436c4fd096c544",
+        "<RC_BASELINE_ROOT>/evidence/rc/qualified-freeze-v2/final-config.json": "ff17bf714174bf34b46e4cd471ae81491a8724094d25fff54147b3358cab57b8"
+      },
+      "binary_sha256": "d3df275c40a5cdb4c00eff074c379b7e4216d68c79c35a4d2bffcdb98558fb3b"
+    },
+    {
+      "label": "boehm",
+      "argv": [
+        "<BOEHM_ROOT>/bin/shen-c",
+        "script",
+        "runme.shen"
+      ],
+      "env": {},
+      "dependency_sha256": {
+        "<OPT_ROOT>/evidence/rc/opt-20261017/final-freeze/freeze.json": "c1d33041e54a57344609b28fdebda7beda80d8f9d6680b91a58df5e318e38b23",
+        "<BOEHM_ROOT>/Makefile": "1c692bf09227e9296735c20c033e36a47e79ce1dc91df9c07992809add022c63",
+        "<BOEHM_ROOT>/obj/kernel_aot/core.c": "dc8979401e3697191ae8bd8c8dc47eee293a0cf3fa02de8a58964550dc06ca1b",
+        "<BOEHM_ROOT>/obj/kernel_aot/declarations.c": "256f47cce18a1cce16b6669631508ec316e04b432f4dcb1fb1a0bfaa43df1658",
+        "<BOEHM_ROOT>/obj/kernel_aot/install_all.c": "7af3ecd6c009a043a3b0aacfdab50051d1d7cefe19d804e70830835d06efb2a0",
+        "<BOEHM_ROOT>/obj/kernel_aot/load.c": "7eba457e334ed8cf0adbf787c19e40ab93104c2f8b7babb5905544a1e496d061",
+        "<BOEHM_ROOT>/obj/kernel_aot/macros.c": "5e8b6f036d6ddc2f3a0ca46939a25bb912834f10792295d3bf55870d33e5613f",
+        "<BOEHM_ROOT>/obj/kernel_aot/prolog.c": "41d8bb117b54135a7cf1a10a26695629a60f19e9fa7c1bc488ff66af8b694c7f",
+        "<BOEHM_ROOT>/obj/kernel_aot/reader.c": "6551ab55a13de58fb11e6341b6343870c31336c07132c9a8067c73d9781972f3",
+        "<BOEHM_ROOT>/obj/kernel_aot/sequent.c": "8a6f186d4849b7e6cac396c6da90ce14c851180e7cf9d12dbbbded1f191722a4",
+        "<BOEHM_ROOT>/obj/kernel_aot/sys.c": "ddd4ab1fc7bbd8fc15be85bb1581c9e192e2069f58d181b1e03613ae66eb8268",
+        "<BOEHM_ROOT>/obj/kernel_aot/t_star.c": "51fb40f40a38b7da2c6c1390a6b947b6b805eb0c0043bdf8338d07e88d1b8920",
+        "<BOEHM_ROOT>/obj/kernel_aot/toplevel.c": "e2af9364d245a28f316ce3d40624e23788f548610decb771325d5fa414ae8190",
+        "<BOEHM_ROOT>/obj/kernel_aot/track.c": "4e6f26145c07e14325c6e516411c42c62ee0b14ed59a98a55cc4acd33c7671a0",
+        "<BOEHM_ROOT>/obj/kernel_aot/types.c": "984d5a79a894236775e2b922e8a94aa8b45ea0bf3cfc2c654592b51cc48eee4d",
+        "<BOEHM_ROOT>/obj/kernel_aot/writer.c": "6c4da1e65bd60b6af6842756246b05d051c70be5b73765c693b4c2c0185f9ac4",
+        "<BOEHM_ROOT>/obj/kernel_aot/yacc.c": "c275f08d20f8479c18e72c0712429558b6b422ec70f249e7df7ac7003bbe4d28",
+        "<BOEHM_ROOT>/shen/src/kl/core.kl": "f2477d4151c3ecd2d76c8f2b58ec577a6dc830392e0afd342e2fdb3d1adb1a75",
+        "<BOEHM_ROOT>/shen/src/kl/declarations.kl": "fa1f04b92a61167971b3b58a3785b05b79be984f123bb43b4bd03388ee29f5b7",
+        "<BOEHM_ROOT>/shen/src/kl/load.kl": "56eba5b674e5085a09dfa38390b1e7f677496e0c601fd3ed6f482577bcf971c9",
+        "<BOEHM_ROOT>/shen/src/kl/macros.kl": "617c70c191f07c054e6fc597006477bc57519944c0e27956336e4d72e3e8a2af",
+        "<BOEHM_ROOT>/shen/src/kl/prolog.kl": "dc401f8940f7f97fbfc87157338ff8b84fd845c1101b70e6db893886aaf11c17",
+        "<BOEHM_ROOT>/shen/src/kl/reader.kl": "97f008caaf51072851cc730620d9bdd816bfd1be70cb22fd502a6b3cb000b269",
+        "<BOEHM_ROOT>/shen/src/kl/sequent.kl": "b1018c6d58706f78ac81cc72cf7c4712d36d1be173708ff9def26d0169ddd644",
+        "<BOEHM_ROOT>/shen/src/kl/sys.kl": "97412f6584716e2418aea326c1ecf0456a77a205504d078d26936cd5b9370412",
+        "<BOEHM_ROOT>/shen/src/kl/t-star.kl": "546928d3435934091fc6df6274a6c9d58ece7297c868fbe55ebe328be360159a",
+        "<BOEHM_ROOT>/shen/src/kl/toplevel.kl": "7c0dae226e3fa6a9ca53bd44729774a5f6a8025f2d7fcb43a58ae0e7a2bc46c2",
+        "<BOEHM_ROOT>/shen/src/kl/track.kl": "6130a32d6e5c7afed98f20dfbc68eaf7f68c6e2e714114852514d4f604c8ff3f",
+        "<BOEHM_ROOT>/shen/src/kl/types.kl": "8b6db3592b829f08a0f35367733adf7c2e686220be699a16b392b4cce4a77c3c",
+        "<BOEHM_ROOT>/shen/src/kl/writer.kl": "a1da3d9a287d0d4d78f87517ff11b2ca7690a01bf412dd72178f29ef6e7a4a0d",
+        "<BOEHM_ROOT>/shen/src/kl/yacc.kl": "192880765a29ae6801ef9088a7511e4477be998e6c16ab82f3cc3a2087727f00",
+        "<BOEHM_ROOT>/src/c/abi.c": "c52ce8dfdffc37dbc5ce2a696cb4655d700f1ddb1ca4b48beac8446a48744ddc",
+        "<BOEHM_ROOT>/src/c/abi.h": "838fa08c708f8a30325f775370514fe2e4efe98ec7250df601e6c2da6fb0b62a",
+        "<BOEHM_ROOT>/src/c/boolean.c": "e4bf38e7e1f383f69c604416f23593de49a333323447a5b0387c9674dd226972",
+        "<BOEHM_ROOT>/src/c/boolean.h": "0796070da06f9961de2dc09c9cbe55480ca77dcc6afc4cf23b928b9069124777",
+        "<BOEHM_ROOT>/src/c/character.c": "3d357008d16a73317eab2a9363c95777aae0c550c28cc5494777cdbd74510caa",
+        "<BOEHM_ROOT>/src/c/character.h": "c971f7f9f5e73011230a1ec092985aea11f31d5f06c047e7a4256a189aa51ec1",
+        "<BOEHM_ROOT>/src/c/context.c": "477fb20f649385439a3bbef067980750a7db2feec56465293af22d8842b4dda7",
+        "<BOEHM_ROOT>/src/c/context.h": "7d5f245103f873218d2d222d78501979a8785b3addd842467317bd6c2783c1e0",
+        "<BOEHM_ROOT>/src/c/development.c": "387630924fab3baf76e1b2ca0e5b11cce0da930d62f0a3505bbd63fc76aacc82",
+        "<BOEHM_ROOT>/src/c/development.h": "eae8227f24425a86b5f28d516aab90cf4b34f6b3f1ecf0a8cd971c5763865f33",
+        "<BOEHM_ROOT>/src/c/dictionary.c": "d1dcbce8bd76b37e32753db3100d740530aa0308565e62a497ea7678d85dd3df",
+        "<BOEHM_ROOT>/src/c/dictionary.h": "e4faeddad84ab38ea8299e83abbe895f78f78740d505600a7eabac3f9cbb5ba1",
+        "<BOEHM_ROOT>/src/c/emit.c": "9973077f702a93223149d843004999bf1b8c153279594f6dc1cc4c4ce7710cd2",
+        "<BOEHM_ROOT>/src/c/emit.h": "bc8a649d171c1cff34d6496c173ce69134d87dfc54edf8d81204aaf04b5931e4",
+        "<BOEHM_ROOT>/src/c/emit_rc.c": "28557c27498245d5f60e7e7c8943742750db178e1767233c960765cf58a53087",
+        "<BOEHM_ROOT>/src/c/emit_rc.h": "a40d1ae3ac208019b667060d8c1ff4828293af85daf797dc09dbb52935fe5036",
+        "<BOEHM_ROOT>/src/c/environment.c": "ebdcf7a1a00c670416d6f26c26a653c31b9ea388fe29bff09d2cee19bf635622",
+        "<BOEHM_ROOT>/src/c/environment.h": "2231e05d144e9257aecf42b8c5d31fde691b28aa8f3a2d4e510e8c60d291c2c2",
+        "<BOEHM_ROOT>/src/c/evaluator.c": "c51a86718df16e8f3be0ab949bce0e4b69de79c66a82ac2061c6934fa6122578",
+        "<BOEHM_ROOT>/src/c/evaluator.h": "c7743132bc142bc3a60306020c3c6d8cb469bf3ed177aeb2faff9b089d63ea39",
+        "<BOEHM_ROOT>/src/c/exception.c": "6ea704a5660e8e81528afd351c2c55b332295888ef1bb7f445e2aa9172c3fb5b",
+        "<BOEHM_ROOT>/src/c/exception.h": "8ea50e388307cfdc7694df8f58590e567bbb4d36ab0623267a2450fe57658c23",
+        "<BOEHM_ROOT>/src/c/extension.c": "4fb69035f1d651d5c09c3b0a55be1cc06a8ba75b9cda1d4ee1c7f1a6593fbc38",
+        "<BOEHM_ROOT>/src/c/extension.h": "37c0264282d213e84b50f10d5061632e720d6d8f4a835b12b879a8d558612e65",
+        "<BOEHM_ROOT>/src/c/function.c": "762e460bc31358cdeaf6255b8749f7a573909ce96933beadf9de974836cc15f7",
+        "<BOEHM_ROOT>/src/c/function.h": "96316bf60f9690d87e8ecd7f76d7f0d938870154bbeb5aa69df162a26ce1df64",
+        "<BOEHM_ROOT>/src/c/hash.c": "86dbb495493329edd9ee8526ccd50d75cb02ea091107de0ef61c2f5fd4dd5c6f",
+        "<BOEHM_ROOT>/src/c/hash.h": "429ce2ba39623f9261ed924293c11d54fd4ae94092d7a0634e95c5c6c12f9e44",
+        "<BOEHM_ROOT>/src/c/init.c": "75b6a498e1305428fbec36f40551ab0e32c69f914e493046555d788a2d2097f0",
+        "<BOEHM_ROOT>/src/c/init.h": "4f26bd70cea31f0b0e158c97cbcbb7272e6f05904a93683bf6ff74ae5f55493d",
+        "<BOEHM_ROOT>/src/c/khash.h": "bbb23fd8f9228ee0cfc015d0e14c3f3bbfed89c9e14b32802728b8c164f1f61e",
+        "<BOEHM_ROOT>/src/c/kl.c": "dd4b15e69d213fa98732f7df8815d3f1a3c3ffe216740edd355f2dcb9e47ffc9",
+        "<BOEHM_ROOT>/src/c/kl.h": "1a8786785321ccede3164527760fc25c4bde22f0ce5cb0a0afa570154882fc02",
+        "<BOEHM_ROOT>/src/c/list.c": "c57a982d8644df379fa20e10364009b7f4d74457d6ff881a66580d11a92e13cc",
+        "<BOEHM_ROOT>/src/c/list.h": "2759d2e963474f4ac1ce6375b65de1c23d1bb7560cc1de37087da68b60d087f9",
+        "<BOEHM_ROOT>/src/c/loop.c": "0674c4cac3ba76d8267e494411f552ad6f9ce39e9bb6af3a3dae546e2e634d28",
+        "<BOEHM_ROOT>/src/c/loop.h": "248d46dac969b61b7810facee43f9c94822cf5559143baaa7c9f0fdba78ffdaa",
+        "<BOEHM_ROOT>/src/c/main.c": "edc82c066011750219f84d0e939a12d06b5d4e25e2bd1d3b39d6357b87de5004",
+        "<BOEHM_ROOT>/src/c/number.c": "334ac29512809ed142c0db2618fad9a94354f0fdc64451c16cf00d7403c3d569",
+        "<BOEHM_ROOT>/src/c/number.h": "5d6a31b23f76be0301678e77ea77fb5b1e178b1ba1ca15d99bf2d34e99b35c03",
+        "<BOEHM_ROOT>/src/c/object.c": "6710012a500f3cebee9cf97d141ce4faaab89082a0fd4b5ce08283737e3a32b2",
+        "<BOEHM_ROOT>/src/c/object.h": "c208ef9a6f98bd5727827ca7b9c401673d04cbdccaff628a432dc16cdfe1501c",
+        "<BOEHM_ROOT>/src/c/overwrite.c": "f67abdbebe2bdd2ec3debeaa297bfa279aecf5a4513ca9afd7e726892f9e94f3",
+        "<BOEHM_ROOT>/src/c/overwrite.h": "9ccb2ee278b3366544845e3ade3b6c59411bfc90f56cb27ffadd5ffd4f70f2cf",
+        "<BOEHM_ROOT>/src/c/primitive.c": "fa25795629792c9f557ed59f3aa67fb0875466255f5ed19934dd3d3625a5733f",
+        "<BOEHM_ROOT>/src/c/primitive.h": "b051c8de87be6b497df02119ac86b029edf70be7e16388875fca05cd6a7e7ee6",
+        "<BOEHM_ROOT>/src/c/reader.c": "32c8cfa7c35fca72a079ae4dcb228eabaf5a06da57169822921fcef910a5c3bb",
+        "<BOEHM_ROOT>/src/c/reader.h": "db4748d6dd881efd451701c9b006a921928434b56b84a80e77e61a65ca80aa19",
+        "<BOEHM_ROOT>/src/c/repl.c": "4b310b7d899eac74cb1ea40017a28165ae771ac3de9adb614881a88f22bdec4f",
+        "<BOEHM_ROOT>/src/c/repl.h": "8c0a4708fee02a3809a74fee56f33d74d165471c3ad0f0ded7a7fad33af5d7fb",
+        "<BOEHM_ROOT>/src/c/repl_socket.c": "7d6edab3f940c963fb30dbe97c42ff80f07adfb0abffc54a10911d1ddac9296f",
+        "<BOEHM_ROOT>/src/c/repl_socket.h": "bd69d0d4a6af4b8c68d1c87d1a5b5fa96c9b3ff659117e940270f5e9da42c2a7",
+        "<BOEHM_ROOT>/src/c/stack.c": "d75bdace6d0dd90dcce343cef7ee4baee99d07cdf2f99b45b2dfd75ce450b01b",
+        "<BOEHM_ROOT>/src/c/stack.h": "8d8370686f6f07d7750dd9f62463a58c9e0ae9d095acf29748266fbfe937f2ec",
+        "<BOEHM_ROOT>/src/c/stream.c": "815348d6bb4b99b941866459bdd3fa8b4084c8814b38aefec982382b87bae77f",
+        "<BOEHM_ROOT>/src/c/stream.h": "52685226bf5113c4fd1a4918fe6d825b864a628243a66dcd5e3af9c0fd7dee21",
+        "<BOEHM_ROOT>/src/c/string.c": "114ee523711f96c289b2e8c34365cb8968d534e4d0234e7f2d60cdd34c0cc5b4",
+        "<BOEHM_ROOT>/src/c/string.h": "32baaf7caadc899c4f9bbf4ae404288341bf9d5fecd497a749849f056d21e32e",
+        "<BOEHM_ROOT>/src/c/symbol.c": "9e0f1c0ad0bf53b3f165ecfdf18b15935298bacd6379e308cffc0b5e64cb17d5",
+        "<BOEHM_ROOT>/src/c/symbol.h": "526cb2ce971cf2ee48f8fca960343da9cc93c661516142a13604b68db92cdd68",
+        "<BOEHM_ROOT>/src/c/symbol_pool.c": "e50376454380698530b06b52cd384e43cc7a187043694c2d1368411685123399",
+        "<BOEHM_ROOT>/src/c/symbol_pool.h": "ec1c7713c664523b768c08881f63df890d3360c5ba75783e203a08a1c3854ee6",
+        "<BOEHM_ROOT>/src/c/system.c": "70a132fc6f5fc238f59fe232fa1fe3b49775d20ac2fdeee759d78e7525217187",
+        "<BOEHM_ROOT>/src/c/system.h": "a890cedb82ddc19aa1b935454e3006bd34dec21859d2f076efd184b097d55a41",
+        "<BOEHM_ROOT>/src/c/tc_cache.c": "717aa8417e212a8a2d02ff87954d5964a0ea7a99e22dd704c0581dfebc29cdb4",
+        "<BOEHM_ROOT>/src/c/tc_cache.h": "8cae33c8b447429d30eb170bfd0f71d9a6a2706bdbcc3ea1e10c0382d6974365",
+        "<BOEHM_ROOT>/src/c/variable.c": "112c23c0a63e37e00c6d14d5a00a048c0064750a9576a86944769c41871752c8",
+        "<BOEHM_ROOT>/src/c/variable.h": "9f4fadda055cf6be433c5f6253cd91c6b982ed8f2002d8e5777539d88a67e0d8",
+        "<BOEHM_ROOT>/src/c/vector.c": "ec922ffbbac7bc93461119b8b8aab70d53f463b7a72ac3333f74cb6096ae9f2b",
+        "<BOEHM_ROOT>/src/c/vector.h": "1075177557ff84f7e9bbdff4d734ab803a0484146e3d32f8748282f2ae62acdb",
+        "<BOEHM_ROOT>/src/c/version.h": "4ecf9c4d6efec7c6401636bdf268ab112b4eca016356030d13a807cec224f0b0",
+        "<BOEHM_ROOT>/tools/kernel-aot-build.c": "4f55ef0c0bcb8e0da043d2da491711aef14ec0736aa3161619e9d25f07c575f6",
+        "/nix/store/r9bdx29an70k9jg6jj2h1ccnpjqdbwzg-boehm-gc-8.2.12/lib/libgc.1.dylib": "5115bc7b4d0d795912999a18f2ef53be28f38ef2b258df023e43fad129d5496f",
+        "<RC_BASELINE_ROOT>/evidence/rc/qualified-freeze-v2/final-config.json": "ff17bf714174bf34b46e4cd471ae81491a8724094d25fff54147b3358cab57b8"
+      },
+      "binary_sha256": "c3673fd327c8c74e0485d013fb9f48f004583fa31dcdfe9f7bbcb1db3db11f3b"
+    }
+  ],
+  "repetitions": 10,
+  "runs": [
+    {
+      "label": "rc",
+      "repetition": 1,
+      "command": [
+        "/usr/bin/time",
+        "-l",
+        "/usr/bin/env",
+        "<OPT_ROOT>/evidence/rc/opt-20261017/candidate-f1/shen-rc",
+        "script",
+        "runme.shen"
+      ],
+      "status": "PASS",
+      "binary_sha256": "d3df275c40a5cdb4c00eff074c379b7e4216d68c79c35a4d2bffcdb98558fb3b",
+      "exit": 0,
+      "wrapper_wall_seconds": 3.887,
+      "stdout": "01-rc.out",
+      "stderr": "01-rc.err",
+      "stdout_sha256": "38ec22435fe228e7ad4f7ad16ea6d25c0f821fe9ed306d2dbcc9774ce8627972",
+      "stderr_sha256": "025b04a1b34b03edc5c96b131da2adb307ea40a2a309e05ded18e710fee3ec83",
+      "binary_unchanged": true,
+      "dependencies_unchanged": true,
+      "suite_unchanged": true,
+      "inputs_unchanged": true,
+      "suite_validation": {
+        "status": "PASS",
+        "errors": [],
+        "passed_reports": [
+          2,
+          4,
+          8,
+          10,
+          17,
+          23,
+          25,
+          29,
+          31,
+          33,
+          35,
+          38,
+          44,
+          46,
+          48,
+          52,
+          54,
+          59,
+          64,
+          70,
+          75,
+          77,
+          90,
+          95,
+          98,
+          101,
+          103,
+          108,
+          111,
+          115,
+          120,
+          125,
+          129,
+          131,
+          133,
+          136
+        ],
+        "failed_reports": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "output_sha256": {
+          "test.txt": "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824"
+        }
+      },
+      "passed": [
+        "136"
+      ],
+      "failed": [
+        "0"
+      ],
+      "wall_seconds": 3.82,
+      "user_seconds": 3.73,
+      "sys_seconds": 0.02,
+      "max_rss_bytes": 31997952,
+      "instructions": 99883192147,
+      "cycles": 15920739483,
+      "involuntary_context_switches": 696,
+      "stage_events": "01-rc-stages.json",
+      "stage_events_sha256": "70497b6d95e5f853aad30689117f47c6db2ae3f8acc8aca8bda62878821923a1",
+      "largest_shen_intervals": [
+        {
+          "shen_cpu_seconds": 3.739357,
+          "test_label": "Prolog interpreter: (tc -) = false",
+          "preceding_output": [
+            "ok",
+            "0",
+            "loaded"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 3.726958,
+          "test_label": "Prolog interpreter: (tc -) = false",
+          "preceding_output": [
+            "pass rate ... 100%",
+            "ok",
+            "0"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 1.78037,
+          "test_label": "L interpreter: (load \"interpreter.shen\") = loaded",
+          "preceding_output": [
+            "(fn replace) : (pattern --> (l-formula --> (l-formula --> l-formula)))",
+            "(fn free?) : (pattern --> (pattern --> boolean))",
+            "typechecked in 1177726 inferences"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 1.780355,
+          "test_label": "L interpreter: (load \"interpreter.shen\") = loaded",
+          "preceding_output": [
+            "(fn no-match?) : ((list (pattern * l-formula)) --> boolean)",
+            "(fn replace) : (pattern --> (l-formula --> (l-formula --> l-formula)))",
+            "(fn free?) : (pattern --> (pattern --> boolean))"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.610422,
+          "test_label": "c-: (load \"c-minus.shen\") = loaded",
+          "preceding_output": [
+            "(fn <comment>) : ((list string) ==> symbol)",
+            "(fn <comment-body>) : ((list string) ==> symbol)",
+            "typechecked in 289707 inferences"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.610408,
+          "test_label": "c-: (load \"c-minus.shen\") = loaded",
+          "preceding_output": [
+            "(fn <newline>) : ((list string) ==> symbol)",
+            "(fn <comment>) : ((list string) ==> symbol)",
+            "(fn <comment-body>) : ((list string) ==> symbol)"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.360073,
+          "test_label": "Prolog interpreter: (load \"prologinterp.shen\") = loaded",
+          "preceding_output": [
+            "(fn replace-term-in-atom) : (term --> (term --> (atom --> atom)))",
+            "(fn replace-term) : (term --> (term --> (term --> term)))",
+            "typechecked in 1634358 inferences"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.360057,
+          "test_label": "Prolog interpreter: (load \"prologinterp.shen\") = loaded",
+          "preceding_output": [
+            "(fn replace-term-in-clause) : (term --> (term --> (horn-clause --> horn-clause)))",
+            "(fn replace-term-in-atom) : (term --> (term --> (atom --> atom)))",
+            "(fn replace-term) : (term --> (term --> (term --> term)))"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.14417,
+          "test_label": "quantifier machine: (load \"qmachine.shen\") = loaded",
+          "preceding_output": [
+            "(fn prime*?) : (number --> boolean)",
+            "(fn prime-help) : (number --> (number --> (number --> boolean)))",
+            "typechecked in 1346483 inferences"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.144158,
+          "test_label": "quantifier machine: (load \"qmachine.shen\") = loaded",
+          "preceding_output": [
+            "(fn next-prime) : (number --> number)",
+            "(fn prime*?) : (number --> boolean)",
+            "(fn prime-help) : (number --> (number --> (number --> boolean)))"
+          ]
+        }
+      ]
+    },
+    {
+      "label": "boehm",
+      "repetition": 1,
+      "command": [
+        "/usr/bin/time",
+        "-l",
+        "/usr/bin/env",
+        "<BOEHM_ROOT>/bin/shen-c",
+        "script",
+        "runme.shen"
+      ],
+      "status": "PASS",
+      "binary_sha256": "c3673fd327c8c74e0485d013fb9f48f004583fa31dcdfe9f7bbcb1db3db11f3b",
+      "exit": 0,
+      "wrapper_wall_seconds": 4.491,
+      "stdout": "01-boehm.out",
+      "stderr": "01-boehm.err",
+      "stdout_sha256": "b150979332160fe54d937bd96e7f73bc45e657621d91938ca16b9142820c9b03",
+      "stderr_sha256": "e85bba8bd45d569ac88fbf4c797b19cc5f88eae65c6c43f1ff6236eb53789b2d",
+      "binary_unchanged": true,
+      "dependencies_unchanged": true,
+      "suite_unchanged": true,
+      "inputs_unchanged": true,
+      "suite_validation": {
+        "status": "PASS",
+        "errors": [],
+        "passed_reports": [
+          2,
+          4,
+          8,
+          10,
+          17,
+          23,
+          25,
+          29,
+          31,
+          33,
+          35,
+          38,
+          44,
+          46,
+          48,
+          52,
+          54,
+          59,
+          64,
+          70,
+          75,
+          77,
+          90,
+          95,
+          98,
+          101,
+          103,
+          108,
+          111,
+          115,
+          120,
+          125,
+          129,
+          131,
+          133,
+          136
+        ],
+        "failed_reports": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "output_sha256": {
+          "test.txt": "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824"
+        }
+      },
+      "passed": [
+        "136"
+      ],
+      "failed": [
+        "0"
+      ],
+      "wall_seconds": 4.32,
+      "user_seconds": 4.23,
+      "sys_seconds": 0.02,
+      "max_rss_bytes": 73662464,
+      "instructions": 88969180467,
+      "cycles": 18083696678,
+      "involuntary_context_switches": 406,
+      "stage_events": "01-boehm-stages.json",
+      "stage_events_sha256": "c46ad6c7786a0a65205dbbecb5c007775b4593cac922ab7eb7ccb770774527eb",
+      "largest_shen_intervals": [
+        {
+          "shen_cpu_seconds": 4.222695,
+          "test_label": "Prolog interpreter: (tc -) = false",
+          "preceding_output": [
+            "ok",
+            "0",
+            "loaded"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 4.216912,
+          "test_label": "Prolog interpreter: (tc -) = false",
+          "preceding_output": [
+            "pass rate ... 100%",
+            "ok",
+            "0"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 2.200986,
+          "test_label": "L interpreter: (load \"interpreter.shen\") = loaded",
+          "preceding_output": [
+            "(fn replace) : (pattern --> (l-formula --> (l-formula --> l-formula)))",
+            "(fn free?) : (pattern --> (pattern --> boolean))",
+            "typechecked in 1177726 inferences"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 2.200971,
+          "test_label": "L interpreter: (load \"interpreter.shen\") = loaded",
+          "preceding_output": [
+            "(fn no-match?) : ((list (pattern * l-formula)) --> boolean)",
+            "(fn replace) : (pattern --> (l-formula --> (l-formula --> l-formula)))",
+            "(fn free?) : (pattern --> (pattern --> boolean))"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.578429,
+          "test_label": "c-: (load \"c-minus.shen\") = loaded",
+          "preceding_output": [
+            "(fn <comment>) : ((list string) ==> symbol)",
+            "(fn <comment-body>) : ((list string) ==> symbol)",
+            "typechecked in 289707 inferences"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.578416,
+          "test_label": "c-: (load \"c-minus.shen\") = loaded",
+          "preceding_output": [
+            "(fn <newline>) : ((list string) ==> symbol)",
+            "(fn <comment>) : ((list string) ==> symbol)",
+            "(fn <comment-body>) : ((list string) ==> symbol)"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.446994,
+          "test_label": "Prolog interpreter: (load \"prologinterp.shen\") = loaded",
+          "preceding_output": [
+            "(fn replace-term-in-atom) : (term --> (term --> (atom --> atom)))",
+            "(fn replace-term) : (term --> (term --> (term --> term)))",
+            "typechecked in 1634358 inferences"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.44698,
+          "test_label": "Prolog interpreter: (load \"prologinterp.shen\") = loaded",
+          "preceding_output": [
+            "(fn replace-term-in-clause) : (term --> (term --> (horn-clause --> horn-clause)))",
+            "(fn replace-term-in-atom) : (term --> (term --> (atom --> atom)))",
+            "(fn replace-term) : (term --> (term --> (term --> term)))"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.169843,
+          "test_label": "quantifier machine: (load \"qmachine.shen\") = loaded",
+          "preceding_output": [
+            "(fn prime*?) : (number --> boolean)",
+            "(fn prime-help) : (number --> (number --> (number --> boolean)))",
+            "typechecked in 1346483 inferences"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.169827,
+          "test_label": "quantifier machine: (load \"qmachine.shen\") = loaded",
+          "preceding_output": [
+            "(fn next-prime) : (number --> number)",
+            "(fn prime*?) : (number --> boolean)",
+            "(fn prime-help) : (number --> (number --> (number --> boolean)))"
+          ]
+        }
+      ]
+    },
+    {
+      "label": "boehm",
+      "repetition": 2,
+      "command": [
+        "/usr/bin/time",
+        "-l",
+        "/usr/bin/env",
+        "<BOEHM_ROOT>/bin/shen-c",
+        "script",
+        "runme.shen"
+      ],
+      "status": "PASS",
+      "binary_sha256": "c3673fd327c8c74e0485d013fb9f48f004583fa31dcdfe9f7bbcb1db3db11f3b",
+      "exit": 0,
+      "wrapper_wall_seconds": 4.709,
+      "stdout": "02-boehm.out",
+      "stderr": "02-boehm.err",
+      "stdout_sha256": "d6be34b93021cfc11d9ad1367f18142c08bfbd9fd106b0ec41fc35e9793932ee",
+      "stderr_sha256": "d092674317781da52ec7bf9f6059a0b81a16fe3691600ba8201f8a8d015d7f27",
+      "binary_unchanged": true,
+      "dependencies_unchanged": true,
+      "suite_unchanged": true,
+      "inputs_unchanged": true,
+      "suite_validation": {
+        "status": "PASS",
+        "errors": [],
+        "passed_reports": [
+          2,
+          4,
+          8,
+          10,
+          17,
+          23,
+          25,
+          29,
+          31,
+          33,
+          35,
+          38,
+          44,
+          46,
+          48,
+          52,
+          54,
+          59,
+          64,
+          70,
+          75,
+          77,
+          90,
+          95,
+          98,
+          101,
+          103,
+          108,
+          111,
+          115,
+          120,
+          125,
+          129,
+          131,
+          133,
+          136
+        ],
+        "failed_reports": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "output_sha256": {
+          "test.txt": "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824"
+        }
+      },
+      "passed": [
+        "136"
+      ],
+      "failed": [
+        "0"
+      ],
+      "wall_seconds": 4.54,
+      "user_seconds": 4.46,
+      "sys_seconds": 0.02,
+      "max_rss_bytes": 73744384,
+      "instructions": 88402410072,
+      "cycles": 19027495827,
+      "involuntary_context_switches": 530,
+      "stage_events": "02-boehm-stages.json",
+      "stage_events_sha256": "0c6dd07ef9b7e4a973a0e72489a30e7be9c85d52d07c4c93ded49a080b624dbb",
+      "largest_shen_intervals": [
+        {
+          "shen_cpu_seconds": 4.449012,
+          "test_label": "Prolog interpreter: (tc -) = false",
+          "preceding_output": [
+            "ok",
+            "0",
+            "loaded"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 4.443536,
+          "test_label": "Prolog interpreter: (tc -) = false",
+          "preceding_output": [
+            "pass rate ... 100%",
+            "ok",
+            "0"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 2.333294,
+          "test_label": "L interpreter: (load \"interpreter.shen\") = loaded",
+          "preceding_output": [
+            "(fn replace) : (pattern --> (l-formula --> (l-formula --> l-formula)))",
+            "(fn free?) : (pattern --> (pattern --> boolean))",
+            "typechecked in 1177726 inferences"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 2.333278,
+          "test_label": "L interpreter: (load \"interpreter.shen\") = loaded",
+          "preceding_output": [
+            "(fn no-match?) : ((list (pattern * l-formula)) --> boolean)",
+            "(fn replace) : (pattern --> (l-formula --> (l-formula --> l-formula)))",
+            "(fn free?) : (pattern --> (pattern --> boolean))"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.604181,
+          "test_label": "c-: (load \"c-minus.shen\") = loaded",
+          "preceding_output": [
+            "(fn <comment>) : ((list string) ==> symbol)",
+            "(fn <comment-body>) : ((list string) ==> symbol)",
+            "typechecked in 289707 inferences"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.604161,
+          "test_label": "c-: (load \"c-minus.shen\") = loaded",
+          "preceding_output": [
+            "(fn <newline>) : ((list string) ==> symbol)",
+            "(fn <comment>) : ((list string) ==> symbol)",
+            "(fn <comment-body>) : ((list string) ==> symbol)"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.483481,
+          "test_label": "Prolog interpreter: (load \"prologinterp.shen\") = loaded",
+          "preceding_output": [
+            "(fn replace-term-in-atom) : (term --> (term --> (atom --> atom)))",
+            "(fn replace-term) : (term --> (term --> (term --> term)))",
+            "typechecked in 1634358 inferences"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.483465,
+          "test_label": "Prolog interpreter: (load \"prologinterp.shen\") = loaded",
+          "preceding_output": [
+            "(fn replace-term-in-clause) : (term --> (term --> (horn-clause --> horn-clause)))",
+            "(fn replace-term-in-atom) : (term --> (term --> (atom --> atom)))",
+            "(fn replace-term) : (term --> (term --> (term --> term)))"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.178161,
+          "test_label": "quantifier machine: (load \"qmachine.shen\") = loaded",
+          "preceding_output": [
+            "(fn prime*?) : (number --> boolean)",
+            "(fn prime-help) : (number --> (number --> (number --> boolean)))",
+            "typechecked in 1346483 inferences"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.178149,
+          "test_label": "quantifier machine: (load \"qmachine.shen\") = loaded",
+          "preceding_output": [
+            "(fn next-prime) : (number --> number)",
+            "(fn prime*?) : (number --> boolean)",
+            "(fn prime-help) : (number --> (number --> (number --> boolean)))"
+          ]
+        }
+      ]
+    },
+    {
+      "label": "rc",
+      "repetition": 2,
+      "command": [
+        "/usr/bin/time",
+        "-l",
+        "/usr/bin/env",
+        "<OPT_ROOT>/evidence/rc/opt-20261017/candidate-f1/shen-rc",
+        "script",
+        "runme.shen"
+      ],
+      "status": "PASS",
+      "binary_sha256": "d3df275c40a5cdb4c00eff074c379b7e4216d68c79c35a4d2bffcdb98558fb3b",
+      "exit": 0,
+      "wrapper_wall_seconds": 4.072,
+      "stdout": "02-rc.out",
+      "stderr": "02-rc.err",
+      "stdout_sha256": "b7af8c33a4de6f396eb82d955d484f1129f6d1a0fc3bd533da7d90f37c43a9af",
+      "stderr_sha256": "b6bfe04d8754650d5de10c0cb6f27167bae9cb74703eb713633c91e937dd79fc",
+      "binary_unchanged": true,
+      "dependencies_unchanged": true,
+      "suite_unchanged": true,
+      "inputs_unchanged": true,
+      "suite_validation": {
+        "status": "PASS",
+        "errors": [],
+        "passed_reports": [
+          2,
+          4,
+          8,
+          10,
+          17,
+          23,
+          25,
+          29,
+          31,
+          33,
+          35,
+          38,
+          44,
+          46,
+          48,
+          52,
+          54,
+          59,
+          64,
+          70,
+          75,
+          77,
+          90,
+          95,
+          98,
+          101,
+          103,
+          108,
+          111,
+          115,
+          120,
+          125,
+          129,
+          131,
+          133,
+          136
+        ],
+        "failed_reports": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "output_sha256": {
+          "test.txt": "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824"
+        }
+      },
+      "passed": [
+        "136"
+      ],
+      "failed": [
+        "0"
+      ],
+      "wall_seconds": 3.88,
+      "user_seconds": 3.77,
+      "sys_seconds": 0.02,
+      "max_rss_bytes": 32014336,
+      "instructions": 99856731949,
+      "cycles": 16047990697,
+      "involuntary_context_switches": 1502,
+      "stage_events": "02-rc-stages.json",
+      "stage_events_sha256": "9016e772d87ef83b4f2a96ecb7ffac16b6b62f91333a1dfa11e352ffca4a913d",
+      "largest_shen_intervals": [
+        {
+          "shen_cpu_seconds": 3.785147,
+          "test_label": "Prolog interpreter: (tc -) = false",
+          "preceding_output": [
+            "ok",
+            "0",
+            "loaded"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 3.773085,
+          "test_label": "Prolog interpreter: (tc -) = false",
+          "preceding_output": [
+            "pass rate ... 100%",
+            "ok",
+            "0"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 1.788252,
+          "test_label": "L interpreter: (load \"interpreter.shen\") = loaded",
+          "preceding_output": [
+            "(fn replace) : (pattern --> (l-formula --> (l-formula --> l-formula)))",
+            "(fn free?) : (pattern --> (pattern --> boolean))",
+            "typechecked in 1177726 inferences"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 1.788235,
+          "test_label": "L interpreter: (load \"interpreter.shen\") = loaded",
+          "preceding_output": [
+            "(fn no-match?) : ((list (pattern * l-formula)) --> boolean)",
+            "(fn replace) : (pattern --> (l-formula --> (l-formula --> l-formula)))",
+            "(fn free?) : (pattern --> (pattern --> boolean))"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.604939,
+          "test_label": "c-: (load \"c-minus.shen\") = loaded",
+          "preceding_output": [
+            "(fn <comment>) : ((list string) ==> symbol)",
+            "(fn <comment-body>) : ((list string) ==> symbol)",
+            "typechecked in 289707 inferences"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.604926,
+          "test_label": "c-: (load \"c-minus.shen\") = loaded",
+          "preceding_output": [
+            "(fn <newline>) : ((list string) ==> symbol)",
+            "(fn <comment>) : ((list string) ==> symbol)",
+            "(fn <comment-body>) : ((list string) ==> symbol)"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.412364,
+          "test_label": "Prolog interpreter: (load \"prologinterp.shen\") = loaded",
+          "preceding_output": [
+            "(fn replace-term-in-atom) : (term --> (term --> (atom --> atom)))",
+            "(fn replace-term) : (term --> (term --> (term --> term)))",
+            "typechecked in 1634358 inferences"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.412349,
+          "test_label": "Prolog interpreter: (load \"prologinterp.shen\") = loaded",
+          "preceding_output": [
+            "(fn replace-term-in-clause) : (term --> (term --> (horn-clause --> horn-clause)))",
+            "(fn replace-term-in-atom) : (term --> (term --> (atom --> atom)))",
+            "(fn replace-term) : (term --> (term --> (term --> term)))"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.142004,
+          "test_label": "quantifier machine: (load \"qmachine.shen\") = loaded",
+          "preceding_output": [
+            "(fn prime*?) : (number --> boolean)",
+            "(fn prime-help) : (number --> (number --> (number --> boolean)))",
+            "typechecked in 1346483 inferences"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.141992,
+          "test_label": "quantifier machine: (load \"qmachine.shen\") = loaded",
+          "preceding_output": [
+            "(fn next-prime) : (number --> number)",
+            "(fn prime*?) : (number --> boolean)",
+            "(fn prime-help) : (number --> (number --> (number --> boolean)))"
+          ]
+        }
+      ]
+    },
+    {
+      "label": "rc",
+      "repetition": 3,
+      "command": [
+        "/usr/bin/time",
+        "-l",
+        "/usr/bin/env",
+        "<OPT_ROOT>/evidence/rc/opt-20261017/candidate-f1/shen-rc",
+        "script",
+        "runme.shen"
+      ],
+      "status": "PASS",
+      "binary_sha256": "d3df275c40a5cdb4c00eff074c379b7e4216d68c79c35a4d2bffcdb98558fb3b",
+      "exit": 0,
+      "wrapper_wall_seconds": 3.895,
+      "stdout": "03-rc.out",
+      "stderr": "03-rc.err",
+      "stdout_sha256": "4cdecbe6dfa66f15adfc92e64e8b0cda019d0a480492991ba9e902f7c9a17f85",
+      "stderr_sha256": "4db20581283d47470d543e1dab9455b8a7b62bc5101b7e74fa2d3c0662a421d4",
+      "binary_unchanged": true,
+      "dependencies_unchanged": true,
+      "suite_unchanged": true,
+      "inputs_unchanged": true,
+      "suite_validation": {
+        "status": "PASS",
+        "errors": [],
+        "passed_reports": [
+          2,
+          4,
+          8,
+          10,
+          17,
+          23,
+          25,
+          29,
+          31,
+          33,
+          35,
+          38,
+          44,
+          46,
+          48,
+          52,
+          54,
+          59,
+          64,
+          70,
+          75,
+          77,
+          90,
+          95,
+          98,
+          101,
+          103,
+          108,
+          111,
+          115,
+          120,
+          125,
+          129,
+          131,
+          133,
+          136
+        ],
+        "failed_reports": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "output_sha256": {
+          "test.txt": "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824"
+        }
+      },
+      "passed": [
+        "136"
+      ],
+      "failed": [
+        "0"
+      ],
+      "wall_seconds": 3.82,
+      "user_seconds": 3.73,
+      "sys_seconds": 0.01,
+      "max_rss_bytes": 32063488,
+      "instructions": 99866603780,
+      "cycles": 15881763306,
+      "involuntary_context_switches": 912,
+      "stage_events": "03-rc-stages.json",
+      "stage_events_sha256": "fb46a09915f32ebe3f3805270ab48ddc307c6aee05e6fc3d89d43a361e9825f0",
+      "largest_shen_intervals": [
+        {
+          "shen_cpu_seconds": 3.7332,
+          "test_label": "Prolog interpreter: (tc -) = false",
+          "preceding_output": [
+            "ok",
+            "0",
+            "loaded"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 3.719047,
+          "test_label": "Prolog interpreter: (tc -) = false",
+          "preceding_output": [
+            "pass rate ... 100%",
+            "ok",
+            "0"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 1.785046,
+          "test_label": "L interpreter: (load \"interpreter.shen\") = loaded",
+          "preceding_output": [
+            "(fn replace) : (pattern --> (l-formula --> (l-formula --> l-formula)))",
+            "(fn free?) : (pattern --> (pattern --> boolean))",
+            "typechecked in 1177726 inferences"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 1.785031,
+          "test_label": "L interpreter: (load \"interpreter.shen\") = loaded",
+          "preceding_output": [
+            "(fn no-match?) : ((list (pattern * l-formula)) --> boolean)",
+            "(fn replace) : (pattern --> (l-formula --> (l-formula --> l-formula)))",
+            "(fn free?) : (pattern --> (pattern --> boolean))"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.597482,
+          "test_label": "c-: (load \"c-minus.shen\") = loaded",
+          "preceding_output": [
+            "(fn <comment>) : ((list string) ==> symbol)",
+            "(fn <comment-body>) : ((list string) ==> symbol)",
+            "typechecked in 289707 inferences"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.597463,
+          "test_label": "c-: (load \"c-minus.shen\") = loaded",
+          "preceding_output": [
+            "(fn <newline>) : ((list string) ==> symbol)",
+            "(fn <comment>) : ((list string) ==> symbol)",
+            "(fn <comment-body>) : ((list string) ==> symbol)"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.364073,
+          "test_label": "Prolog interpreter: (load \"prologinterp.shen\") = loaded",
+          "preceding_output": [
+            "(fn replace-term-in-atom) : (term --> (term --> (atom --> atom)))",
+            "(fn replace-term) : (term --> (term --> (term --> term)))",
+            "typechecked in 1634358 inferences"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.364057,
+          "test_label": "Prolog interpreter: (load \"prologinterp.shen\") = loaded",
+          "preceding_output": [
+            "(fn replace-term-in-clause) : (term --> (term --> (horn-clause --> horn-clause)))",
+            "(fn replace-term-in-atom) : (term --> (term --> (atom --> atom)))",
+            "(fn replace-term) : (term --> (term --> (term --> term)))"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.142677,
+          "test_label": "quantifier machine: (load \"qmachine.shen\") = loaded",
+          "preceding_output": [
+            "(fn prime*?) : (number --> boolean)",
+            "(fn prime-help) : (number --> (number --> (number --> boolean)))",
+            "typechecked in 1346483 inferences"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.142665,
+          "test_label": "quantifier machine: (load \"qmachine.shen\") = loaded",
+          "preceding_output": [
+            "(fn next-prime) : (number --> number)",
+            "(fn prime*?) : (number --> boolean)",
+            "(fn prime-help) : (number --> (number --> (number --> boolean)))"
+          ]
+        }
+      ]
+    },
+    {
+      "label": "boehm",
+      "repetition": 3,
+      "command": [
+        "/usr/bin/time",
+        "-l",
+        "/usr/bin/env",
+        "<BOEHM_ROOT>/bin/shen-c",
+        "script",
+        "runme.shen"
+      ],
+      "status": "PASS",
+      "binary_sha256": "c3673fd327c8c74e0485d013fb9f48f004583fa31dcdfe9f7bbcb1db3db11f3b",
+      "exit": 0,
+      "wrapper_wall_seconds": 4.501,
+      "stdout": "03-boehm.out",
+      "stderr": "03-boehm.err",
+      "stdout_sha256": "f202846ad7e7f43711a67ce20acd3566d5bde8854f1636a9c8d93a922e44e253",
+      "stderr_sha256": "52dda77abec4fe5e2704c20d4273d50d30458d5f0607a8224a8f356644359202",
+      "binary_unchanged": true,
+      "dependencies_unchanged": true,
+      "suite_unchanged": true,
+      "inputs_unchanged": true,
+      "suite_validation": {
+        "status": "PASS",
+        "errors": [],
+        "passed_reports": [
+          2,
+          4,
+          8,
+          10,
+          17,
+          23,
+          25,
+          29,
+          31,
+          33,
+          35,
+          38,
+          44,
+          46,
+          48,
+          52,
+          54,
+          59,
+          64,
+          70,
+          75,
+          77,
+          90,
+          95,
+          98,
+          101,
+          103,
+          108,
+          111,
+          115,
+          120,
+          125,
+          129,
+          131,
+          133,
+          136
+        ],
+        "failed_reports": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "output_sha256": {
+          "test.txt": "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824"
+        }
+      },
+      "passed": [
+        "136"
+      ],
+      "failed": [
+        "0"
+      ],
+      "wall_seconds": 4.36,
+      "user_seconds": 4.22,
+      "sys_seconds": 0.02,
+      "max_rss_bytes": 72974336,
+      "instructions": 88518362959,
+      "cycles": 17988579038,
+      "involuntary_context_switches": 2787,
+      "stage_events": "03-boehm-stages.json",
+      "stage_events_sha256": "080c7a9e6704ff5dfdad6a4bfc560aea47fa7078630e03decc4b3040d3bf751a",
+      "largest_shen_intervals": [
+        {
+          "shen_cpu_seconds": 4.218869,
+          "test_label": "Prolog interpreter: (tc -) = false",
+          "preceding_output": [
+            "ok",
+            "0",
+            "loaded"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 4.213455,
+          "test_label": "Prolog interpreter: (tc -) = false",
+          "preceding_output": [
+            "pass rate ... 100%",
+            "ok",
+            "0"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 2.251022,
+          "test_label": "L interpreter: (load \"interpreter.shen\") = loaded",
+          "preceding_output": [
+            "(fn replace) : (pattern --> (l-formula --> (l-formula --> l-formula)))",
+            "(fn free?) : (pattern --> (pattern --> boolean))",
+            "typechecked in 1177726 inferences"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 2.251005,
+          "test_label": "L interpreter: (load \"interpreter.shen\") = loaded",
+          "preceding_output": [
+            "(fn no-match?) : ((list (pattern * l-formula)) --> boolean)",
+            "(fn replace) : (pattern --> (l-formula --> (l-formula --> l-formula)))",
+            "(fn free?) : (pattern --> (pattern --> boolean))"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.554324,
+          "test_label": "c-: (load \"c-minus.shen\") = loaded",
+          "preceding_output": [
+            "(fn <comment>) : ((list string) ==> symbol)",
+            "(fn <comment-body>) : ((list string) ==> symbol)",
+            "typechecked in 289707 inferences"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.554302,
+          "test_label": "c-: (load \"c-minus.shen\") = loaded",
+          "preceding_output": [
+            "(fn <newline>) : ((list string) ==> symbol)",
+            "(fn <comment>) : ((list string) ==> symbol)",
+            "(fn <comment-body>) : ((list string) ==> symbol)"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.469679000000001,
+          "test_label": "Prolog interpreter: (load \"prologinterp.shen\") = loaded",
+          "preceding_output": [
+            "(fn replace-term-in-atom) : (term --> (term --> (atom --> atom)))",
+            "(fn replace-term) : (term --> (term --> (term --> term)))",
+            "typechecked in 1634358 inferences"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.469664,
+          "test_label": "Prolog interpreter: (load \"prologinterp.shen\") = loaded",
+          "preceding_output": [
+            "(fn replace-term-in-clause) : (term --> (term --> (horn-clause --> horn-clause)))",
+            "(fn replace-term-in-atom) : (term --> (term --> (atom --> atom)))",
+            "(fn replace-term) : (term --> (term --> (term --> term)))"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.170188,
+          "test_label": "quantifier machine: (load \"qmachine.shen\") = loaded",
+          "preceding_output": [
+            "(fn prime*?) : (number --> boolean)",
+            "(fn prime-help) : (number --> (number --> (number --> boolean)))",
+            "typechecked in 1346483 inferences"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.170171,
+          "test_label": "quantifier machine: (load \"qmachine.shen\") = loaded",
+          "preceding_output": [
+            "(fn next-prime) : (number --> number)",
+            "(fn prime*?) : (number --> boolean)",
+            "(fn prime-help) : (number --> (number --> (number --> boolean)))"
+          ]
+        }
+      ]
+    },
+    {
+      "label": "boehm",
+      "repetition": 4,
+      "command": [
+        "/usr/bin/time",
+        "-l",
+        "/usr/bin/env",
+        "<BOEHM_ROOT>/bin/shen-c",
+        "script",
+        "runme.shen"
+      ],
+      "status": "PASS",
+      "binary_sha256": "c3673fd327c8c74e0485d013fb9f48f004583fa31dcdfe9f7bbcb1db3db11f3b",
+      "exit": 0,
+      "wrapper_wall_seconds": 4.706,
+      "stdout": "04-boehm.out",
+      "stderr": "04-boehm.err",
+      "stdout_sha256": "8e65af06e4719eb106d0990cc639c3054c937f6f359d2f4bd387610f5a876303",
+      "stderr_sha256": "3b1b76eff9011c45dc47c6dc21ba6c718db6ffbc6b1f2832f51e9d6ec4dad7ea",
+      "binary_unchanged": true,
+      "dependencies_unchanged": true,
+      "suite_unchanged": true,
+      "inputs_unchanged": true,
+      "suite_validation": {
+        "status": "PASS",
+        "errors": [],
+        "passed_reports": [
+          2,
+          4,
+          8,
+          10,
+          17,
+          23,
+          25,
+          29,
+          31,
+          33,
+          35,
+          38,
+          44,
+          46,
+          48,
+          52,
+          54,
+          59,
+          64,
+          70,
+          75,
+          77,
+          90,
+          95,
+          98,
+          101,
+          103,
+          108,
+          111,
+          115,
+          120,
+          125,
+          129,
+          131,
+          133,
+          136
+        ],
+        "failed_reports": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "output_sha256": {
+          "test.txt": "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824"
+        }
+      },
+      "passed": [
+        "136"
+      ],
+      "failed": [
+        "0"
+      ],
+      "wall_seconds": 4.52,
+      "user_seconds": 4.33,
+      "sys_seconds": 0.03,
+      "max_rss_bytes": 73760768,
+      "instructions": 88416966594,
+      "cycles": 18394799279,
+      "involuntary_context_switches": 6524,
+      "stage_events": "04-boehm-stages.json",
+      "stage_events_sha256": "137468fcfc01c543c268e8c21f4a195e331098d257dbbc79e57e06db43ce57b5",
+      "largest_shen_intervals": [
+        {
+          "shen_cpu_seconds": 4.343073,
+          "test_label": "Prolog interpreter: (tc -) = false",
+          "preceding_output": [
+            "ok",
+            "0",
+            "loaded"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 4.337407,
+          "test_label": "Prolog interpreter: (tc -) = false",
+          "preceding_output": [
+            "pass rate ... 100%",
+            "ok",
+            "0"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 2.299857,
+          "test_label": "L interpreter: (load \"interpreter.shen\") = loaded",
+          "preceding_output": [
+            "(fn replace) : (pattern --> (l-formula --> (l-formula --> l-formula)))",
+            "(fn free?) : (pattern --> (pattern --> boolean))",
+            "typechecked in 1177726 inferences"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 2.299839,
+          "test_label": "L interpreter: (load \"interpreter.shen\") = loaded",
+          "preceding_output": [
+            "(fn no-match?) : ((list (pattern * l-formula)) --> boolean)",
+            "(fn replace) : (pattern --> (l-formula --> (l-formula --> l-formula)))",
+            "(fn free?) : (pattern --> (pattern --> boolean))"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.596804,
+          "test_label": "c-: (load \"c-minus.shen\") = loaded",
+          "preceding_output": [
+            "(fn <comment>) : ((list string) ==> symbol)",
+            "(fn <comment-body>) : ((list string) ==> symbol)",
+            "typechecked in 289707 inferences"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.596785,
+          "test_label": "c-: (load \"c-minus.shen\") = loaded",
+          "preceding_output": [
+            "(fn <newline>) : ((list string) ==> symbol)",
+            "(fn <comment>) : ((list string) ==> symbol)",
+            "(fn <comment-body>) : ((list string) ==> symbol)"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.444575,
+          "test_label": "Prolog interpreter: (load \"prologinterp.shen\") = loaded",
+          "preceding_output": [
+            "(fn replace-term-in-atom) : (term --> (term --> (atom --> atom)))",
+            "(fn replace-term) : (term --> (term --> (term --> term)))",
+            "typechecked in 1634358 inferences"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.444559,
+          "test_label": "Prolog interpreter: (load \"prologinterp.shen\") = loaded",
+          "preceding_output": [
+            "(fn replace-term-in-clause) : (term --> (term --> (horn-clause --> horn-clause)))",
+            "(fn replace-term-in-atom) : (term --> (term --> (atom --> atom)))",
+            "(fn replace-term) : (term --> (term --> (term --> term)))"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.182089,
+          "test_label": "proof assistant: (load \"proof assistant.shen\") = loaded",
+          "preceding_output": [
+            "(fn back) : ((list ((list wff) * wff)) --> (list ((list wff) * wff)))",
+            "(fn go-back) : ((list ((list ((list wff) * wff)) * ((list ((list wff) * wff)) --> (list ((list wff) * wff))))) --> (list ((list wff) * wff)))",
+            "typechecked in 1253811 inferences"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.182072,
+          "test_label": "proof assistant: (load \"proof assistant.shen\") = loaded",
+          "preceding_output": [
+            "(fn user-directive) : (A --> ((list ((list wff) * wff)) --> (list ((list wff) * wff))))",
+            "(fn back) : ((list ((list wff) * wff)) --> (list ((list wff) * wff)))",
+            "(fn go-back) : ((list ((list ((list wff) * wff)) * ((list ((list wff) * wff)) --> (list ((list wff) * wff))))) --> (list ((list wff) * wff)))"
+          ]
+        }
+      ]
+    },
+    {
+      "label": "rc",
+      "repetition": 4,
+      "command": [
+        "/usr/bin/time",
+        "-l",
+        "/usr/bin/env",
+        "<OPT_ROOT>/evidence/rc/opt-20261017/candidate-f1/shen-rc",
+        "script",
+        "runme.shen"
+      ],
+      "status": "PASS",
+      "binary_sha256": "d3df275c40a5cdb4c00eff074c379b7e4216d68c79c35a4d2bffcdb98558fb3b",
+      "exit": 0,
+      "wrapper_wall_seconds": 3.884,
+      "stdout": "04-rc.out",
+      "stderr": "04-rc.err",
+      "stdout_sha256": "5d2841b2c82d59f363824238703b7222be48ee2f62034d419f62bf2d27017083",
+      "stderr_sha256": "e0049c2ad54ebe5a310904e070a002e5377e5cc79e8c5a363cc5b1956114d272",
+      "binary_unchanged": true,
+      "dependencies_unchanged": true,
+      "suite_unchanged": true,
+      "inputs_unchanged": true,
+      "suite_validation": {
+        "status": "PASS",
+        "errors": [],
+        "passed_reports": [
+          2,
+          4,
+          8,
+          10,
+          17,
+          23,
+          25,
+          29,
+          31,
+          33,
+          35,
+          38,
+          44,
+          46,
+          48,
+          52,
+          54,
+          59,
+          64,
+          70,
+          75,
+          77,
+          90,
+          95,
+          98,
+          101,
+          103,
+          108,
+          111,
+          115,
+          120,
+          125,
+          129,
+          131,
+          133,
+          136
+        ],
+        "failed_reports": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "output_sha256": {
+          "test.txt": "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824"
+        }
+      },
+      "passed": [
+        "136"
+      ],
+      "failed": [
+        "0"
+      ],
+      "wall_seconds": 3.84,
+      "user_seconds": 3.74,
+      "sys_seconds": 0.02,
+      "max_rss_bytes": 31981568,
+      "instructions": 99870736667,
+      "cycles": 15958654941,
+      "involuntary_context_switches": 2195,
+      "stage_events": "04-rc-stages.json",
+      "stage_events_sha256": "5d846f873b09cad938e17aeb1f2ca8acea5dcc7c75ee0a35c4022d00a2a7db83",
+      "largest_shen_intervals": [
+        {
+          "shen_cpu_seconds": 3.753906,
+          "test_label": "Prolog interpreter: (tc -) = false",
+          "preceding_output": [
+            "ok",
+            "0",
+            "loaded"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 3.741741,
+          "test_label": "Prolog interpreter: (tc -) = false",
+          "preceding_output": [
+            "pass rate ... 100%",
+            "ok",
+            "0"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 1.782821,
+          "test_label": "L interpreter: (load \"interpreter.shen\") = loaded",
+          "preceding_output": [
+            "(fn replace) : (pattern --> (l-formula --> (l-formula --> l-formula)))",
+            "(fn free?) : (pattern --> (pattern --> boolean))",
+            "typechecked in 1177726 inferences"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 1.782808,
+          "test_label": "L interpreter: (load \"interpreter.shen\") = loaded",
+          "preceding_output": [
+            "(fn no-match?) : ((list (pattern * l-formula)) --> boolean)",
+            "(fn replace) : (pattern --> (l-formula --> (l-formula --> l-formula)))",
+            "(fn free?) : (pattern --> (pattern --> boolean))"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.635715,
+          "test_label": "c-: (load \"c-minus.shen\") = loaded",
+          "preceding_output": [
+            "(fn <comment>) : ((list string) ==> symbol)",
+            "(fn <comment-body>) : ((list string) ==> symbol)",
+            "typechecked in 289707 inferences"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.635698,
+          "test_label": "c-: (load \"c-minus.shen\") = loaded",
+          "preceding_output": [
+            "(fn <newline>) : ((list string) ==> symbol)",
+            "(fn <comment>) : ((list string) ==> symbol)",
+            "(fn <comment-body>) : ((list string) ==> symbol)"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.360422,
+          "test_label": "Prolog interpreter: (load \"prologinterp.shen\") = loaded",
+          "preceding_output": [
+            "(fn replace-term-in-atom) : (term --> (term --> (atom --> atom)))",
+            "(fn replace-term) : (term --> (term --> (term --> term)))",
+            "typechecked in 1634358 inferences"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.36041,
+          "test_label": "Prolog interpreter: (load \"prologinterp.shen\") = loaded",
+          "preceding_output": [
+            "(fn replace-term-in-clause) : (term --> (term --> (horn-clause --> horn-clause)))",
+            "(fn replace-term-in-atom) : (term --> (term --> (atom --> atom)))",
+            "(fn replace-term) : (term --> (term --> (term --> term)))"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.140817,
+          "test_label": "quantifier machine: (load \"qmachine.shen\") = loaded",
+          "preceding_output": [
+            "(fn prime*?) : (number --> boolean)",
+            "(fn prime-help) : (number --> (number --> (number --> boolean)))",
+            "typechecked in 1346483 inferences"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.140804,
+          "test_label": "quantifier machine: (load \"qmachine.shen\") = loaded",
+          "preceding_output": [
+            "(fn next-prime) : (number --> number)",
+            "(fn prime*?) : (number --> boolean)",
+            "(fn prime-help) : (number --> (number --> (number --> boolean)))"
+          ]
+        }
+      ]
+    },
+    {
+      "label": "rc",
+      "repetition": 5,
+      "command": [
+        "/usr/bin/time",
+        "-l",
+        "/usr/bin/env",
+        "<OPT_ROOT>/evidence/rc/opt-20261017/candidate-f1/shen-rc",
+        "script",
+        "runme.shen"
+      ],
+      "status": "PASS",
+      "binary_sha256": "d3df275c40a5cdb4c00eff074c379b7e4216d68c79c35a4d2bffcdb98558fb3b",
+      "exit": 0,
+      "wrapper_wall_seconds": 4.229,
+      "stdout": "05-rc.out",
+      "stderr": "05-rc.err",
+      "stdout_sha256": "323b8cb8433958a8b7297ae330dc65387aadd03db4d1359a7398234c7d8055c4",
+      "stderr_sha256": "a232f5ccbc127743f47c497626d0f1bbce2b9b37b91826ca9bd2ff976a18c6e2",
+      "binary_unchanged": true,
+      "dependencies_unchanged": true,
+      "suite_unchanged": true,
+      "inputs_unchanged": true,
+      "suite_validation": {
+        "status": "PASS",
+        "errors": [],
+        "passed_reports": [
+          2,
+          4,
+          8,
+          10,
+          17,
+          23,
+          25,
+          29,
+          31,
+          33,
+          35,
+          38,
+          44,
+          46,
+          48,
+          52,
+          54,
+          59,
+          64,
+          70,
+          75,
+          77,
+          90,
+          95,
+          98,
+          101,
+          103,
+          108,
+          111,
+          115,
+          120,
+          125,
+          129,
+          131,
+          133,
+          136
+        ],
+        "failed_reports": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "output_sha256": {
+          "test.txt": "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824"
+        }
+      },
+      "passed": [
+        "136"
+      ],
+      "failed": [
+        "0"
+      ],
+      "wall_seconds": 3.99,
+      "user_seconds": 3.82,
+      "sys_seconds": 0.03,
+      "max_rss_bytes": 31932416,
+      "instructions": 99961483969,
+      "cycles": 16281177566,
+      "involuntary_context_switches": 10533,
+      "stage_events": "05-rc-stages.json",
+      "stage_events_sha256": "4d501689c13507b443a5b29eec9f5760b0b2775b6cf371c0ab2a86ede41a3eaf",
+      "largest_shen_intervals": [
+        {
+          "shen_cpu_seconds": 3.849,
+          "test_label": "Prolog interpreter: (tc -) = false",
+          "preceding_output": [
+            "ok",
+            "0",
+            "loaded"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 3.837076,
+          "test_label": "Prolog interpreter: (tc -) = false",
+          "preceding_output": [
+            "pass rate ... 100%",
+            "ok",
+            "0"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 1.816589,
+          "test_label": "L interpreter: (load \"interpreter.shen\") = loaded",
+          "preceding_output": [
+            "(fn replace) : (pattern --> (l-formula --> (l-formula --> l-formula)))",
+            "(fn free?) : (pattern --> (pattern --> boolean))",
+            "typechecked in 1177726 inferences"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 1.816573,
+          "test_label": "L interpreter: (load \"interpreter.shen\") = loaded",
+          "preceding_output": [
+            "(fn no-match?) : ((list (pattern * l-formula)) --> boolean)",
+            "(fn replace) : (pattern --> (l-formula --> (l-formula --> l-formula)))",
+            "(fn free?) : (pattern --> (pattern --> boolean))"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.615982,
+          "test_label": "c-: (load \"c-minus.shen\") = loaded",
+          "preceding_output": [
+            "(fn <comment>) : ((list string) ==> symbol)",
+            "(fn <comment-body>) : ((list string) ==> symbol)",
+            "typechecked in 289707 inferences"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.615969,
+          "test_label": "c-: (load \"c-minus.shen\") = loaded",
+          "preceding_output": [
+            "(fn <newline>) : ((list string) ==> symbol)",
+            "(fn <comment>) : ((list string) ==> symbol)",
+            "(fn <comment-body>) : ((list string) ==> symbol)"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.402868,
+          "test_label": "Prolog interpreter: (load \"prologinterp.shen\") = loaded",
+          "preceding_output": [
+            "(fn replace-term-in-atom) : (term --> (term --> (atom --> atom)))",
+            "(fn replace-term) : (term --> (term --> (term --> term)))",
+            "typechecked in 1634358 inferences"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.402852,
+          "test_label": "Prolog interpreter: (load \"prologinterp.shen\") = loaded",
+          "preceding_output": [
+            "(fn replace-term-in-clause) : (term --> (term --> (horn-clause --> horn-clause)))",
+            "(fn replace-term-in-atom) : (term --> (term --> (atom --> atom)))",
+            "(fn replace-term) : (term --> (term --> (term --> term)))"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.15713,
+          "test_label": "quantifier machine: (load \"qmachine.shen\") = loaded",
+          "preceding_output": [
+            "(fn prime*?) : (number --> boolean)",
+            "(fn prime-help) : (number --> (number --> (number --> boolean)))",
+            "typechecked in 1346483 inferences"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.157117,
+          "test_label": "quantifier machine: (load \"qmachine.shen\") = loaded",
+          "preceding_output": [
+            "(fn next-prime) : (number --> number)",
+            "(fn prime*?) : (number --> boolean)",
+            "(fn prime-help) : (number --> (number --> (number --> boolean)))"
+          ]
+        }
+      ]
+    },
+    {
+      "label": "boehm",
+      "repetition": 5,
+      "command": [
+        "/usr/bin/time",
+        "-l",
+        "/usr/bin/env",
+        "<BOEHM_ROOT>/bin/shen-c",
+        "script",
+        "runme.shen"
+      ],
+      "status": "PASS",
+      "binary_sha256": "c3673fd327c8c74e0485d013fb9f48f004583fa31dcdfe9f7bbcb1db3db11f3b",
+      "exit": 0,
+      "wrapper_wall_seconds": 4.312,
+      "stdout": "05-boehm.out",
+      "stderr": "05-boehm.err",
+      "stdout_sha256": "60677592f2fa208aad43a8d9fb4362e9934787e266744e9b21d403cd68c3feb5",
+      "stderr_sha256": "c6b44ec896f54e7c134cd0c074d916c1d3b62707554fefba21aa27b1ad1f1ea2",
+      "binary_unchanged": true,
+      "dependencies_unchanged": true,
+      "suite_unchanged": true,
+      "inputs_unchanged": true,
+      "suite_validation": {
+        "status": "PASS",
+        "errors": [],
+        "passed_reports": [
+          2,
+          4,
+          8,
+          10,
+          17,
+          23,
+          25,
+          29,
+          31,
+          33,
+          35,
+          38,
+          44,
+          46,
+          48,
+          52,
+          54,
+          59,
+          64,
+          70,
+          75,
+          77,
+          90,
+          95,
+          98,
+          101,
+          103,
+          108,
+          111,
+          115,
+          120,
+          125,
+          129,
+          131,
+          133,
+          136
+        ],
+        "failed_reports": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "output_sha256": {
+          "test.txt": "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824"
+        }
+      },
+      "passed": [
+        "136"
+      ],
+      "failed": [
+        "0"
+      ],
+      "wall_seconds": 4.28,
+      "user_seconds": 4.18,
+      "sys_seconds": 0.02,
+      "max_rss_bytes": 72990720,
+      "instructions": 88604539531,
+      "cycles": 17825537762,
+      "involuntary_context_switches": 635,
+      "stage_events": "05-boehm-stages.json",
+      "stage_events_sha256": "55fdb9dcd27803de636fda74537afea283f6bc84cb8882063edd925c93bce0b2",
+      "largest_shen_intervals": [
+        {
+          "shen_cpu_seconds": 4.167517,
+          "test_label": "Prolog interpreter: (tc -) = false",
+          "preceding_output": [
+            "ok",
+            "0",
+            "loaded"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 4.161928,
+          "test_label": "Prolog interpreter: (tc -) = false",
+          "preceding_output": [
+            "pass rate ... 100%",
+            "ok",
+            "0"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 2.1667,
+          "test_label": "L interpreter: (load \"interpreter.shen\") = loaded",
+          "preceding_output": [
+            "(fn replace) : (pattern --> (l-formula --> (l-formula --> l-formula)))",
+            "(fn free?) : (pattern --> (pattern --> boolean))",
+            "typechecked in 1177726 inferences"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 2.166682,
+          "test_label": "L interpreter: (load \"interpreter.shen\") = loaded",
+          "preceding_output": [
+            "(fn no-match?) : ((list (pattern * l-formula)) --> boolean)",
+            "(fn replace) : (pattern --> (l-formula --> (l-formula --> l-formula)))",
+            "(fn free?) : (pattern --> (pattern --> boolean))"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.580571,
+          "test_label": "c-: (load \"c-minus.shen\") = loaded",
+          "preceding_output": [
+            "(fn <comment>) : ((list string) ==> symbol)",
+            "(fn <comment-body>) : ((list string) ==> symbol)",
+            "typechecked in 289707 inferences"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.580558,
+          "test_label": "c-: (load \"c-minus.shen\") = loaded",
+          "preceding_output": [
+            "(fn <newline>) : ((list string) ==> symbol)",
+            "(fn <comment>) : ((list string) ==> symbol)",
+            "(fn <comment-body>) : ((list string) ==> symbol)"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.441149,
+          "test_label": "Prolog interpreter: (load \"prologinterp.shen\") = loaded",
+          "preceding_output": [
+            "(fn replace-term-in-atom) : (term --> (term --> (atom --> atom)))",
+            "(fn replace-term) : (term --> (term --> (term --> term)))",
+            "typechecked in 1634358 inferences"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.441135,
+          "test_label": "Prolog interpreter: (load \"prologinterp.shen\") = loaded",
+          "preceding_output": [
+            "(fn replace-term-in-clause) : (term --> (term --> (horn-clause --> horn-clause)))",
+            "(fn replace-term-in-atom) : (term --> (term --> (atom --> atom)))",
+            "(fn replace-term) : (term --> (term --> (term --> term)))"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.162537,
+          "test_label": "quantifier machine: (load \"qmachine.shen\") = loaded",
+          "preceding_output": [
+            "(fn prime*?) : (number --> boolean)",
+            "(fn prime-help) : (number --> (number --> (number --> boolean)))",
+            "typechecked in 1346483 inferences"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.162523,
+          "test_label": "quantifier machine: (load \"qmachine.shen\") = loaded",
+          "preceding_output": [
+            "(fn next-prime) : (number --> number)",
+            "(fn prime*?) : (number --> boolean)",
+            "(fn prime-help) : (number --> (number --> (number --> boolean)))"
+          ]
+        }
+      ]
+    },
+    {
+      "label": "boehm",
+      "repetition": 6,
+      "command": [
+        "/usr/bin/time",
+        "-l",
+        "/usr/bin/env",
+        "<BOEHM_ROOT>/bin/shen-c",
+        "script",
+        "runme.shen"
+      ],
+      "status": "PASS",
+      "binary_sha256": "c3673fd327c8c74e0485d013fb9f48f004583fa31dcdfe9f7bbcb1db3db11f3b",
+      "exit": 0,
+      "wrapper_wall_seconds": 5.109,
+      "stdout": "06-boehm.out",
+      "stderr": "06-boehm.err",
+      "stdout_sha256": "45ac0026391f25eef6cd5e23a5aae2482a8be827a9f5d33879c763c3d35bb09b",
+      "stderr_sha256": "c264264ff28cfc96e36246d67647f6fe00bde1899acd69c41db5447d9586d2b5",
+      "binary_unchanged": true,
+      "dependencies_unchanged": true,
+      "suite_unchanged": true,
+      "inputs_unchanged": true,
+      "suite_validation": {
+        "status": "PASS",
+        "errors": [],
+        "passed_reports": [
+          2,
+          4,
+          8,
+          10,
+          17,
+          23,
+          25,
+          29,
+          31,
+          33,
+          35,
+          38,
+          44,
+          46,
+          48,
+          52,
+          54,
+          59,
+          64,
+          70,
+          75,
+          77,
+          90,
+          95,
+          98,
+          101,
+          103,
+          108,
+          111,
+          115,
+          120,
+          125,
+          129,
+          131,
+          133,
+          136
+        ],
+        "failed_reports": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "output_sha256": {
+          "test.txt": "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824"
+        }
+      },
+      "passed": [
+        "136"
+      ],
+      "failed": [
+        "0"
+      ],
+      "wall_seconds": 4.8,
+      "user_seconds": 4.67,
+      "sys_seconds": 0.02,
+      "max_rss_bytes": 64880640,
+      "instructions": 91806200914,
+      "cycles": 19783941179,
+      "involuntary_context_switches": 3132,
+      "stage_events": "06-boehm-stages.json",
+      "stage_events_sha256": "d3b7d8347094e481d9ac692e8568dc3a250ab617293b342b676db1c97813d6d7",
+      "largest_shen_intervals": [
+        {
+          "shen_cpu_seconds": 4.667797,
+          "test_label": "Prolog interpreter: (tc -) = false",
+          "preceding_output": [
+            "ok",
+            "0",
+            "loaded"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 4.662409,
+          "test_label": "Prolog interpreter: (tc -) = false",
+          "preceding_output": [
+            "pass rate ... 100%",
+            "ok",
+            "0"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 2.463153,
+          "test_label": "L interpreter: (load \"interpreter.shen\") = loaded",
+          "preceding_output": [
+            "(fn replace) : (pattern --> (l-formula --> (l-formula --> l-formula)))",
+            "(fn free?) : (pattern --> (pattern --> boolean))",
+            "typechecked in 1177726 inferences"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 2.463137,
+          "test_label": "L interpreter: (load \"interpreter.shen\") = loaded",
+          "preceding_output": [
+            "(fn no-match?) : ((list (pattern * l-formula)) --> boolean)",
+            "(fn replace) : (pattern --> (l-formula --> (l-formula --> l-formula)))",
+            "(fn free?) : (pattern --> (pattern --> boolean))"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.670114,
+          "test_label": "c-: (load \"c-minus.shen\") = loaded",
+          "preceding_output": [
+            "(fn <comment>) : ((list string) ==> symbol)",
+            "(fn <comment-body>) : ((list string) ==> symbol)",
+            "typechecked in 289707 inferences"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.6701,
+          "test_label": "c-: (load \"c-minus.shen\") = loaded",
+          "preceding_output": [
+            "(fn <newline>) : ((list string) ==> symbol)",
+            "(fn <comment>) : ((list string) ==> symbol)",
+            "(fn <comment-body>) : ((list string) ==> symbol)"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.48676,
+          "test_label": "Prolog interpreter: (load \"prologinterp.shen\") = loaded",
+          "preceding_output": [
+            "(fn replace-term-in-atom) : (term --> (term --> (atom --> atom)))",
+            "(fn replace-term) : (term --> (term --> (term --> term)))",
+            "typechecked in 1634358 inferences"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.486745,
+          "test_label": "Prolog interpreter: (load \"prologinterp.shen\") = loaded",
+          "preceding_output": [
+            "(fn replace-term-in-clause) : (term --> (term --> (horn-clause --> horn-clause)))",
+            "(fn replace-term-in-atom) : (term --> (term --> (atom --> atom)))",
+            "(fn replace-term) : (term --> (term --> (term --> term)))"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.184446,
+          "test_label": "quantifier machine: (load \"qmachine.shen\") = loaded",
+          "preceding_output": [
+            "(fn prime*?) : (number --> boolean)",
+            "(fn prime-help) : (number --> (number --> (number --> boolean)))",
+            "typechecked in 1346483 inferences"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.184433,
+          "test_label": "quantifier machine: (load \"qmachine.shen\") = loaded",
+          "preceding_output": [
+            "(fn next-prime) : (number --> number)",
+            "(fn prime*?) : (number --> boolean)",
+            "(fn prime-help) : (number --> (number --> (number --> boolean)))"
+          ]
+        }
+      ]
+    },
+    {
+      "label": "rc",
+      "repetition": 6,
+      "command": [
+        "/usr/bin/time",
+        "-l",
+        "/usr/bin/env",
+        "<OPT_ROOT>/evidence/rc/opt-20261017/candidate-f1/shen-rc",
+        "script",
+        "runme.shen"
+      ],
+      "status": "PASS",
+      "binary_sha256": "d3df275c40a5cdb4c00eff074c379b7e4216d68c79c35a4d2bffcdb98558fb3b",
+      "exit": 0,
+      "wrapper_wall_seconds": 4.094,
+      "stdout": "06-rc.out",
+      "stderr": "06-rc.err",
+      "stdout_sha256": "949979e60239916b1879494b10be25432bcffda6511eda5d67223d0a75c261b7",
+      "stderr_sha256": "b499d52f28945c8cef95e08866cde9b7908dd138ba982045b7b0d69962706dda",
+      "binary_unchanged": true,
+      "dependencies_unchanged": true,
+      "suite_unchanged": true,
+      "inputs_unchanged": true,
+      "suite_validation": {
+        "status": "PASS",
+        "errors": [],
+        "passed_reports": [
+          2,
+          4,
+          8,
+          10,
+          17,
+          23,
+          25,
+          29,
+          31,
+          33,
+          35,
+          38,
+          44,
+          46,
+          48,
+          52,
+          54,
+          59,
+          64,
+          70,
+          75,
+          77,
+          90,
+          95,
+          98,
+          101,
+          103,
+          108,
+          111,
+          115,
+          120,
+          125,
+          129,
+          131,
+          133,
+          136
+        ],
+        "failed_reports": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "output_sha256": {
+          "test.txt": "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824"
+        }
+      },
+      "passed": [
+        "136"
+      ],
+      "failed": [
+        "0"
+      ],
+      "wall_seconds": 3.95,
+      "user_seconds": 3.84,
+      "sys_seconds": 0.02,
+      "max_rss_bytes": 32194560,
+      "instructions": 99884045540,
+      "cycles": 16371304101,
+      "involuntary_context_switches": 2269,
+      "stage_events": "06-rc-stages.json",
+      "stage_events_sha256": "a4fdc13b3a1a8712ca79c98294ff7918be4c91db5214a4290e3ff382355df596",
+      "largest_shen_intervals": [
+        {
+          "shen_cpu_seconds": 3.848312,
+          "test_label": "Prolog interpreter: (tc -) = false",
+          "preceding_output": [
+            "ok",
+            "0",
+            "loaded"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 3.835996,
+          "test_label": "Prolog interpreter: (tc -) = false",
+          "preceding_output": [
+            "pass rate ... 100%",
+            "ok",
+            "0"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 1.831112,
+          "test_label": "L interpreter: (load \"interpreter.shen\") = loaded",
+          "preceding_output": [
+            "(fn replace) : (pattern --> (l-formula --> (l-formula --> l-formula)))",
+            "(fn free?) : (pattern --> (pattern --> boolean))",
+            "typechecked in 1177726 inferences"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 1.831097,
+          "test_label": "L interpreter: (load \"interpreter.shen\") = loaded",
+          "preceding_output": [
+            "(fn no-match?) : ((list (pattern * l-formula)) --> boolean)",
+            "(fn replace) : (pattern --> (l-formula --> (l-formula --> l-formula)))",
+            "(fn free?) : (pattern --> (pattern --> boolean))"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.635563,
+          "test_label": "c-: (load \"c-minus.shen\") = loaded",
+          "preceding_output": [
+            "(fn <comment>) : ((list string) ==> symbol)",
+            "(fn <comment-body>) : ((list string) ==> symbol)",
+            "typechecked in 289707 inferences"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.635548,
+          "test_label": "c-: (load \"c-minus.shen\") = loaded",
+          "preceding_output": [
+            "(fn <newline>) : ((list string) ==> symbol)",
+            "(fn <comment>) : ((list string) ==> symbol)",
+            "(fn <comment-body>) : ((list string) ==> symbol)"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.375429,
+          "test_label": "Prolog interpreter: (load \"prologinterp.shen\") = loaded",
+          "preceding_output": [
+            "(fn replace-term-in-atom) : (term --> (term --> (atom --> atom)))",
+            "(fn replace-term) : (term --> (term --> (term --> term)))",
+            "typechecked in 1634358 inferences"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.375415,
+          "test_label": "Prolog interpreter: (load \"prologinterp.shen\") = loaded",
+          "preceding_output": [
+            "(fn replace-term-in-clause) : (term --> (term --> (horn-clause --> horn-clause)))",
+            "(fn replace-term-in-atom) : (term --> (term --> (atom --> atom)))",
+            "(fn replace-term) : (term --> (term --> (term --> term)))"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.14663,
+          "test_label": "quantifier machine: (load \"qmachine.shen\") = loaded",
+          "preceding_output": [
+            "(fn prime*?) : (number --> boolean)",
+            "(fn prime-help) : (number --> (number --> (number --> boolean)))",
+            "typechecked in 1346483 inferences"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.146614,
+          "test_label": "quantifier machine: (load \"qmachine.shen\") = loaded",
+          "preceding_output": [
+            "(fn next-prime) : (number --> number)",
+            "(fn prime*?) : (number --> boolean)",
+            "(fn prime-help) : (number --> (number --> (number --> boolean)))"
+          ]
+        }
+      ]
+    },
+    {
+      "label": "rc",
+      "repetition": 7,
+      "command": [
+        "/usr/bin/time",
+        "-l",
+        "/usr/bin/env",
+        "<OPT_ROOT>/evidence/rc/opt-20261017/candidate-f1/shen-rc",
+        "script",
+        "runme.shen"
+      ],
+      "status": "PASS",
+      "binary_sha256": "d3df275c40a5cdb4c00eff074c379b7e4216d68c79c35a4d2bffcdb98558fb3b",
+      "exit": 0,
+      "wrapper_wall_seconds": 4.077,
+      "stdout": "07-rc.out",
+      "stderr": "07-rc.err",
+      "stdout_sha256": "ceadf1beedc9bf04cea90e98af24e9978c1e5c2dcee3285fb95dce0ce576f6dc",
+      "stderr_sha256": "65ebd4fecfbcaca0a04f8122659ca18c9b989fe868b86354928e7b0a4fda9fc1",
+      "binary_unchanged": true,
+      "dependencies_unchanged": true,
+      "suite_unchanged": true,
+      "inputs_unchanged": true,
+      "suite_validation": {
+        "status": "PASS",
+        "errors": [],
+        "passed_reports": [
+          2,
+          4,
+          8,
+          10,
+          17,
+          23,
+          25,
+          29,
+          31,
+          33,
+          35,
+          38,
+          44,
+          46,
+          48,
+          52,
+          54,
+          59,
+          64,
+          70,
+          75,
+          77,
+          90,
+          95,
+          98,
+          101,
+          103,
+          108,
+          111,
+          115,
+          120,
+          125,
+          129,
+          131,
+          133,
+          136
+        ],
+        "failed_reports": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "output_sha256": {
+          "test.txt": "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824"
+        }
+      },
+      "passed": [
+        "136"
+      ],
+      "failed": [
+        "0"
+      ],
+      "wall_seconds": 3.94,
+      "user_seconds": 3.79,
+      "sys_seconds": 0.02,
+      "max_rss_bytes": 32047104,
+      "instructions": 99871284213,
+      "cycles": 16099415468,
+      "involuntary_context_switches": 2476,
+      "stage_events": "07-rc-stages.json",
+      "stage_events_sha256": "75c4cdcbe4959b6741a2d04d405249e4fcf735649b5216368144538373f62668",
+      "largest_shen_intervals": [
+        {
+          "shen_cpu_seconds": 3.802677,
+          "test_label": "Prolog interpreter: (tc -) = false",
+          "preceding_output": [
+            "ok",
+            "0",
+            "loaded"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 3.790577,
+          "test_label": "Prolog interpreter: (tc -) = false",
+          "preceding_output": [
+            "pass rate ... 100%",
+            "ok",
+            "0"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 1.785732,
+          "test_label": "L interpreter: (load \"interpreter.shen\") = loaded",
+          "preceding_output": [
+            "(fn replace) : (pattern --> (l-formula --> (l-formula --> l-formula)))",
+            "(fn free?) : (pattern --> (pattern --> boolean))",
+            "typechecked in 1177726 inferences"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 1.785718,
+          "test_label": "L interpreter: (load \"interpreter.shen\") = loaded",
+          "preceding_output": [
+            "(fn no-match?) : ((list (pattern * l-formula)) --> boolean)",
+            "(fn replace) : (pattern --> (l-formula --> (l-formula --> l-formula)))",
+            "(fn free?) : (pattern --> (pattern --> boolean))"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.673306,
+          "test_label": "c-: (load \"c-minus.shen\") = loaded",
+          "preceding_output": [
+            "(fn <comment>) : ((list string) ==> symbol)",
+            "(fn <comment-body>) : ((list string) ==> symbol)",
+            "typechecked in 289707 inferences"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.673285,
+          "test_label": "c-: (load \"c-minus.shen\") = loaded",
+          "preceding_output": [
+            "(fn <newline>) : ((list string) ==> symbol)",
+            "(fn <comment>) : ((list string) ==> symbol)",
+            "(fn <comment-body>) : ((list string) ==> symbol)"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.364987,
+          "test_label": "Prolog interpreter: (load \"prologinterp.shen\") = loaded",
+          "preceding_output": [
+            "(fn replace-term-in-atom) : (term --> (term --> (atom --> atom)))",
+            "(fn replace-term) : (term --> (term --> (term --> term)))",
+            "typechecked in 1634358 inferences"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.364971,
+          "test_label": "Prolog interpreter: (load \"prologinterp.shen\") = loaded",
+          "preceding_output": [
+            "(fn replace-term-in-clause) : (term --> (term --> (horn-clause --> horn-clause)))",
+            "(fn replace-term-in-atom) : (term --> (term --> (atom --> atom)))",
+            "(fn replace-term) : (term --> (term --> (term --> term)))"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.143992,
+          "test_label": "quantifier machine: (load \"qmachine.shen\") = loaded",
+          "preceding_output": [
+            "(fn prime*?) : (number --> boolean)",
+            "(fn prime-help) : (number --> (number --> (number --> boolean)))",
+            "typechecked in 1346483 inferences"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.14398,
+          "test_label": "quantifier machine: (load \"qmachine.shen\") = loaded",
+          "preceding_output": [
+            "(fn next-prime) : (number --> number)",
+            "(fn prime*?) : (number --> boolean)",
+            "(fn prime-help) : (number --> (number --> (number --> boolean)))"
+          ]
+        }
+      ]
+    },
+    {
+      "label": "boehm",
+      "repetition": 7,
+      "command": [
+        "/usr/bin/time",
+        "-l",
+        "/usr/bin/env",
+        "<BOEHM_ROOT>/bin/shen-c",
+        "script",
+        "runme.shen"
+      ],
+      "status": "PASS",
+      "binary_sha256": "c3673fd327c8c74e0485d013fb9f48f004583fa31dcdfe9f7bbcb1db3db11f3b",
+      "exit": 0,
+      "wrapper_wall_seconds": 4.491,
+      "stdout": "07-boehm.out",
+      "stderr": "07-boehm.err",
+      "stdout_sha256": "8a20ad09235347fd5c0998e4beacb89cbd3f6f3edeccbafbbec3cfba8c44691a",
+      "stderr_sha256": "a0446a2f056b23d274c0623415ce61bb55fbe43be06ab684b4d0c35d9720e90f",
+      "binary_unchanged": true,
+      "dependencies_unchanged": true,
+      "suite_unchanged": true,
+      "inputs_unchanged": true,
+      "suite_validation": {
+        "status": "PASS",
+        "errors": [],
+        "passed_reports": [
+          2,
+          4,
+          8,
+          10,
+          17,
+          23,
+          25,
+          29,
+          31,
+          33,
+          35,
+          38,
+          44,
+          46,
+          48,
+          52,
+          54,
+          59,
+          64,
+          70,
+          75,
+          77,
+          90,
+          95,
+          98,
+          101,
+          103,
+          108,
+          111,
+          115,
+          120,
+          125,
+          129,
+          131,
+          133,
+          136
+        ],
+        "failed_reports": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "output_sha256": {
+          "test.txt": "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824"
+        }
+      },
+      "passed": [
+        "136"
+      ],
+      "failed": [
+        "0"
+      ],
+      "wall_seconds": 4.39,
+      "user_seconds": 4.27,
+      "sys_seconds": 0.02,
+      "max_rss_bytes": 73777152,
+      "instructions": 88411982714,
+      "cycles": 18205717332,
+      "involuntary_context_switches": 3818,
+      "stage_events": "07-boehm-stages.json",
+      "stage_events_sha256": "32fc281a389a805107575b0f6877d5c0d5852365e676b28c121cceb34a9d9e58",
+      "largest_shen_intervals": [
+        {
+          "shen_cpu_seconds": 4.266744,
+          "test_label": "Prolog interpreter: (tc -) = false",
+          "preceding_output": [
+            "ok",
+            "0",
+            "loaded"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 4.26056,
+          "test_label": "Prolog interpreter: (tc -) = false",
+          "preceding_output": [
+            "pass rate ... 100%",
+            "ok",
+            "0"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 2.273263,
+          "test_label": "L interpreter: (load \"interpreter.shen\") = loaded",
+          "preceding_output": [
+            "(fn replace) : (pattern --> (l-formula --> (l-formula --> l-formula)))",
+            "(fn free?) : (pattern --> (pattern --> boolean))",
+            "typechecked in 1177726 inferences"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 2.273246,
+          "test_label": "L interpreter: (load \"interpreter.shen\") = loaded",
+          "preceding_output": [
+            "(fn no-match?) : ((list (pattern * l-formula)) --> boolean)",
+            "(fn replace) : (pattern --> (l-formula --> (l-formula --> l-formula)))",
+            "(fn free?) : (pattern --> (pattern --> boolean))"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.559393,
+          "test_label": "c-: (load \"c-minus.shen\") = loaded",
+          "preceding_output": [
+            "(fn <comment>) : ((list string) ==> symbol)",
+            "(fn <comment-body>) : ((list string) ==> symbol)",
+            "typechecked in 289707 inferences"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.559368,
+          "test_label": "c-: (load \"c-minus.shen\") = loaded",
+          "preceding_output": [
+            "(fn <newline>) : ((list string) ==> symbol)",
+            "(fn <comment>) : ((list string) ==> symbol)",
+            "(fn <comment-body>) : ((list string) ==> symbol)"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.448584,
+          "test_label": "Prolog interpreter: (load \"prologinterp.shen\") = loaded",
+          "preceding_output": [
+            "(fn replace-term-in-atom) : (term --> (term --> (atom --> atom)))",
+            "(fn replace-term) : (term --> (term --> (term --> term)))",
+            "typechecked in 1634358 inferences"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.448568,
+          "test_label": "Prolog interpreter: (load \"prologinterp.shen\") = loaded",
+          "preceding_output": [
+            "(fn replace-term-in-clause) : (term --> (term --> (horn-clause --> horn-clause)))",
+            "(fn replace-term-in-atom) : (term --> (term --> (atom --> atom)))",
+            "(fn replace-term) : (term --> (term --> (term --> term)))"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.180336,
+          "test_label": "quantifier machine: (load \"qmachine.shen\") = loaded",
+          "preceding_output": [
+            "(fn prime*?) : (number --> boolean)",
+            "(fn prime-help) : (number --> (number --> (number --> boolean)))",
+            "typechecked in 1346483 inferences"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.18032,
+          "test_label": "quantifier machine: (load \"qmachine.shen\") = loaded",
+          "preceding_output": [
+            "(fn next-prime) : (number --> number)",
+            "(fn prime*?) : (number --> boolean)",
+            "(fn prime-help) : (number --> (number --> (number --> boolean)))"
+          ]
+        }
+      ]
+    },
+    {
+      "label": "boehm",
+      "repetition": 8,
+      "command": [
+        "/usr/bin/time",
+        "-l",
+        "/usr/bin/env",
+        "<BOEHM_ROOT>/bin/shen-c",
+        "script",
+        "runme.shen"
+      ],
+      "status": "PASS",
+      "binary_sha256": "c3673fd327c8c74e0485d013fb9f48f004583fa31dcdfe9f7bbcb1db3db11f3b",
+      "exit": 0,
+      "wrapper_wall_seconds": 4.905,
+      "stdout": "08-boehm.out",
+      "stderr": "08-boehm.err",
+      "stdout_sha256": "a114d9d0e6a7eb95bfee0c76b9d6d2bb919ed3c8a21e496214e5ddfa5c8dcc81",
+      "stderr_sha256": "3b4831479685c6bbb69ea616e6a6804779cdcdf28281c35fa0fb2b4f76c45634",
+      "binary_unchanged": true,
+      "dependencies_unchanged": true,
+      "suite_unchanged": true,
+      "inputs_unchanged": true,
+      "suite_validation": {
+        "status": "PASS",
+        "errors": [],
+        "passed_reports": [
+          2,
+          4,
+          8,
+          10,
+          17,
+          23,
+          25,
+          29,
+          31,
+          33,
+          35,
+          38,
+          44,
+          46,
+          48,
+          52,
+          54,
+          59,
+          64,
+          70,
+          75,
+          77,
+          90,
+          95,
+          98,
+          101,
+          103,
+          108,
+          111,
+          115,
+          120,
+          125,
+          129,
+          131,
+          133,
+          136
+        ],
+        "failed_reports": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "output_sha256": {
+          "test.txt": "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824"
+        }
+      },
+      "passed": [
+        "136"
+      ],
+      "failed": [
+        "0"
+      ],
+      "wall_seconds": 4.71,
+      "user_seconds": 4.55,
+      "sys_seconds": 0.03,
+      "max_rss_bytes": 73744384,
+      "instructions": 89141352168,
+      "cycles": 19273038533,
+      "involuntary_context_switches": 4744,
+      "stage_events": "08-boehm-stages.json",
+      "stage_events_sha256": "5c40b5ebb71ccf406d2ccaddd08559d291bfbf98de93a70853989c477cab39f4",
+      "largest_shen_intervals": [
+        {
+          "shen_cpu_seconds": 4.550823,
+          "test_label": "Prolog interpreter: (tc -) = false",
+          "preceding_output": [
+            "ok",
+            "0",
+            "loaded"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 4.545215,
+          "test_label": "Prolog interpreter: (tc -) = false",
+          "preceding_output": [
+            "pass rate ... 100%",
+            "ok",
+            "0"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 2.309083,
+          "test_label": "L interpreter: (load \"interpreter.shen\") = loaded",
+          "preceding_output": [
+            "(fn replace) : (pattern --> (l-formula --> (l-formula --> l-formula)))",
+            "(fn free?) : (pattern --> (pattern --> boolean))",
+            "typechecked in 1177726 inferences"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 2.309069,
+          "test_label": "L interpreter: (load \"interpreter.shen\") = loaded",
+          "preceding_output": [
+            "(fn no-match?) : ((list (pattern * l-formula)) --> boolean)",
+            "(fn replace) : (pattern --> (l-formula --> (l-formula --> l-formula)))",
+            "(fn free?) : (pattern --> (pattern --> boolean))"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.604995,
+          "test_label": "c-: (load \"c-minus.shen\") = loaded",
+          "preceding_output": [
+            "(fn <comment>) : ((list string) ==> symbol)",
+            "(fn <comment-body>) : ((list string) ==> symbol)",
+            "typechecked in 289707 inferences"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.604972,
+          "test_label": "c-: (load \"c-minus.shen\") = loaded",
+          "preceding_output": [
+            "(fn <newline>) : ((list string) ==> symbol)",
+            "(fn <comment>) : ((list string) ==> symbol)",
+            "(fn <comment-body>) : ((list string) ==> symbol)"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.549191,
+          "test_label": "Prolog interpreter: (load \"prologinterp.shen\") = loaded",
+          "preceding_output": [
+            "(fn replace-term-in-atom) : (term --> (term --> (atom --> atom)))",
+            "(fn replace-term) : (term --> (term --> (term --> term)))",
+            "typechecked in 1634358 inferences"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.549175,
+          "test_label": "Prolog interpreter: (load \"prologinterp.shen\") = loaded",
+          "preceding_output": [
+            "(fn replace-term-in-clause) : (term --> (term --> (horn-clause --> horn-clause)))",
+            "(fn replace-term-in-atom) : (term --> (term --> (atom --> atom)))",
+            "(fn replace-term) : (term --> (term --> (term --> term)))"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.183851,
+          "test_label": "quantifier machine: (load \"qmachine.shen\") = loaded",
+          "preceding_output": [
+            "(fn prime*?) : (number --> boolean)",
+            "(fn prime-help) : (number --> (number --> (number --> boolean)))",
+            "typechecked in 1346483 inferences"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.183837,
+          "test_label": "quantifier machine: (load \"qmachine.shen\") = loaded",
+          "preceding_output": [
+            "(fn next-prime) : (number --> number)",
+            "(fn prime*?) : (number --> boolean)",
+            "(fn prime-help) : (number --> (number --> (number --> boolean)))"
+          ]
+        }
+      ]
+    },
+    {
+      "label": "rc",
+      "repetition": 8,
+      "command": [
+        "/usr/bin/time",
+        "-l",
+        "/usr/bin/env",
+        "<OPT_ROOT>/evidence/rc/opt-20261017/candidate-f1/shen-rc",
+        "script",
+        "runme.shen"
+      ],
+      "status": "PASS",
+      "binary_sha256": "d3df275c40a5cdb4c00eff074c379b7e4216d68c79c35a4d2bffcdb98558fb3b",
+      "exit": 0,
+      "wrapper_wall_seconds": 4.483,
+      "stdout": "08-rc.out",
+      "stderr": "08-rc.err",
+      "stdout_sha256": "23ecbae1aa0938e3b82295ea42030189b108d79b93ed4607cec3464a4baae5dc",
+      "stderr_sha256": "d369b07a8c5023e527c8f19b97f7068e83b173ca81783ff5b690c6947538248b",
+      "binary_unchanged": true,
+      "dependencies_unchanged": true,
+      "suite_unchanged": true,
+      "inputs_unchanged": true,
+      "suite_validation": {
+        "status": "PASS",
+        "errors": [],
+        "passed_reports": [
+          2,
+          4,
+          8,
+          10,
+          17,
+          23,
+          25,
+          29,
+          31,
+          33,
+          35,
+          38,
+          44,
+          46,
+          48,
+          52,
+          54,
+          59,
+          64,
+          70,
+          75,
+          77,
+          90,
+          95,
+          98,
+          101,
+          103,
+          108,
+          111,
+          115,
+          120,
+          125,
+          129,
+          131,
+          133,
+          136
+        ],
+        "failed_reports": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "output_sha256": {
+          "test.txt": "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824"
+        }
+      },
+      "passed": [
+        "136"
+      ],
+      "failed": [
+        "0"
+      ],
+      "wall_seconds": 4.29,
+      "user_seconds": 4.0,
+      "sys_seconds": 0.06,
+      "max_rss_bytes": 31981568,
+      "instructions": 100041740108,
+      "cycles": 16742729976,
+      "involuntary_context_switches": 16787,
+      "stage_events": "08-rc-stages.json",
+      "stage_events_sha256": "89a2fc388bf3131114f9d8a9c2fd4e02b19da04941761ec750b6453a1951dc76",
+      "largest_shen_intervals": [
+        {
+          "shen_cpu_seconds": 4.047771,
+          "test_label": "Prolog interpreter: (tc -) = false",
+          "preceding_output": [
+            "ok",
+            "0",
+            "loaded"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 4.035192,
+          "test_label": "Prolog interpreter: (tc -) = false",
+          "preceding_output": [
+            "pass rate ... 100%",
+            "ok",
+            "0"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 1.936623,
+          "test_label": "L interpreter: (load \"interpreter.shen\") = loaded",
+          "preceding_output": [
+            "(fn replace) : (pattern --> (l-formula --> (l-formula --> l-formula)))",
+            "(fn free?) : (pattern --> (pattern --> boolean))",
+            "typechecked in 1177726 inferences"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 1.936609,
+          "test_label": "L interpreter: (load \"interpreter.shen\") = loaded",
+          "preceding_output": [
+            "(fn no-match?) : ((list (pattern * l-formula)) --> boolean)",
+            "(fn replace) : (pattern --> (l-formula --> (l-formula --> l-formula)))",
+            "(fn free?) : (pattern --> (pattern --> boolean))"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.68134,
+          "test_label": "c-: (load \"c-minus.shen\") = loaded",
+          "preceding_output": [
+            "(fn <comment>) : ((list string) ==> symbol)",
+            "(fn <comment-body>) : ((list string) ==> symbol)",
+            "typechecked in 289707 inferences"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.681327,
+          "test_label": "c-: (load \"c-minus.shen\") = loaded",
+          "preceding_output": [
+            "(fn <newline>) : ((list string) ==> symbol)",
+            "(fn <comment>) : ((list string) ==> symbol)",
+            "(fn <comment-body>) : ((list string) ==> symbol)"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.385677,
+          "test_label": "Prolog interpreter: (load \"prologinterp.shen\") = loaded",
+          "preceding_output": [
+            "(fn replace-term-in-atom) : (term --> (term --> (atom --> atom)))",
+            "(fn replace-term) : (term --> (term --> (term --> term)))",
+            "typechecked in 1634358 inferences"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.385662,
+          "test_label": "Prolog interpreter: (load \"prologinterp.shen\") = loaded",
+          "preceding_output": [
+            "(fn replace-term-in-clause) : (term --> (term --> (horn-clause --> horn-clause)))",
+            "(fn replace-term-in-atom) : (term --> (term --> (atom --> atom)))",
+            "(fn replace-term) : (term --> (term --> (term --> term)))"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.141307,
+          "test_label": "quantifier machine: (load \"qmachine.shen\") = loaded",
+          "preceding_output": [
+            "(fn prime*?) : (number --> boolean)",
+            "(fn prime-help) : (number --> (number --> (number --> boolean)))",
+            "typechecked in 1346483 inferences"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.141292,
+          "test_label": "quantifier machine: (load \"qmachine.shen\") = loaded",
+          "preceding_output": [
+            "(fn next-prime) : (number --> number)",
+            "(fn prime*?) : (number --> boolean)",
+            "(fn prime-help) : (number --> (number --> (number --> boolean)))"
+          ]
+        }
+      ]
+    },
+    {
+      "label": "rc",
+      "repetition": 9,
+      "command": [
+        "/usr/bin/time",
+        "-l",
+        "/usr/bin/env",
+        "<OPT_ROOT>/evidence/rc/opt-20261017/candidate-f1/shen-rc",
+        "script",
+        "runme.shen"
+      ],
+      "status": "PASS",
+      "binary_sha256": "d3df275c40a5cdb4c00eff074c379b7e4216d68c79c35a4d2bffcdb98558fb3b",
+      "exit": 0,
+      "wrapper_wall_seconds": 3.882,
+      "stdout": "09-rc.out",
+      "stderr": "09-rc.err",
+      "stdout_sha256": "7874dd59bde1f395901be33eb8f97115eea7ef9769a5c1ad32035882d5ffad88",
+      "stderr_sha256": "b9a3988a8d057bc52ad85ea46002a5159275045689140649c1d58861d708bc58",
+      "binary_unchanged": true,
+      "dependencies_unchanged": true,
+      "suite_unchanged": true,
+      "inputs_unchanged": true,
+      "suite_validation": {
+        "status": "PASS",
+        "errors": [],
+        "passed_reports": [
+          2,
+          4,
+          8,
+          10,
+          17,
+          23,
+          25,
+          29,
+          31,
+          33,
+          35,
+          38,
+          44,
+          46,
+          48,
+          52,
+          54,
+          59,
+          64,
+          70,
+          75,
+          77,
+          90,
+          95,
+          98,
+          101,
+          103,
+          108,
+          111,
+          115,
+          120,
+          125,
+          129,
+          131,
+          133,
+          136
+        ],
+        "failed_reports": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "output_sha256": {
+          "test.txt": "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824"
+        }
+      },
+      "passed": [
+        "136"
+      ],
+      "failed": [
+        "0"
+      ],
+      "wall_seconds": 3.84,
+      "user_seconds": 3.73,
+      "sys_seconds": 0.01,
+      "max_rss_bytes": 31883264,
+      "instructions": 99854264303,
+      "cycles": 15882554557,
+      "involuntary_context_switches": 385,
+      "stage_events": "09-rc-stages.json",
+      "stage_events_sha256": "f1f4b9359667c85f33e7da6e035bd79d9a85b230b84a81d034106dc3f5bcc458",
+      "largest_shen_intervals": [
+        {
+          "shen_cpu_seconds": 3.733625,
+          "test_label": "Prolog interpreter: (tc -) = false",
+          "preceding_output": [
+            "ok",
+            "0",
+            "loaded"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 3.721543,
+          "test_label": "Prolog interpreter: (tc -) = false",
+          "preceding_output": [
+            "pass rate ... 100%",
+            "ok",
+            "0"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 1.77996,
+          "test_label": "L interpreter: (load \"interpreter.shen\") = loaded",
+          "preceding_output": [
+            "(fn replace) : (pattern --> (l-formula --> (l-formula --> l-formula)))",
+            "(fn free?) : (pattern --> (pattern --> boolean))",
+            "typechecked in 1177726 inferences"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 1.779947,
+          "test_label": "L interpreter: (load \"interpreter.shen\") = loaded",
+          "preceding_output": [
+            "(fn no-match?) : ((list (pattern * l-formula)) --> boolean)",
+            "(fn replace) : (pattern --> (l-formula --> (l-formula --> l-formula)))",
+            "(fn free?) : (pattern --> (pattern --> boolean))"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.613431,
+          "test_label": "c-: (load \"c-minus.shen\") = loaded",
+          "preceding_output": [
+            "(fn <comment>) : ((list string) ==> symbol)",
+            "(fn <comment-body>) : ((list string) ==> symbol)",
+            "typechecked in 289707 inferences"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.613417,
+          "test_label": "c-: (load \"c-minus.shen\") = loaded",
+          "preceding_output": [
+            "(fn <newline>) : ((list string) ==> symbol)",
+            "(fn <comment>) : ((list string) ==> symbol)",
+            "(fn <comment-body>) : ((list string) ==> symbol)"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.360439,
+          "test_label": "Prolog interpreter: (load \"prologinterp.shen\") = loaded",
+          "preceding_output": [
+            "(fn replace-term-in-atom) : (term --> (term --> (atom --> atom)))",
+            "(fn replace-term) : (term --> (term --> (term --> term)))",
+            "typechecked in 1634358 inferences"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.360425,
+          "test_label": "Prolog interpreter: (load \"prologinterp.shen\") = loaded",
+          "preceding_output": [
+            "(fn replace-term-in-clause) : (term --> (term --> (horn-clause --> horn-clause)))",
+            "(fn replace-term-in-atom) : (term --> (term --> (atom --> atom)))",
+            "(fn replace-term) : (term --> (term --> (term --> term)))"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.143927,
+          "test_label": "quantifier machine: (load \"qmachine.shen\") = loaded",
+          "preceding_output": [
+            "(fn prime*?) : (number --> boolean)",
+            "(fn prime-help) : (number --> (number --> (number --> boolean)))",
+            "typechecked in 1346483 inferences"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.143915,
+          "test_label": "quantifier machine: (load \"qmachine.shen\") = loaded",
+          "preceding_output": [
+            "(fn next-prime) : (number --> number)",
+            "(fn prime*?) : (number --> boolean)",
+            "(fn prime-help) : (number --> (number --> (number --> boolean)))"
+          ]
+        }
+      ]
+    },
+    {
+      "label": "boehm",
+      "repetition": 9,
+      "command": [
+        "/usr/bin/time",
+        "-l",
+        "/usr/bin/env",
+        "<BOEHM_ROOT>/bin/shen-c",
+        "script",
+        "runme.shen"
+      ],
+      "status": "PASS",
+      "binary_sha256": "c3673fd327c8c74e0485d013fb9f48f004583fa31dcdfe9f7bbcb1db3db11f3b",
+      "exit": 0,
+      "wrapper_wall_seconds": 4.885,
+      "stdout": "09-boehm.out",
+      "stderr": "09-boehm.err",
+      "stdout_sha256": "5cb59a6fa40acc6c3234abd86e47367f3751a7d2513f4393ca99a0cd6ace75f4",
+      "stderr_sha256": "b621da2cf8db18a6e93ee446ce305f7fd0f9a2f7ef4385c466c8a5a0a13d3702",
+      "binary_unchanged": true,
+      "dependencies_unchanged": true,
+      "suite_unchanged": true,
+      "inputs_unchanged": true,
+      "suite_validation": {
+        "status": "PASS",
+        "errors": [],
+        "passed_reports": [
+          2,
+          4,
+          8,
+          10,
+          17,
+          23,
+          25,
+          29,
+          31,
+          33,
+          35,
+          38,
+          44,
+          46,
+          48,
+          52,
+          54,
+          59,
+          64,
+          70,
+          75,
+          77,
+          90,
+          95,
+          98,
+          101,
+          103,
+          108,
+          111,
+          115,
+          120,
+          125,
+          129,
+          131,
+          133,
+          136
+        ],
+        "failed_reports": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "output_sha256": {
+          "test.txt": "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824"
+        }
+      },
+      "passed": [
+        "136"
+      ],
+      "failed": [
+        "0"
+      ],
+      "wall_seconds": 4.62,
+      "user_seconds": 4.48,
+      "sys_seconds": 0.03,
+      "max_rss_bytes": 64880640,
+      "instructions": 91837785734,
+      "cycles": 19099592715,
+      "involuntary_context_switches": 3746,
+      "stage_events": "09-boehm-stages.json",
+      "stage_events_sha256": "f2450ca52ca2d4570878e59a9bfd48539e6405e2c959d27be12eb8e985cca3b0",
+      "largest_shen_intervals": [
+        {
+          "shen_cpu_seconds": 4.487678,
+          "test_label": "Prolog interpreter: (tc -) = false",
+          "preceding_output": [
+            "ok",
+            "0",
+            "loaded"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 4.482242,
+          "test_label": "Prolog interpreter: (tc -) = false",
+          "preceding_output": [
+            "pass rate ... 100%",
+            "ok",
+            "0"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 2.315901,
+          "test_label": "L interpreter: (load \"interpreter.shen\") = loaded",
+          "preceding_output": [
+            "(fn replace) : (pattern --> (l-formula --> (l-formula --> l-formula)))",
+            "(fn free?) : (pattern --> (pattern --> boolean))",
+            "typechecked in 1177726 inferences"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 2.315886,
+          "test_label": "L interpreter: (load \"interpreter.shen\") = loaded",
+          "preceding_output": [
+            "(fn no-match?) : ((list (pattern * l-formula)) --> boolean)",
+            "(fn replace) : (pattern --> (l-formula --> (l-formula --> l-formula)))",
+            "(fn free?) : (pattern --> (pattern --> boolean))"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.639666,
+          "test_label": "c-: (load \"c-minus.shen\") = loaded",
+          "preceding_output": [
+            "(fn <comment>) : ((list string) ==> symbol)",
+            "(fn <comment-body>) : ((list string) ==> symbol)",
+            "typechecked in 289707 inferences"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.639646,
+          "test_label": "c-: (load \"c-minus.shen\") = loaded",
+          "preceding_output": [
+            "(fn <newline>) : ((list string) ==> symbol)",
+            "(fn <comment>) : ((list string) ==> symbol)",
+            "(fn <comment-body>) : ((list string) ==> symbol)"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.492963,
+          "test_label": "Prolog interpreter: (load \"prologinterp.shen\") = loaded",
+          "preceding_output": [
+            "(fn replace-term-in-atom) : (term --> (term --> (atom --> atom)))",
+            "(fn replace-term) : (term --> (term --> (term --> term)))",
+            "typechecked in 1634358 inferences"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.492944,
+          "test_label": "Prolog interpreter: (load \"prologinterp.shen\") = loaded",
+          "preceding_output": [
+            "(fn replace-term-in-clause) : (term --> (term --> (horn-clause --> horn-clause)))",
+            "(fn replace-term-in-atom) : (term --> (term --> (atom --> atom)))",
+            "(fn replace-term) : (term --> (term --> (term --> term)))"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.169412,
+          "test_label": "quantifier machine: (load \"qmachine.shen\") = loaded",
+          "preceding_output": [
+            "(fn prime*?) : (number --> boolean)",
+            "(fn prime-help) : (number --> (number --> (number --> boolean)))",
+            "typechecked in 1346483 inferences"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.169399,
+          "test_label": "quantifier machine: (load \"qmachine.shen\") = loaded",
+          "preceding_output": [
+            "(fn next-prime) : (number --> number)",
+            "(fn prime*?) : (number --> boolean)",
+            "(fn prime-help) : (number --> (number --> (number --> boolean)))"
+          ]
+        }
+      ]
+    },
+    {
+      "label": "boehm",
+      "repetition": 10,
+      "command": [
+        "/usr/bin/time",
+        "-l",
+        "/usr/bin/env",
+        "<BOEHM_ROOT>/bin/shen-c",
+        "script",
+        "runme.shen"
+      ],
+      "status": "PASS",
+      "binary_sha256": "c3673fd327c8c74e0485d013fb9f48f004583fa31dcdfe9f7bbcb1db3db11f3b",
+      "exit": 0,
+      "wrapper_wall_seconds": 5.505,
+      "stdout": "10-boehm.out",
+      "stderr": "10-boehm.err",
+      "stdout_sha256": "19607797b8b279f13112964a5af809bad0c883528e4fa907d3b68febe70d52f0",
+      "stderr_sha256": "26d94b080a39aa134a8d20a5acb1397bc9231304f8b951b4e67fb79f7a0ec271",
+      "binary_unchanged": true,
+      "dependencies_unchanged": true,
+      "suite_unchanged": true,
+      "inputs_unchanged": true,
+      "suite_validation": {
+        "status": "PASS",
+        "errors": [],
+        "passed_reports": [
+          2,
+          4,
+          8,
+          10,
+          17,
+          23,
+          25,
+          29,
+          31,
+          33,
+          35,
+          38,
+          44,
+          46,
+          48,
+          52,
+          54,
+          59,
+          64,
+          70,
+          75,
+          77,
+          90,
+          95,
+          98,
+          101,
+          103,
+          108,
+          111,
+          115,
+          120,
+          125,
+          129,
+          131,
+          133,
+          136
+        ],
+        "failed_reports": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "output_sha256": {
+          "test.txt": "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824"
+        }
+      },
+      "passed": [
+        "136"
+      ],
+      "failed": [
+        "0"
+      ],
+      "wall_seconds": 5.44,
+      "user_seconds": 5.16,
+      "sys_seconds": 0.03,
+      "max_rss_bytes": 73760768,
+      "instructions": 89090905837,
+      "cycles": 20753434262,
+      "involuntary_context_switches": 3016,
+      "stage_events": "10-boehm-stages.json",
+      "stage_events_sha256": "1e9a45d0f3327425377a62e98b729c7b79cd48f46a14e87356703ddaf6a90c78",
+      "largest_shen_intervals": [
+        {
+          "shen_cpu_seconds": 5.162392,
+          "test_label": "Prolog interpreter: (tc -) = false",
+          "preceding_output": [
+            "ok",
+            "0",
+            "loaded"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 5.156711,
+          "test_label": "Prolog interpreter: (tc -) = false",
+          "preceding_output": [
+            "pass rate ... 100%",
+            "ok",
+            "0"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 2.692555,
+          "test_label": "L interpreter: (load \"interpreter.shen\") = loaded",
+          "preceding_output": [
+            "(fn replace) : (pattern --> (l-formula --> (l-formula --> l-formula)))",
+            "(fn free?) : (pattern --> (pattern --> boolean))",
+            "typechecked in 1177726 inferences"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 2.692539,
+          "test_label": "L interpreter: (load \"interpreter.shen\") = loaded",
+          "preceding_output": [
+            "(fn no-match?) : ((list (pattern * l-formula)) --> boolean)",
+            "(fn replace) : (pattern --> (l-formula --> (l-formula --> l-formula)))",
+            "(fn free?) : (pattern --> (pattern --> boolean))"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.650649,
+          "test_label": "c-: (load \"c-minus.shen\") = loaded",
+          "preceding_output": [
+            "(fn <comment>) : ((list string) ==> symbol)",
+            "(fn <comment-body>) : ((list string) ==> symbol)",
+            "typechecked in 289707 inferences"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.650636,
+          "test_label": "c-: (load \"c-minus.shen\") = loaded",
+          "preceding_output": [
+            "(fn <newline>) : ((list string) ==> symbol)",
+            "(fn <comment>) : ((list string) ==> symbol)",
+            "(fn <comment-body>) : ((list string) ==> symbol)"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.641744,
+          "test_label": "Prolog interpreter: (load \"prologinterp.shen\") = loaded",
+          "preceding_output": [
+            "(fn replace-term-in-atom) : (term --> (term --> (atom --> atom)))",
+            "(fn replace-term) : (term --> (term --> (term --> term)))",
+            "typechecked in 1634358 inferences"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.641717,
+          "test_label": "Prolog interpreter: (load \"prologinterp.shen\") = loaded",
+          "preceding_output": [
+            "(fn replace-term-in-clause) : (term --> (term --> (horn-clause --> horn-clause)))",
+            "(fn replace-term-in-atom) : (term --> (term --> (atom --> atom)))",
+            "(fn replace-term) : (term --> (term --> (term --> term)))"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.223236,
+          "test_label": "quantifier machine: (load \"qmachine.shen\") = loaded",
+          "preceding_output": [
+            "(fn prime*?) : (number --> boolean)",
+            "(fn prime-help) : (number --> (number --> (number --> boolean)))",
+            "typechecked in 1346483 inferences"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.223216,
+          "test_label": "quantifier machine: (load \"qmachine.shen\") = loaded",
+          "preceding_output": [
+            "(fn next-prime) : (number --> number)",
+            "(fn prime*?) : (number --> boolean)",
+            "(fn prime-help) : (number --> (number --> (number --> boolean)))"
+          ]
+        }
+      ]
+    },
+    {
+      "label": "rc",
+      "repetition": 10,
+      "command": [
+        "/usr/bin/time",
+        "-l",
+        "/usr/bin/env",
+        "<OPT_ROOT>/evidence/rc/opt-20261017/candidate-f1/shen-rc",
+        "script",
+        "runme.shen"
+      ],
+      "status": "PASS",
+      "binary_sha256": "d3df275c40a5cdb4c00eff074c379b7e4216d68c79c35a4d2bffcdb98558fb3b",
+      "exit": 0,
+      "wrapper_wall_seconds": 4.682,
+      "stdout": "10-rc.out",
+      "stderr": "10-rc.err",
+      "stdout_sha256": "5d879ddc68d786158ea4eba093eed97c88a0925637248e60a7246e6359f4c13a",
+      "stderr_sha256": "25015c445af41ea09a0ec02dc9c37798119c400717773c243a003fd34bdff8ee",
+      "binary_unchanged": true,
+      "dependencies_unchanged": true,
+      "suite_unchanged": true,
+      "inputs_unchanged": true,
+      "suite_validation": {
+        "status": "PASS",
+        "errors": [],
+        "passed_reports": [
+          2,
+          4,
+          8,
+          10,
+          17,
+          23,
+          25,
+          29,
+          31,
+          33,
+          35,
+          38,
+          44,
+          46,
+          48,
+          52,
+          54,
+          59,
+          64,
+          70,
+          75,
+          77,
+          90,
+          95,
+          98,
+          101,
+          103,
+          108,
+          111,
+          115,
+          120,
+          125,
+          129,
+          131,
+          133,
+          136
+        ],
+        "failed_reports": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "output_sha256": {
+          "test.txt": "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824"
+        }
+      },
+      "passed": [
+        "136"
+      ],
+      "failed": [
+        "0"
+      ],
+      "wall_seconds": 4.6,
+      "user_seconds": 4.14,
+      "sys_seconds": 0.02,
+      "max_rss_bytes": 32178176,
+      "instructions": 99891797139,
+      "cycles": 16616611464,
+      "involuntary_context_switches": 2266,
+      "stage_events": "10-rc-stages.json",
+      "stage_events_sha256": "b3fc6aaec0a0f68b31c9ac58e9562adc49c2e34c837a1bace49b8cac9b4f9df8",
+      "largest_shen_intervals": [
+        {
+          "shen_cpu_seconds": 4.148983,
+          "test_label": "Prolog interpreter: (tc -) = false",
+          "preceding_output": [
+            "ok",
+            "0",
+            "loaded"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 4.123346,
+          "test_label": "Prolog interpreter: (tc -) = false",
+          "preceding_output": [
+            "pass rate ... 100%",
+            "ok",
+            "0"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 1.982227,
+          "test_label": "L interpreter: (load \"interpreter.shen\") = loaded",
+          "preceding_output": [
+            "(fn replace) : (pattern --> (l-formula --> (l-formula --> l-formula)))",
+            "(fn free?) : (pattern --> (pattern --> boolean))",
+            "typechecked in 1177726 inferences"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 1.982209,
+          "test_label": "L interpreter: (load \"interpreter.shen\") = loaded",
+          "preceding_output": [
+            "(fn no-match?) : ((list (pattern * l-formula)) --> boolean)",
+            "(fn replace) : (pattern --> (l-formula --> (l-formula --> l-formula)))",
+            "(fn free?) : (pattern --> (pattern --> boolean))"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.667215,
+          "test_label": "c-: (load \"c-minus.shen\") = loaded",
+          "preceding_output": [
+            "(fn <comment>) : ((list string) ==> symbol)",
+            "(fn <comment-body>) : ((list string) ==> symbol)",
+            "typechecked in 289707 inferences"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.667199,
+          "test_label": "c-: (load \"c-minus.shen\") = loaded",
+          "preceding_output": [
+            "(fn <newline>) : ((list string) ==> symbol)",
+            "(fn <comment>) : ((list string) ==> symbol)",
+            "(fn <comment-body>) : ((list string) ==> symbol)"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.371591,
+          "test_label": "Prolog interpreter: (load \"prologinterp.shen\") = loaded",
+          "preceding_output": [
+            "(fn replace-term-in-atom) : (term --> (term --> (atom --> atom)))",
+            "(fn replace-term) : (term --> (term --> (term --> term)))",
+            "typechecked in 1634358 inferences"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.371575,
+          "test_label": "Prolog interpreter: (load \"prologinterp.shen\") = loaded",
+          "preceding_output": [
+            "(fn replace-term-in-clause) : (term --> (term --> (horn-clause --> horn-clause)))",
+            "(fn replace-term-in-atom) : (term --> (term --> (atom --> atom)))",
+            "(fn replace-term) : (term --> (term --> (term --> term)))"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.154847,
+          "test_label": "quantifier machine: (load \"qmachine.shen\") = loaded",
+          "preceding_output": [
+            "(fn prime*?) : (number --> boolean)",
+            "(fn prime-help) : (number --> (number --> (number --> boolean)))",
+            "typechecked in 1346483 inferences"
+          ]
+        },
+        {
+          "shen_cpu_seconds": 0.154832,
+          "test_label": "quantifier machine: (load \"qmachine.shen\") = loaded",
+          "preceding_output": [
+            "(fn next-prime) : (number --> number)",
+            "(fn prime*?) : (number --> boolean)",
+            "(fn prime-help) : (number --> (number --> (number --> boolean)))"
+          ]
+        }
+      ]
+    }
+  ],
+  "harness_sha256": {
+    "<OPT_ROOT>/scripts/benchmark-rc.py": "4c23aee050112f7b3bd3c502f2f4dfb8cd9d50dd9b67623ac3daebca28751c11",
+    "<OPT_ROOT>/scripts/release_manifest.py": "19b1dd8d4a0a6fc412247143bfcba0ab68d9c96e15a63e1c806d7a81347eb96a"
+  },
+  "timing_note": "Shen run-time events are nested CPU intervals; do not sum them.",
+  "started_utc": "2026-10-18T01:48:30.557200+00:00",
+  "removed_environment_prefixes": [
+    "SHEN_",
+    "RC_",
+    "DYLD_",
+    "GC_",
+    "ASAN_OPTIONS",
+    "UBSAN_OPTIONS",
+    "CPUPROFILE",
+    "CPUPROFILESIGNAL"
+  ],
+  "summary": {
+    "rc": {
+      "wall_seconds": {
+        "min": 3.82,
+        "median": 3.91,
+        "max": 4.6
+      },
+      "user_seconds": {
+        "min": 3.73,
+        "median": 3.7800000000000002,
+        "max": 4.14
+      },
+      "sys_seconds": {
+        "min": 0.01,
+        "median": 0.02,
+        "max": 0.06
+      },
+      "max_rss_bytes": {
+        "min": 31883264,
+        "median": 32006144.0,
+        "max": 32194560
+      },
+      "instructions": {
+        "min": 99854264303,
+        "median": 99877238180.0,
+        "max": 100041740108
+      },
+      "cycles": {
+        "min": 15881763306,
+        "median": 16073703082.5,
+        "max": 16742729976
+      }
+    },
+    "boehm": {
+      "wall_seconds": {
+        "min": 4.28,
+        "median": 4.529999999999999,
+        "max": 5.44
+      },
+      "user_seconds": {
+        "min": 4.18,
+        "median": 4.395,
+        "max": 5.16
+      },
+      "sys_seconds": {
+        "min": 0.02,
+        "median": 0.02,
+        "max": 0.03
+      },
+      "max_rss_bytes": {
+        "min": 64880640,
+        "median": 73703424.0,
+        "max": 73777152
+      },
+      "instructions": {
+        "min": 88402410072,
+        "median": 88786859999.0,
+        "max": 91837785734
+      },
+      "cycles": {
+        "min": 17825537762,
+        "median": 18711147553.0,
+        "max": 20753434262
+      }
+    }
+  },
+  "execution_status": "PASS",
+  "performance_acceptance": {
+    "status": "PASS",
+    "batches": [
+      {
+        "user_seconds": 0.8817966903073285,
+        "wall_seconds": 0.8761467889908255,
+        "max_rss_bytes": 0.4343861209964413
+      },
+      {
+        "user_seconds": 0.8325892857142856,
+        "wall_seconds": 0.8455882352941175,
+        "max_rss_bytes": 0.4362505553087517
+      }
+    ],
+    "cpu_wins": 10,
+    "paired_ratios": [
+      {
+        "user_seconds": 0.8817966903073285,
+        "wall_seconds": 0.8842592592592592,
+        "max_rss_bytes": 0.4343861209964413
+      },
+      {
+        "user_seconds": 0.8452914798206278,
+        "wall_seconds": 0.8546255506607929,
+        "max_rss_bytes": 0.4341257498333704
+      },
+      {
+        "user_seconds": 0.8838862559241707,
+        "wall_seconds": 0.8761467889908255,
+        "max_rss_bytes": 0.439380332285586
+      },
+      {
+        "user_seconds": 0.8637413394919169,
+        "wall_seconds": 0.8495575221238939,
+        "max_rss_bytes": 0.43358507330075524
+      },
+      {
+        "user_seconds": 0.9138755980861244,
+        "wall_seconds": 0.9322429906542056,
+        "max_rss_bytes": 0.4374859708193041
+      },
+      {
+        "user_seconds": 0.8222698072805139,
+        "wall_seconds": 0.8229166666666667,
+        "max_rss_bytes": 0.4962121212121212
+      },
+      {
+        "user_seconds": 0.8875878220140516,
+        "wall_seconds": 0.8974943052391801,
+        "max_rss_bytes": 0.4343770819453698
+      },
+      {
+        "user_seconds": 0.8791208791208791,
+        "wall_seconds": 0.910828025477707,
+        "max_rss_bytes": 0.433681404132415
+      },
+      {
+        "user_seconds": 0.8325892857142856,
+        "wall_seconds": 0.8311688311688311,
+        "max_rss_bytes": 0.4914141414141414
+      },
+      {
+        "user_seconds": 0.8023255813953487,
+        "wall_seconds": 0.8455882352941175,
+        "max_rss_bytes": 0.4362505553087517
+      }
+    ],
+    "rc_max_rss_vs_baseline": 1.0391327340031729
+  },
+  "status": "PASS",
+  "ended_utc": "2026-10-18T01:50:01.035656+00:00"
+}

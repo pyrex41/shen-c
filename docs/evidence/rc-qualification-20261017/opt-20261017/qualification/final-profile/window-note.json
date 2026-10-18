@@ -1,0 +1,4 @@
+{
+  "scope": "diagnostic only",
+  "limitation": "An independent diagnostic baseline build overlapped this initial sampling window. Retained; repeated with no local builds or benchmarks."
+}

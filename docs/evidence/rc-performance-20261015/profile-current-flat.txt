@@ -1,0 +1,25 @@
+Sort by top of stack, same collapsed (when >= 5):
+        rc_symbol  (in shen-rc)        74
+        rc_release  (in shen-rc)        48
+        rc_collect  (in shen-rc)        30
+        _platform_strcmp$VARIANT$Base  (in libsystem_platform.dylib)        25
+        apply_small  (in shen-rc)        21
+        _xzm_free_tc  (in libsystem_malloc.dylib)        20
+        _xzm_malloc_tc  (in libsystem_malloc.dylib)        12
+        apply_request  (in shen-rc)        11
+        primitive  (in shen-rc)        11
+        rc_retain  (in shen-rc)        11
+        DYLD-STUB$$_platform_strcmp  (in libsystem_platform.dylib)        10
+        _free  (in libsystem_malloc.dylib)        10
+        rc_tailcall_owned_args  (in shen-rc)        10
+        rc_function_get  (in shen-rc)        9
+        rc_type  (in shen-rc)        9
+        _malloc_zone_calloc  (in libsystem_malloc.dylib)        7
+        rc_text  (in shen-rc)        7
+        DYLD-STUB$$strcmp  (in shen-rc)        6
+        rc_capture  (in shen-rc)        6
+        rc_equal  (in shen-rc)        6
+        rc_native_398  (in shen-rc)        6
+        rc_safepoint  (in shen-rc)        6
+        rc_is_true  (in shen-rc)        5
+        rc_native_834  (in shen-rc)        5

@@ -1,0 +1,36 @@
+[
+  [
+    "/usr/bin/cc",
+    "-O3",
+    "-g",
+    "-flto=thin",
+    "-std=c17",
+    "-I<OPT_ROOT>/src/rc",
+    "-c",
+    "<OPT_ROOT>/evidence/rc/opt-20261017/count-build/main.c",
+    "-o",
+    "<OPT_ROOT>/evidence/rc/opt-20261017/count-build/main.o"
+  ],
+  [
+    "/usr/bin/cc",
+    "-g",
+    "-flto=thin",
+    "<OPT_ROOT>/evidence/rc/opt-20261017/count-build/main.o",
+    "<RC_BASELINE_ROOT>/obj/rc/kernel.o",
+    "<RC_BASELINE_ROOT>/bin/rc/libshenrc.a",
+    "-lm",
+    "-o",
+    "<OPT_ROOT>/evidence/rc/opt-20261017/count-build/shen-baseline"
+  ],
+  [
+    "/usr/bin/cc",
+    "-g",
+    "-flto=thin",
+    "<OPT_ROOT>/evidence/rc/opt-20261017/count-build/main.o",
+    "<OPT_ROOT>/obj/rc/kernel.o",
+    "<OPT_ROOT>/bin/rc/libshenrc.a",
+    "-lm",
+    "-o",
+    "<OPT_ROOT>/evidence/rc/opt-20261017/count-build/shen-candidate"
+  ]
+]

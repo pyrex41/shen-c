@@ -1,0 +1,292 @@
+{
+  "schema": 1,
+  "scope": "Fresh default CMake Release full graph, CLI alias, embedded eval from empty cwd, compiler/CLI Boehm audit",
+  "status": "PASS",
+  "build_directory": "${TMP}/shen-rc-cmake-default-cli-20261015T213508Z",
+  "source_sha256_at_configure": {
+    "CMakeLists.txt": "c3915b24502c60326258882cae9374f7971756a588eefbb9c80d3bb137d6eee2",
+    "tools/rc-build.c": "0b3bc4244c14bf1d4f2c857f74c09b7100606172fc3535622bfaa2d3b6e5a484",
+    "src/rc/emit.c": "02b340c759af10023808ebe202492a4f15f7b20b1d9652f4fbf4eec25629047a",
+    "src/rc/emit.h": "ae1946b669f771941b12a706316a28090aefd126f54cc687fa00a3b10b322a9f",
+    "src/rc/eval.c": "1fa1e61b5ebc2bb55d17b62153e8be9c55e46c0b42948fa5b497f31c5310da13",
+    "src/rc/eval.h": "40840e20cb00334a7032ef11aec08ce6a0846912ae05dfb0d08e894ba7ad2e15",
+    "src/rc/main.c": "3172e40552e11ce650026c5c0f3c85936a74e4f02872319745f9e6f6c08ca34f",
+    "src/rc/primitives.c": "db07db3d3fb9c71e212abdec2180085ac66d2bbd9d5318c2764845f8599b94d7",
+    "src/rc/primitives.h": "d3e6db49c69741c8a656822b6564c5fe8494a8ceb0813c89f75971abcb95d59d",
+    "src/rc/rc.c": "b5fd2a86b1db6cf2d148d34a4294bef71a4b495b84b03c26d31e960e8fa350b5",
+    "src/rc/rc.h": "b7b44e2a8e43d019a87157564a90cbf6b926e842a2bbe6bef2c4f05236363ee3",
+    "src/rc/read.c": "f61444980f2d34d3986f9640103b3478501c4d368f6c2dd5058a4b39b3143667",
+    "src/rc/read.h": "71fb3e8ce757174ee47dde95f732200ae1b023c66f8164ac0a4d82ebb241fea5",
+    "shen/src/kl/sys.kl": "964156c922e844560b6675898e304317a524c0d617941730af1a32636c3d2418",
+    "shen/src/kl/writer.kl": "3894e6c7d3961d2715fcc2aa9ea7d28805790b0bbdd072966b126fc95ecaf51d",
+    "shen/src/kl/core.kl": "f2477d4151c3ecd2d76c8f2b58ec577a6dc830392e0afd342e2fdb3d1adb1a75",
+    "shen/src/kl/reader.kl": "ec5dafa613ffdff36fe5c0b98beb2381625b635e4b3db621dded01e30ebdb397",
+    "shen/src/kl/declarations.kl": "4d7c169ffba20bbbca00d2785eb498df268c0d57f3dda9ff0042ae9f5d51b9da",
+    "shen/src/kl/toplevel.kl": "eb10d13f31087ade803c0831bb2a9b7facac1040f506803313937b22fbb3f90a",
+    "shen/src/kl/macros.kl": "7b5cfd98a676e2733f5de090d19388ed9270c70ff301769b814983cb978ed7c5",
+    "shen/src/kl/load.kl": "56eba5b674e5085a09dfa38390b1e7f677496e0c601fd3ed6f482577bcf971c9",
+    "shen/src/kl/prolog.kl": "dc401f8940f7f97fbfc87157338ff8b84fd845c1101b70e6db893886aaf11c17",
+    "shen/src/kl/sequent.kl": "b1018c6d58706f78ac81cc72cf7c4712d36d1be173708ff9def26d0169ddd644",
+    "shen/src/kl/track.kl": "a7d2ad7952540fc4f022ac7ff1773477bb82977e6ff5fbde1d25c8e418b849aa",
+    "shen/src/kl/t-star.kl": "ee6e5e6e15b2224964151a6a5f6f04b121bfc957597277bc2b70141d4a812776",
+    "shen/src/kl/yacc.kl": "192880765a29ae6801ef9088a7511e4477be998e6c16ab82f3cc3a2087727f00",
+    "shen/src/kl/types.kl": "b0c8c5a2a76c9dadef7cfc5cc5db2f60c6cc7a816dd7ff5ee4a7da52db6cb531"
+  },
+  "commands": [
+    {
+      "name": "configure",
+      "argv": [
+        "/nix/store/y134s2lnhk472l2m2lm1q07wp5pj677j-cmake-4.1.2/bin/cmake",
+        "-S",
+        ".",
+        "-B",
+        "${TMP}/shen-rc-cmake-default-cli-20261015T213508Z",
+        "-G",
+        "Unix Makefiles",
+        "-DCMAKE_BUILD_TYPE=Release",
+        "-DSHEN_RC_SANITIZE=OFF",
+        "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON",
+        "-DCMAKE_C_COMPILER=/Library/Developer/CommandLineTools/usr/bin/clang",
+        "-DCMAKE_OSX_SYSROOT=/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk",
+        "-DCMAKE_AR=/nix/store/0jqhv6bkz6inag7sgzzy0289sy6fvjr4-llvm-21.1.8/bin/llvm-ar",
+        "-DCMAKE_RANLIB=/nix/store/0jqhv6bkz6inag7sgzzy0289sy6fvjr4-llvm-21.1.8/bin/llvm-ranlib",
+        "-DCMAKE_C_COMPILER_AR=/nix/store/0jqhv6bkz6inag7sgzzy0289sy6fvjr4-llvm-21.1.8/bin/llvm-ar",
+        "-DCMAKE_C_COMPILER_RANLIB=/nix/store/0jqhv6bkz6inag7sgzzy0289sy6fvjr4-llvm-21.1.8/bin/llvm-ranlib",
+        "-DCMAKE_MAKE_PROGRAM=/nix/store/308q7v3aaiw4d1wjijy7xcszlgnfadb6-gnumake-4.4.1/bin/make"
+      ],
+      "log": "evidence/rc/cmake-default-cli-20261015T213508Z/configure.log",
+      "exit_code": 0,
+      "seconds": 15.366
+    },
+    {
+      "name": "build",
+      "argv": [
+        "/nix/store/y134s2lnhk472l2m2lm1q07wp5pj677j-cmake-4.1.2/bin/cmake",
+        "--build",
+        "${TMP}/shen-rc-cmake-default-cli-20261015T213508Z",
+        "--parallel",
+        "2"
+      ],
+      "log": "evidence/rc/cmake-default-cli-20261015T213508Z/build.log",
+      "exit_code": 0,
+      "seconds": 58.844
+    },
+    {
+      "name": "ctest",
+      "argv": [
+        "/nix/store/y134s2lnhk472l2m2lm1q07wp5pj677j-cmake-4.1.2/bin/ctest",
+        "--test-dir",
+        "${TMP}/shen-rc-cmake-default-cli-20261015T213508Z",
+        "--output-on-failure"
+      ],
+      "log": "evidence/rc/cmake-default-cli-20261015T213508Z/ctest.log",
+      "exit_code": 0,
+      "seconds": 5.114
+    },
+    {
+      "name": "audit",
+      "argv": [
+        "sh",
+        "scripts/test-rc.sh",
+        "--audit-only",
+        "${TMP}/shen-rc-cmake-default-cli-20261015T213508Z/rc-build",
+        "${TMP}/shen-rc-cmake-default-cli-20261015T213508Z/shen-rc",
+        "${TMP}/shen-rc-cmake-default-cli-20261015T213508Z/shen-c"
+      ],
+      "log": "evidence/rc/cmake-default-cli-20261015T213508Z/audit.log",
+      "exit_code": 0,
+      "seconds": 0.713
+    },
+    {
+      "name": "reader-capture",
+      "argv": [
+        "sh",
+        "test/rc/test_reader_capture.sh",
+        "${TMP}/shen-rc-cmake-default-cli-20261015T213508Z/shen-rc"
+      ],
+      "log": "evidence/rc/cmake-default-cli-20261015T213508Z/reader-capture.log",
+      "exit_code": 0,
+      "seconds": 16.418
+    },
+    {
+      "name": "empty-cwd-arithmetic",
+      "argv": [
+        "${TMP}/shen-rc-cmake-default-cli-20261015T213508Z/shen-rc",
+        "eval",
+        "-q",
+        "-e",
+        "(+ 20 22)"
+      ],
+      "log": "evidence/rc/cmake-default-cli-20261015T213508Z/empty-cwd-arithmetic.log",
+      "exit_code": 0,
+      "seconds": 0.379
+    },
+    {
+      "name": "empty-cwd-reverse",
+      "argv": [
+        "${TMP}/shen-rc-cmake-default-cli-20261015T213508Z/shen-rc",
+        "eval",
+        "-q",
+        "-e",
+        "(reverse [1 2 3])"
+      ],
+      "log": "evidence/rc/cmake-default-cli-20261015T213508Z/empty-cwd-reverse.log",
+      "exit_code": 0,
+      "seconds": 0.305
+    },
+    {
+      "name": "empty-cwd-legalcycle",
+      "argv": [
+        "${TMP}/shen-rc-cmake-default-cli-20261015T213508Z/shen-rc",
+        "eval",
+        "-q",
+        "-e",
+        "(let V (absvector 1) (do (address-> V 0 V) (= V (<-address V 0))))"
+      ],
+      "log": "evidence/rc/cmake-default-cli-20261015T213508Z/empty-cwd-legalcycle.log",
+      "exit_code": 0,
+      "seconds": 0.28
+    },
+    {
+      "name": "empty-cwd-visible-arithmetic",
+      "argv": [
+        "${TMP}/shen-rc-cmake-default-cli-20261015T213508Z/shen-rc",
+        "eval",
+        "-e",
+        "(+ 20 22)"
+      ],
+      "log": "evidence/rc/cmake-default-cli-20261015T213508Z/empty-cwd-visible-arithmetic.log",
+      "exit_code": 0,
+      "seconds": 0.227
+    },
+    {
+      "name": "empty-cwd-visible-reverse",
+      "argv": [
+        "${TMP}/shen-rc-cmake-default-cli-20261015T213508Z/shen-rc",
+        "eval",
+        "-e",
+        "(reverse [1 2 3])"
+      ],
+      "log": "evidence/rc/cmake-default-cli-20261015T213508Z/empty-cwd-visible-reverse.log",
+      "exit_code": 0,
+      "seconds": 0.26
+    },
+    {
+      "name": "empty-cwd-visible-legalcycle",
+      "argv": [
+        "${TMP}/shen-rc-cmake-default-cli-20261015T213508Z/shen-rc",
+        "eval",
+        "-e",
+        "(let V (absvector 1) (do (address-> V 0 V) (= V (<-address V 0))))"
+      ],
+      "log": "evidence/rc/cmake-default-cli-20261015T213508Z/empty-cwd-visible-legalcycle.log",
+      "exit_code": 0,
+      "seconds": 0.286
+    }
+  ],
+  "planned_build": [
+    "/nix/store/y134s2lnhk472l2m2lm1q07wp5pj677j-cmake-4.1.2/bin/cmake",
+    "--build",
+    "${TMP}/shen-rc-cmake-default-cli-20261015T213508Z",
+    "--parallel",
+    "2"
+  ],
+  "heavy_build_started": true,
+  "root_queue_release_required": false,
+  "source_sha256_at_build_start": {
+    "CMakeLists.txt": "c3915b24502c60326258882cae9374f7971756a588eefbb9c80d3bb137d6eee2",
+    "tools/rc-build.c": "0b3bc4244c14bf1d4f2c857f74c09b7100606172fc3535622bfaa2d3b6e5a484",
+    "src/rc/emit.c": "b44742a4bfd6a128aad54523b1747efbfa375372aa26505e6d611f329a43ca23",
+    "src/rc/emit.h": "ae1946b669f771941b12a706316a28090aefd126f54cc687fa00a3b10b322a9f",
+    "src/rc/eval.c": "1fa1e61b5ebc2bb55d17b62153e8be9c55e46c0b42948fa5b497f31c5310da13",
+    "src/rc/eval.h": "40840e20cb00334a7032ef11aec08ce6a0846912ae05dfb0d08e894ba7ad2e15",
+    "src/rc/main.c": "aed4ac89c8aaf338f8519b35554effd251b04d47bbee6dbf5781343097d74275",
+    "src/rc/primitives.c": "db07db3d3fb9c71e212abdec2180085ac66d2bbd9d5318c2764845f8599b94d7",
+    "src/rc/primitives.h": "d3e6db49c69741c8a656822b6564c5fe8494a8ceb0813c89f75971abcb95d59d",
+    "src/rc/rc.c": "b5fd2a86b1db6cf2d148d34a4294bef71a4b495b84b03c26d31e960e8fa350b5",
+    "src/rc/rc.h": "b7b44e2a8e43d019a87157564a90cbf6b926e842a2bbe6bef2c4f05236363ee3",
+    "src/rc/read.c": "f61444980f2d34d3986f9640103b3478501c4d368f6c2dd5058a4b39b3143667",
+    "src/rc/read.h": "71fb3e8ce757174ee47dde95f732200ae1b023c66f8164ac0a4d82ebb241fea5",
+    "shen/src/kl/sys.kl": "964156c922e844560b6675898e304317a524c0d617941730af1a32636c3d2418",
+    "shen/src/kl/writer.kl": "3894e6c7d3961d2715fcc2aa9ea7d28805790b0bbdd072966b126fc95ecaf51d",
+    "shen/src/kl/core.kl": "f2477d4151c3ecd2d76c8f2b58ec577a6dc830392e0afd342e2fdb3d1adb1a75",
+    "shen/src/kl/reader.kl": "ec5dafa613ffdff36fe5c0b98beb2381625b635e4b3db621dded01e30ebdb397",
+    "shen/src/kl/declarations.kl": "4d7c169ffba20bbbca00d2785eb498df268c0d57f3dda9ff0042ae9f5d51b9da",
+    "shen/src/kl/toplevel.kl": "eb10d13f31087ade803c0831bb2a9b7facac1040f506803313937b22fbb3f90a",
+    "shen/src/kl/macros.kl": "7b5cfd98a676e2733f5de090d19388ed9270c70ff301769b814983cb978ed7c5",
+    "shen/src/kl/load.kl": "56eba5b674e5085a09dfa38390b1e7f677496e0c601fd3ed6f482577bcf971c9",
+    "shen/src/kl/prolog.kl": "dc401f8940f7f97fbfc87157338ff8b84fd845c1101b70e6db893886aaf11c17",
+    "shen/src/kl/sequent.kl": "b1018c6d58706f78ac81cc72cf7c4712d36d1be173708ff9def26d0169ddd644",
+    "shen/src/kl/track.kl": "a7d2ad7952540fc4f022ac7ff1773477bb82977e6ff5fbde1d25c8e418b849aa",
+    "shen/src/kl/t-star.kl": "ee6e5e6e15b2224964151a6a5f6f04b121bfc957597277bc2b70141d4a812776",
+    "shen/src/kl/yacc.kl": "192880765a29ae6801ef9088a7511e4477be998e6c16ab82f3cc3a2087727f00",
+    "shen/src/kl/types.kl": "b0c8c5a2a76c9dadef7cfc5cc5db2f60c6cc7a816dd7ff5ee4a7da52db6cb531",
+    "scripts/test-rc.sh": "acf8451ff1924ff1b11861e015d220fcd2a558cd280b2de099a07296f890f213",
+    "test/rc/test_reader_capture.sh": "37d226cdb9e05422473a9212386ba52646dbd7e0bc8fbef9e1695c5364a684b8"
+  },
+  "artifact_sha256": {
+    "rc-build": "697245064db9b29fa31ad265c00b2953a4a8dfce3b4e6be7e1fdba5ae7240167",
+    "shen-rc": "728f77465dfd30a5f3bd15309ab369cb22ed1f3bf39a28603a5bcc84807a90d7",
+    "shen-c": "728f77465dfd30a5f3bd15309ab369cb22ed1f3bf39a28603a5bcc84807a90d7",
+    "rc-kernel.c": "d46479905a370ba07ac5287e5bef86206124d0debc71671b847bde814837a00f"
+  },
+  "cli_alias_identical": true,
+  "empty_cwd_checks": [
+    {
+      "name": "arithmetic",
+      "expected": "42",
+      "actual": "42",
+      "passed": true
+    },
+    {
+      "name": "reverse",
+      "expected": "[3 2 1]",
+      "actual": "[3 2 1]",
+      "passed": true
+    },
+    {
+      "name": "legalcycle",
+      "expected": "true",
+      "actual": "true",
+      "passed": true
+    }
+  ],
+  "source_sha256_after": {
+    "CMakeLists.txt": "c3915b24502c60326258882cae9374f7971756a588eefbb9c80d3bb137d6eee2",
+    "tools/rc-build.c": "0b3bc4244c14bf1d4f2c857f74c09b7100606172fc3535622bfaa2d3b6e5a484",
+    "src/rc/emit.c": "b44742a4bfd6a128aad54523b1747efbfa375372aa26505e6d611f329a43ca23",
+    "src/rc/emit.h": "ae1946b669f771941b12a706316a28090aefd126f54cc687fa00a3b10b322a9f",
+    "src/rc/eval.c": "1fa1e61b5ebc2bb55d17b62153e8be9c55e46c0b42948fa5b497f31c5310da13",
+    "src/rc/eval.h": "40840e20cb00334a7032ef11aec08ce6a0846912ae05dfb0d08e894ba7ad2e15",
+    "src/rc/main.c": "aed4ac89c8aaf338f8519b35554effd251b04d47bbee6dbf5781343097d74275",
+    "src/rc/primitives.c": "db07db3d3fb9c71e212abdec2180085ac66d2bbd9d5318c2764845f8599b94d7",
+    "src/rc/primitives.h": "d3e6db49c69741c8a656822b6564c5fe8494a8ceb0813c89f75971abcb95d59d",
+    "src/rc/rc.c": "b5fd2a86b1db6cf2d148d34a4294bef71a4b495b84b03c26d31e960e8fa350b5",
+    "src/rc/rc.h": "b7b44e2a8e43d019a87157564a90cbf6b926e842a2bbe6bef2c4f05236363ee3",
+    "src/rc/read.c": "f61444980f2d34d3986f9640103b3478501c4d368f6c2dd5058a4b39b3143667",
+    "src/rc/read.h": "71fb3e8ce757174ee47dde95f732200ae1b023c66f8164ac0a4d82ebb241fea5",
+    "shen/src/kl/sys.kl": "964156c922e844560b6675898e304317a524c0d617941730af1a32636c3d2418",
+    "shen/src/kl/writer.kl": "3894e6c7d3961d2715fcc2aa9ea7d28805790b0bbdd072966b126fc95ecaf51d",
+    "shen/src/kl/core.kl": "f2477d4151c3ecd2d76c8f2b58ec577a6dc830392e0afd342e2fdb3d1adb1a75",
+    "shen/src/kl/reader.kl": "ec5dafa613ffdff36fe5c0b98beb2381625b635e4b3db621dded01e30ebdb397",
+    "shen/src/kl/declarations.kl": "4d7c169ffba20bbbca00d2785eb498df268c0d57f3dda9ff0042ae9f5d51b9da",
+    "shen/src/kl/toplevel.kl": "eb10d13f31087ade803c0831bb2a9b7facac1040f506803313937b22fbb3f90a",
+    "shen/src/kl/macros.kl": "7b5cfd98a676e2733f5de090d19388ed9270c70ff301769b814983cb978ed7c5",
+    "shen/src/kl/load.kl": "56eba5b674e5085a09dfa38390b1e7f677496e0c601fd3ed6f482577bcf971c9",
+    "shen/src/kl/prolog.kl": "dc401f8940f7f97fbfc87157338ff8b84fd845c1101b70e6db893886aaf11c17",
+    "shen/src/kl/sequent.kl": "b1018c6d58706f78ac81cc72cf7c4712d36d1be173708ff9def26d0169ddd644",
+    "shen/src/kl/track.kl": "a7d2ad7952540fc4f022ac7ff1773477bb82977e6ff5fbde1d25c8e418b849aa",
+    "shen/src/kl/t-star.kl": "ee6e5e6e15b2224964151a6a5f6f04b121bfc957597277bc2b70141d4a812776",
+    "shen/src/kl/yacc.kl": "192880765a29ae6801ef9088a7511e4477be998e6c16ab82f3cc3a2087727f00",
+    "shen/src/kl/types.kl": "b0c8c5a2a76c9dadef7cfc5cc5db2f60c6cc7a816dd7ff5ee4a7da52db6cb531",
+    "scripts/test-rc.sh": "acf8451ff1924ff1b11861e015d220fcd2a558cd280b2de099a07296f890f213",
+    "test/rc/test_reader_capture.sh": "37d226cdb9e05422473a9212386ba52646dbd7e0bc8fbef9e1695c5364a684b8"
+  },
+  "source_unchanged_during_qualification": true,
+  "empty_cwd_initial_check_note": "Initial commands used -q, which intentionally suppresses output; all exited zero. Repeated without -q for asserted output.",
+  "_publication": {
+    "raw_receipt": "evidence/rc/cmake-default-cli-20261015T213508Z/receipt.json",
+    "raw_sha256": "d7e0c3ee290ec6a37628d1cfb402c8deae974155df5e457f13d0de3b66871aeb",
+    "path_redaction": "Repository, home and temporary paths replaced; hashes describe original bytes."
+  }
+}

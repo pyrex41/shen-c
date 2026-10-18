@@ -1,0 +1,294 @@
+{
+  "baseline": "8dbc9414a402a148dee0e5c0bde6fd087c7e9fce",
+  "host": "arm64 Darwin",
+  "compiler": "Apple clang 21.0.0",
+  "flags": "-O3 -flto=thin -std=c17; no sanitizer",
+  "logical_header_before": 136,
+  "logical_header_after": 128,
+  "darwin_malloc_size_before": 160,
+  "darwin_malloc_size_after": 128,
+  "long_balanced_runs": [
+    {
+      "repeat": 0,
+      "mode": 0,
+      "variant": "before",
+      "instructions": 2363628974,
+      "output": "mode=0 iterations=10000000 seconds=0.265139 header=136 usable=160 allocations=10000000 frees=10000000 retains=0 releases=10000000 collections=0 cycles=0 live=0 cached=1 cached_bytes=136"
+    },
+    {
+      "repeat": 0,
+      "mode": 0,
+      "variant": "after",
+      "instructions": 2355401360,
+      "output": "mode=0 iterations=10000000 seconds=0.310679 header=128 usable=128 allocations=10000000 frees=10000000 retains=0 releases=10000000 collections=0 cycles=0 live=0 cached=1 cached_bytes=128"
+    },
+    {
+      "repeat": 0,
+      "mode": 1,
+      "variant": "before",
+      "instructions": 1143893591,
+      "output": "mode=1 iterations=128 seconds=0.188465 header=136 usable=160 allocations=2097152 frees=2097152 retains=0 releases=2097152 collections=0 cycles=0 live=0 cached=1024 cached_bytes=139264"
+    },
+    {
+      "repeat": 0,
+      "mode": 1,
+      "variant": "after",
+      "instructions": 1155118277,
+      "output": "mode=1 iterations=128 seconds=0.167984 header=128 usable=128 allocations=2097152 frees=2097152 retains=0 releases=2097152 collections=0 cycles=0 live=0 cached=1024 cached_bytes=131072"
+    },
+    {
+      "repeat": 0,
+      "mode": 2,
+      "variant": "before",
+      "instructions": 1177734814,
+      "output": "mode=2 iterations=2000000 seconds=0.177795 header=136 usable=160 allocations=2000000 frees=2000000 retains=2000000 releases=2000000 collections=15626 cycles=2000000 live=0 cached=128 cached_bytes=17408"
+    },
+    {
+      "repeat": 0,
+      "mode": 2,
+      "variant": "after",
+      "instructions": 1183004661,
+      "output": "mode=2 iterations=2000000 seconds=0.170815 header=128 usable=128 allocations=2000000 frees=2000000 retains=2000000 releases=2000000 collections=15626 cycles=2000000 live=0 cached=128 cached_bytes=16384"
+    },
+    {
+      "repeat": 0,
+      "mode": 3,
+      "variant": "before",
+      "instructions": 1237810529,
+      "output": "mode=3 iterations=10000000 seconds=0.129312 header=136 usable=160 allocations=0 frees=0 retains=0 releases=0 collections=0 cycles=0 live=127 cached=0 cached_bytes=0"
+    },
+    {
+      "repeat": 0,
+      "mode": 3,
+      "variant": "after",
+      "instructions": 1237259380,
+      "output": "mode=3 iterations=10000000 seconds=0.129082 header=128 usable=128 allocations=0 frees=0 retains=0 releases=0 collections=0 cycles=0 live=127 cached=0 cached_bytes=0"
+    },
+    {
+      "repeat": 1,
+      "mode": 3,
+      "variant": "after",
+      "instructions": 1239099735,
+      "output": "mode=3 iterations=10000000 seconds=0.137975 header=128 usable=128 allocations=0 frees=0 retains=0 releases=0 collections=0 cycles=0 live=127 cached=0 cached_bytes=0"
+    },
+    {
+      "repeat": 1,
+      "mode": 3,
+      "variant": "before",
+      "instructions": 1237080789,
+      "output": "mode=3 iterations=10000000 seconds=0.127523 header=136 usable=160 allocations=0 frees=0 retains=0 releases=0 collections=0 cycles=0 live=127 cached=0 cached_bytes=0"
+    },
+    {
+      "repeat": 1,
+      "mode": 2,
+      "variant": "after",
+      "instructions": 1178509911,
+      "output": "mode=2 iterations=2000000 seconds=0.128324 header=128 usable=128 allocations=2000000 frees=2000000 retains=2000000 releases=2000000 collections=15626 cycles=2000000 live=0 cached=128 cached_bytes=16384"
+    },
+    {
+      "repeat": 1,
+      "mode": 2,
+      "variant": "before",
+      "instructions": 1178283345,
+      "output": "mode=2 iterations=2000000 seconds=0.139977 header=136 usable=160 allocations=2000000 frees=2000000 retains=2000000 releases=2000000 collections=15626 cycles=2000000 live=0 cached=128 cached_bytes=17408"
+    },
+    {
+      "repeat": 1,
+      "mode": 1,
+      "variant": "after",
+      "instructions": 1153537222,
+      "output": "mode=1 iterations=128 seconds=0.141261 header=128 usable=128 allocations=2097152 frees=2097152 retains=0 releases=2097152 collections=0 cycles=0 live=0 cached=1024 cached_bytes=131072"
+    },
+    {
+      "repeat": 1,
+      "mode": 1,
+      "variant": "before",
+      "instructions": 1143365568,
+      "output": "mode=1 iterations=128 seconds=0.150364 header=136 usable=160 allocations=2097152 frees=2097152 retains=0 releases=2097152 collections=0 cycles=0 live=0 cached=1024 cached_bytes=139264"
+    },
+    {
+      "repeat": 1,
+      "mode": 0,
+      "variant": "after",
+      "instructions": 2351022700,
+      "output": "mode=0 iterations=10000000 seconds=0.258889 header=128 usable=128 allocations=10000000 frees=10000000 retains=0 releases=10000000 collections=0 cycles=0 live=0 cached=1 cached_bytes=128"
+    },
+    {
+      "repeat": 1,
+      "mode": 0,
+      "variant": "before",
+      "instructions": 2361338974,
+      "output": "mode=0 iterations=10000000 seconds=0.262299 header=136 usable=160 allocations=10000000 frees=10000000 retains=0 releases=10000000 collections=0 cycles=0 live=0 cached=1 cached_bytes=136"
+    }
+  ],
+  "short_pilot_runs": [
+    {
+      "repeat": 0,
+      "mode": 0,
+      "variant": "before",
+      "instructions": 248517087,
+      "output": "mode=0 iterations=1000000 seconds=0.021047 header=136 usable=160 allocations=1000000 frees=1000000 retains=0 releases=1000000 collections=0 cycles=0 live=0 cached=1 cached_bytes=136"
+    },
+    {
+      "repeat": 0,
+      "mode": 0,
+      "variant": "after",
+      "instructions": 247403236,
+      "output": "mode=0 iterations=1000000 seconds=0.023166 header=128 usable=128 allocations=1000000 frees=1000000 retains=0 releases=1000000 collections=0 cycles=0 live=0 cached=1 cached_bytes=128"
+    },
+    {
+      "repeat": 0,
+      "mode": 1,
+      "variant": "before",
+      "instructions": 158208996,
+      "output": "mode=1 iterations=16 seconds=0.017804 header=136 usable=160 allocations=262144 frees=262144 retains=0 releases=262144 collections=0 cycles=0 live=0 cached=1024 cached_bytes=139264"
+    },
+    {
+      "repeat": 0,
+      "mode": 1,
+      "variant": "after",
+      "instructions": 157469602,
+      "output": "mode=1 iterations=16 seconds=0.014163 header=128 usable=128 allocations=262144 frees=262144 retains=0 releases=262144 collections=0 cycles=0 live=0 cached=1024 cached_bytes=131072"
+    },
+    {
+      "repeat": 0,
+      "mode": 2,
+      "variant": "before",
+      "instructions": 132001118,
+      "output": "mode=2 iterations=200000 seconds=0.011624 header=136 usable=160 allocations=200000 frees=200000 retains=200000 releases=200000 collections=1563 cycles=200000 live=0 cached=128 cached_bytes=17408"
+    },
+    {
+      "repeat": 0,
+      "mode": 2,
+      "variant": "after",
+      "instructions": 132763356,
+      "output": "mode=2 iterations=200000 seconds=0.013111 header=128 usable=128 allocations=200000 frees=200000 retains=200000 releases=200000 collections=1563 cycles=200000 live=0 cached=128 cached_bytes=16384"
+    },
+    {
+      "repeat": 0,
+      "mode": 3,
+      "variant": "before",
+      "instructions": 136218695,
+      "output": "mode=3 iterations=1000000 seconds=0.012968 header=136 usable=160 allocations=0 frees=0 retains=0 releases=0 collections=0 cycles=0 live=127 cached=0 cached_bytes=0"
+    },
+    {
+      "repeat": 0,
+      "mode": 3,
+      "variant": "after",
+      "instructions": 135398355,
+      "output": "mode=3 iterations=1000000 seconds=0.013208 header=128 usable=128 allocations=0 frees=0 retains=0 releases=0 collections=0 cycles=0 live=127 cached=0 cached_bytes=0"
+    },
+    {
+      "repeat": 1,
+      "mode": 3,
+      "variant": "after",
+      "instructions": 135445026,
+      "output": "mode=3 iterations=1000000 seconds=0.012901 header=128 usable=128 allocations=0 frees=0 retains=0 releases=0 collections=0 cycles=0 live=127 cached=0 cached_bytes=0"
+    },
+    {
+      "repeat": 1,
+      "mode": 3,
+      "variant": "before",
+      "instructions": 135482154,
+      "output": "mode=3 iterations=1000000 seconds=0.014382 header=136 usable=160 allocations=0 frees=0 retains=0 releases=0 collections=0 cycles=0 live=127 cached=0 cached_bytes=0"
+    },
+    {
+      "repeat": 1,
+      "mode": 2,
+      "variant": "after",
+      "instructions": 132708883,
+      "output": "mode=2 iterations=200000 seconds=0.011347 header=128 usable=128 allocations=200000 frees=200000 retains=200000 releases=200000 collections=1563 cycles=200000 live=0 cached=128 cached_bytes=16384"
+    },
+    {
+      "repeat": 1,
+      "mode": 2,
+      "variant": "before",
+      "instructions": 131733005,
+      "output": "mode=2 iterations=200000 seconds=0.011678 header=136 usable=160 allocations=200000 frees=200000 retains=200000 releases=200000 collections=1563 cycles=200000 live=0 cached=128 cached_bytes=17408"
+    },
+    {
+      "repeat": 1,
+      "mode": 1,
+      "variant": "after",
+      "instructions": 158151716,
+      "output": "mode=1 iterations=16 seconds=0.015340 header=128 usable=128 allocations=262144 frees=262144 retains=0 releases=262144 collections=0 cycles=0 live=0 cached=1024 cached_bytes=131072"
+    },
+    {
+      "repeat": 1,
+      "mode": 1,
+      "variant": "before",
+      "instructions": 158168920,
+      "output": "mode=1 iterations=16 seconds=0.016355 header=136 usable=160 allocations=262144 frees=262144 retains=0 releases=262144 collections=0 cycles=0 live=0 cached=1024 cached_bytes=139264"
+    },
+    {
+      "repeat": 1,
+      "mode": 0,
+      "variant": "after",
+      "instructions": 246725332,
+      "output": "mode=0 iterations=1000000 seconds=0.022067 header=128 usable=128 allocations=1000000 frees=1000000 retains=0 releases=1000000 collections=0 cycles=0 live=0 cached=1 cached_bytes=128"
+    },
+    {
+      "repeat": 1,
+      "mode": 0,
+      "variant": "before",
+      "instructions": 249312055,
+      "output": "mode=0 iterations=1000000 seconds=0.024199 header=136 usable=160 allocations=1000000 frees=1000000 retains=0 releases=1000000 collections=0 cycles=0 live=0 cached=1 cached_bytes=136"
+    },
+    {
+      "repeat": 2,
+      "mode": 0,
+      "variant": "before",
+      "instructions": 247474335,
+      "output": "mode=0 iterations=1000000 seconds=0.022175 header=136 usable=160 allocations=1000000 frees=1000000 retains=0 releases=1000000 collections=0 cycles=0 live=0 cached=1 cached_bytes=136"
+    },
+    {
+      "repeat": 2,
+      "mode": 0,
+      "variant": "after",
+      "instructions": 246826362,
+      "output": "mode=0 iterations=1000000 seconds=0.021656 header=128 usable=128 allocations=1000000 frees=1000000 retains=0 releases=1000000 collections=0 cycles=0 live=0 cached=1 cached_bytes=128"
+    },
+    {
+      "repeat": 2,
+      "mode": 1,
+      "variant": "before",
+      "instructions": 156549801,
+      "output": "mode=1 iterations=16 seconds=0.013791 header=136 usable=160 allocations=262144 frees=262144 retains=0 releases=262144 collections=0 cycles=0 live=0 cached=1024 cached_bytes=139264"
+    },
+    {
+      "repeat": 2,
+      "mode": 1,
+      "variant": "after",
+      "instructions": 157527050,
+      "output": "mode=1 iterations=16 seconds=0.014239 header=128 usable=128 allocations=262144 frees=262144 retains=0 releases=262144 collections=0 cycles=0 live=0 cached=1024 cached_bytes=131072"
+    },
+    {
+      "repeat": 2,
+      "mode": 2,
+      "variant": "before",
+      "instructions": 131465205,
+      "output": "mode=2 iterations=200000 seconds=0.011126 header=136 usable=160 allocations=200000 frees=200000 retains=200000 releases=200000 collections=1563 cycles=200000 live=0 cached=128 cached_bytes=17408"
+    },
+    {
+      "repeat": 2,
+      "mode": 2,
+      "variant": "after",
+      "instructions": 132469743,
+      "output": "mode=2 iterations=200000 seconds=0.010839 header=128 usable=128 allocations=200000 frees=200000 retains=200000 releases=200000 collections=1563 cycles=200000 live=0 cached=128 cached_bytes=16384"
+    },
+    {
+      "repeat": 2,
+      "mode": 3,
+      "variant": "before",
+      "instructions": 136343616,
+      "output": "mode=3 iterations=1000000 seconds=0.012214 header=136 usable=160 allocations=0 frees=0 retains=0 releases=0 collections=0 cycles=0 live=127 cached=0 cached_bytes=0"
+    },
+    {
+      "repeat": 2,
+      "mode": 3,
+      "variant": "after",
+      "instructions": 135464938,
+      "output": "mode=3 iterations=1000000 seconds=0.012526 header=128 usable=128 allocations=0 frees=0 retains=0 releases=0 collections=0 cycles=0 live=127 cached=0 cached_bytes=0"
+    }
+  ]
+}

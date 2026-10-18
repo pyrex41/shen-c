@@ -1,0 +1,27 @@
+{
+  "identity-tail-summary.json": {
+    "raw_sha256": "8c3ed54fbc0b343e0ae73840e97ba72d2e78b73930452c5084101aa42f2d92d9",
+    "portable_sha256": "8c3ed54fbc0b343e0ae73840e97ba72d2e78b73930452c5084101aa42f2d92d9",
+    "sanitization": "Checkout, home and temporary paths replaced; PATH redacted. Raw receipts retained locally unchanged."
+  },
+  "identity-tail-default-ipo-build/receipt.json": {
+    "raw_sha256": "86955123f0dde1929d991e8a09ecb1c6606e18a0a4292d8cffe95d17e5a7710d",
+    "portable_sha256": "f1560d687f108dafb1e6734632a715052ab64051e6a2988cf98b802ccccda05b",
+    "sanitization": "Checkout, home and temporary paths replaced; PATH redacted. Raw receipts retained locally unchanged."
+  },
+  "perf-identity-tail-balanced/result.json": {
+    "raw_sha256": "5f73ced4c6a92ffd22206848b35bf8d565fb2c880e4053c0a7118fd1a0301e60",
+    "portable_sha256": "ac2a1af425cf58022f0c02b74996d77be1bd76d31f25431e725aa6bb8d9a5bda",
+    "sanitization": "Checkout, home and temporary paths replaced; PATH redacted. Raw receipts retained locally unchanged."
+  },
+  "identity-tail-benchmark-frozen.json": {
+    "raw_sha256": "5989231461f81767c6b613c65b2255ee16e4380f6094ef3c5a3079ebd15a6fc2",
+    "portable_sha256": "5989231461f81767c6b613c65b2255ee16e4380f6094ef3c5a3079ebd15a6fc2",
+    "sanitization": "Checkout, home and temporary paths replaced; PATH redacted. Raw receipts retained locally unchanged."
+  },
+  "identity-tail-balanced-config.json": {
+    "raw_sha256": "d00137ef6c0b553283da7502f9c64c8ee5b81aa23e3d4705d0f3a2b6b4b48b60",
+    "portable_sha256": "6bb7b2cdf8ad27e351d167287ba4ad385b5b5a52ad626614f51cc124e3efcfb7",
+    "sanitization": "Checkout, home and temporary paths replaced; PATH redacted. Raw receipts retained locally unchanged."
+  }
+}

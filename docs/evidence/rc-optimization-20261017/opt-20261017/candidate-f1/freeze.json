@@ -1,0 +1,29 @@
+{
+  "status": "experimental",
+  "flags": "/usr/bin/cc -O3 -g -flto=thin -std=c17",
+  "source_sha256": {
+    "src/rc/eval.c": "5d49c8bd17cb29737538745776a7f8dad6f395e9d09e489e6886bae73961709f",
+    "src/rc/rc.c": "981142db8a86ff6f802035f2ca69dfba1558c0aa2e5df6fe545bc8f97f0d9114",
+    "src/rc/rc_internal.h": "397a2e0220e73ddfedff03a13fb3048d53c8c4d9ad534f730b0ddee943e1f860",
+    "src/rc/emit.c": "e4f56a44159e0a691d397b958770c39e8350519bc30d21b1067e09979166a03b",
+    "src/rc/primitives.c": "e745613a31beb3eea888d35a2f07a55ebc14f312a621a2dc88f4023eec0e32b1",
+    "src/rc/read.c": "f61444980f2d34d3986f9640103b3478501c4d368f6c2dd5058a4b39b3143667",
+    "src/rc/eval.h": "40840e20cb00334a7032ef11aec08ce6a0846912ae05dfb0d08e894ba7ad2e15",
+    "src/rc/main.c": "aed4ac89c8aaf338f8519b35554effd251b04d47bbee6dbf5781343097d74275",
+    "src/rc/primitives.h": "ad9a5b0483d68a1829b6a0557d9b71b0f0ab240b67ec152ab2f0e4f3c87782d2",
+    "src/rc/rc.h": "b77320047d47b013b5064b44d749e80fab11319769145d9e6a676371d9990aec",
+    "src/rc/emit.h": "ae1946b669f771941b12a706316a28090aefd126f54cc687fa00a3b10b322a9f",
+    "src/rc/eval_plan.h": "91c896c000ff381922ccd5fa72420aab6cc8f87f1f8b7851d97c69142f167af4",
+    "src/rc/read.h": "71fb3e8ce757174ee47dde95f732200ae1b023c66f8164ac0a4d82ebb241fea5",
+    "tools/rc-build.c": "dbf6c04b2b5ebbf9197061208c89aa2d781e2b261f17f8a0f04b8931f370e818"
+  },
+  "artifacts": {
+    "bin/shen-guard-f1": "d3df275c40a5cdb4c00eff074c379b7e4216d68c79c35a4d2bffcdb98558fb3b",
+    "obj/rooted-e2-release/kernel.c": "1c97f40cc3574dff23696b13cad8ad9c62af2a2080e5e84b0e436c4fd096c544",
+    "obj/rooted-e2-release/kernel.o": "e1e7835a8130132e3722bf7d376db7af1e2dcb811ea041ecc53fc464a672897e",
+    "obj/rooted-e2-release/main.o": "67fc745b1562c1529f071976bfbd938143a731c27cf42e99deaece612b3390d9",
+    "bin/guard-f1-release/lib/libshenrc.a": "934c94a44e2428193fc393210b2932aca4aa629fd94b94304308e4a6716ae634"
+  },
+  "kernel_reuse": "same emitter/main source as frozen E2; relink only changed runtime",
+  "dependencies": "<OPT_ROOT>/bin/shen-guard-f1:\n\t/usr/lib/libSystem.B.dylib (compatibility version 1.0.0, current version 1359.0.0)\n"
+}

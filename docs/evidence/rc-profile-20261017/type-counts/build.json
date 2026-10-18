@@ -1,0 +1,79 @@
+{
+  "scope": "Diagnostic A/B: remove only two telemetry increments from a source snapshot.\n\nThe public runtime and its RcStats contract stay unchanged. This counter-disabled\nexecutable is an experiment, not a production candidate or acceptance result.\n",
+  "mode": "diagnostic additional per-type counters",
+  "type_order": [
+    "nil",
+    "number",
+    "string",
+    "symbol",
+    "pair",
+    "vector",
+    "closure",
+    "stream",
+    "tail",
+    "env"
+  ],
+  "inputs": {
+    "<CHECKPOINT_ROOT>/src/rc/eval.c": "177229776becca7592459e2ee9625a97bf16cc8fc5feaffabbd3e9c5e455c3dd",
+    "<CHECKPOINT_ROOT>/src/rc/rc.c": "e5d89b2abe397320ba0b2e77afda975f2189af84589bc9daf7da952c155103bf",
+    "<CHECKPOINT_ROOT>/src/rc/rc_internal.h": "da618b5f1687911ae775d983fc115007d81e039c8a19b3fcab92c09e9282e438",
+    "<CHECKPOINT_ROOT>/src/rc/emit.c": "b8705439e0bbd60cc6fd3f57456351f461b973935b903761c2f4fc9cb12de05a",
+    "<CHECKPOINT_ROOT>/src/rc/primitives.c": "3e51bcb2083475e2d07d6cb0ce1b08f9d7a7ee524e74779be2c4a7781f65efc5",
+    "<CHECKPOINT_ROOT>/src/rc/read.c": "f61444980f2d34d3986f9640103b3478501c4d368f6c2dd5058a4b39b3143667",
+    "<CHECKPOINT_ROOT>/src/rc/eval.h": "40840e20cb00334a7032ef11aec08ce6a0846912ae05dfb0d08e894ba7ad2e15",
+    "<CHECKPOINT_ROOT>/src/rc/main.c": "aed4ac89c8aaf338f8519b35554effd251b04d47bbee6dbf5781343097d74275",
+    "<CHECKPOINT_ROOT>/src/rc/primitives.h": "ab8cc324d48775dded4ca6cd49eabd1a99a93fb9ff33e96862cc5243636f0a77",
+    "<CHECKPOINT_ROOT>/src/rc/rc.h": "b77320047d47b013b5064b44d749e80fab11319769145d9e6a676371d9990aec",
+    "<CHECKPOINT_ROOT>/src/rc/emit.h": "ae1946b669f771941b12a706316a28090aefd126f54cc687fa00a3b10b322a9f",
+    "<CHECKPOINT_ROOT>/src/rc/read.h": "71fb3e8ce757174ee47dde95f732200ae1b023c66f8164ac0a4d82ebb241fea5",
+    "<CHECKPOINT_ROOT>/obj/rc/main.o": "ae8a1f0139130c6942511235715d7f6b6cea2296a27907e467b2ca3075e30e80",
+    "<CHECKPOINT_ROOT>/obj/rc/kernel.o": "e9d6cadad53f73121269d37acf7bc5bcb7c71c1d5e5f9e3268df92e32a54408b",
+    "<CHECKPOINT_ROOT>/obj/rc/primitives.o": "5750cb4095a42df267e60d2890c8c4d3dcfd0b0d2e5525acb094bd2c6a51ab32",
+    "<CHECKPOINT_ROOT>/obj/rc/eval.o": "4bb26ac2b6af706219faef443391b9a883e9cb50b05d3778509b951b02fbac17",
+    "<CHECKPOINT_ROOT>/obj/rc/read.o": "050ba99e448f56bceb3d0b9b12ab508d1aa1f2fa53f0c144a16122c0969743b5",
+    "<CHECKPOINT_ROOT>/bin/shen-rc": "c1c5aeaacd96d433194ce42670ba17e6cfd4d0af21209a5ae3486475169a8829",
+    "<CHECKPOINT_ROOT>/obj/rc/kernel.c": "dcea2e0201ecce628735b65f2e6e5939e685c8cb8ff2669e6fe297dcf308d1b2"
+  },
+  "commands": [
+    [
+      "/usr/bin/cc",
+      "-O3",
+      "-g",
+      "-flto=thin",
+      "-std=c17",
+      "-Wall",
+      "-Wextra",
+      "-Wpedantic",
+      "-I<PROFILE_ROOT>/evidence/rc/profile-20261017/type-counts/sources",
+      "-c",
+      "<PROFILE_ROOT>/evidence/rc/profile-20261017/type-counts/sources/rc.c",
+      "-o",
+      "<PROFILE_ROOT>/evidence/rc/profile-20261017/type-counts/rc.o"
+    ],
+    [
+      "/usr/bin/cc",
+      "-O3",
+      "-g",
+      "-flto=thin",
+      "-std=c17",
+      "-Wall",
+      "-Wextra",
+      "-Wpedantic",
+      "-I<PROFILE_ROOT>/evidence/rc/profile-20261017/type-counts/sources",
+      "<CHECKPOINT_ROOT>/obj/rc/main.o",
+      "<CHECKPOINT_ROOT>/obj/rc/kernel.o",
+      "<CHECKPOINT_ROOT>/obj/rc/primitives.o",
+      "<CHECKPOINT_ROOT>/obj/rc/eval.o",
+      "<CHECKPOINT_ROOT>/obj/rc/read.o",
+      "<PROFILE_ROOT>/evidence/rc/profile-20261017/type-counts/rc.o",
+      "-lm",
+      "-o",
+      "<PROFILE_ROOT>/evidence/rc/profile-20261017/type-counts/shen-type-counts"
+    ]
+  ],
+  "source_sha256": "b6473b69dc35e3510c9ddca819b025e25e8d38899775b7180ac976d44c83fb2d",
+  "binaries": {
+    "<PROFILE_ROOT>/evidence/rc/profile-20261017/type-counts/shen-type-counts": "522a8e3b10283dd00253255cd83140a5f43f6490cca00086d38abdd05e5b7583",
+    "<PROFILE_ROOT>/evidence/rc/profile-20261017/type-counts/shen-checkpoint": "c1c5aeaacd96d433194ce42670ba17e6cfd4d0af21209a5ae3486475169a8829"
+  }
+}

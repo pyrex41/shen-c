@@ -1,0 +1,153 @@
+{
+  "scope": "diagnostic sampling only; no performance credit",
+  "binary_sha256": "c1c5aeaacd96d433194ce42670ba17e6cfd4d0af21209a5ae3486475169a8829",
+  "manifest_sha256": "c20ce7e0c5f98b3d427ce6db4045b6a9ac335f5d7cfd592333baee7061f69f46",
+  "samples": [
+    {
+      "command": [
+        "/usr/bin/sample",
+        "22374",
+        "1",
+        "5",
+        "-file",
+        "<RC_WORKTREE>/evidence/rc/qualified-profile/sample-0.txt"
+      ],
+      "exit": 0,
+      "reason": null,
+      "start_offset_seconds": 0.002,
+      "bytes": 12970063,
+      "sha256": "88165ecbdfa9b2333f611384b6089fa4d57dfd0c1a8338220abe717a1de1db0f"
+    },
+    {
+      "command": [
+        "/usr/bin/sample",
+        "22374",
+        "1",
+        "5",
+        "-file",
+        "<RC_WORKTREE>/evidence/rc/qualified-profile/sample-1.txt"
+      ],
+      "exit": 0,
+      "reason": null,
+      "start_offset_seconds": 1.719,
+      "bytes": 42698730,
+      "sha256": "84dd3aa3f274d59469d37d5743b4da474a6398bb7118e4fd397840def6c25d49"
+    },
+    {
+      "command": [
+        "/usr/bin/sample",
+        "22374",
+        "1",
+        "5",
+        "-file",
+        "<RC_WORKTREE>/evidence/rc/qualified-profile/sample-2.txt"
+      ],
+      "exit": 0,
+      "reason": null,
+      "start_offset_seconds": 3.022,
+      "bytes": 36577751,
+      "sha256": "6ddf72a2545f9c728f6cd8310fccbc06cf32260a31051c1af2211c2d99d139ff"
+    }
+  ],
+  "startup": {
+    "command": [
+      "/usr/bin/time",
+      "-l",
+      "<RC_WORKTREE>/bin/shen-rc",
+      "eval",
+      "-e",
+      "(version)"
+    ],
+    "exit": 0
+  },
+  "command": [
+    "<RC_WORKTREE>/bin/shen-rc",
+    "script",
+    "runme.shen"
+  ],
+  "exit": 0,
+  "suite_validation": {
+    "status": "PASS",
+    "errors": [],
+    "passed_reports": [
+      2,
+      4,
+      8,
+      10,
+      17,
+      23,
+      25,
+      29,
+      31,
+      33,
+      35,
+      38,
+      44,
+      46,
+      48,
+      52,
+      54,
+      59,
+      64,
+      70,
+      75,
+      77,
+      90,
+      95,
+      98,
+      101,
+      103,
+      108,
+      111,
+      115,
+      120,
+      125,
+      129,
+      131,
+      133,
+      136
+    ],
+    "failed_reports": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "output_sha256": {
+      "test.txt": "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824"
+    }
+  },
+  "binary_unchanged": true
+}

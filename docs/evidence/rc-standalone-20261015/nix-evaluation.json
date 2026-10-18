@@ -1,0 +1,28 @@
+{
+  "scope": "Nix package name evaluation only; no package build or installed check",
+  "command": [
+    "nix",
+    "--extra-experimental-features",
+    "nix-command flakes",
+    "--option",
+    "connect-timeout",
+    "5",
+    "eval",
+    "--no-write-lock-file",
+    "--raw",
+    ".#packages.aarch64-darwin.shen-c.name"
+  ],
+  "exit": -9,
+  "termination": "TIMEOUT_OR_OUTPUT_LIMIT",
+  "seconds": 180.099,
+  "source_sha256": {
+    "flake.nix": "1245face5daa031c188089b8fd0e48a171314a7fdcaf112677951116976f26f3",
+    "flake.lock": "d9e31dc3e98226688fe22bff7070adff78361c43e4a88dfc1484374db4f83cf8"
+  },
+  "status": "UNKNOWN",
+  "_publication": {
+    "raw_receipt": "evidence/rc/nix-final-evaluation-retry/result.json",
+    "raw_sha256": "98581f40cb02900aca3a3deb50fe68ef381e1b5000cca8cdc2cd6d740b609edb",
+    "path_redaction": "Repository, home and temporary paths replaced; hashes describe original bytes."
+  }
+}

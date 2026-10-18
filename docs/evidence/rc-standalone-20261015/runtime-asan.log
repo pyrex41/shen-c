@@ -1,0 +1,19 @@
+Test project ${TMP}/shen-rc-runtime-cmake-20261015T212411Z
+    Start 1: rc_cycles
+1/7 Test #1: rc_cycles ........................   Passed    0.94 sec
+    Start 2: rc_primitives
+2/7 Test #2: rc_primitives ....................   Passed    0.39 sec
+    Start 3: rc_eval
+3/7 Test #3: rc_eval ..........................   Passed    7.56 sec
+    Start 4: rc_bool_tail
+4/7 Test #4: rc_bool_tail .....................   Passed    0.81 sec
+    Start 5: rc_collection
+5/7 Test #5: rc_collection ....................   Passed    0.57 sec
+    Start 6: rc_reuse
+6/7 Test #6: rc_reuse .........................   Passed    0.85 sec
+    Start 7: rc_acyclic
+7/7 Test #7: rc_acyclic .......................   Passed    0.83 sec
+
+100% tests passed, 0 tests failed out of 7
+
+Total Test time (real) =  13.25 sec

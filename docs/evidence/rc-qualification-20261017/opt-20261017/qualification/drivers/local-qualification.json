@@ -1,0 +1,146 @@
+{
+  "code_revision": "8e01579c238ad6bf2aef18492bb47cf389cbbeed",
+  "scope": "fresh Make compiler/CLI and metadata/source pipeline; CMake Release; installed Darwin Nix; fatal runtime/emitted/full-kernel sanitizers",
+  "checks": {
+    "toolchain": {
+      "status": "PASS",
+      "receipt": "evidence/rc/opt-20261017/final-toolchain/result.json",
+      "sha256": "59e2958e9c9aefae7177578fc6b0541bb7ddca57e7dc385dc8b6bb82e3705afe"
+    },
+    "full_generated_sanitizer": {
+      "status": "PASS",
+      "receipt": "evidence/rc/certify-20261017T224224.649249Z/result.json",
+      "sha256": "48afb593f1b9c990de44bb8260dbb98256524de826c21f8a4fd03cf88923c702"
+    },
+    "nix_installed_suite": {
+      "status": "PASS",
+      "receipt": "evidence/rc/opt-20261017/nix-installed-suite/result.json",
+      "sha256": "41a57cec94c71b7713c2bbe51ef3662400706fdf5dbe3aebb0e69fac0fd3a21c"
+    },
+    "cmake_24": {
+      "status": "PASS",
+      "log": "evidence/rc/opt-20261017/final-cmake-tests.log",
+      "sha256": "45a0e08114f9458f227cff8f8a2322934f8ff8f16ce6a2d3e120ee27ce1b5594"
+    },
+    "runtime_boxed": {
+      "status": "PASS",
+      "log": "evidence/rc/opt-20261017/final-runtime-boxed.log",
+      "sha256": "122b03bf45080a364afaf434af5b8a854708cc7dc6ccd986c06740e38cf87168"
+    },
+    "runtime_and_emitted_fatal": {
+      "status": "PASS",
+      "log": "evidence/rc/opt-20261017/final-all-emitted.log",
+      "sha256": "a3fd812a04bd359475353f9a249546742ff316f40b5435f3bd477aa5df74c7a8"
+    },
+    "reader_capture": {
+      "status": "PASS",
+      "log": "evidence/rc/opt-20261017/final-reader-controls.log",
+      "sha256": "3bfd33c0f0052490678cd98e22aeace405bbe65e10ad91a504e25368dd0410c8"
+    },
+    "distribution_audits": {
+      "status": "PASS",
+      "log": "evidence/rc/opt-20261017/final-distribution-audits.log",
+      "sha256": "df6959fd8c4162df162a6b837abd9b59a4c2b24798c65be716e894f05a3da4d2"
+    },
+    "cmake_cli": {
+      "status": "PASS",
+      "version": "43.1",
+      "value": "42",
+      "binary_sha256": "8ab4e25b10774cab7b3b712836a19497d0f91e49e6720fc73d190f06c7ed21f5"
+    },
+    "nix_cli": {
+      "status": "PASS",
+      "version": "43.1",
+      "value": "42",
+      "binary_sha256": "1fea225a006ccfd72954e14a50d8370aad849f450a8103ef42abe67c68468760"
+    },
+    "ci": {
+      "status": "PASS",
+      "run": "https://github.com/pyrex41/shen-c/actions/runs/39076685575",
+      "receipt_sha256": "378b4713c1c7a4ae7114e7713c6a18a18825a1f026ad0a7b3530cfdc791c5722",
+      "jobs": [
+        "rc-asan-ubsan",
+        "rc-ubuntu-latest-clang",
+        "rc-macos-latest-clang",
+        "rc-ubuntu-latest-gcc"
+      ]
+    }
+  },
+  "source_correspondence": {
+    "cmake_generated": "1c97f40cc3574dff23696b13cad8ad9c62af2a2080e5e84b0e436c4fd096c544",
+    "frozen_generated": "1c97f40cc3574dff23696b13cad8ad9c62af2a2080e5e84b0e436c4fd096c544",
+    "identical": true
+  },
+  "performance": {
+    "status": "PASS",
+    "batches": [
+      {
+        "user_seconds": 0.8810679611650485,
+        "wall_seconds": 0.8758782201405153,
+        "max_rss_bytes": 0.4387067804220925
+      },
+      {
+        "user_seconds": 0.835990888382688,
+        "wall_seconds": 0.84,
+        "max_rss_bytes": 0.49129007826306487
+      }
+    ],
+    "cpu_wins": 10,
+    "paired_ratios": [
+      {
+        "user_seconds": 0.8933002481389578,
+        "wall_seconds": 0.9108433734939758,
+        "max_rss_bytes": 0.4387067804220925
+      },
+      {
+        "user_seconds": 0.8348623853211009,
+        "wall_seconds": 0.8374164810690422,
+        "max_rss_bytes": 0.49555273189326554
+      },
+      {
+        "user_seconds": 0.8951219512195122,
+        "wall_seconds": 0.8957345971563981,
+        "max_rss_bytes": 0.4333629498000888
+      },
+      {
+        "user_seconds": 0.8810679611650485,
+        "wall_seconds": 0.8758782201405153,
+        "max_rss_bytes": 0.4328590484659849
+      },
+      {
+        "user_seconds": 0.8276643990929705,
+        "wall_seconds": 0.8318584070796461,
+        "max_rss_bytes": 0.49217171717171715
+      },
+      {
+        "user_seconds": 0.8995098039215685,
+        "wall_seconds": 0.9069212410501192,
+        "max_rss_bytes": 0.4347922683848034
+      },
+      {
+        "user_seconds": 0.835990888382688,
+        "wall_seconds": 0.836283185840708,
+        "max_rss_bytes": 0.49466192170818507
+      },
+      {
+        "user_seconds": 0.8870192307692307,
+        "wall_seconds": 0.8901869158878505,
+        "max_rss_bytes": 0.43225233229675697
+      },
+      {
+        "user_seconds": 0.835990888382688,
+        "wall_seconds": 0.84,
+        "max_rss_bytes": 0.4945362134688691
+      },
+      {
+        "user_seconds": 0.834090909090909,
+        "wall_seconds": 0.835920177383592,
+        "max_rss_bytes": 0.49129007826306487
+      }
+    ],
+    "rc_max_rss_vs_baseline": 1.0349021681649921
+  },
+  "performance_receipt_sha256": "46c6aa8a46b0ee41cbe3a4861fcf1549606b216c72259d2eec5b1787e3582582",
+  "host_condition": "No local build or profiling overlapped the final timings. Defender and desktop services appear in before/after snapshots; strict quiet-host provenance remains unestablished.",
+  "status": "PASS for numerical performance gates and recorded correctness/platform checks; quiet-host condition UNKNOWN"
+}

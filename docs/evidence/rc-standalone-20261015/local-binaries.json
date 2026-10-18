@@ -1,0 +1,27 @@
+{
+  "scope": "Install already qualified CMake Release artifacts into worktree bin",
+  "receipt": "evidence/rc/cmake-default-cli-20261015T213508Z/receipt.json",
+  "previous": {
+    "rc-build": "5172c9d5162198cc2af8e09a1b322d172ce732f04193b099e417a338443c2689",
+    "shen-rc": "78c58aee3847f7f03db07ff9ffc4a79f060dc5c1740f833a8017b88ae6992fb8"
+  },
+  "installed": {
+    "rc-build": {
+      "source": "${TMP}/shen-rc-cmake-default-cli-20261015T213508Z/rc-build",
+      "sha256": "697245064db9b29fa31ad265c00b2953a4a8dfce3b4e6be7e1fdba5ae7240167"
+    },
+    "shen-rc": {
+      "source": "${TMP}/shen-rc-cmake-default-cli-20261015T213508Z/shen-rc",
+      "sha256": "728f77465dfd30a5f3bd15309ab369cb22ed1f3bf39a28603a5bcc84807a90d7"
+    },
+    "shen-c": {
+      "source": "${TMP}/shen-rc-cmake-default-cli-20261015T213508Z/shen-c",
+      "sha256": "728f77465dfd30a5f3bd15309ab369cb22ed1f3bf39a28603a5bcc84807a90d7"
+    }
+  },
+  "_publication": {
+    "raw_receipt": "evidence/rc/local-bin-final.json",
+    "raw_sha256": "91d32d0d7a214d8c54891de94e742a1a4360605f9304b46dd6bf840d6fa8da8e",
+    "path_redaction": "Repository, home and temporary paths replaced; hashes describe original bytes."
+  }
+}

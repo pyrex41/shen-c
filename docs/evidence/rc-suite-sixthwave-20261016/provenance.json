@@ -1,0 +1,32 @@
+{
+  "sixthwave-focused-asan/receipt.json": {
+    "raw_sha256": "392f614fb09d6c86d8dd30b1f1c3d9bbc2ff45e5a9a002c508b2e2681ac95a6f",
+    "portable_sha256": "9dc8710e253fe3b1ddc1127ea9355c2df40337cfe74cd9aa0e4adaceba318027",
+    "sanitization": "Checkout/home/tmp paths replaced; PATH values use <recorded-build-path>. Raw source receipts remain unchanged."
+  },
+  "sixthwave-default-ipo-build/receipt.json": {
+    "raw_sha256": "7a391ea64d041a6ac06ec129a274e95a6efead652c782ac2a6561860e2979107",
+    "portable_sha256": "78240246a16e27b5d1263d8aaa3e58381bc74a762f2d7572e268ec08ecd7f568",
+    "sanitization": "Checkout/home/tmp paths replaced; PATH values use <recorded-build-path>. Raw source receipts remain unchanged."
+  },
+  "perf-sixthwave-balanced/result.json": {
+    "raw_sha256": "f5c3bb31a9dd53e6aa5a2ca2b595c5f9c14a633133cfd769a28d0b31a9791639",
+    "portable_sha256": "948e5733022c33ebce73135cac0fb810accf2cc20191eea4d50249d4d2a7b6df",
+    "sanitization": "Checkout/home/tmp paths replaced; PATH values use <recorded-build-path>. Raw source receipts remain unchanged."
+  },
+  "perf-sixthwave-balanced-config.json": {
+    "raw_sha256": "cb11b291a66497095d9c018f985261ff2233b890142648ddd49cabb87e8dae14",
+    "portable_sha256": "26059bf9ac093eb4c7369487e5218fcdfcbc5ddeafebfa2a31d1e79150d6cfdd",
+    "sanitization": "Checkout/home/tmp paths replaced; PATH values use <recorded-build-path>. Raw source receipts remain unchanged."
+  },
+  "perf-sixthwave-profile/result.json": {
+    "raw_sha256": "a5d9218e9388271f76b6ce4e898778fd2031b2fa4b2917e7e50e5c62820e582e",
+    "portable_sha256": "df6f9dbeddfe7aeb093cfc2066ad5150183cb73bb6bc83e58d02c83d29f5c894",
+    "sanitization": "Checkout/home/tmp paths replaced; PATH values use <recorded-build-path>. Raw source receipts remain unchanged."
+  },
+  "perf-sixthwave-profile/decisions.md": {
+    "raw_sha256": "c9d96ade12aedc9002b49b9a0b386b09773b6eb761e2bdd54bf632238ae52ee8",
+    "portable_sha256": "c9d96ade12aedc9002b49b9a0b386b09773b6eb761e2bdd54bf632238ae52ee8",
+    "sanitization": "Checkout/home/tmp paths replaced; PATH values use <recorded-build-path>. Raw source receipts remain unchanged."
+  }
+}

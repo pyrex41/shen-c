@@ -1,0 +1,46 @@
+{
+  "numerical_acceptance": "PASS",
+  "execution_audit": "PASS",
+  "source_head": "bb9997738f9704ec0eaf73505f83d832b2e18cd7",
+  "runtime_code_checkpoint": "8e01579c238ad6bf2aef18492bb47cf389cbbeed",
+  "config_sha256": "a00b8659c889e27227157ad9744123389f0d0278c92ca7621dcbda841d5a2fe9",
+  "result_sha256": "fbc19815821e49c12d408b25e63f2760a976cc23b8cd7381a28fd4187664013c",
+  "host_samples_sha256": "c713ffb9c2c435e4a9ff3ae1e92e565f743264f253a6985f46a007004fd02664",
+  "samples": 20,
+  "suite_results": "20 x 136/0; every intermediate checkpoint and redirect check passed",
+  "batches": [
+    {
+      "user_seconds": 0.8817966903073285,
+      "sys_seconds": 1.0,
+      "wall_seconds": 0.8761467889908255,
+      "max_rss_bytes": 0.4343861209964413,
+      "instructions": 1.1282021090500316,
+      "cycles": 0.8803918671323779
+    },
+    {
+      "user_seconds": 0.8325892857142856,
+      "sys_seconds": 1.0,
+      "wall_seconds": 0.8455882352941175,
+      "max_rss_bytes": 0.4362505553087517,
+      "instructions": 1.121234498634027,
+      "cycles": 0.831565091151212
+    }
+  ],
+  "cpu_wins": 10,
+  "max_rc_rss_bytes": 32194560,
+  "rc_baseline_rss_bytes": 30982144,
+  "rss_ratio": 1.0391327340031729,
+  "quiet_host": {
+    "status": "NOT_MET",
+    "process_snapshot_count": 20,
+    "snapshot_presence_counts": {
+      "other_shen_work": 15,
+      "defender": 20,
+      "browser": 20
+    },
+    "sampling": "ps -Ao pid,pcpu,etime,comm every five seconds plus completion; process names, not arguments or environment. ps CPU fields are estimates, not exclusive CPU accounting.",
+    "reason": "Concurrent unrelated Shen work, Defender and browser activity observed. This session launched no build, profiler or diagnostic counter collection during timing."
+  },
+  "overall_finish_line": "OPEN: strict quiet-host condition not met in this retry",
+  "retention": "All twenty samples retained; earlier final-ten-pairs results unchanged."
+}

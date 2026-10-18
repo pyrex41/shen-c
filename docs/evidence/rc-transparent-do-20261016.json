@@ -1,0 +1,72 @@
+{
+  "date": "2026-10-16",
+  "baseline_commit": "7933147781b616e1772a35c0d0a2123e23a4511e",
+  "source_sha256": {
+    "src/rc/emit.c": "c6a143bd3e60492e19d938785624410e07a7a6bc2ee1272290e1cf96305c6369",
+    "src/rc/primitives.c": "37daddcc5d8cd5f1c079770e9bb0433a4c5fb586e5aa8ba6b5dab0490737a443",
+    "src/rc/primitives.h": "69cf6d1901e6eb4ba5d9fda772b388588191480d59641e10f605eeb1c7a85698",
+    "src/rc/rc.c": "19978f963965029268f51322898973ba3d2c35db7bf26cb6a6af891ac195944a",
+    "src/rc/rc.h": "45737e6668f333dc4aa9688f782810bef4faa5ac1452ae0d320c537f6b32ad55",
+    "test/rc/test_semantics.sh": "465354134721a9f387665d8770b459accfefab4d3232af841d4fb7779c30ccd7"
+  },
+  "scope": "Guard exact self recurrence through snapshotted, certified transparent do closures. General fallback remains eager/non-tail.",
+  "validation": {
+    "emitted_semantics": {
+      "result": "PASS",
+      "cases": 81,
+      "added_cases": 9,
+      "flags": "-O1 -g -fsanitize=address,undefined -fno-sanitize-recover=all -fno-omit-frame-pointer",
+      "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1",
+      "artifact_no_boehm_audit": "PASS"
+    },
+    "ownership": {
+      "result": "PASS",
+      "differential_cases": 20,
+      "pair_reuses": 102,
+      "same_sanitizer_flags": true
+    }
+  },
+  "generated_kernel_source": {
+    "C_compilation": "NOT RUN",
+    "sha256": "17e8e092ff419434b27244ed0f22563489d894527352c055bf179f0b3efda4a2",
+    "callback_1463": "shen.search-user-datatypes",
+    "old_1463_loop": false,
+    "new_1463_loop": true,
+    "new_1463_guard": "t[11]==self && rc_arity(self)==7 && rc_transparent_do(t[10])",
+    "guarded_sites": 29,
+    "guarded_callbacks": 21,
+    "newly_looping_callbacks": 17
+  },
+  "microbenchmark": {
+    "scope": "generated identity-do tail recursion microbenchmark (500 batches of 1000); excludes compilation; not full kernel or Boehm comparison",
+    "iterations": 500000,
+    "baseline_commit": "7933147781b616e1772a35c0d0a2123e23a4511e",
+    "samples_seconds": {
+      "baseline": [
+        0.41343770900857635,
+        0.3266378749976866,
+        0.17977799999061972,
+        0.17659575000288896,
+        0.19147420799708925
+      ],
+      "self_loop": [
+        0.28541912500804756,
+        0.22707166599866468,
+        0.15016974999161903,
+        0.11335241699998733,
+        0.18869108300714288
+      ]
+    },
+    "median_seconds": {
+      "baseline": 0.19147420799708925,
+      "self_loop": 0.18869108300714288
+    },
+    "speedup": 1.0147496370554034,
+    "interpretation": "UNKNOWN for speedup: concurrent host activity caused large sample variance. Raw scoped samples retained; no full-suite performance claim."
+  },
+  "remaining": [
+    "Combined full kernel/suite validation belongs to integration.",
+    "Full-product performance remains UNKNOWN."
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "repetitions": 3,
+  "cases": [
+    {
+      "label": "baseline",
+      "argv": [
+        "<RC_BASELINE_ROOT>/bin/shen-rc",
+        "script",
+        "runme.shen"
+      ],
+      "env": {}
+    },
+    {
+      "label": "prepared_b1",
+      "argv": [
+        "<OPT_ROOT>/bin/shen-pvm",
+        "script",
+        "runme.shen"
+      ],
+      "env": {}
+    }
+  ]
+}

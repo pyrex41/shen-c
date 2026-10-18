@@ -1,0 +1,6 @@
+{
+  "status": "FAIL",
+  "scope": "diagnostic counter-disabled snapshot, never a production candidate",
+  "reason": "Unchanged test_immediates asserts the public retain_calls statistic, intentionally absent in this diagnostic control; first seven runtime tests passed under fatal ASan/UBSan. No complete runtime qualification claim.",
+  "log_sha256": "b6111aea64dc0b906f1dcc301d3c384b52eefea2897e20a73244f390bc142ee3"
+}

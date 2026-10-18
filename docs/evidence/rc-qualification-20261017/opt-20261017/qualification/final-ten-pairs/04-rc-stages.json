@@ -1,0 +1,1622 @@
+[
+  {
+    "shen_cpu_seconds": 0.011767,
+    "test_label": null,
+    "preceding_output": [
+      "test-harness.report-results-macro",
+      "(fn test-harness.create-tests)",
+      "(fn test-harness.results)"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 0.00135399999999999,
+    "test_label": "cartesian product: (load \"cartprod.shen\") = loaded",
+    "preceding_output": [
+      "cartesian product: (load \"cartprod.shen\") = loaded",
+      "(fn cartesian-product)",
+      "(fn all-pairs-using-X)"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 0.00136999999999998,
+    "test_label": "cartesian product: (load \"cartprod.shen\") = loaded",
+    "preceding_output": [
+      "cartesian product: (load \"cartprod.shen\") = loaded",
+      "(fn cartesian-product)",
+      "(fn all-pairs-using-X)"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 1.49999999999872e-05,
+    "test_label": "cartesian product: (cartesian-product (cons 1 (cons 2 (cons 3 ()))) (cons 1 (cons 2 (cons 3 ())))) = [[1 1] [1 2] [1 3] [2 1] [2 2] [2 3] [3 1] [3 2] [3 3]]",
+    "preceding_output": [
+      "(fn all-pairs-using-X)",
+      "passed",
+      "cartesian product: (cartesian-product (cons 1 (cons 2 (cons 3 ()))) (cons 1 (cons 2 (cons 3 ())))) = [[1 1] [1 2] [1 3] [2 1] [2 2] [2 3] [3 1] [3 2] [3 3]]"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 0.001168,
+    "test_label": "powerset: (load \"powerset.shen\") = loaded",
+    "preceding_output": [
+      "powerset: (load \"powerset.shen\") = loaded",
+      "(fn powerset*)",
+      "(fn cons-X-to-each-set)"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 0.00117500000000001,
+    "test_label": "powerset: (load \"powerset.shen\") = loaded",
+    "preceding_output": [
+      "powerset: (load \"powerset.shen\") = loaded",
+      "(fn powerset*)",
+      "(fn cons-X-to-each-set)"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 1.29999999999852e-05,
+    "test_label": "powerset: (powerset* (cons 1 (cons 2 (cons 3 ())))) = [[1 2 3] [1 2] [1 3] [1] [2 3] [2] [3] []]",
+    "preceding_output": [
+      "(fn cons-X-to-each-set)",
+      "passed",
+      "powerset: (powerset* (cons 1 (cons 2 (cons 3 ())))) = [[1 2 3] [1 2] [1 3] [1] [2 3] [2] [3] []]"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 0.00173899999999999,
+    "test_label": "bubble sort: (load \"bubble version 1.shen\") = loaded",
+    "preceding_output": [
+      "(fn bubble-sort)",
+      "(fn bubble)",
+      "(fn bubble-again-perhaps)"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 0.001744,
+    "test_label": "bubble sort: (load \"bubble version 1.shen\") = loaded",
+    "preceding_output": [
+      "(fn bubble-sort)",
+      "(fn bubble)",
+      "(fn bubble-again-perhaps)"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 1.4000000000014e-05,
+    "test_label": "bubble sort: (bubble-sort (cons 1 (cons 2 (cons 3 ())))) = [3 2 1]",
+    "preceding_output": [
+      "(fn bubble-again-perhaps)",
+      "passed",
+      "bubble sort: (bubble-sort (cons 1 (cons 2 (cons 3 ())))) = [3 2 1]"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 0.00123500000000001,
+    "test_label": "bubble sort: (load \"bubble version 2.shen\") = loaded",
+    "preceding_output": [
+      "bubble sort: (load \"bubble version 2.shen\") = loaded",
+      "(fn bubble-sort)",
+      "(fn bubble)"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 0.00124100000000002,
+    "test_label": "bubble sort: (load \"bubble version 2.shen\") = loaded",
+    "preceding_output": [
+      "bubble sort: (load \"bubble version 2.shen\") = loaded",
+      "(fn bubble-sort)",
+      "(fn bubble)"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 1.89999999999912e-05,
+    "test_label": "bubble sort: (bubble-sort (cons 1 (cons 2 (cons 3 ())))) = [3 2 1]",
+    "preceding_output": [
+      "(fn bubble)",
+      "passed",
+      "bubble sort: (bubble-sort (cons 1 (cons 2 (cons 3 ())))) = [3 2 1]"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 0.00484799999999999,
+    "test_label": "spreadsheet: (load \"spreadsheet.shen\") = loaded",
+    "preceding_output": [
+      "(fn get')",
+      "(fn get-row)",
+      "(fn get-cell)"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 0.004856,
+    "test_label": "spreadsheet: (load \"spreadsheet.shen\") = loaded",
+    "preceding_output": [
+      "(fn get')",
+      "(fn get-row)",
+      "(fn get-cell)"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 4.69999999999915e-05,
+    "test_label": "spreadsheet: (assess-spreadsheet (cons (cons jim (cons (cons wages (cons (lambda Spreadsheet (get' frank wages Spreadsheet)) ())) (cons (cons tax (cons (lambda Spreadsheet (* (get' frank tax Spreadsheet) 0.8)) ())) ()))) (cons (cons frank (cons (cons wages (cons 20000 ())) (cons (cons tax (cons (lambda Spreadsheet (* 0.25 (get' frank wages Spreadsheet))) ())) ()))) ()))) = [[jim [wages 20000] [tax 4000.0]] [frank [wages 20000] [tax 5000.0]]]",
+    "preceding_output": [
+      "(fn get-cell)",
+      "passed",
+      "spreadsheet: (assess-spreadsheet (cons (cons jim (cons (cons wages (cons (lambda Spreadsheet (get' frank wages Spreadsheet)) ())) (cons (cons tax (cons (lambda Spreadsheet (* (get' frank tax Spreadsheet) 0.8)) ())) ()))) (cons (cons frank (cons (cons wages (cons 20000 ())) (cons (cons tax (cons (lambda Spreadsheet (* 0.25 (get' frank wages Spreadsheet))) ())) ()))) ()))) = [[jim [wages 20000] [tax 4000.0]] [frank [wages 20000] [tax 5000.0]]]"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 0.001192,
+    "test_label": "primes: (load \"prime.shen\") = loaded",
+    "preceding_output": [
+      "primes: (load \"prime.shen\") = loaded",
+      "(fn prime*?)",
+      "(fn prime*)"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 0.001198,
+    "test_label": "primes: (load \"prime.shen\") = loaded",
+    "preceding_output": [
+      "primes: (load \"prime.shen\") = loaded",
+      "(fn prime*?)",
+      "(fn prime*)"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 0.049189,
+    "test_label": "primes: (prime*? 1000003) = true",
+    "preceding_output": [
+      "(fn prime*)",
+      "passed",
+      "primes: (prime*? 1000003) = true"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 0.000899999999999984,
+    "test_label": "primes: (load \"mutual.shen\") = loaded",
+    "preceding_output": [
+      "primes: (load \"mutual.shen\") = loaded",
+      "(fn even*?)",
+      "(fn odd*?)"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 0.000906999999999991,
+    "test_label": "primes: (load \"mutual.shen\") = loaded",
+    "preceding_output": [
+      "primes: (load \"mutual.shen\") = loaded",
+      "(fn even*?)",
+      "(fn odd*?)"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 1.3000000000013e-05,
+    "test_label": "primes: (even*? 56) = true",
+    "preceding_output": [
+      "(fn odd*?)",
+      "passed",
+      "primes: (even*? 56) = true"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 1.3000000000013e-05,
+    "test_label": "primes: (odd*? 77) = true",
+    "preceding_output": [
+      "primes: (even*? 56) = true",
+      "passed",
+      "primes: (odd*? 77) = true"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 0.00192400000000001,
+    "test_label": "primes: (load \"change.shen\") = loaded",
+    "preceding_output": [
+      "(fn count-change)",
+      "(fn count-change*)",
+      "(fn next-denom)"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 0.00193200000000002,
+    "test_label": "primes: (load \"change.shen\") = loaded",
+    "preceding_output": [
+      "(fn count-change)",
+      "(fn count-change*)",
+      "(fn next-denom)"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 0.031898,
+    "test_label": "primes: (count-change 100) = 4563",
+    "preceding_output": [
+      "(fn next-denom)",
+      "passed",
+      "primes: (count-change 100) = 4563"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 0.004022,
+    "test_label": "semantic nets: (load \"semantic net.shen\") = loaded",
+    "preceding_output": [
+      "(fn assert)",
+      "(fn get-prop)",
+      "(fn clear)"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 0.004029,
+    "test_label": "semantic nets: (load \"semantic net.shen\") = loaded",
+    "preceding_output": [
+      "(fn assert)",
+      "(fn get-prop)",
+      "(fn clear)"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 1.9000000000019e-05,
+    "test_label": "semantic nets: (clear Mark_Tarver) = []",
+    "preceding_output": [
+      "(fn clear)",
+      "passed",
+      "semantic nets: (clear Mark_Tarver) = []"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 1.000000000001e-05,
+    "test_label": "semantic nets: (clear man) = []",
+    "preceding_output": [
+      "semantic nets: (clear Mark_Tarver) = []",
+      "passed",
+      "semantic nets: (clear man) = []"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 1.89999999999912e-05,
+    "test_label": "semantic nets: (assert (cons Mark_Tarver (cons is_a (cons man ())))) = [man]",
+    "preceding_output": [
+      "semantic nets: (clear man) = []",
+      "passed",
+      "semantic nets: (assert (cons Mark_Tarver (cons is_a (cons man ())))) = [man]"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 1.19999999999842e-05,
+    "test_label": "semantic nets: (assert (cons man (cons type_of (cons human ())))) = [human]",
+    "preceding_output": [
+      "semantic nets: (assert (cons Mark_Tarver (cons is_a (cons man ())))) = [man]",
+      "passed",
+      "semantic nets: (assert (cons man (cons type_of (cons human ())))) = [human]"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 6.49999999999817e-05,
+    "test_label": "semantic nets: (query (cons is (cons Mark_Tarver (cons human ())))) = yes",
+    "preceding_output": [
+      "semantic nets: (assert (cons man (cons type_of (cons human ())))) = [human]",
+      "passed",
+      "semantic nets: (query (cons is (cons Mark_Tarver (cons human ())))) = yes"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 0.025369,
+    "test_label": "einsteins riddle: (load \"einsteins-riddle.shen\") = loaded",
+    "preceding_output": [
+      "(fn next)",
+      "(fn left)",
+      "(fn who-owns-the-fish?)"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 0.025375,
+    "test_label": "einsteins riddle: (load \"einsteins-riddle.shen\") = loaded",
+    "preceding_output": [
+      "(fn next)",
+      "(fn left)",
+      "(fn who-owns-the-fish?)"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 0.043318,
+    "test_label": "einsteins riddle: ((lambda V1129 (lambda L1130 (lambda K1131 (lambda C1132 (do (shen.incinfs) (riddle V1129 L1130 K1131 C1132)))))) (shen.prolog-vector) (@v true (@v 0 (vector 0))) 0 (freeze true)) = german",
+    "preceding_output": [
+      "(fn who-owns-the-fish?)",
+      "passed",
+      "einsteins riddle: ((lambda V1129 (lambda L1130 (lambda K1131 (lambda C1132 (do (shen.incinfs) (riddle V1129 L1130 K1131 C1132)))))) (shen.prolog-vector) (@v true (@v 0 (vector 0))) 0 (freeze true)) = german"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 0.004552,
+    "test_label": "Prolog call: (load \"call.shen\") = loaded",
+    "preceding_output": [
+      "(fn consit)",
+      "(fn different)",
+      "(fn not!)"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 0.004556,
+    "test_label": "Prolog call: (load \"call.shen\") = loaded",
+    "preceding_output": [
+      "(fn consit)",
+      "(fn different)",
+      "(fn not!)"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 4.50000000000172e-05,
+    "test_label": "Prolog call: ((lambda V1133 (lambda L1134 (lambda K1135 (lambda C1136 (let X (shen.newpv V1133) (shen.gc V1133 (do (shen.incinfs) (mapit (fn consit) (cons 1 (cons 2 (cons 3 ()))) X V1133 L1134 K1135 (freeze (return X V1133 L1134 K1135 C1136)))))))))) (shen.prolog-vector) (@v true (@v 0 (vector 0))) 0 (freeze true)) = [[1 1] [1 2] [1 3]]",
+    "preceding_output": [
+      "(fn not!)",
+      "passed",
+      "Prolog call: ((lambda V1133 (lambda L1134 (lambda K1135 (lambda C1136 (let X (shen.newpv V1133) (shen.gc V1133 (do (shen.incinfs) (mapit (fn consit) (cons 1 (cons 2 (cons 3 ()))) X V1133 L1134 K1135 (freeze (return X V1133 L1134 K1135 C1136)))))))))) (shen.prolog-vector) (@v true (@v 0 (vector 0))) 0 (freeze true)) = [[1 1] [1 2] [1 3]]"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 1.49999999999872e-05,
+    "test_label": "Prolog call: ((lambda V1137 (lambda L1138 (lambda K1139 (lambda C1140 (do (shen.incinfs) (different 1 2 V1137 L1138 K1139 C1140)))))) (shen.prolog-vector) (@v true (@v 0 (vector 0))) 0 (freeze true)) = true",
+    "preceding_output": [
+      "Prolog call: ((lambda V1133 (lambda L1134 (lambda K1135 (lambda C1136 (let X (shen.newpv V1133) (shen.gc V1133 (do (shen.incinfs) (mapit (fn consit) (cons 1 (cons 2 (cons 3 ()))) X V1133 L1134 K1135 (freeze (return X V1133 L1134 K1135 C1136)))))))))) (shen.prolog-vector) (@v true (@v 0 (vector 0))) 0 (freeze true)) = [[1 1] [1 2] [1 3]]",
+      "passed",
+      "Prolog call: ((lambda V1137 (lambda L1138 (lambda K1139 (lambda C1140 (do (shen.incinfs) (different 1 2 V1137 L1138 K1139 C1140)))))) (shen.prolog-vector) (@v true (@v 0 (vector 0))) 0 (freeze true)) = true"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 1.59999999999605e-05,
+    "test_label": "Prolog call: ((lambda V1141 (lambda L1142 (lambda K1143 (lambda C1144 (do (shen.incinfs) (different 1 1 V1141 L1142 K1143 C1144)))))) (shen.prolog-vector) (@v true (@v 0 (vector 0))) 0 (freeze true)) = false",
+    "preceding_output": [
+      "Prolog call: ((lambda V1137 (lambda L1138 (lambda K1139 (lambda C1140 (do (shen.incinfs) (different 1 2 V1137 L1138 K1139 C1140)))))) (shen.prolog-vector) (@v true (@v 0 (vector 0))) 0 (freeze true)) = true",
+      "passed",
+      "Prolog call: ((lambda V1141 (lambda L1142 (lambda K1143 (lambda C1144 (do (shen.incinfs) (different 1 1 V1141 L1142 K1143 C1144)))))) (shen.prolog-vector) (@v true (@v 0 (vector 0))) 0 (freeze true)) = false"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 0.003911,
+    "test_label": "Prolog cut: (load \"cut.shen\") = loaded",
+    "preceding_output": [
+      "(fn f)",
+      "(fn g*)",
+      "(fn h)"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 0.00391399999999997,
+    "test_label": "Prolog cut: (load \"cut.shen\") = loaded",
+    "preceding_output": [
+      "(fn f)",
+      "(fn g*)",
+      "(fn h)"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 2.09999999999932e-05,
+    "test_label": "Prolog cut: ((lambda V1145 (lambda L1146 (lambda K1147 (lambda C1148 (let X (shen.newpv V1145) (shen.gc V1145 (do (shen.incinfs) (a X V1145 L1146 K1147 (freeze (return X V1145 L1146 K1147 C1148)))))))))) (shen.prolog-vector) (@v true (@v 0 (vector 0))) 0 (freeze true)) = 4",
+    "preceding_output": [
+      "(fn h)",
+      "passed",
+      "Prolog cut: ((lambda V1145 (lambda L1146 (lambda K1147 (lambda C1148 (let X (shen.newpv V1145) (shen.gc V1145 (do (shen.incinfs) (a X V1145 L1146 K1147 (freeze (return X V1145 L1146 K1147 C1148)))))))))) (shen.prolog-vector) (@v true (@v 0 (vector 0))) 0 (freeze true)) = 4"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 0.00317500000000004,
+    "test_label": "Prolog naive reverse: (load \"nreverseprolog.shen\") = loaded",
+    "preceding_output": [
+      "Prolog naive reverse: (load \"nreverseprolog.shen\") = loaded",
+      "(fn nreverse)",
+      "(fn nappend)"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 0.00318100000000004,
+    "test_label": "Prolog naive reverse: (load \"nreverseprolog.shen\") = loaded",
+    "preceding_output": [
+      "Prolog naive reverse: (load \"nreverseprolog.shen\") = loaded",
+      "(fn nreverse)",
+      "(fn nappend)"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 5.30000000000252e-05,
+    "test_label": "Prolog naive reverse: ((lambda V1149 (lambda L1150 (lambda K1151 (lambda C1152 (let X (shen.newpv V1149) (shen.gc V1149 (do (shen.incinfs) (nreverse (cons 1 (cons 2 (cons 3 (cons 4 ())))) X V1149 L1150 K1151 (freeze (return X V1149 L1150 K1151 C1152)))))))))) (shen.prolog-vector) (@v true (@v 0 (vector 0))) 0 (freeze true)) = [4 3 2 1]",
+    "preceding_output": [
+      "(fn nappend)",
+      "passed",
+      "Prolog naive reverse: ((lambda V1149 (lambda L1150 (lambda K1151 (lambda C1152 (let X (shen.newpv V1149) (shen.gc V1149 (do (shen.incinfs) (nreverse (cons 1 (cons 2 (cons 3 (cons 4 ())))) X V1149 L1150 K1151 (freeze (return X V1149 L1150 K1151 C1152)))))))))) (shen.prolog-vector) (@v true (@v 0 (vector 0))) 0 (freeze true)) = [4 3 2 1]"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 0.001799,
+    "test_label": "findall in Prolog: (load \"findall.shen\") = loaded",
+    "preceding_output": [
+      "findall in Prolog: (load \"findall.shen\") = loaded",
+      "(fn enjoys)",
+      "(fn fads)"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 0.001803,
+    "test_label": "findall in Prolog: (load \"findall.shen\") = loaded",
+    "preceding_output": [
+      "findall in Prolog: (load \"findall.shen\") = loaded",
+      "(fn enjoys)",
+      "(fn fads)"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 3.000000000003e-05,
+    "test_label": "findall in Prolog: ((lambda V1153 (lambda L1154 (lambda K1155 (lambda C1156 (do (shen.incinfs) (fads mark V1153 L1154 K1155 C1156)))))) (shen.prolog-vector) (@v true (@v 0 (vector 0))) 0 (freeze true)) = [tea chocolate]",
+    "preceding_output": [
+      "(fn fads)",
+      "passed",
+      "findall in Prolog: ((lambda V1153 (lambda L1154 (lambda K1155 (lambda C1156 (do (shen.incinfs) (fads mark V1153 L1154 K1155 C1156)))))) (shen.prolog-vector) (@v true (@v 0 (vector 0))) 0 (freeze true)) = [tea chocolate]"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 0.023913,
+    "test_label": "Prolog tableau: (load \"tableauprolog.shen\") = loaded",
+    "preceding_output": [
+      "(fn consistent)",
+      "(fn complement)",
+      "(fn member)"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 0.02392,
+    "test_label": "Prolog tableau: (load \"tableauprolog.shen\") = loaded",
+    "preceding_output": [
+      "(fn consistent)",
+      "(fn complement)",
+      "(fn member)"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 0.00159100000000001,
+    "test_label": "Prolog tableau: ((lambda V1157 (lambda L1158 (lambda K1159 (lambda C1160 (do (shen.incinfs) (prop () (cons (cons p (cons <=> (cons q ()))) (cons <=> (cons (cons q (cons <=> (cons p ()))) ()))) V1157 L1158 K1159 C1160)))))) (shen.prolog-vector) (@v true (@v 0 (vector 0))) 0 (freeze true)) = true",
+    "preceding_output": [
+      "(fn member)",
+      "passed",
+      "Prolog tableau: ((lambda V1157 (lambda L1158 (lambda K1159 (lambda C1160 (do (shen.incinfs) (prop () (cons (cons p (cons <=> (cons q ()))) (cons <=> (cons (cons q (cons <=> (cons p ()))) ()))) V1157 L1158 K1159 C1160)))))) (shen.prolog-vector) (@v true (@v 0 (vector 0))) 0 (freeze true)) = true"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 0.000460999999999989,
+    "test_label": "Prolog tableau: ((lambda V1161 (lambda L1162 (lambda K1163 (lambda C1164 (do (shen.incinfs) (prop () (cons (cons p (cons <=> (cons q ()))) (cons <=> (cons (cons q (cons <=> (cons r ()))) ()))) V1161 L1162 K1163 C1164)))))) (shen.prolog-vector) (@v true (@v 0 (vector 0))) 0 (freeze true)) = false",
+    "preceding_output": [
+      "Prolog tableau: ((lambda V1157 (lambda L1158 (lambda K1159 (lambda C1160 (do (shen.incinfs) (prop () (cons (cons p (cons <=> (cons q ()))) (cons <=> (cons (cons q (cons <=> (cons p ()))) ()))) V1157 L1158 K1159 C1160)))))) (shen.prolog-vector) (@v true (@v 0 (vector 0))) 0 (freeze true)) = true",
+      "passed",
+      "Prolog tableau: ((lambda V1161 (lambda L1162 (lambda K1163 (lambda C1164 (do (shen.incinfs) (prop () (cons (cons p (cons <=> (cons q ()))) (cons <=> (cons (cons q (cons <=> (cons r ()))) ()))) V1161 L1162 K1163 C1164)))))) (shen.prolog-vector) (@v true (@v 0 (vector 0))) 0 (freeze true)) = false"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 0.00198499999999996,
+    "test_label": "proplog: (load \"proplog version 1.shen\") = loaded",
+    "preceding_output": [
+      "proplog: (load \"proplog version 1.shen\") = loaded",
+      "(fn backchain)",
+      "(fn backchain*)"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 0.00199199999999999,
+    "test_label": "proplog: (load \"proplog version 1.shen\") = loaded",
+    "preceding_output": [
+      "proplog: (load \"proplog version 1.shen\") = loaded",
+      "(fn backchain)",
+      "(fn backchain*)"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 2.000000000002e-05,
+    "test_label": "proplog: (backchain q (cons (cons q (cons <= (cons p ()))) (cons (cons q (cons <= (cons r ()))) (cons (cons r (cons <= ())) ())))) = proved",
+    "preceding_output": [
+      "(fn backchain*)",
+      "passed",
+      "proplog: (backchain q (cons (cons q (cons <= (cons p ()))) (cons (cons q (cons <= (cons r ()))) (cons (cons r (cons <= ())) ())))) = proved"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 1.4000000000014e-05,
+    "test_label": "proplog: (backchain q (cons (cons q (cons <= (cons p ()))) (cons (cons q (cons <= (cons r ()))) ()))) = ...",
+    "preceding_output": [
+      "proplog: (backchain q (cons (cons q (cons <= (cons p ()))) (cons (cons q (cons <= (cons r ()))) (cons (cons r (cons <= ())) ())))) = proved",
+      "passed",
+      "proplog: (backchain q (cons (cons q (cons <= (cons p ()))) (cons (cons q (cons <= (cons r ()))) ()))) = ..."
+    ]
+  },
+  {
+    "shen_cpu_seconds": 0.001888,
+    "test_label": "proplog: (load \"proplog version 2.shen\") = loaded",
+    "preceding_output": [
+      "proplog: (load \"proplog version 2.shen\") = loaded",
+      "(fn backchain)",
+      "(fn backchain*)"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 0.00189299999999998,
+    "test_label": "proplog: (load \"proplog version 2.shen\") = loaded",
+    "preceding_output": [
+      "proplog: (load \"proplog version 2.shen\") = loaded",
+      "(fn backchain)",
+      "(fn backchain*)"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 1.8000000000018e-05,
+    "test_label": "proplog: (backchain q (cons (cons q (cons <= (cons p ()))) (cons (cons q (cons <= (cons r ()))) (cons r ())))) = true",
+    "preceding_output": [
+      "(fn backchain*)",
+      "passed",
+      "proplog: (backchain q (cons (cons q (cons <= (cons p ()))) (cons (cons q (cons <= (cons r ()))) (cons r ())))) = true"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 1.39999999999585e-05,
+    "test_label": "proplog: (backchain q (cons (cons q (cons <= (cons p ()))) (cons (cons q (cons <= (cons r ()))) ()))) = false",
+    "preceding_output": [
+      "proplog: (backchain q (cons (cons q (cons <= (cons p ()))) (cons (cons q (cons <= (cons r ()))) (cons r ())))) = true",
+      "passed",
+      "proplog: (backchain q (cons (cons q (cons <= (cons p ()))) (cons (cons q (cons <= (cons r ()))) ()))) = false"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 0.000877000000000017,
+    "test_label": "redirect: (load \"redirect.shen\") = loaded",
+    "preceding_output": [
+      "ok",
+      "redirect: (load \"redirect.shen\") = loaded",
+      "(fn redirect)"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 0.000881999999999994,
+    "test_label": "redirect: (load \"redirect.shen\") = loaded",
+    "preceding_output": [
+      "ok",
+      "redirect: (load \"redirect.shen\") = loaded",
+      "(fn redirect)"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 0.000161999999999995,
+    "test_label": "redirect: (redirect) = ok",
+    "preceding_output": [
+      "(fn redirect)",
+      "passed",
+      "redirect: (redirect) = ok"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 0.010842,
+    "test_label": "metaprogramming: (load \"metaprog.shen\") = loaded",
+    "preceding_output": [
+      "(fn ae_help)",
+      "(fn generate_code_for_lex)",
+      "(fn gcfl_help)"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 0.010849,
+    "test_label": "metaprogramming: (load \"metaprog.shen\") = loaded",
+    "preceding_output": [
+      "(fn ae_help)",
+      "(fn generate_code_for_lex)",
+      "(fn gcfl_help)"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 0.00278500000000004,
+    "test_label": "metaprogramming: (do (generate_parser (cons sent (cons --> (cons np (cons vp (cons np (cons --> (cons name (cons np (cons --> (cons det (cons n (cons name (cons --> (cons \"John\" (cons name (cons --> (cons \"Bill\" (cons name (cons --> (cons \"Tom\" (cons det (cons --> (cons \"the\" (cons det (cons --> (cons \"a\" (cons det (cons --> (cons \"that\" (cons det (cons --> (cons \"this\" (cons n (cons --> (cons \"girl\" (cons n (cons --> (cons \"ball\" (cons vp (cons --> (cons vtrans (cons np (cons vp (cons --> (cons vintrans (cons vtrans (cons --> (cons \"kicks\" (cons vtrans (cons --> (cons \"likes\" (cons vintrans (cons --> (cons \"jumps\" (cons vintrans (cons --> (cons \"flies\" ())))))))))))))))))))))))))))))))))))))))))))))))))))))))))) ok) = ok",
+    "preceding_output": [
+      "(fn gcfl_help)",
+      "passed",
+      "metaprogramming: (do (generate_parser (cons sent (cons --> (cons np (cons vp (cons np (cons --> (cons name (cons np (cons --> (cons det (cons n (cons name (cons --> (cons \"John\" (cons name (cons --> (cons \"Bill\" (cons name (cons --> (cons \"Tom\" (cons det (cons --> (cons \"the\" (cons det (cons --> (cons \"a\" (cons det (cons --> (cons \"that\" (cons det (cons --> (cons \"this\" (cons n (cons --> (cons \"girl\" (cons n (cons --> (cons \"ball\" (cons vp (cons --> (cons vtrans (cons np (cons vp (cons --> (cons vintrans (cons vtrans (cons --> (cons \"kicks\" (cons vtrans (cons --> (cons \"likes\" (cons vintrans (cons --> (cons \"jumps\" (cons vintrans (cons --> (cons \"flies\" ())))))))))))))))))))))))))))))))))))))))))))))))))))))))))) ok) = ok"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 0.00998900000000003,
+    "test_label": "binary number datatype: (load \"binary.shen\") = loaded",
+    "preceding_output": [
+      "changing the arity of complement may cause errors",
+      "binary#type",
+      "(fn complement)"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 0.009994,
+    "test_label": "binary number datatype: (load \"binary.shen\") = loaded",
+    "preceding_output": [
+      "changing the arity of complement may cause errors",
+      "binary#type",
+      "(fn complement)"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 1.000000000001e-05,
+    "test_label": "binary number datatype: (complement (cons 1 (cons 0 ()))) = [0 1]",
+    "preceding_output": [
+      "(fn complement)",
+      "passed",
+      "binary number datatype: (complement (cons 1 (cons 0 ()))) = [0 1]"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 0.00736400000000004,
+    "test_label": "binary number datatype: (load \"streams.shen\") = loaded",
+    "preceding_output": [
+      "(fn delay)",
+      "(fn force)",
+      "(fn end?)"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 0.00736999999999999,
+    "test_label": "binary number datatype: (load \"streams.shen\") = loaded",
+    "preceding_output": [
+      "(fn delay)",
+      "(fn force)",
+      "(fn end?)"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 1.09999999999832e-05,
+    "test_label": "binary number datatype: (fst (delay (@p 0 (@p (+ 1) (lambda X false))))) = 1",
+    "preceding_output": [
+      "(fn end?)",
+      "passed",
+      "binary number datatype: (fst (delay (@p 0 (@p (+ 1) (lambda X false))))) = 1"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 0.015544,
+    "test_label": "calculator: (load \"calculator.shen\") = loaded",
+    "preceding_output": [
+      "calculator: (load \"calculator.shen\") = loaded",
+      "arith-expr#type",
+      "(fn do-calculation)"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 0.01555,
+    "test_label": "calculator: (load \"calculator.shen\") = loaded",
+    "preceding_output": [
+      "calculator: (load \"calculator.shen\") = loaded",
+      "arith-expr#type",
+      "(fn do-calculation)"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 1.6000000000016e-05,
+    "test_label": "calculator: (do-calculation (cons (cons num (cons 12 ())) (cons + (cons (cons (cons num (cons 7 ())) (cons * (cons (cons num (cons 4 ())) ()))) ())))) = 40",
+    "preceding_output": [
+      "(fn do-calculation)",
+      "passed",
+      "calculator: (do-calculation (cons (cons num (cons 12 ())) (cons + (cons (cons (cons num (cons 7 ())) (cons * (cons (cons num (cons 4 ())) ()))) ())))) = 40"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 0.00507700000000005,
+    "test_label": "structures 1: (load \"structures-untyped.shen\") = loaded",
+    "preceding_output": [
+      "(fn params)",
+      "(fn make-association-list)",
+      "(fn recognisor)"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 0.00508200000000003,
+    "test_label": "structures 1: (load \"structures-untyped.shen\") = loaded",
+    "preceding_output": [
+      "(fn params)",
+      "(fn make-association-list)",
+      "(fn recognisor)"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 0.000674000000000008,
+    "test_label": "structures 1: (defstruct ship (cons length (cons name ()))) = ship",
+    "preceding_output": [
+      "(fn recognisor)",
+      "passed",
+      "structures 1: (defstruct ship (cons length (cons name ()))) = ship"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 8.99999999998125e-06,
+    "test_label": "structures 1: (make-ship 200 \"Mary Rose\") = [[structure | ship] [length | 200] [name | \"Mary Rose\"]]",
+    "preceding_output": [
+      "structures 1: (defstruct ship (cons length (cons name ()))) = ship",
+      "passed",
+      "structures 1: (make-ship 200 \"Mary Rose\") = [[structure | ship] [length | 200] [name | \"Mary Rose\"]]"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 1.49999999999872e-05,
+    "test_label": "structures 1: (ship-length (make-ship 200 \"Mary Rose\")) = 200",
+    "preceding_output": [
+      "structures 1: (make-ship 200 \"Mary Rose\") = [[structure | ship] [length | 200] [name | \"Mary Rose\"]]",
+      "passed",
+      "structures 1: (ship-length (make-ship 200 \"Mary Rose\")) = 200"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 1.4000000000014e-05,
+    "test_label": "structures 1: (ship-name (make-ship 200 \"Mary Rose\")) = \"Mary Rose\"",
+    "preceding_output": [
+      "structures 1: (ship-length (make-ship 200 \"Mary Rose\")) = 200",
+      "passed",
+      "structures 1: (ship-name (make-ship 200 \"Mary Rose\")) = \"Mary Rose\""
+    ]
+  },
+  {
+    "shen_cpu_seconds": 0.00872899999999999,
+    "test_label": "structures 2: (load \"structures-typed.shen\") = loaded",
+    "preceding_output": [
+      "(fn params)",
+      "(fn make-association-list)",
+      "(fn recognisor)"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 0.00873499999999999,
+    "test_label": "structures 2: (load \"structures-typed.shen\") = loaded",
+    "preceding_output": [
+      "(fn params)",
+      "(fn make-association-list)",
+      "(fn recognisor)"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 0.00113200000000002,
+    "test_label": "structures 2: (defstruct ship (cons (@p length number) (cons (@p name string) ()))) = ship",
+    "preceding_output": [
+      "(fn recognisor)",
+      "passed",
+      "structures 2: (defstruct ship (cons (@p length number) (cons (@p name string) ()))) = ship"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 1.09999999999832e-05,
+    "test_label": "structures 2: (make-ship 200 \"Mary Rose\") = [[structure | ship] [length | 200] [name | \"Mary Rose\"]]",
+    "preceding_output": [
+      "structures 2: (defstruct ship (cons (@p length number) (cons (@p name string) ()))) = ship",
+      "passed",
+      "structures 2: (make-ship 200 \"Mary Rose\") = [[structure | ship] [length | 200] [name | \"Mary Rose\"]]"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 1.6000000000016e-05,
+    "test_label": "structures 2: (ship-length (make-ship 200 \"Mary Rose\")) = 200",
+    "preceding_output": [
+      "structures 2: (make-ship 200 \"Mary Rose\") = [[structure | ship] [length | 200] [name | \"Mary Rose\"]]",
+      "passed",
+      "structures 2: (ship-length (make-ship 200 \"Mary Rose\")) = 200"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 1.4000000000014e-05,
+    "test_label": "structures 2: (ship-name (make-ship 200 \"Mary Rose\")) = \"Mary Rose\"",
+    "preceding_output": [
+      "structures 2: (ship-length (make-ship 200 \"Mary Rose\")) = 200",
+      "passed",
+      "structures 2: (ship-name (make-ship 200 \"Mary Rose\")) = \"Mary Rose\""
+    ]
+  },
+  {
+    "shen_cpu_seconds": 0.00546800000000003,
+    "test_label": "classes 1: (load \"classes-untyped.shen\") = loaded",
+    "preceding_output": [
+      "(fn has-attribute?)",
+      "(fn change-value)",
+      "(fn instance-of)"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 0.00547399999999998,
+    "test_label": "classes 1: (load \"classes-untyped.shen\") = loaded",
+    "preceding_output": [
+      "(fn has-attribute?)",
+      "(fn change-value)",
+      "(fn instance-of)"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 1.29999999999852e-05,
+    "test_label": "classes 1: (defclass ship (cons length (cons name ()))) = ship",
+    "preceding_output": [
+      "(fn instance-of)",
+      "passed",
+      "classes 1: (defclass ship (cons length (cons name ()))) = ship"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 1.29999999999852e-05,
+    "test_label": "classes 1: (set s (make-instance ship)) = [[class | ship] [length | fail] [name | fail]]",
+    "preceding_output": [
+      "classes 1: (defclass ship (cons length (cons name ()))) = ship",
+      "passed",
+      "classes 1: (set s (make-instance ship)) = [[class | ship] [length | fail] [name | fail]]"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 8.99999999998125e-06,
+    "test_label": "classes 1: (has-value? length (value s)) = false",
+    "preceding_output": [
+      "classes 1: (set s (make-instance ship)) = [[class | ship] [length | fail] [name | fail]]",
+      "passed",
+      "classes 1: (has-value? length (value s)) = false"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 1.09999999999832e-05,
+    "test_label": "classes 1: (set s (change-value (value s) length 100)) = [[class | ship] [length | 100] [name | fail]]",
+    "preceding_output": [
+      "classes 1: (has-value? length (value s)) = false",
+      "passed",
+      "classes 1: (set s (change-value (value s) length 100)) = [[class | ship] [length | 100] [name | fail]]"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 8.99999999998125e-06,
+    "test_label": "classes 1: (get-value length (value s)) = 100",
+    "preceding_output": [
+      "classes 1: (set s (change-value (value s) length 100)) = [[class | ship] [length | 100] [name | fail]]",
+      "passed",
+      "classes 1: (get-value length (value s)) = 100"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 0.010144,
+    "test_label": "classes 2: (load \"classes-typed.shen\") = loaded",
+    "preceding_output": [
+      "(fn change-value)",
+      "instance-of",
+      "(fn instance-of)"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 0.01015,
+    "test_label": "classes 2: (load \"classes-typed.shen\") = loaded",
+    "preceding_output": [
+      "(fn change-value)",
+      "instance-of",
+      "(fn instance-of)"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 0.00645299999999999,
+    "test_label": "classes 2: (defclass ship (cons (@p length number) (cons (@p name string) ()))) = ship",
+    "preceding_output": [
+      "(fn instance-of)",
+      "passed",
+      "classes 2: (defclass ship (cons (@p length number) (cons (@p name string) ()))) = ship"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 2.19999999999665e-05,
+    "test_label": "classes 2: (has-value? length (make-instance ship)) = false",
+    "preceding_output": [
+      "classes 2: (defclass ship (cons (@p length number) (cons (@p name string) ()))) = ship",
+      "passed",
+      "classes 2: (has-value? length (make-instance ship)) = false"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 2.2000000000022e-05,
+    "test_label": "classes 2: (change-value (make-instance ship) length 100) = [[class | ship] [length | 100] [name | fail]]",
+    "preceding_output": [
+      "classes 2: (has-value? length (make-instance ship)) = false",
+      "passed",
+      "classes 2: (change-value (make-instance ship) length 100) = [[class | ship] [length | 100] [name | fail]]"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 2.90000000000012e-05,
+    "test_label": "classes 2: (get-value length (change-value (make-instance ship) length 100)) = 100",
+    "preceding_output": [
+      "classes 2: (change-value (make-instance ship) length 100) = [[class | ship] [length | 100] [name | fail]]",
+      "passed",
+      "classes 2: (get-value length (change-value (make-instance ship) length 100)) = 100"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 0.003359,
+    "test_label": "abstract datatypes: (load \"stack.shen\") = loaded",
+    "preceding_output": [
+      "(fn push)",
+      "(fn top)",
+      "(fn pop)"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 0.00336700000000001,
+    "test_label": "abstract datatypes: (load \"stack.shen\") = loaded",
+    "preceding_output": [
+      "(fn push)",
+      "(fn top)",
+      "(fn pop)"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 1.90000000000468e-05,
+    "test_label": "abstract datatypes: (top (push 0 (empty-stack _))) = 0",
+    "preceding_output": [
+      "(fn pop)",
+      "passed",
+      "abstract datatypes: (top (push 0 (empty-stack _))) = 0"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 0.025947,
+    "test_label": "yacc: (load \"yacc.shen\") = loaded",
+    "preceding_output": [
+      "(fn <b*>)",
+      "(fn <c*>)",
+      "(fn <d*>)"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 0.025954,
+    "test_label": "yacc: (load \"yacc.shen\") = loaded",
+    "preceding_output": [
+      "(fn <b*>)",
+      "(fn <c*>)",
+      "(fn <d*>)"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 1.6000000000016e-05,
+    "test_label": "yacc: (compile (fn <sent>) (cons the (cons cat (cons likes (cons the (cons dog ())))))) = [the cat likes the dog]",
+    "preceding_output": [
+      "(fn <d*>)",
+      "passed",
+      "yacc: (compile (fn <sent>) (cons the (cons cat (cons likes (cons the (cons dog ())))))) = [the cat likes the dog]"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 1.4000000000014e-05,
+    "test_label": "yacc: (trap-error (compile (fn <sent>) (cons the (cons cat (cons likes (cons the (cons canary ())))))) (lambda E (fail))) = ...",
+    "preceding_output": [
+      "yacc: (compile (fn <sent>) (cons the (cons cat (cons likes (cons the (cons dog ())))))) = [the cat likes the dog]",
+      "passed",
+      "yacc: (trap-error (compile (fn <sent>) (cons the (cons cat (cons likes (cons the (cons canary ())))))) (lambda E (fail))) = ..."
+    ]
+  },
+  {
+    "shen_cpu_seconds": 1.59999999999605e-05,
+    "test_label": "yacc: (compile (fn <asbscs>) (cons a (cons a (cons a (cons b (cons b (cons c ()))))))) = [a a a b b c]",
+    "preceding_output": [
+      "yacc: (trap-error (compile (fn <sent>) (cons the (cons cat (cons likes (cons the (cons canary ())))))) (lambda E (fail))) = ...",
+      "passed",
+      "yacc: (compile (fn <asbscs>) (cons a (cons a (cons a (cons b (cons b (cons c ()))))))) = [a a a b b c]"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 2.90000000000012e-05,
+    "test_label": "yacc: (compile (fn <find-digit>) (cons a (cons v (cons f (cons g (cons 6 (cons y (cons u ())))))))) = [6]",
+    "preceding_output": [
+      "yacc: (compile (fn <asbscs>) (cons a (cons a (cons a (cons b (cons b (cons c ()))))))) = [a a a b b c]",
+      "passed",
+      "yacc: (compile (fn <find-digit>) (cons a (cons v (cons f (cons g (cons 6 (cons y (cons u ())))))))) = [6]"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 8.99999999998125e-06,
+    "test_label": "yacc: (compile (fn <vp>) (cons chases (cons the (cons cat ())))) = [chases the cat]",
+    "preceding_output": [
+      "yacc: (compile (fn <find-digit>) (cons a (cons v (cons f (cons g (cons 6 (cons y (cons u ())))))))) = [6]",
+      "passed",
+      "yacc: (compile (fn <vp>) (cons chases (cons the (cons cat ())))) = [chases the cat]"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 1.2000000000012e-05,
+    "test_label": "yacc: (compile (fn <des>) (cons (cons d ()) (cons (cons e (cons e ())) ()))) = [d e e]",
+    "preceding_output": [
+      "yacc: (compile (fn <vp>) (cons chases (cons the (cons cat ())))) = [chases the cat]",
+      "passed",
+      "yacc: (compile (fn <des>) (cons (cons d ()) (cons (cons e (cons e ())) ()))) = [d e e]"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 1.30000000000408e-05,
+    "test_label": "yacc: (compile (fn <sent'>) (cons the (cons cat (cons likes (cons the (cons dog ())))))) = [is it true that your father likes the dog ?]",
+    "preceding_output": [
+      "yacc: (compile (fn <des>) (cons (cons d ()) (cons (cons e (cons e ())) ()))) = [d e e]",
+      "passed",
+      "yacc: (compile (fn <sent'>) (cons the (cons cat (cons likes (cons the (cons dog ())))))) = [is it true that your father likes the dog ?]"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 8.000000000008e-06,
+    "test_label": "yacc: (compile (fn <as>) (cons a (cons a (cons a ())))) = [a a a]",
+    "preceding_output": [
+      "yacc: (compile (fn <sent'>) (cons the (cons cat (cons likes (cons the (cons dog ())))))) = [is it true that your father likes the dog ?]",
+      "passed",
+      "yacc: (compile (fn <as>) (cons a (cons a (cons a ())))) = [a a a]"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 2.90000000000012e-05,
+    "test_label": "yacc: (compile (fn <find-digit'>) (cons a (cons v (cons f (cons g (cons 6 (cons y (cons u ())))))))) = [6 y u]",
+    "preceding_output": [
+      "yacc: (compile (fn <as>) (cons a (cons a (cons a ())))) = [a a a]",
+      "passed",
+      "yacc: (compile (fn <find-digit'>) (cons a (cons v (cons f (cons g (cons 6 (cons y (cons u ())))))))) = [6 y u]"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 1.29999999999852e-05,
+    "test_label": "yacc: (trap-error (compile (fn <asbs'cs>) (cons a (cons v (cons f (cons g (cons 6 (cons y (cons u ())))))))) (lambda E (fail))) = ...",
+    "preceding_output": [
+      "yacc: (compile (fn <find-digit'>) (cons a (cons v (cons f (cons g (cons 6 (cons y (cons u ())))))))) = [6 y u]",
+      "passed",
+      "yacc: (trap-error (compile (fn <asbs'cs>) (cons a (cons v (cons f (cons g (cons 6 (cons y (cons u ())))))))) (lambda E (fail))) = ..."
+    ]
+  },
+  {
+    "shen_cpu_seconds": 2.29999999999952e-05,
+    "test_label": "yacc: (compile (fn <find-digit''>) (cons a (cons v (cons f (cons g (cons 6 (cons y (cons u ())))))))) = 6",
+    "preceding_output": [
+      "yacc: (trap-error (compile (fn <asbs'cs>) (cons a (cons v (cons f (cons g (cons 6 (cons y (cons u ())))))))) (lambda E (fail))) = ...",
+      "passed",
+      "yacc: (compile (fn <find-digit''>) (cons a (cons v (cons f (cons g (cons 6 (cons y (cons u ())))))))) = 6"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 1.89999999999912e-05,
+    "test_label": "yacc: (compile (fn <anbncn>) (cons a (cons a (cons a (cons b (cons b (cons b (cons c (cons c (cons c ())))))))))) = [a a a b b b c c c]",
+    "preceding_output": [
+      "yacc: (compile (fn <find-digit''>) (cons a (cons v (cons f (cons g (cons 6 (cons y (cons u ())))))))) = 6",
+      "passed",
+      "yacc: (compile (fn <anbncn>) (cons a (cons a (cons a (cons b (cons b (cons b (cons c (cons c (cons c ())))))))))) = [a a a b b b c c c]"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 1.00000000002876e-06,
+    "test_label": "N Queens: (preclude-all-but ()) = []",
+    "preceding_output": [
+      "[]",
+      "true",
+      "N Queens: (preclude-all-but ()) = []"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 9.99999999973245e-07,
+    "test_label": "N Queens: (tc +) = true",
+    "preceding_output": [
+      "N Queens: (preclude-all-but ()) = []",
+      "passed",
+      "N Queens: (tc +) = true"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 0.012324,
+    "test_label": "N Queens: (load \"n queens.shen\") = loaded",
+    "preceding_output": [
+      "(fn n-queens.ok_row?) : ((list number) --> boolean)",
+      "(fn n-queens.ok_diag?) : ((list number) --> boolean)",
+      "(fn n-queens.ok_diag_N?) : (number --> (number --> ((list number) --> boolean)))"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 0.012336,
+    "test_label": "N Queens: (load \"n queens.shen\") = loaded",
+    "preceding_output": [
+      "(fn n-queens.ok_diag?) : ((list number) --> boolean)",
+      "(fn n-queens.ok_diag_N?) : (number --> (number --> ((list number) --> boolean)))",
+      "typechecked in 40910 inferences"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 0.002079,
+    "test_label": "N Queens: (n-queens 5) = [[4 2 5 3 1] [3 5 2 4 1] [5 3 1 4 2] [4 1 3 5 2] [5 2 4 1 3] [1 4 2 5 3] [2 5 3 1 4] [1 3 5 2 4] [3 1 4 2 5] [2 4 1 3 5]]",
+    "preceding_output": [
+      "typechecked in 40910 inferences",
+      "passed",
+      "N Queens: (n-queens 5) = [[4 2 5 3 1] [3 5 2 4 1] [5 3 1 4 2] [4 1 3 5 2] [5 2 4 1 3] [1 4 2 5 3] [2 5 3 1 4] [1 3 5 2 4] [3 1 4 2 5] [2 4 1 3 5]]"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 0.0,
+    "test_label": "N Queens: (tc -) = false",
+    "preceding_output": [
+      "N Queens: (n-queens 5) = [[4 2 5 3 1] [3 5 2 4 1] [5 3 1 4 2] [4 1 3 5 2] [5 2 4 1 3] [1 4 2 5 3] [2 5 3 1 4] [1 3 5 2 4] [3 1 4 2 5] [2 4 1 3 5]]",
+      "passed",
+      "N Queens: (tc -) = false"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 0.0,
+    "test_label": "search: (tc +) = true",
+    "preceding_output": [
+      "pass rate ... 100%",
+      "ok",
+      "search: (tc +) = true"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 0.015099,
+    "test_label": "search: (load \"search.shen\") = loaded",
+    "preceding_output": [
+      "(fn order_states) : ((state --> number) --> ((list state) --> (list state)))",
+      "(fn bsort) : ((A --> (A --> boolean)) --> ((list A) --> (list A)))",
+      "(fn bsort*) : ((A --> (A --> boolean)) --> ((list A) --> (list A)))"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 0.0151089999999999,
+    "test_label": "search: (load \"search.shen\") = loaded",
+    "preceding_output": [
+      "(fn bsort) : ((A --> (A --> boolean)) --> ((list A) --> (list A)))",
+      "(fn bsort*) : ((A --> (A --> boolean)) --> ((list A) --> (list A)))",
+      "typechecked in 44265 inferences"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 1.00000000002876e-06,
+    "test_label": "search: (tc -) = false",
+    "preceding_output": [
+      "typechecked in 44265 inferences",
+      "passed",
+      "search: (tc -) = false"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 1.00000000002876e-06,
+    "test_label": "montague: (tc +) = true",
+    "preceding_output": [
+      "pass rate ... 100%",
+      "ok",
+      "montague: (tc +) = true"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 0.0783729999999999,
+    "test_label": "montague: (load \"montague.shen\") = loaded",
+    "preceding_output": [
+      "(fn <trans>) : ((list t) ==> (t --> (t --> f)))",
+      "(fn trans?) : (t --> boolean)",
+      "(fn <det>) : ((list t) ==> ((t --> f) --> ((t --> f) --> f)))"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 0.078384,
+    "test_label": "montague: (load \"montague.shen\") = loaded",
+    "preceding_output": [
+      "(fn trans?) : (t --> boolean)",
+      "(fn <det>) : ((list t) ==> ((t --> f) --> ((t --> f) --> f)))",
+      "typechecked in 57057 inferences"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 2.000000000002e-05,
+    "test_label": "montague: (compile (fn <sent>) (cons Mary (cons likes (cons John ())))) = [likes Mary John]",
+    "preceding_output": [
+      "typechecked in 57057 inferences",
+      "passed",
+      "montague: (compile (fn <sent>) (cons Mary (cons likes (cons John ())))) = [likes Mary John]"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 9.99999999917733e-07,
+    "test_label": "c-: (tc +) = true",
+    "preceding_output": [
+      "pass rate ... 100%",
+      "ok",
+      "c-: (tc +) = true"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 0.59268,
+    "test_label": "c-: (load \"c-minus.shen\") = loaded",
+    "preceding_output": [
+      "(fn <newline>) : ((list string) ==> symbol)",
+      "(fn <comment>) : ((list string) ==> symbol)",
+      "(fn <comment-body>) : ((list string) ==> symbol)"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 0.592691,
+    "test_label": "c-: (load \"c-minus.shen\") = loaded",
+    "preceding_output": [
+      "(fn <comment>) : ((list string) ==> symbol)",
+      "(fn <comment-body>) : ((list string) ==> symbol)",
+      "typechecked in 289707 inferences"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 0.0,
+    "test_label": "L interpreter: (tc +) = true",
+    "preceding_output": [
+      "pass rate ... 100%",
+      "ok",
+      "L interpreter: (tc +) = true"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 1.739817,
+    "test_label": "L interpreter: (load \"interpreter.shen\") = loaded",
+    "preceding_output": [
+      "(fn no-match?) : ((list (pattern * l-formula)) --> boolean)",
+      "(fn replace) : (pattern --> (l-formula --> (l-formula --> l-formula)))",
+      "(fn free?) : (pattern --> (pattern --> boolean))"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 1.739831,
+    "test_label": "L interpreter: (load \"interpreter.shen\") = loaded",
+    "preceding_output": [
+      "(fn replace) : (pattern --> (l-formula --> (l-formula --> l-formula)))",
+      "(fn free?) : (pattern --> (pattern --> boolean))",
+      "typechecked in 1177726 inferences"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 0.000259999999999927,
+    "test_label": "L interpreter: (normal-form (cons (cons (cons y-combinator (cons (cons /. (cons ADD (cons (cons /. (cons X (cons (cons /. (cons Y (cons (cons if (cons (cons = (cons X (cons 0 ()))) (cons Y (cons (cons (cons ADD (cons (cons -- (cons X ())) ())) (cons (cons ++ (cons Y ())) ())) ())))) ()))) ()))) ()))) ())) (cons 3 ())) (cons 4 ()))) = 7",
+    "preceding_output": [
+      "typechecked in 1177726 inferences",
+      "passed",
+      "L interpreter: (normal-form (cons (cons (cons y-combinator (cons (cons /. (cons ADD (cons (cons /. (cons X (cons (cons /. (cons Y (cons (cons if (cons (cons = (cons X (cons 0 ()))) (cons Y (cons (cons (cons ADD (cons (cons -- (cons X ())) ())) (cons (cons ++ (cons Y ())) ())) ())))) ()))) ()))) ()))) ())) (cons 3 ())) (cons 4 ()))) = 7"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 0.000145999999999979,
+    "test_label": "L interpreter: (normal-form (cons (cons (cons y-combinator (cons (cons /. (cons APPEND (cons (cons /. (cons X (cons (cons /. (cons Y (cons (cons if (cons (cons = (cons X (cons () ()))) (cons Y (cons (cons cons (cons (cons (cons /. (cons (cons cons (cons A (cons B ()))) (cons A ()))) (cons X ())) (cons (cons (cons APPEND (cons (cons (cons /. (cons (cons cons (cons A (cons B ()))) (cons B ()))) (cons X ())) ())) (cons Y ())) ()))) ())))) ()))) ()))) ()))) ())) (cons (cons cons (cons 1 (cons () ()))) ())) (cons (cons cons (cons 2 (cons () ()))) ()))) = [cons 1 [cons 2 []]]",
+    "preceding_output": [
+      "L interpreter: (normal-form (cons (cons (cons y-combinator (cons (cons /. (cons ADD (cons (cons /. (cons X (cons (cons /. (cons Y (cons (cons if (cons (cons = (cons X (cons 0 ()))) (cons Y (cons (cons (cons ADD (cons (cons -- (cons X ())) ())) (cons (cons ++ (cons Y ())) ())) ())))) ()))) ()))) ()))) ())) (cons 3 ())) (cons 4 ()))) = 7",
+      "passed",
+      "L interpreter: (normal-form (cons (cons (cons y-combinator (cons (cons /. (cons APPEND (cons (cons /. (cons X (cons (cons /. (cons Y (cons (cons if (cons (cons = (cons X (cons () ()))) (cons Y (cons (cons cons (cons (cons (cons /. (cons (cons cons (cons A (cons B ()))) (cons A ()))) (cons X ())) (cons (cons (cons APPEND (cons (cons (cons /. (cons (cons cons (cons A (cons B ()))) (cons B ()))) (cons X ())) ())) (cons Y ())) ()))) ())))) ()))) ()))) ()))) ())) (cons (cons cons (cons 1 (cons () ()))) ())) (cons (cons cons (cons 2 (cons () ()))) ()))) = [cons 1 [cons 2 []]]"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 9.99999999695689e-07,
+    "test_label": "L interpreter: (tc -) = false",
+    "preceding_output": [
+      "L interpreter: (normal-form (cons (cons (cons y-combinator (cons (cons /. (cons APPEND (cons (cons /. (cons X (cons (cons /. (cons Y (cons (cons if (cons (cons = (cons X (cons () ()))) (cons Y (cons (cons cons (cons (cons (cons /. (cons (cons cons (cons A (cons B ()))) (cons A ()))) (cons X ())) (cons (cons (cons APPEND (cons (cons (cons /. (cons (cons cons (cons A (cons B ()))) (cons B ()))) (cons X ())) ())) (cons Y ())) ()))) ())))) ()))) ()))) ()))) ())) (cons (cons cons (cons 1 (cons () ()))) ())) (cons (cons cons (cons 2 (cons () ()))) ()))) = [cons 1 [cons 2 []]]",
+      "passed",
+      "L interpreter: (tc -) = false"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 1.00000000013978e-06,
+    "test_label": "proof assistant: (tc +) = true",
+    "preceding_output": [
+      "pass rate ... 100%",
+      "ok",
+      "proof assistant: (tc +) = true"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 0.128619,
+    "test_label": "proof assistant: (load \"proof assistant.shen\") = loaded",
+    "preceding_output": [
+      "(fn user-directive) : (A --> ((list ((list wff) * wff)) --> (list ((list wff) * wff))))",
+      "(fn back) : ((list ((list wff) * wff)) --> (list ((list wff) * wff)))",
+      "(fn go-back) : ((list ((list ((list wff) * wff)) * ((list ((list wff) * wff)) --> (list ((list wff) * wff))))) --> (list ((list wff) * wff)))"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 0.128635,
+    "test_label": "proof assistant: (load \"proof assistant.shen\") = loaded",
+    "preceding_output": [
+      "(fn back) : ((list ((list wff) * wff)) --> (list ((list wff) * wff)))",
+      "(fn go-back) : ((list ((list ((list wff) * wff)) * ((list ((list wff) * wff)) --> (list ((list wff) * wff))))) --> (list ((list wff) * wff)))",
+      "typechecked in 1253811 inferences"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 9.99999999695689e-07,
+    "test_label": "proof assistant: (tc -) = false",
+    "preceding_output": [
+      "typechecked in 1253811 inferences",
+      "passed",
+      "proof assistant: (tc -) = false"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 0.0,
+    "test_label": "quantifier machine: (tc +) = true",
+    "preceding_output": [
+      "pass rate ... 100%",
+      "ok",
+      "quantifier machine: (tc +) = true"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 0.140046,
+    "test_label": "quantifier machine: (load \"qmachine.shen\") = loaded",
+    "preceding_output": [
+      "(fn next-prime) : (number --> number)",
+      "(fn prime*?) : (number --> boolean)",
+      "(fn prime-help) : (number --> (number --> (number --> boolean)))"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 0.140059,
+    "test_label": "quantifier machine: (load \"qmachine.shen\") = loaded",
+    "preceding_output": [
+      "(fn prime*?) : (number --> boolean)",
+      "(fn prime-help) : (number --> (number --> (number --> boolean)))",
+      "typechecked in 1346483 inferences"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 8.7999999999866e-05,
+    "test_label": "quantifier machine: (exists (cons 1 (cons (+ 1) (cons (= 100) ()))) (> 50)) = true",
+    "preceding_output": [
+      "typechecked in 1346483 inferences",
+      "passed",
+      "quantifier machine: (exists (cons 1 (cons (+ 1) (cons (= 100) ()))) (> 50)) = true"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 1.00000000013978e-06,
+    "test_label": "quantifier machine: (tc -) = false",
+    "preceding_output": [
+      "quantifier machine: (exists (cons 1 (cons (+ 1) (cons (= 100) ()))) (> 50)) = true",
+      "passed",
+      "quantifier machine: (tc -) = false"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 0.0,
+    "test_label": "depth first search: (tc +) = true",
+    "preceding_output": [
+      "pass rate ... 100%",
+      "ok",
+      "depth first search: (tc +) = true"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 0.0134020000000001,
+    "test_label": "depth first search: (load \"depth.shen\") = loaded",
+    "preceding_output": [
+      "warning: changing the type of depth may create errors",
+      "(fn depth) : (A --> ((A --> (list A)) --> ((A --> boolean) --> ((A --> boolean) --> (list A)))))",
+      "(fn depth-help) : ((list A) --> ((A --> (list A)) --> ((A --> boolean) --> ((A --> boolean) --> ((list A) --> (list A))))))"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 0.0134129999999999,
+    "test_label": "depth first search: (load \"depth.shen\") = loaded",
+    "preceding_output": [
+      "(fn depth) : (A --> ((A --> (list A)) --> ((A --> boolean) --> ((A --> boolean) --> (list A)))))",
+      "(fn depth-help) : ((list A) --> ((A --> (list A)) --> ((A --> boolean) --> ((A --> boolean) --> ((list A) --> (list A))))))",
+      "typechecked in 1354713 inferences"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 2.49999999999417e-05,
+    "test_label": "depth first search: (depth 4 (lambda X (cons (+ X 3) (cons (+ X 4) (cons (+ X 5) ())))) (lambda X (= X 27)) (lambda X (> X 27))) = [4 7 10 13 16 19 22 27]",
+    "preceding_output": [
+      "typechecked in 1354713 inferences",
+      "passed",
+      "depth first search: (depth 4 (lambda X (cons (+ X 3) (cons (+ X 4) (cons (+ X 5) ())))) (lambda X (= X 27)) (lambda X (> X 27))) = [4 7 10 13 16 19 22 27]"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 2.0000000000131e-05,
+    "test_label": "depth first search: (depth 4 (lambda X (cons (+ X 3) ())) (lambda X (= X 27)) (lambda X (> X 27))) = []",
+    "preceding_output": [
+      "depth first search: (depth 4 (lambda X (cons (+ X 3) (cons (+ X 4) (cons (+ X 5) ())))) (lambda X (= X 27)) (lambda X (> X 27))) = [4 7 10 13 16 19 22 27]",
+      "passed",
+      "depth first search: (depth 4 (lambda X (cons (+ X 3) ())) (lambda X (= X 27)) (lambda X (> X 27))) = []"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 1.00000000013978e-06,
+    "test_label": "depth first search: (tc -) = false",
+    "preceding_output": [
+      "depth first search: (depth 4 (lambda X (cons (+ X 3) ())) (lambda X (= X 27)) (lambda X (> X 27))) = []",
+      "passed",
+      "depth first search: (tc -) = false"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 0.0,
+    "test_label": "secd: (tc +) = true",
+    "preceding_output": [
+      "pass rate ... 100%",
+      "ok",
+      "secd: (tc +) = true"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 0.0831339999999998,
+    "test_label": "secd: (load \"secd1.shen\") = loaded",
+    "preceding_output": [
+      "(fn secd) : ((list ob) --> ((list (symbol * ob)) --> ((list ob) --> ((list ((list ob) * ((list (symbol * ob)) * (list ob)))) --> ob))))",
+      "(fn bnd?) : (ob --> ((list (symbol * ob)) --> boolean))",
+      "(fn lookup) : (ob --> ((list (symbol * ob)) --> ob))"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 0.0831460000000002,
+    "test_label": "secd: (load \"secd1.shen\") = loaded",
+    "preceding_output": [
+      "(fn bnd?) : (ob --> ((list (symbol * ob)) --> boolean))",
+      "(fn lookup) : (ob --> ((list (symbol * ob)) --> ob))",
+      "typechecked in 1392014 inferences"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 4.20000000000975e-05,
+    "test_label": "secd: (evaluate (cons (cons lambda (cons x (cons x ()))) (cons b ()))) = b",
+    "preceding_output": [
+      "typechecked in 1392014 inferences",
+      "passed",
+      "secd: (evaluate (cons (cons lambda (cons x (cons x ()))) (cons b ()))) = b"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 1.09999999997612e-05,
+    "test_label": "secd: (evaluate (cons lambda (cons x (cons x ())))) = [closure [] x x]",
+    "preceding_output": [
+      "secd: (evaluate (cons (cons lambda (cons x (cons x ()))) (cons b ()))) = b",
+      "passed",
+      "secd: (evaluate (cons lambda (cons x (cons x ())))) = [closure [] x x]"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 5.49999999996942e-05,
+    "test_label": "secd: (let If (cons lambda (cons z (cons (cons lambda (cons x (cons (cons lambda (cons y (cons (cons (cons z (cons x ())) (cons y ())) ()))) ()))) ()))) (let True (cons lambda (cons x (cons (cons lambda (cons y (cons x ()))) ()))) (evaluate (cons (cons (cons If (cons True ())) (cons a ())) (cons b ()))))) = a",
+    "preceding_output": [
+      "secd: (evaluate (cons lambda (cons x (cons x ())))) = [closure [] x x]",
+      "passed",
+      "secd: (let If (cons lambda (cons z (cons (cons lambda (cons x (cons (cons lambda (cons y (cons (cons (cons z (cons x ())) (cons y ())) ()))) ()))) ()))) (let True (cons lambda (cons x (cons (cons lambda (cons y (cons x ()))) ()))) (evaluate (cons (cons (cons If (cons True ())) (cons a ())) (cons b ()))))) = a"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 1.00000000013978e-06,
+    "test_label": "unification: (tc -) = false",
+    "preceding_output": [
+      "pass rate ... 100%",
+      "ok",
+      "unification: (tc -) = false"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 0.004108,
+    "test_label": "unification: (load \"unification.shen\") = loaded",
+    "preceding_output": [
+      "(fn unify-loop)",
+      "(fn occurs-check?)",
+      "(fn deref)"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 0.00411699999999993,
+    "test_label": "unification: (load \"unification.shen\") = loaded",
+    "preceding_output": [
+      "(fn unify-loop)",
+      "(fn occurs-check?)",
+      "(fn deref)"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 1.30000000000408e-05,
+    "test_label": "unification: (unify (cons f (cons a ())) X) = [[X f a]]",
+    "preceding_output": [
+      "(fn deref)",
+      "passed",
+      "unification: (unify (cons f (cons a ())) X) = [[X f a]]"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 1.49999999998762e-05,
+    "test_label": "unification: (unify (cons f (cons Y ())) (cons f (cons b ()))) = [[Y | b]]",
+    "preceding_output": [
+      "unification: (unify (cons f (cons a ())) X) = [[X f a]]",
+      "passed",
+      "unification: (unify (cons f (cons Y ())) (cons f (cons b ()))) = [[Y | b]]"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 0.0115069999999999,
+    "test_label": "total in Prolog: (load \"totalprolog.shen\") = loaded",
+    "preceding_output": [
+      "(fn begat)",
+      "7625",
+      "(fn total)"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 0.0115119999999997,
+    "test_label": "total in Prolog: (load \"totalprolog.shen\") = loaded",
+    "preceding_output": [
+      "(fn begat)",
+      "7625",
+      "(fn total)"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 7.29999999999897e-05,
+    "test_label": "total in Prolog: ((lambda V1165 (lambda L1166 (lambda K1167 (lambda C1168 (let Person (shen.newpv V1165) (shen.gc V1165 (let Age (shen.newpv V1165) (shen.gc V1165 (let Ages (shen.newpv V1165) (shen.gc V1165 (let Total (shen.newpv V1165) (shen.gc V1165 (do (shen.incinfs) (findall Age (lived (shen.deref Person V1165) (shen.deref Age V1165)) Ages V1165 L1166 K1167 (freeze (total Ages Total V1165 L1166 K1167 (freeze (return Total V1165 L1166 K1167 C1168)))))))))))))))))) (shen.prolog-vector) (@v true (@v 0 (vector 0))) 0 (freeze true)) = 7625",
+    "preceding_output": [
+      "(fn total)",
+      "passed",
+      "total in Prolog: ((lambda V1165 (lambda L1166 (lambda K1167 (lambda C1168 (let Person (shen.newpv V1165) (shen.gc V1165 (let Age (shen.newpv V1165) (shen.gc V1165 (let Ages (shen.newpv V1165) (shen.gc V1165 (let Total (shen.newpv V1165) (shen.gc V1165 (do (shen.incinfs) (findall Age (lived (shen.deref Person V1165) (shen.deref Age V1165)) Ages V1165 L1166 K1167 (freeze (total Ages Total V1165 L1166 K1167 (freeze (return Total V1165 L1166 K1167 C1168)))))))))))))))))) (shen.prolog-vector) (@v true (@v 0 (vector 0))) 0 (freeze true)) = 7625"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 0.00280900000000006,
+    "test_label": "Prolog fork: (load \"fork.shen\") = loaded",
+    "preceding_output": [
+      "(fn i)",
+      "(fn j)",
+      "(fn f)"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 0.00281500000000001,
+    "test_label": "Prolog fork: (load \"fork.shen\") = loaded",
+    "preceding_output": [
+      "(fn i)",
+      "(fn j)",
+      "(fn f)"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 1.39999999997364e-05,
+    "test_label": "Prolog fork: ((lambda V1169 (lambda L1170 (lambda K1171 (lambda C1172 (do (shen.incinfs) (g1 a V1169 L1170 K1171 C1172)))))) (shen.prolog-vector) (@v true (@v 0 (vector 0))) 0 (freeze true)) = true",
+    "preceding_output": [
+      "(fn f)",
+      "passed",
+      "Prolog fork: ((lambda V1169 (lambda L1170 (lambda K1171 (lambda C1172 (do (shen.incinfs) (g1 a V1169 L1170 K1171 C1172)))))) (shen.prolog-vector) (@v true (@v 0 (vector 0))) 0 (freeze true)) = true"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 1.00000000013978e-06,
+    "test_label": "Prolog interpreter: (tc +) = true",
+    "preceding_output": [
+      "pass rate ... 100%",
+      "ok",
+      "Prolog interpreter: (tc +) = true"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 0.355969,
+    "test_label": "Prolog interpreter: (load \"prologinterp.shen\") = loaded",
+    "preceding_output": [
+      "(fn replace-term-in-clause) : (term --> (term --> (horn-clause --> horn-clause)))",
+      "(fn replace-term-in-atom) : (term --> (term --> (atom --> atom)))",
+      "(fn replace-term) : (term --> (term --> (term --> term)))"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 0.35598,
+    "test_label": "Prolog interpreter: (load \"prologinterp.shen\") = loaded",
+    "preceding_output": [
+      "(fn replace-term-in-atom) : (term --> (term --> (atom --> atom)))",
+      "(fn replace-term) : (term --> (term --> (term --> term)))",
+      "typechecked in 1634358 inferences"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 9.99999999695689e-07,
+    "test_label": "Prolog interpreter: (tc -) = false",
+    "preceding_output": [
+      "typechecked in 1634358 inferences",
+      "passed",
+      "Prolog interpreter: (tc -) = false"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 3.640395,
+    "test_label": "Prolog interpreter: (tc -) = false",
+    "preceding_output": [
+      "pass rate ... 100%",
+      "ok",
+      "0"
+    ]
+  },
+  {
+    "shen_cpu_seconds": 3.652468,
+    "test_label": "Prolog interpreter: (tc -) = false",
+    "preceding_output": [
+      "ok",
+      "0",
+      "loaded"
+    ]
+  }
+]
