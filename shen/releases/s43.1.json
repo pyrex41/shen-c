@@ -16,7 +16,9 @@
     "track",
     "t-star",
     "yacc",
-    "types"
+    "types",
+    "stlib",
+    "stlib-init"
   ],
   "suite_directory": "shen/test/s43.1",
   "suite_entrypoint": "runme.shen",
@@ -178,6 +180,9 @@
     "shen/src/kl/prolog.kl": "dc401f8940f7f97fbfc87157338ff8b84fd845c1101b70e6db893886aaf11c17",
     "shen/src/kl/reader.kl": "97f008caaf51072851cc730620d9bdd816bfd1be70cb22fd502a6b3cb000b269",
     "shen/src/kl/sequent.kl": "b1018c6d58706f78ac81cc72cf7c4712d36d1be173708ff9def26d0169ddd644",
+    "shen/src/kl/stlib-init.kl": "391b7ca22669e2e3b4332082fa7e2f17f00c3f3a6e1138178ef173f0f702e5a0",
+    "shen/src/kl/stlib.LICENSE": "aec4473b0b8990ce8ab3344f75cdc0ec11da50020405a44b4b50453789dbf948",
+    "shen/src/kl/stlib.kl": "d987926573c4403143a7316d04cc9eff176c341411fe35dba95587f9e83e187e",
     "shen/src/kl/sys.kl": "97412f6584716e2418aea326c1ecf0456a77a205504d078d26936cd5b9370412",
     "shen/src/kl/t-star.kl": "546928d3435934091fc6df6274a6c9d58ece7297c868fbe55ebe328be360159a",
     "shen/src/kl/toplevel.kl": "7c0dae226e3fa6a9ca53bd44729774a5f6a8025f2d7fcb43a58ae0e7a2bc46c2",
@@ -280,5 +285,14 @@
   },
   "upstream_inventory": "shen/releases/s43.1/upstream.json",
   "archive_url": "https://www.shenlanguage.org/Download/S43.zip",
-  "archive_sha256": "195537eb3480363313678594897d4d8cf6399b484afab0d68cf180e725c52d40"
+  "archive_sha256": "195537eb3480363313678594897d4d8cf6399b484afab0d68cf180e725c52d40",
+  "stlib": {
+    "note": "The Shen Standard Library, built into the image as other ports do. stlib.kl and stlib.LICENSE are unmodified copies from the shen-sources 43.1 release; stlib-init.kl runs its initialiser once the kernel is up.",
+    "archive_url": "https://github.com/Shen-Language/shen-sources/releases/download/shen-43.1/ShenOSKernel-43.1.tar.gz",
+    "archive_sha256": "900eedef44f440af78f9395ed06e689ce1604546fc309f5bc7c8bc84cc651920",
+    "files": {
+      "shen/src/kl/stlib.kl": "ShenOSKernel-43.1/klambda/stlib.kl",
+      "shen/src/kl/stlib.LICENSE": "ShenOSKernel-43.1/LICENSE.txt"
+    }
+  }
 }
