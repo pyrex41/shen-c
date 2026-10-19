@@ -37,7 +37,7 @@ def wrap(text,name,signature,arguments,before,after='sp_leave();'):
 def rc_kernel(text):
     names=json.loads('['+re.search(r'rc_module_symbol_names\[\]=\{(.*?)\};',text,re.S)[1].rstrip().rstrip(',')+']')
     symbols={}
-    for index,native in re.findall(r't\[0\]=rc_retain\(symbols\[(\d+)\]\);\s*if\(!t\[0\]\) goto cleanup;\s*t\[1\]=rc_closure(?:_owned)?\(ctx,\d+,rc_native_(\d+),0,NULL\);',text):
+    for index,native in re.findall(r't\[0\]=(?:rc_retain\()?symbols\[(\d+)\]\)?;\s*if\(!t\[0\]\) goto cleanup;\s*t\[1\]=(?:rc_closure_static\()?rc_closure(?:_owned)?\(ctx,\d+,rc_native_(\d+),0,NULL\)\)?;',text):
         symbols['rc_native_body_'+native]=names[int(index)]
     for match in re.finditer(r'static RcValue \*rc_module_call_(\d+)\([^\n]+\) \{(.*?)\n\}',text,re.S):
         body=re.search(r'rc_native_body_(\d+)\(',match[2])

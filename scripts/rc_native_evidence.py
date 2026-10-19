@@ -102,8 +102,12 @@ def native_definition_evidence(source, symbol=None):
                 registered = _symbol_value(slots.get(setter[1], ''), names)
                 if registered is None:
                     raise ValueError('unknown generated symbol registration')
-                closure = re.fullmatch(r'rc_closure(?:_owned)?\(ctx,(\d+),(rc_native_\d+),\d+,[^;]+\)', slots.get(setter[2], ''))
-                identity = re.fullmatch(r'rc_closure_return_second(?:_owned)?\(ctx,(rc_native_\d+),\d+,[^;]+\)', slots.get(setter[2], ''))
+                constructor = slots.get(setter[2], '')
+                # Top-level definitions wrap the constructor to make it immortal.
+                static = re.fullmatch(r'rc_closure_static\((.*)\)', constructor)
+                constructor = static[1] if static else constructor
+                closure = re.fullmatch(r'rc_closure(?:_owned)?\(ctx,(\d+),(rc_native_\d+),\d+,[^;]+\)', constructor)
+                identity = re.fullmatch(r'rc_closure_return_second(?:_owned)?\(ctx,(rc_native_\d+),\d+,[^;]+\)', constructor)
                 if closure:
                     target, target_arity = closure[2], int(closure[1])
                 elif identity:

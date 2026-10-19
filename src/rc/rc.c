@@ -106,6 +106,10 @@ struct RcContext {
     size_t symbol_capacity, symbol_count;
     RcResolvedSymbols *compiled_symbols;
     RcValue *true_symbol, *false_symbol; /* Borrowed intern-table roots. */
+    /* Open-addressed set of shared immortal closures (rc_closure_static).
+     * They stay on the live list, which frees them at teardown. */
+    RcValue **static_closures;
+    size_t static_capacity, static_count;
     /* Owned context roots, bounded by the specialized builtin set. */
     RcValue *builtin_roots[RC_BUILTIN_COUNT];
     /* One bounded dependency certificate. Keys borrow permanent intern roots;
@@ -419,7 +423,7 @@ void rc_context_free(RcContext *ctx) {
         ctx->compiled_symbols = next;
     }
     ctx->destroying = true;
-    free(ctx->symbols);
+    free(ctx->symbols); free(ctx->static_closures);
     RcValue *v = ctx->objects;
     while (v) { RcValue *next = v->next; raw_free(v); v = next; }
     while (ctx->stats.cached_objects) {
@@ -928,6 +932,58 @@ RcValue *rc_closure_return_second_owned(RcContext *ctx, RcNativeOwned native,
                                         size_t capture_count, RcValue *const *captures) {
     RcValue *v=closure_create(ctx,2,NULL,native,capture_count,captures);
     if(v)v->returns_second=true;
+    return v;
+}
+static size_t static_closure_hash(const RcValue *v) {
+    uint64_t h = (uint64_t)(uintptr_t)v->as.closure.native * UINT64_C(0x9e3779b97f4a7c15);
+    h ^= (uint64_t)(uintptr_t)v->as.closure.owned_native * UINT64_C(0xbf58476d1ce4e5b9);
+    h ^= ((uint64_t)v->as.closure.arity << 1 | v->returns_second) * UINT64_C(0x94d049bb133111eb);
+    for (size_t i = 0; i < v->as.closure.capture_count; ++i)
+        h = (h ^ (uint64_t)(uintptr_t)v->as.closure.captures[i]) * UINT64_C(0x100000001b3);
+    return (size_t)(h ^ h >> 29);
+}
+static bool static_closure_same(const RcValue *a, const RcValue *b) {
+    if (a->as.closure.native != b->as.closure.native ||
+        a->as.closure.owned_native != b->as.closure.owned_native ||
+        a->as.closure.arity != b->as.closure.arity || a->returns_second != b->returns_second ||
+        a->as.closure.capture_count != b->as.closure.capture_count) return false;
+    /* Immortal captures are immediates, nil, symbols or shared closures, so
+     * handle identity is value identity. */
+    for (size_t i = 0; i < a->as.closure.capture_count; ++i)
+        if (a->as.closure.captures[i] != b->as.closure.captures[i]) return false;
+    return true;
+}
+static bool grow_static_closures(RcContext *ctx) {
+    size_t capacity = ctx->static_capacity ? ctx->static_capacity * 2 : 256;
+    if (capacity < ctx->static_capacity || capacity > SIZE_MAX / sizeof(RcValue *)) return false;
+    RcValue **slots = calloc(capacity, sizeof(*slots));
+    if (!slots) return false;
+    for (size_t i = 0; i < ctx->static_capacity; ++i) {
+        RcValue *v = ctx->static_closures[i];
+        if (!v) continue;
+        size_t j = static_closure_hash(v) & (capacity - 1);
+        while (slots[j]) j = (j + 1) & (capacity - 1);
+        slots[j] = v;
+    }
+    free(ctx->static_closures);
+    ctx->static_closures = slots; ctx->static_capacity = capacity;
+    return true;
+}
+RcValue *rc_closure_static(RcValue *v) {
+    if (!is_counted(v) || v->type != RC_CLOSURE || v->as.closure.bound_count) return v;
+    /* Immortal captures add no counted edges, so the closure cannot keep any
+     * mortal value alive and cannot lie on a cycle. Its code and captures are
+     * immutable: only interpreted closures promote their first capture. */
+    for (size_t i = 0; i < v->as.closure.capture_count; ++i)
+        if (is_counted(v->as.closure.captures[i])) return v;
+    RcContext *ctx = v->ctx;
+    /* Without set storage the closure stays ordinary: correct, just counted. */
+    if (ctx->static_count >= ctx->static_capacity / 2 && !grow_static_closures(ctx)) return v;
+    size_t j = static_closure_hash(v) & (ctx->static_capacity - 1);
+    for (RcValue *found; (found = ctx->static_closures[j]); j = (j + 1) & (ctx->static_capacity - 1))
+        if (static_closure_same(found, v)) { rc_release(v); return found; }
+    ctx->static_closures[j] = v; ctx->static_count++;
+    v->refs = RC_IMMORTAL;
     return v;
 }
 bool rc_closure_returns_second(RcContext *ctx, const RcValue *v) {

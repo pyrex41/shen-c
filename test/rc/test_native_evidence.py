@@ -24,6 +24,8 @@ evidence = native_definition_evidence(source, 'proof')
 assert evidence['callback'] == 'rc_native_1' and evidence['body'] == 'rc_native_body_1'
 # Output from before immortal symbols retained the table entry.
 assert native_definition_evidence(source.replace('t[0]=symbols[0]', 't[0]=rc_retain(symbols[0])'), 'proof') == evidence
+# Top-level definitions wrap their constructor to make the closure immortal.
+assert native_definition_evidence(source.replace('t[1]=rc_closure_owned(ctx,1,rc_native_1,0,NULL);', 't[1]=rc_closure_static(rc_closure_owned(ctx,1,rc_native_1,0,NULL));'), 'proof') == evidence
 controls = {
     'interpreted delegated body': source.replace('rc_retain(argv[0])', 'rc_eval(ctx,argv[0])'),
     'cached eval-kl forwarding': source.replace('rc_retain(argv[0])', 'rc_apply(ctx,symbols[1],0,NULL)'),

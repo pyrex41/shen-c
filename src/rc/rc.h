@@ -163,6 +163,18 @@ RcValue *rc_closure_return_second(RcContext *ctx, RcNative native,
 RcValue *rc_closure_return_second_owned(RcContext *ctx, RcNativeOwned native,
                                         size_t capture_count, RcValue *const *captures);
 bool rc_closure_returns_second(RcContext *ctx, const RcValue *function);
+/* Compiler/installer ABI: consumes and returns an owned closure; NULL passes
+ * through. An unbound closure whose captures are all immortal becomes
+ * immortal; any other value is returned unchanged. Immortal closures are
+ * shared: if the context already holds one with the same callbacks, arity,
+ * identity certificate and captures, the argument is released and that one
+ * is returned. Storage is therefore bounded by the distinct code/capture
+ * combinations, and is freed at context teardown rather than when a binding
+ * is replaced. Use it for installers and definitions that run at most once,
+ * where sharing cannot be observed. Named calls through such a binding then
+ * perform no reference-count operations, and a running body's self stays
+ * valid even after a callback redefines its name. */
+RcValue *rc_closure_static(RcValue *owned_closure);
 bool rc_closure_is_native(const RcValue *closure, RcNative native);
 bool rc_closure_is_owned_native(const RcValue *closure, RcNativeOwned native);
 /* Internal compiler ABI: function/arguments must already be valid values of
