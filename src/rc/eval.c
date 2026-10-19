@@ -69,6 +69,11 @@ static bool parameters(RcContext *ctx, RcValue *params, size_t *arity) {
 }
 static RcValue *prepared_call(RcContext *,RcValue *,size_t,RcValue *const *);
 static RcValue *plan_prepare(RcContext *,RcValue *,RcValue *,size_t,RcValue *const *,bool);
+/* Optional native-tier hotness observer; absent hooks cost one branch. */
+static inline void tier_call(RcContext *ctx, RcValue *self) {
+    void *state; const RcTierHooks *hooks=rc_tier_hooks(ctx,&state);
+    if(hooks)hooks->call(ctx,state,self);
+}
 static RcValue *dynamic_call(RcContext *ctx, RcValue *self, size_t argc, RcValue *const *argv) {
     RcValue *const *captures=rc_eval_captures(ctx,self,dynamic_call,argc);if(!captures)return NULL;
     RcValue *plan=plan_prepare(ctx,captures[0],captures[1],argc,captures+2,true);
@@ -77,6 +82,7 @@ static RcValue *dynamic_call(RcContext *ctx, RcValue *self, size_t argc, RcValue
         return prepared_call(ctx,self,argc,argv);
     }
     if(rc_has_error(ctx))return NULL;
+    tier_call(ctx,self);
     RcValue *body=NULL;
     RcValue *env=rc_eval_env_frame(ctx,self,dynamic_call,argc,argv,&body);
     if(!env)return NULL;
@@ -259,7 +265,12 @@ static RcValue *evaluate(RcContext *ctx, RcValue *input, RcValue *environment, b
             if (rc_type(name)!=RC_SYMBOL) { rc_error(ctx,"eval-kl: defun name must be a symbol"); break; }
             RcValue *fn=make_function(ctx,nth(args,1),nth(args,2),rc_nil());
             if (!fn) break;
-            if (rc_function_set(ctx,name,fn)) result=rc_retain(name);
+            const RcValue *old=rc_function_slot_borrowed(ctx,name);
+            if (rc_function_set(ctx,name,fn)) {
+                void *state; const RcTierHooks *hooks=rc_tier_hooks(ctx,&state);
+                if (hooks) hooks->defun(ctx,state,name,expr,fn,old);
+                result=rc_retain(name);
+            }
             rc_release(fn); break;
         }
         if (form==F_TRAP) {
@@ -300,7 +311,10 @@ RcValue *rc_eval(RcContext *ctx, RcValue *expression) {
     return result;
 }
 static RcValue *eval_native(RcContext *ctx, RcValue *self, size_t argc, RcValue *const *argv) {
-    (void)self; (void)argc; return rc_eval(ctx,argv[0]);
+    (void)self; (void)argc;
+    void *state; const RcTierHooks *hooks=rc_tier_hooks(ctx,&state);
+    if (hooks && !rc_has_error(ctx)) hooks->safepoint(ctx,state);
+    return rc_eval(ctx,argv[0]);
 }
 bool rc_install_eval(RcContext *ctx) {
     RcValue *name=rc_symbol(ctx,"eval-kl"), *fn=rc_closure(ctx,1,eval_native,0,NULL);

@@ -130,9 +130,12 @@ static void frame_code(Buf *out,const RcEmitFn *f) {
  Buf rewritten={.owner=f->p};rewrite_frame_code(&rewritten,f);
  unsigned char *nulls=alloc(f->p,(size_t)(f->frame_slots?f->frame_slots:1));
  memset(nulls,1,(size_t)f->frame_slots);
- const char *line=rewritten.p?rewritten.p:"";
+ char empty[1]="",*line=rewritten.p?rewritten.p:empty;
  while(*line) {
-  const char *end=strchr(line,'\n');size_t len=end?(size_t)(end-line)+1:strlen(line);
+  char *end=strchr(line,'\n');size_t len=end?(size_t)(end-line)+1:strlen(line);
+  /* Terminate the line while matching: sscanf may measure its whole input,
+   * which made matching quadratic in function size. */
+  if(end)*end=0;
   int a=-1,b=-1,c=-1,n=0;char label[64];bool omit=false,recognized=false;
   if((n=0,sscanf(line,"  if(t[%d]) rc_release(t[%d]); t[%d]=NULL;%n",&a,&b,&c,&n))==3&&
      a==b&&b==c&&a>=0&&a<f->frame_slots&&n==(int)(len-(end?1:0))) {
@@ -171,6 +174,7 @@ static void frame_code(Buf *out,const RcEmitFn *f) {
    }
    if(safe&&semicolons==1&&!quote){nulls[a]=0;recognized=true;}
   }
+  if(end)*end='\n';
   if(!recognized)memset(nulls,0,(size_t)f->frame_slots);
   if(!omit)put(out,"%.*s",(int)len,line);
   line+=len;
@@ -536,7 +540,7 @@ static int expr_inner(RcEmitFn *f,RcValue *x,int tail,const Live *after){
    put(&f->code,"  t[%d]=rc_literal_%d(ctx);\n",quoted,data);check(f,quoted);
    put(&f->code,"  if(!rc_source_definition(ctx,t[%d],t[%d],%d)) goto %s;\n",t,quoted,count(p,second(args)),f->fail);drop(f,quoted);
   }
-  put(&f->code,"  if(!rc_function_set(ctx,t[%d],t[%d])) goto %s;\n",t,cl,f->fail);drop(f,cl);p->defuns++;drop_dead(f,after);return t;
+  put(&f->code,"  if(!%s(ctx,t[%d],t[%d])) goto %s;\n",p->options.module_entry?"rc_module_define":"rc_function_set",t,cl,f->fail);drop(f,cl);p->defuns++;drop_dead(f,after);return t;
  }
  int n=count(p,args);
  /* Atom construction can allocate, but never invokes callbacks or a safepoint.
@@ -782,6 +786,11 @@ bool rc_emit_program(RcContext *ctx,FILE *out,RcValue *const *kernel,size_t nker
   if(setjmp(p->failure)) { clear_arena(p); free(p); return false; }
   Buf installs={.owner=p},kt={.owner=p},ut={.owner=p},events={.owner=p};
   if(options->source_events&&!options->source_metadata)bad(p,"source reader events require source metadata mode");
+  if(options->module_entry){
+    if(!identifier(options->module_entry)||nuser||options->source_events||options->source_metadata||options->emit_main||options->init_name)
+      bad(p,"invalid native module options");
+    for(size_t i=0;i<nkernel;i++)if(!kernel[i]||!is_pair(kernel[i])||!named(first(kernel[i]),"defun"))bad(p,"native module forms must be defuns");
+  }
   for(RcValue *q=options->source_events;q&&!rc_is_nil(q);q=rest(q)){
     if(!is_pair(q))bad(p,"improper source reader event list");
     p->user_phase=false;p->metadata_root=NULL;
@@ -805,6 +814,7 @@ bool rc_emit_program(RcContext *ctx,FILE *out,RcValue *const *kernel,size_t nker
         " * Owned slots, explicit drops, and cleanup on every return path. */\n"
         "#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n"
         "#include <stdint.h>\n#include <math.h>\n#include \"rc.h\"\n#include \"primitives.h\"\n#include \"eval.h\"\n",out);
+  if(options->module_entry)fputs("static bool (*rc_module_define)(RcContext*,RcValue*,RcValue*);\n",out);
   if(p->nsymbols) {
     Buf names={.owner=p};
     for(size_t i=0;i<p->nsymbols;i++){if(i)put(&names,",\n");quoted(&names,p->symbols[i]);}
@@ -842,6 +852,15 @@ bool rc_emit_program(RcContext *ctx,FILE *out,RcValue *const *kernel,size_t nker
         "  if(!value) return false;\n"
         "  if(print && getenv(\"SHEN_RC_PRINT\")) { rc_print(stdout,value); fputc('\\n',stdout); }\n"
         "  rc_release(value); rc_safepoint(ctx); return true;\n}\n",out);
+  if(options->module_entry) {
+    /* Module definitions are only offered to the host; it decides publication. */
+    fprintf(out,"__attribute__((visibility(\"default\"))) bool %s(RcContext *ctx,bool (*define)(RcContext*,RcValue*,RcValue*)) {\n  rc_module_define=define;\n",options->module_entry);
+    if(installs.p) fputs(installs.p,out);
+    fputs("  return true;\n}\n",out);
+    if(report) *report=(RcEmitReport){p->defuns,p->tops,p->lambdas};
+    bool ok=!ferror(out); if(!ok) rc_error(ctx,"failed writing generated C");
+    clear_arena(p); free(p); return ok;
+  }
   fprintf(out,"bool %s(RcContext *ctx) {\n",bootstrap);
   fputs("  if(!rc_install_primitives(ctx) || !rc_install_eval(ctx)) return false;\n",out);
   if(installs.p) fputs(installs.p,out);

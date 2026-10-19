@@ -99,6 +99,9 @@ struct RcContext {
     RcValue **symbols;
     size_t symbol_capacity, symbol_count;
     RcResolvedSymbols *compiled_symbols;
+    /* Direct-mapped lookup over compiled_symbols; entries are borrowed. With
+     * runtime-loaded modules the list grows, and every native call reads it. */
+    RcResolvedSymbols *compiled_symbol_cache[64];
     RcValue *true_symbol, *false_symbol; /* Borrowed intern-table roots. */
     /* Owned context roots, bounded by the specialized builtin set. */
     RcValue *builtin_roots[RC_BUILTIN_COUNT];
@@ -111,6 +114,8 @@ struct RcContext {
     size_t collection_interval, since_collection, graph_slots, visit_epoch, cycle_sources;
     char *error;
     bool collecting, error_active, adaptive_collection, acyclic;
+    /* Optional evaluator observer; NULL unless a host attaches a tier. */
+    const RcTierHooks *tier_hooks; void *tier_state;
 };
 static RcValue nil_value = {.type = RC_NIL, .refs = SIZE_MAX};
 
@@ -519,6 +524,13 @@ RcValue *rc_function_slot_borrowed(RcContext *ctx,RcValue *symbol) {
 RcValue *rc_vector_slot_borrowed(RcValue *vector,size_t index) {
     return rc_type(vector)==RC_VECTOR&&index<vector->as.vector.length ? vector->as.vector.items[index] : NULL;
 }
+void rc_tier_attach(RcContext *ctx,const RcTierHooks *hooks,void *state) {
+    ctx->tier_hooks=hooks; ctx->tier_state=hooks ? state : NULL;
+}
+const RcTierHooks *rc_tier_hooks(const RcContext *ctx,void **state) {
+    if(!ctx->tier_hooks)return NULL;
+    *state=ctx->tier_state; return ctx->tier_hooks;
+}
 bool rc_eval_plan_environment(const RcValue *environment) {
     return rc_is_nil(environment) || (rc_type(environment)==RC_ENV && !(environment->as.env.key_classes&2));
 }
@@ -647,8 +659,10 @@ RcValue *rc_symbol(RcContext *ctx, const char *name) {
 }
 RcValue *const *rc_symbol_table(RcContext *ctx, const RcSymbolTable *table) {
     if (!ctx || !table) { rc_error(ctx, "invalid compiled symbol table"); return NULL; }
+    RcResolvedSymbols **cached = &ctx->compiled_symbol_cache[((uintptr_t)table >> 4) & 63];
+    if (*cached && (*cached)->table == table) return (*cached)->values;
     for (RcResolvedSymbols *entry = ctx->compiled_symbols; entry; entry = entry->next)
-        if (entry->table == table) return entry->values;
+        if (entry->table == table) { *cached = entry; return entry->values; }
     if ((table->count && !table->names) ||
         table->count > (SIZE_MAX - sizeof(RcResolvedSymbols)) / sizeof(RcValue *)) {
         rc_error(ctx, "invalid compiled symbol table size"); return NULL;
@@ -666,6 +680,7 @@ RcValue *const *rc_symbol_table(RcContext *ctx, const RcSymbolTable *table) {
     entry->table = table;
     entry->next = ctx->compiled_symbols;
     ctx->compiled_symbols = entry;
+    *cached = entry;
     return entry->values;
 }
 const char *rc_text(const RcValue *v) { return v && (rc_type(v) == RC_STRING || rc_type(v) == RC_SYMBOL) ? v->as.text.data : NULL; }

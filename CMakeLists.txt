@@ -74,8 +74,32 @@ add_custom_command(OUTPUT "${RC_KERNEL_C}"
   DEPENDS rc-build ${RC_KERNEL_INPUTS}
   COMMENT "Compiling the complete Shen kernel with the Boehm-free compiler"
   VERBATIM)
-add_executable(shen-rc src/rc/main.c "${RC_KERNEL_C}")
-target_link_libraries(shen-rc PRIVATE shenrc)
+# Optional native tier (SHEN_RC_NATIVE): embedded runtime headers and build
+# flags, the emitter, and runtime symbols exported to dlopen'd modules.
+set(RC_TIER_HEADERS src/rc/rc.h src/rc/primitives.h src/rc/eval.h)
+set(RC_TIER_HOST_FLAGS "")
+if(SHEN_RC_SANITIZE)
+  set(RC_TIER_HOST_FLAGS "-fsanitize=address,undefined -fno-sanitize-recover=all -fno-omit-frame-pointer")
+endif()
+if(SHEN_RC_ACYCLIC_ONLY)
+  string(APPEND RC_TIER_HOST_FLAGS " -DSHEN_RC_ACYCLIC_ONLY")
+endif()
+set(RC_TIER_CONFIG "${CMAKE_CURRENT_BINARY_DIR}/tier_config.h")
+add_custom_command(OUTPUT "${RC_TIER_CONFIG}"
+  COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/embed-tier-config.py"
+          "${RC_TIER_CONFIG}" "${CMAKE_C_COMPILER}" "${RC_TIER_HOST_FLAGS}" ${RC_TIER_HEADERS}
+          -- src/rc/emit.c src/rc/emit.h
+  WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+  DEPENDS scripts/embed-tier-config.py ${RC_TIER_HEADERS} src/rc/emit.c src/rc/emit.h
+  VERBATIM)
+add_executable(shen-rc src/rc/main.c src/rc/native_tier.c src/rc/emit.c "${RC_KERNEL_C}" "${RC_TIER_CONFIG}")
+target_include_directories(shen-rc PRIVATE "${CMAKE_CURRENT_BINARY_DIR}")
+target_link_libraries(shen-rc PRIVATE shenrc ${CMAKE_DL_LIBS})
+set_target_properties(shen-rc PROPERTIES ENABLE_EXPORTS ON)
+if(APPLE)
+  # Also keeps LTO from internalizing runtime symbols the kernel never uses.
+  target_link_options(shen-rc PRIVATE -Wl,-export_dynamic)
+endif()
 # Keep the conventional executable name without a second runtime.
 add_custom_command(TARGET shen-rc POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:shen-rc>
