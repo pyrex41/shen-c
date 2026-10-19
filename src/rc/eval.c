@@ -76,7 +76,7 @@ static inline void tier_call(RcContext *ctx, RcValue *self) {
     if(hooks)hooks->call(ctx,state,self);
 }
 static RcValue *dynamic_call(RcContext *ctx, RcValue *self, size_t argc, RcValue *const *argv) {
-    if(!rc_interpreter_enter(ctx))return NULL;
+    if(!rc_interpreter_enter(ctx)||!rc_stack_check(ctx))return NULL;
     RcValue *const *captures=rc_eval_captures(ctx,self,dynamic_call,argc);if(!captures)return NULL;
     RcValue *plan=plan_prepare(ctx,captures[0],captures[1],argc,captures+2,true);
     if(plan) {
