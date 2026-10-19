@@ -120,3 +120,30 @@ RC baseline/Boehm RSS bounds. Earlier release receipts do not qualify this
 backend. Refresh the loaded execution profile after the final live-after rule;
 then choose the largest measured remaining cost among graph traversal,
 parameter ownership and tail dispatch.
+
+## Tail correctness follow-up (55bf4a9)
+
+The complete suite at ea1ae24 passed, but the broader emitted sanitizer controls
+then found a native stack overflow in `(and true (do ... (f ...)))`. The saved
+`do` identity allowed the recursive operand to be forwarded, but its ordinary
+application still drove that operand through another C call. The preceding
+receipts and profile above describe that earlier source, not the follow-up.
+
+The emitter now creates a tail request only if every saved `do` callee in the
+forwarding chain is a certified second-argument identity. It forwards the result
+through those identities and leaves arbitrary replacements on the eager checked
+path. Boolean completion guards still validate the eventual result. This is a
+compiled control-flow correction; it does not revive the deferred interpreted
+self-loop experiment or change the collector.
+
+The regression checks 17 outcomes with both ownership lowerings and both native
+and diagnostic interpreter execution, including 40,000 self calls, 20,000 boolean
+calls, a nonboolean final result, 30,000 mutually recursive calls, nested `do`,
+callee snapshots, mutation, collection, lexical/computed calls and partial
+application. Native executions must report zero interpreter entries. Fatal
+ASan/UBSan controls pass in both immediate and boxed modes.
+
+Final follow-up receipts, exact build inputs and focused controls are recorded
+separately in [the tail qualification evidence](../evidence/native-tail-qualification-20261019/README.md).
+The preceding timing and counter observations do not automatically qualify this
+changed source for performance. Whole-suite Boehm acceptance remains OPEN.
