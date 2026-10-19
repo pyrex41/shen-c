@@ -539,13 +539,13 @@ static int condition_checked(RcEmitFn *f,RcValue *x,const Live *after,bool rhs_b
    bool borrow=true;
    for(RcValue *q=args;!rc_is_nil(q);q=rest(q))if(is_pair(first(q)))borrow=false;
    Live live=sequence_live(f,args,after);int fn=function_head(f,head,&live,borrow);clear_live(p,&live);
-   /* Bound atoms are already strong roots in this activation. Lookup invokes
-    * no callback, and keeping the bindings live through the predicate avoids
-    * creating and consuming temporary owners. Generic replacements still use
-    * checked borrowed apply; effectful/uncertain operands keep the owned path. */
+   /* Borrow only lexical owners that remain live afterward. Besides removing
+    * copy/release pairs, this preserves exactly the roots seen at the predicate
+    * safepoint; last-use owners must still drop before collection. Generic
+    * replacements use checked borrowed apply with independent snapshots. */
    bool rooted=true;
    for(RcValue *q=args;!rc_is_nil(q);q=rest(q))
-    if(!is_symbol(first(q))||binding(f,name(first(q)))<0)rooted=false;
+    if(!is_symbol(first(q))||!has(after,binding(f,name(first(q)))))rooted=false;
    if(rooted){
     int i=0;for(RcValue *q=args;!rc_is_nil(q);q=rest(q))argument(f,i++,binding(f,name(first(q))));
    }else{
