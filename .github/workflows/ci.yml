@@ -1,14 +1,22 @@
 name: CI
 
 on:
+  # A pull request already runs every commit on its branch; pushes to other
+  # branches would only start a second, identical run of the same commit.
   push:
+    branches: [main]
   pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   nix:
     name: rc-${{ matrix.os }}-${{ matrix.cc }}
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 90
+    timeout-minutes: 40
     strategy:
       fail-fast: false
       matrix:
@@ -72,7 +80,7 @@ jobs:
   sanitize:
     name: rc-asan-ubsan
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: cachix/install-nix-action@v31
