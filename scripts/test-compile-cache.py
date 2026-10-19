@@ -24,6 +24,17 @@ def main():
         subprocess.run([sys.executable,str(packer),'--cache',str(cache)],env=base,check=True,timeout=60,capture_output=True)
         s,_=run(expression='(+ 20 22)',expected='42\n')
         assert s['compiles']=='0' and s['disk_hits']=='0' and s['bundle_hits']=='1',s
+        # Constant-table helpers and typedefs from separate native modules must
+        # have distinct names when the packer combines them into one C image.
+        giant='(cons 1 '*80+'()'+')'*80
+        table_expressions=[f'(let X {giant} (+ 41 (hd X)))',f'(let X {giant} (+ 42 (+ 0 (hd X))))']
+        for marker,expression in zip((41,42),table_expressions):
+            s,_=run(expression=expression,expected=str(marker+1)+'\n')
+            assert s['compiles']=='1',s
+        subprocess.run([sys.executable,str(packer),'--cache',str(cache)],env=base,check=True,timeout=60,capture_output=True)
+        for marker,expression in zip((41,42),table_expressions):
+            s,_=run(expression=expression,expected=str(marker+1)+'\n')
+            assert s['compiles']=='0' and s['bundle_hits']=='1',s
         usage=root/'used-keys.txt'
         subprocess.run([sys.executable,str(packer),'--cache',str(cache),'--record-usage',str(usage)],env=base,check=True,timeout=60,capture_output=True)
         s,_=run();assert s['bundle_hits']=='1' and len(usage.read_text().splitlines())==1,s

@@ -32,7 +32,7 @@ def config(path):
 
 
 TOKENS=re.compile(r'"(?:\\.|[^"\\])*"|\'(?:\\.|[^\'\\])*\'|/\*.*?\*/|//[^\n]*|[A-Za-z_][A-Za-z_0-9]*',re.S)
-PRIVATE=re.compile(r'rc_native_(?:body_)?[0-9]+|rc_module_call_[0-9]+|rc_drop_range|rc_certified_pvar|rc_transparent_do|rc_expression_module')
+PRIVATE=re.compile(r'rc_native_(?:body_)?[0-9]+|rc_module_call_[0-9]+|rc_drop_range|rc_certified_pvar|rc_transparent_do|rc_expression_module|RcConstantString|RcConstantData|rc_constant_data|rc_constant_(?:(?:code|strings|integers|reals)_)?[0-9]+')
 
 
 def namespace(source, number):
@@ -105,7 +105,6 @@ def main():
         if (key,raw) not in records:
             total+=len(raw);records[key,raw]=None
     if not records: raise ValueError('no matching expression modules')
-    if len(records)>512 or total>32*1024*1024: raise ValueError('pack exceeds 512 modules or 32 MiB canonical C budget')
     records=sorted(records)
     if args.only_used:
         if args.only_used.stat().st_size>1024*1024:raise ValueError('usage record exceeds 1 MiB')
@@ -114,6 +113,7 @@ def main():
         records=[r for r in records if r[0] in used]
         if {key for key,raw in records}!=used:raise ValueError('usage keys do not match canonical sources and this ABI')
         total=sum(len(raw) for key,raw in records)
+    if len(records)>512 or total>32*1024*1024: raise ValueError('pack exceeds 512 modules or 32 MiB canonical C budget')
     base=cache/f'bundle-{abi}';source=base.with_suffix('.build.c');obj=base.with_suffix('.so');log=base.with_suffix('.log')
     temporary=cache/f'.bundle-{abi}-{os.getpid()}.so'
     pieces=[]
