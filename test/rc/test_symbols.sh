@@ -47,7 +47,11 @@ int main(void) {
 }
 C
 # Match the generated app's documented compiler overrides.
+case $(uname -s) in
+    Darwin) export_flags='-Wl,-export_dynamic' ;;
+    *) export_flags='-rdynamic -ldl' ;;
+esac
 ${CC:-cc} ${CPPFLAGS:-} ${CFLAGS:--O2} -std=c17 -I"$work/app" -I"$root/src/rc" \
     "$work/app/contexts.c" "$root/src/rc/rc.c" "$root/src/rc/primitives.c" \
-    "$root/src/rc/eval.c" "$root/src/rc/read.c" "$root/src/rc/emit.c" "$root/src/rc/native_compile.c" $(case $(uname -s) in Darwin) echo -Wl,-export_dynamic;; *) echo -rdynamic -ldl;; esac) -lm -o "$work/app/contexts"
+    "$root/src/rc/eval.c" "$root/src/rc/read.c" "$root/src/rc/emit.c" "$root/src/rc/native_compile.c" $export_flags -lm -o "$work/app/contexts"
 "$work/app/contexts"
