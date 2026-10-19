@@ -94,3 +94,5 @@ every sample. Require median paired user CPU <=0.90 in each batch, eight CPU
 wins, wall regression <=3%, the agreed RSS bounds and complete unchanged suite
 success. If CPU remains short, profile the packed release build separately
 before choosing the next ownership or dispatch change.
+
+The later [16-module generated-kernel sanitizer receipt](../evidence/compile-first-sanitizer-20261019/README.md) passes 136/0 and clean process exit after the CLI alternate-stack restoration fix. This supersedes the earlier shutdown failure; platform CI and repeated Boehm acceptance remain separate gates.
