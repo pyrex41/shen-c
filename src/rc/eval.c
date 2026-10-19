@@ -70,6 +70,7 @@ static bool parameters(RcContext *ctx, RcValue *params, size_t *arity) {
 static RcValue *prepared_call(RcContext *,RcValue *,size_t,RcValue *const *);
 static RcValue *plan_prepare(RcContext *,RcValue *,RcValue *,size_t,RcValue *const *,bool);
 static RcValue *dynamic_call(RcContext *ctx, RcValue *self, size_t argc, RcValue *const *argv) {
+    if(!rc_stack_check(ctx))return NULL;
     RcValue *const *captures=rc_eval_captures(ctx,self,dynamic_call,argc);if(!captures)return NULL;
     RcValue *plan=plan_prepare(ctx,captures[0],captures[1],argc,captures+2,true);
     if(plan) {
