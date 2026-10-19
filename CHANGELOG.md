@@ -1,12 +1,32 @@
 # Changelog
 
-## Unreleased
+## 0.4.0
 
-- Add an experimental, opt-in native tier (`SHEN_RC_NATIVE=1`) that compiles
-  hot runtime-defined defuns with the system C compiler, with a content-addressed
-  cache and full interpreter fallback. It is off by default.
-- Make emitter peephole matching linear in function size and cache compiled
-  symbol-table resolution per context.
+- Compile loaded Shen source, REPL forms and explicit `eval-kl` to native C
+  before execution. Function bodies can compile lazily on first call; native
+  mode never falls back to interpretation. Dynamic code requires a C compiler.
+  `SHEN_RC_EXECUTION=interpret` remains an explicit diagnostic mode.
+- Cache native code by its verified code shape and compiler/ABI identity, with
+  live literal bindings, bounded disk storage and optional packed images.
+- Preserve dynamic redefinition, escaping closures, mutable cycles and guarded
+  tail calls, including boolean recursion through identity `do` calls.
+- Reduce retain/release traffic with guarded borrows of live lexical predicate
+  arguments. Split huge generated initializers into shared-frame helpers and
+  use constant construction tables to reduce C compiler work.
+- Include the standard library in the embedded kernel and retain the complete
+  pinned 136-test Shen 43.1 suite, source compiler and metadata behavior.
+- Provide relocatable macOS and Linux binary toolchain archives for arm64 and
+  x86_64, including runtime sources and the source compiler. Each archive has
+  a build receipt and is checked after extraction outside the build checkout.
+
+The complete suite passes in release and fully instrumented ASan/UBSan builds
+with zero interpreter entries. The latest cached Darwin qualification took
+8.17 seconds wall / 7.27 seconds user CPU, including startup, loading and
+typechecking; it was a single shared-host run, excluding initial compilation.
+Current matched Boehm performance acceptance remains **OPEN**. The 0.3.0
+performance results below describe that earlier implementation. See the
+[compile-first report](docs/performance/compile-first-20261019.md) and
+[latest correctness and profiling evidence](docs/performance/native-optimization-20261019.md).
 
 ## 0.3.0
 

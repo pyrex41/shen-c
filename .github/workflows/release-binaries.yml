@@ -1,0 +1,58 @@
+name: Release binaries
+
+on:
+  push:
+    branches: ['release/**']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  binary:
+    name: binary-${{ matrix.target }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-24.04
+            target: linux-x86_64
+          - os: ubuntu-24.04-arm
+            target: linux-arm64
+          - os: macos-15
+            target: macos-arm64
+          - os: macos-15-intel
+            target: macos-x86_64
+    env:
+      CC: cc
+      RC_CFLAGS: -O3 -g
+    steps:
+      - uses: actions/checkout@v4
+      - name: Select macOS minimum version
+        if: runner.os == 'macOS'
+        run: echo 'MACOSX_DEPLOYMENT_TARGET=15.0' >> "$GITHUB_ENV"
+      - name: Build native toolchain and run unit tests
+        run: make -j2 all test
+      - name: Package relocatable binaries and source compiler
+        run: python3 scripts/package-release.py
+      - name: Test extracted toolchain, source compiler and full suite
+        shell: bash
+        run: |
+          set -euo pipefail
+          archive=(dist/shen-c-*-${{ matrix.target }}.tar.gz)
+          test "${#archive[@]}" = 1
+          python3 scripts/test-release-package.py "${archive[0]}" --suite-output dist/qualification
+      - name: Upload binary and qualification evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: shen-c-${{ matrix.target }}
+          path: |
+            dist/*.tar.gz
+            dist/*.sha256
+            dist/qualification/result.json
+            dist/qualification/*/run.log
+            dist/qualification/*/run.time
+          if-no-files-found: error
