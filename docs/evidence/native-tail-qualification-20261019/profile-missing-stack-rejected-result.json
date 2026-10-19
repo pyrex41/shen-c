@@ -1,0 +1,14 @@
+{
+  "status": "FAIL",
+  "binary_sha256": "271f6cda2c016b10cb7ce3516f43a681cf3a6fecf216b8678ab5825bed9caa7f",
+  "driver_source_sha256": "1943a49562a4bf7b70f06e303cfd9b0b65433972c24c78dff77500f031e5c4c7",
+  "scope": "separate sampled loaded typecheck, no timing credit",
+  "exit": 0,
+  "sample_exit": 0,
+  "repetitions": 300000,
+  "inference_budget": 1000000000,
+  "run_log_sha256": "a32f15580ac4da61a45ad40a2171abe0039f410ba364a6f7af9cfcc2087a348d",
+  "sample_sha256": null,
+  "reason": "sample returned zero but did not publish the requested stack report; execution counter control only",
+  "original_receipt_sha256": "b7b1f8c9e1f6f05b90485c96bcc9560c23a594beb69a90935619c48307d9e964"
+}

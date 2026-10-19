@@ -52,11 +52,20 @@ static bool emit_path(RcContext *ctx,const char *filename,RcValue **kernel,size_
   if(strlen(filename)>=sizeof(directory)) { rc_error(ctx,"output path too long"); return false; }
   strcpy(directory,filename); char *slash=strrchr(directory,'/');
   if(slash) { *slash=0; if(*directory&&mkdirs(directory)) { rc_error(ctx,"cannot create output directory %s",directory); return false; } }
-  FILE *out=fopen(filename,"w");
+  char pending[4200];snprintf(pending,sizeof(pending),"%s.%ld.new",filename,(long)getpid());
+  FILE *out=fopen(pending,"w+");
   if(!out) { rc_error(ctx,"cannot write %s",filename); return false; }
   RcEmitReport report={0}; bool ok=rc_emit_program(ctx,out,kernel,nkernel,user,nuser,options,&report);
+  if(ok&&fflush(out))ok=false;
+  FILE *old=ok?fopen(filename,"rb"):NULL;bool same=old!=NULL;
+  if(old){rewind(out);char a[8192],b[8192];size_t n,m;
+    do{n=fread(a,1,sizeof(a),out);m=fread(b,1,sizeof(b),old);if(n!=m||memcmp(a,b,n)){same=false;break;}}while(n);
+    if(ferror(old)||ferror(out))same=false;fclose(old);
+  }
   if(fclose(out)&&ok) { rc_error(ctx,"cannot finish %s",filename); ok=false; }
-  if(!ok) { unlink(filename); return false; }
+  if(ok&&!same&&rename(pending,filename)){rc_error(ctx,"cannot publish %s",filename);ok=false;}
+  if(same||!ok)unlink(pending);
+  if(!ok)return false;
   fprintf(stderr,"rc-build: native defuns=%ld lambdas=%ld tops=%ld\n",report.defuns,report.lambdas,report.toplevels);
   return true;
 }
@@ -124,11 +133,14 @@ static bool build_app(RcContext *ctx,const char *input,const char *output,RcEmit
         "rc_space := $(rc_empty) $(rc_empty)\n"
         "rc_escape = $(subst $(rc_space),\\$(rc_space),$(1))\n"
         "rc_quote = '$(subst ','\"'\"',$(1))'\n"
-        "RC_FILES = rc.c primitives.c eval.c read.c\n"
-        "RC_HEADERS = rc.h rc_internal.h primitives.h eval.h eval_plan.h read.h\n"
+        "RC_FILES = rc.c primitives.c eval.c read.c emit.c native_compile.c\n"
+        "RC_HEADERS = rc.h rc_internal.h primitives.h eval.h eval_plan.h read.h emit.h native_compile.h\n"
         "RC_DEPS = $(foreach file,$(RC_FILES) $(RC_HEADERS),$(call rc_escape,$(SHEN_C_HOME)/src/rc/$(file)))\n"
+        "RC_EXPORT = $(if $(filter Darwin,$(shell uname -s)),-Wl$(rc_comma)-export_dynamic,-rdynamic -ldl)\n"
+        "rc_comma := ,\n"
         "app: app.c $(RC_DEPS)\n"
-        "\t$(CC) $(CPPFLAGS) $(CFLAGS) -std=c17 -I$(call rc_quote,$(SHEN_C_HOME)/src/rc) app.c $(foreach file,$(RC_FILES),$(call rc_quote,$(SHEN_C_HOME)/src/rc/$(file))) -lm -o app\n",out);
+        "\tpython3 $(call rc_quote,$(SHEN_C_HOME)/scripts/embed-tier-config.py) tier_config.h $(call rc_quote,$(CC)) $(call rc_quote,$(CPPFLAGS) $(CFLAGS)) $(foreach file,rc.h primitives.h eval.h,$(call rc_quote,$(SHEN_C_HOME)/src/rc/$(file))) -- $(foreach file,$(RC_FILES) emit.h,$(call rc_quote,$(SHEN_C_HOME)/src/rc/$(file)))\n"
+        "\t$(CC) $(CPPFLAGS) $(CFLAGS) -std=c17 -I. -I$(call rc_quote,$(SHEN_C_HOME)/src/rc) app.c $(foreach file,$(RC_FILES),$(call rc_quote,$(SHEN_C_HOME)/src/rc/$(file))) -lm $(RC_EXPORT) -o app\n",out);
   if(acyclic) fputs("override CPPFLAGS += -DSHEN_RC_ACYCLIC_ONLY\n",out);
   if(fclose(out)) { rc_error(ctx,"cannot finish generated Makefile"); goto done; }
   pid_t pid=fork(); if(pid<0) { rc_error(ctx,"cannot fork make"); goto done; }

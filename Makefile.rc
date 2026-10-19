@@ -48,12 +48,12 @@ ifeq ($(RC_SANITIZE),1)
 override RC_CFLAGS += -O1 -fsanitize=address,undefined -fno-sanitize-recover=all -fno-omit-frame-pointer
 override RC_LDFLAGS += -fsanitize=address,undefined
 endif
-RC_SOURCES := src/rc/rc.c src/rc/primitives.c src/rc/eval.c src/rc/read.c
+RC_SOURCES := src/rc/rc.c src/rc/primitives.c src/rc/eval.c src/rc/read.c src/rc/emit.c src/rc/native_compile.c
 RC_OBJECTS := $(patsubst src/rc/%.c,$(RC_BUILD)/%.o,$(RC_SOURCES))
 ifeq ($(RC_ACYCLIC_ONLY),1)
 RC_TESTS := test_acyclic
 else
-RC_TESTS := test_cycles test_primitives test_eval test_env test_bool_tail test_apply_fast test_object_cache test_immediates test_collection test_reuse test_acyclic test_symbols test_primitive_fast test_equal test_canonical_primitives test_canonical_numeric test_canonical_hash test_canonical_cons test_generic_builtin_tag test_trial_work_union test_callee test_identity_tail test_list_length test_eval_plan test_rooted_call
+RC_TESTS := test_cycles test_primitives test_eval test_env test_bool_tail test_apply_fast test_object_cache test_immediates test_collection test_reuse test_acyclic test_symbols test_primitive_fast test_equal test_canonical_primitives test_canonical_numeric test_canonical_hash test_canonical_cons test_generic_builtin_tag test_trial_work_union test_callee test_identity_tail test_list_length test_eval_plan test_rooted_call test_condition_borrow
 endif
 RC_TEST_BINS := $(addprefix $(RC_BIN)/,$(RC_TESTS))
 
@@ -70,6 +70,9 @@ $(RC_BUILD)/release.h: FORCE_RELEASE $(RC_RELEASE_MANIFEST) scripts/release_mani
 
 all: $(RC_TOOL_BIN)/rc-build $(RC_TOOL_BIN)/shen-rc
 
+$(RC_BIN)/bench_execution: test/rc/bench_execution.c $(RC_BUILD)/kernel.o $(RC_BIN)/libshenrc.a | $(RC_BIN)
+	$(CC) $(RC_CPPFLAGS) $(RC_CFLAGS) $< $(RC_BUILD)/kernel.o $(RC_BIN)/libshenrc.a $(RC_LDFLAGS) $(RC_TIER_LDFLAGS) $(RC_LDLIBS) $(RC_TIER_LDLIBS) -o $@
+
 runtime: $(RC_BIN)/libshenrc.a
 
 $(sort $(RC_BUILD) $(RC_BIN) $(RC_TOOL_BIN)):
@@ -81,8 +84,8 @@ $(RC_BUILD)/%.o: src/rc/%.c $(wildcard src/rc/*.h) | $(RC_BUILD)
 $(RC_BIN)/libshenrc.a: $(RC_OBJECTS) | $(RC_BIN)
 	$(AR) rcs $@ $^
 
-$(RC_TOOL_BIN)/rc-build: tools/rc-build.c $(RC_BUILD)/release.h $(RC_BUILD)/emit.o $(RC_BIN)/libshenrc.a | $(RC_TOOL_BIN)
-	$(CC) $(RC_CPPFLAGS) $(RC_CFLAGS) -I$(RC_BUILD) tools/rc-build.c $(RC_BUILD)/emit.o $(RC_BIN)/libshenrc.a $(RC_LDFLAGS) $(RC_LDLIBS) -o $@
+$(RC_TOOL_BIN)/rc-build: tools/rc-build.c $(RC_BUILD)/release.h $(RC_BIN)/libshenrc.a | $(RC_TOOL_BIN)
+	$(CC) $(RC_CPPFLAGS) $(RC_CFLAGS) -I$(RC_BUILD) tools/rc-build.c $(RC_BIN)/libshenrc.a $(RC_LDFLAGS) $(RC_TIER_LDFLAGS) $(RC_LDLIBS) $(RC_TIER_LDLIBS) -o $@
 
 $(RC_BUILD)/kernel.c: $(RC_TOOL_BIN)/rc-build $(RC_KERNEL_INPUTS) | $(RC_BUILD)
 	$(RC_TOOL_BIN)/rc-build --emit-kernel $(RC_KERNEL_DIR) $@
@@ -90,16 +93,39 @@ $(RC_BUILD)/kernel.c: $(RC_TOOL_BIN)/rc-build $(RC_KERNEL_INPUTS) | $(RC_BUILD)
 $(RC_BUILD)/kernel.o: $(RC_BUILD)/kernel.c $(wildcard src/rc/*.h)
 	$(CC) $(RC_CPPFLAGS) $(RC_CFLAGS) -c $< -o $@
 
-$(RC_TOOL_BIN)/shen-rc: $(RC_BUILD)/main.o $(RC_BUILD)/kernel.o $(RC_BIN)/libshenrc.a | $(RC_TOOL_BIN)
-	$(CC) $(RC_CPPFLAGS) $(RC_CFLAGS) $^ $(RC_LDFLAGS) $(RC_LDLIBS) -o $@
+# Optional native tier (SHEN_RC_NATIVE): the CLI embeds the emitter and the
+# runtime headers, and exports its runtime symbols to dlopen'd modules.
+RC_TIER_HEADERS := src/rc/rc.h src/rc/primitives.h src/rc/eval.h
+RC_TIER_HOST_FLAGS := $(RC_CPPFLAGS) $(filter -D% -fsanitize% -fno-sanitize% -fno-omit-frame-pointer,$(RC_CFLAGS))
+rc_tier_quote = '$(subst ','"'"',$(1))'
+RC_UNAME := $(shell uname -s 2>/dev/null)
+ifeq ($(RC_UNAME),Darwin)
+RC_TIER_LDFLAGS ?= -Wl,-export_dynamic
+else
+RC_TIER_LDFLAGS ?= -rdynamic
+RC_TIER_LDLIBS ?= -ldl
+endif
+
+$(RC_BUILD)/tier_config.h: FORCE_RELEASE scripts/embed-tier-config.py $(RC_TIER_HEADERS) src/rc/emit.c src/rc/emit.h src/rc/rc.c src/rc/primitives.c src/rc/eval.c src/rc/native_compile.c | $(RC_BUILD)
+	python3 scripts/embed-tier-config.py $@ $(call rc_tier_quote,$(CC)) $(call rc_tier_quote,$(RC_TIER_HOST_FLAGS)) $(RC_TIER_HEADERS) -- src/rc/emit.c src/rc/emit.h src/rc/rc.c src/rc/primitives.c src/rc/eval.c src/rc/native_compile.c
+
+$(RC_BUILD)/native_compile.o: src/rc/native_compile.c $(RC_BUILD)/tier_config.h $(wildcard src/rc/*.h) | $(RC_BUILD)
+	$(CC) $(RC_CPPFLAGS) $(RC_CFLAGS) -I$(RC_BUILD) -c $< -o $@
+
+$(RC_BUILD)/native_tier.o: src/rc/native_tier.c $(RC_BUILD)/tier_config.h $(wildcard src/rc/*.h) | $(RC_BUILD)
+	$(CC) $(RC_CPPFLAGS) $(RC_CFLAGS) -I$(RC_BUILD) -c $< -o $@
+
+$(RC_TOOL_BIN)/shen-rc: $(RC_BUILD)/main.o $(RC_BUILD)/kernel.o $(RC_BUILD)/native_tier.o $(RC_BIN)/libshenrc.a | $(RC_TOOL_BIN)
+	$(CC) $(RC_CPPFLAGS) $(RC_CFLAGS) $^ $(RC_LDFLAGS) $(RC_TIER_LDFLAGS) $(RC_LDLIBS) $(RC_TIER_LDLIBS) -o $@
 
 $(RC_BIN)/test_%: test/rc/test_%.c $(RC_BIN)/libshenrc.a
-	$(CC) $(RC_CPPFLAGS) $(RC_CFLAGS) $< $(RC_BIN)/libshenrc.a $(RC_LDFLAGS) $(RC_LDLIBS) -o $@
+	$(CC) $(RC_CPPFLAGS) $(RC_CFLAGS) $< $(RC_BIN)/libshenrc.a $(RC_LDFLAGS) $(RC_TIER_LDFLAGS) $(RC_LDLIBS) $(RC_TIER_LDLIBS) -o $@
 
-test-binaries: $(RC_TEST_BINS)
+test-binaries: $(RC_TEST_BINS) $(RC_BIN)/test_native_compile
 
 test: test-binaries
-	@set -e; for test in $(RC_TEST_BINS); do "$$test"; done
+	@set -e; for test in $(RC_TEST_BINS); do SHEN_RC_EXECUTION=interpret "$$test"; done
+	$(RC_BIN)/test_native_compile
 
 # Separate output directories keep sanitizer objects out of release artifacts.
 sanitize:

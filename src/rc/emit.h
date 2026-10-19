@@ -16,7 +16,22 @@ typedef struct {
     RcValue *source_events;
     bool source_metadata; /* Replay reader events and record root Shen definitions. */
     bool conservative_ownership; /* Disable liveness/capture/owned-call/reuse optimization for comparison. */
+    /* Runtime module mode (native tier): kernel forms must all be defuns and
+     * no user forms, events, metadata or main are allowed. Instead of a
+     * bootstrap, the only exported symbol is
+     *   bool <module_entry>(RcContext *, RcModuleDefine define)
+     * which builds each native closure and hands it to define (borrowed name
+     * and closure) instead of publishing it. No primitives are installed. */
+    const char *module_entry;
+    /* Single expression entry: RcValue *entry(ctx, borrowed literal vector).
+     * Returns owned result, without bootstrap or printing. Output binding
+     * array is malloc-owned; elements borrow the input AST. */
+    const char *expression_entry;
+    RcValue *function_parameters; /* Non-NULL: entry returns a closure, not its result. */
+    RcValue ***literal_bindings;
+    size_t *literal_count;
 } RcEmitOptions;
+typedef bool (*RcModuleDefine)(RcContext *, RcValue *name, RcValue *function);
 typedef struct {
     long defuns, toplevels, lambdas;
 } RcEmitReport;

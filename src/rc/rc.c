@@ -1,5 +1,6 @@
 #include "rc.h"
 #include "rc_internal.h"
+#include "native_compile.h"
 
 #include <limits.h>
 #include <math.h>
@@ -93,12 +94,19 @@ _Static_assert(offsetof(RcValue, ctx) ==
                  _Alignof(RcContext *) - 1) / _Alignof(RcContext *)) * _Alignof(RcContext *),
                "builtin tag must not shift the value header");
 struct RcContext {
+    void *native_compile_state;
+    size_t interpreter_entries;
+    bool verify_native;
+    int execution_mode;
     RcValue *objects;
     RcValue *object_cache[RC_OBJECT_CACHE_LIMIT];
     bool destroying;
     RcValue **symbols;
     size_t symbol_capacity, symbol_count;
     RcResolvedSymbols *compiled_symbols;
+    /* Direct-mapped lookup over compiled_symbols; entries are borrowed. With
+     * runtime-loaded modules the list grows, and every native call reads it. */
+    RcResolvedSymbols *compiled_symbol_cache[64];
     RcValue *true_symbol, *false_symbol; /* Borrowed intern-table roots. */
     /* Owned context roots, bounded by the specialized builtin set. */
     RcValue *builtin_roots[RC_BUILTIN_COUNT];
@@ -112,6 +120,8 @@ struct RcContext {
     char *error;
     uintptr_t stack_limit;
     bool collecting, error_active, adaptive_collection, acyclic;
+    /* Optional evaluator observer; NULL unless a host attaches a tier. */
+    const RcTierHooks *tier_hooks; void *tier_state;
 };
 static RcValue nil_value = {.type = RC_NIL, .refs = SIZE_MAX};
 
@@ -164,8 +174,14 @@ RcValue *rc_error(RcContext *ctx, const char *format, ...) {
 bool rc_has_error(const RcContext *ctx) { return ctx && ctx->error_active; }
 void rc_set_stack_limit(RcContext *ctx, const void *limit) { if (ctx) ctx->stack_limit = (uintptr_t)limit; }
 bool rc_stack_check(RcContext *ctx) {
-    volatile char probe = 0;
-    if (!ctx->stack_limit || (uintptr_t)&probe >= ctx->stack_limit) return true;
+    if(!ctx->stack_limit)return true;
+#if defined(__GNUC__) || defined(__clang__)
+    /* ASan may place local objects on its fake stack. Inspect the real frame. */
+    uintptr_t address=(uintptr_t)__builtin_frame_address(0);
+#else
+    volatile char probe=0;uintptr_t address=(uintptr_t)&probe;
+#endif
+    if(address>=ctx->stack_limit)return true;
     rc_error(ctx, "stack exhausted: recursion is too deep");
     return false;
 }
@@ -223,6 +239,9 @@ RcContext *rc_context_new_with_policy(RcCyclePolicy policy) {
     RcContext *ctx = calloc(1, sizeof(*ctx));
     if (ctx) {
         ctx->collection_interval = 4096; ctx->adaptive_collection = true;
+        const char *strict=getenv("SHEN_RC_VERIFY_NATIVE");ctx->verify_native=strict&&strcmp(strict,"0");
+        const char *backend=getenv("SHEN_RC_EXECUTION");
+        ctx->execution_mode=!backend||!strcmp(backend,"native")?0:!strcmp(backend,"interpret")?1:-1;
 #if defined(SHEN_RC_ACYCLIC_ONLY) && SHEN_RC_ACYCLIC_ONLY
         ctx->acyclic = true;
 #else
@@ -400,8 +419,16 @@ RcStats rc_stats(const RcContext *ctx) {
     }
     return result;
 }
+int rc_execution_mode(const RcContext *ctx){return ctx->execution_mode;}
+void **rc_native_compile_slot(RcContext *ctx){return &ctx->native_compile_state;}
+size_t rc_interpreter_entries(const RcContext *ctx){return ctx->interpreter_entries;}
+bool rc_interpreter_enter(RcContext *ctx){
+ ctx->interpreter_entries++;
+ if(ctx->verify_native||ctx->execution_mode!=1){rc_error(ctx,"strict native execution entered interpreter");return false;}return true;
+}
 void rc_context_free(RcContext *ctx) {
     if (!ctx) return;
+    rc_native_compile_free(ctx->native_compile_state);
     while (ctx->compiled_symbols) {
         RcResolvedSymbols *next = ctx->compiled_symbols->next;
         free(ctx->compiled_symbols);
@@ -526,6 +553,13 @@ RcValue *rc_function_slot_borrowed(RcContext *ctx,RcValue *symbol) {
 }
 RcValue *rc_vector_slot_borrowed(RcValue *vector,size_t index) {
     return rc_type(vector)==RC_VECTOR&&index<vector->as.vector.length ? vector->as.vector.items[index] : NULL;
+}
+void rc_tier_attach(RcContext *ctx,const RcTierHooks *hooks,void *state) {
+    ctx->tier_hooks=hooks; ctx->tier_state=hooks ? state : NULL;
+}
+const RcTierHooks *rc_tier_hooks(const RcContext *ctx,void **state) {
+    if(!ctx->tier_hooks)return NULL;
+    *state=ctx->tier_state; return ctx->tier_hooks;
 }
 bool rc_eval_plan_environment(const RcValue *environment) {
     return rc_is_nil(environment) || (rc_type(environment)==RC_ENV && !(environment->as.env.key_classes&2));
@@ -655,8 +689,10 @@ RcValue *rc_symbol(RcContext *ctx, const char *name) {
 }
 RcValue *const *rc_symbol_table(RcContext *ctx, const RcSymbolTable *table) {
     if (!ctx || !table) { rc_error(ctx, "invalid compiled symbol table"); return NULL; }
+    RcResolvedSymbols **cached = &ctx->compiled_symbol_cache[((uintptr_t)table >> 4) & 63];
+    if (*cached && (*cached)->table == table) return (*cached)->values;
     for (RcResolvedSymbols *entry = ctx->compiled_symbols; entry; entry = entry->next)
-        if (entry->table == table) return entry->values;
+        if (entry->table == table) { *cached = entry; return entry->values; }
     if ((table->count && !table->names) ||
         table->count > (SIZE_MAX - sizeof(RcResolvedSymbols)) / sizeof(RcValue *)) {
         rc_error(ctx, "invalid compiled symbol table size"); return NULL;
@@ -674,6 +710,7 @@ RcValue *const *rc_symbol_table(RcContext *ctx, const RcSymbolTable *table) {
     entry->table = table;
     entry->next = ctx->compiled_symbols;
     ctx->compiled_symbols = entry;
+    *cached = entry;
     return entry->values;
 }
 const char *rc_text(const RcValue *v) { return v && (rc_type(v) == RC_STRING || rc_type(v) == RC_SYMBOL) ? v->as.text.data : NULL; }
@@ -969,6 +1006,11 @@ RcValue *rc_eval_env_frame(RcContext *ctx,RcValue *self,RcNative callback,size_t
     RcValue *env=env_frame_construct(ctx,captures[1],arity,captures+2,argv,bytes);
     if(env)*body=captures[0];
     return env;
+}
+RcValue *const *rc_compiled_literal_slots(const RcValue *self,size_t capture,size_t first){
+ RcValue *v=rc_capture(self,capture);
+ if(rc_type(v)!=RC_VECTOR||first>v->as.vector.length)return NULL;
+ return v->as.vector.items+first;
 }
 size_t rc_arity(const RcValue *v) {
     return v && rc_type(v) == RC_CLOSURE ? v->as.closure.arity - v->as.closure.bound_count : 0;

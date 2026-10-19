@@ -1,0 +1,919 @@
+{
+  "status": "PASS",
+  "host": "macOS-27.0.1-arm64-arm-64bit",
+  "machine": "arm64",
+  "binary_sha256": "2dfabbb614c45244237542ec04952f993c4a28934e1b2609921ff3f245b9f988",
+  "source_sha256": {
+    "test/rc/bench_execution.c": "0ef6bf823f3a08adf4f5bf950d92ea6c23aea945feebab715e5ca7261c3afe16",
+    "scripts/measure-execution.py": "39c97d66290a7a92f7c3bc5a5ae4f55bde814c4097226fa3c8ecc352a51ce6ec",
+    "shen/releases/s43.1.json": "df423ea11c4aa46a3fc530281543b992864fb46e7416d78c118030ab68a30e9c",
+    "src/rc/eval.c": "b000cf643055e687f343ac45286bfd30a461b62b87c1c7421051f81d34abde13",
+    "src/rc/native_tier.h": "7b4aaf3d8b9b80b12b924bc2108ce87ba6cf7bfbf190120c9e9abdf1b4afedf8",
+    "src/rc/native_compile.c": "252ea6b53ebeff35f797f117be909f340c0f74ae2e1867b6c2fec8fff5e4afd1",
+    "src/rc/rc.c": "00ba62ca2758d824744c2187de582ee443dfb847aedf3b9edafaa43c5ec25208",
+    "src/rc/rc_internal.h": "0d108dd171930d1a23f336433553616472be5e2b69ef1e8adfc144e1205741b7",
+    "src/rc/emit.c": "e51db2ee2faccbc3eb26b7f15471c9c8a57b41cf191cee7de0fb58150e9c9688",
+    "src/rc/primitives.c": "324f8cfa2c309c73f9c5f969533ae28da5ba955c225391ad19e5625eca0ff49a",
+    "src/rc/read.c": "f61444980f2d34d3986f9640103b3478501c4d368f6c2dd5058a4b39b3143667",
+    "src/rc/eval.h": "8cf30f46144317237e6f1d99b154c7392d6302f292b2f81625bf63a05c92c026",
+    "src/rc/main.c": "07a8a237e0de386e9ef773593ed09ae8b4b674bcbfeaa302660cbfe5316fc175",
+    "src/rc/native_compile.h": "92612137b3f8e78458b808f1d265fdcc35d4ced883357ca51c5a341265b0dd6d",
+    "src/rc/native_tier.c": "ec513a8614615f823e158ea2aed554cfe3ceb1c4551af057dddca40e53b637bd",
+    "src/rc/primitives.h": "036f928535fc8c2504e18c67891e52f6c7c873599b61e18a80d7528f5bb963b3",
+    "src/rc/rc.h": "763963bec313541e55027d983ffba7b81c9ced457dbcea154a831d37206eb37e",
+    "src/rc/emit.h": "ccc73db9fa1a11522a91a34a0cebf534b85b83fef99f8e04cc22a42d2b1c0d72",
+    "src/rc/eval_plan.h": "400f3c6de332b937693580de529c2fdd6935e84a939f1c2d01f9379381287e23",
+    "src/rc/read.h": "71fb3e8ce757174ee47dde95f732200ae1b023c66f8164ac0a4d82ebb241fea5"
+  },
+  "scope": "warmed representative execution; not whole-suite or Boehm acceptance",
+  "samples": [
+    {
+      "name": "0-tail-count-native",
+      "mode": "native",
+      "round": 0,
+      "command": [
+        "bin/rc/bench_execution",
+        "tail-count",
+        "300",
+        "${EVIDENCE}/0-tail-count-native/suite"
+      ],
+      "log_sha256": "b252bc3d645fcb70b635c4e1853c5caaeec8d9194902a7cfeef9e6898b022a44",
+      "metrics": {
+        "case": "tail-count",
+        "repetitions": 300,
+        "setup_wall": 0.092245,
+        "wall": 0.752404,
+        "user": 0.746558,
+        "system": 0.003649,
+        "compiler_child_cpu": 0.0,
+        "interpreter_entries": 0,
+        "retain_calls": 30000900,
+        "release_calls": 30001200,
+        "system_allocations": 0,
+        "pair_reuses": 0,
+        "collections": 0,
+        "cycle_objects_freed": 0
+      }
+    },
+    {
+      "name": "0-tail-count-interpret",
+      "mode": "interpret",
+      "round": 0,
+      "command": [
+        "bin/rc/bench_execution",
+        "tail-count",
+        "300",
+        "${EVIDENCE}/0-tail-count-interpret/suite"
+      ],
+      "log_sha256": "49604f40a9709428fc260c7b7b72f84eec0589f18a53a225c18c71b97f998fc5",
+      "metrics": {
+        "case": "tail-count",
+        "repetitions": 300,
+        "setup_wall": 0.053374,
+        "wall": 2.056719,
+        "user": 2.041335,
+        "system": 0.013088,
+        "compiler_child_cpu": 0.0,
+        "interpreter_entries": 30000631,
+        "retain_calls": 180001534,
+        "release_calls": 210001837,
+        "system_allocations": 0,
+        "pair_reuses": 0,
+        "collections": 48,
+        "cycle_objects_freed": 0
+      }
+    },
+    {
+      "name": "0-list-build-native",
+      "mode": "native",
+      "round": 0,
+      "command": [
+        "bin/rc/bench_execution",
+        "list-build",
+        "1000",
+        "${EVIDENCE}/0-list-build-native/suite"
+      ],
+      "log_sha256": "545049a9a5dc44d5044565bf972c264f56f8184a460dce17d4190c00c4800c62",
+      "metrics": {
+        "case": "list-build",
+        "repetitions": 1000,
+        "setup_wall": 0.085616,
+        "wall": 0.619668,
+        "user": 0.615917,
+        "system": 0.003066,
+        "compiler_child_cpu": 0.0,
+        "interpreter_entries": 0,
+        "retain_calls": 60004000,
+        "release_calls": 70006000,
+        "system_allocations": 8978000,
+        "pair_reuses": 0,
+        "collections": 15,
+        "cycle_objects_freed": 0
+      }
+    },
+    {
+      "name": "0-list-build-interpret",
+      "mode": "interpret",
+      "round": 0,
+      "command": [
+        "bin/rc/bench_execution",
+        "list-build",
+        "1000",
+        "${EVIDENCE}/0-list-build-interpret/suite"
+      ],
+      "log_sha256": "2fb25e4bd82b9620773b8bbb8179dbc7054fe056dbca1b655096734a690832ff",
+      "metrics": {
+        "case": "list-build",
+        "repetitions": 1000,
+        "setup_wall": 0.047771,
+        "wall": 1.004072,
+        "user": 0.997133,
+        "system": 0.005832,
+        "compiler_child_cpu": 0.0,
+        "interpreter_entries": 10002061,
+        "retain_calls": 100007035,
+        "release_calls": 120009040,
+        "system_allocations": 8978000,
+        "pair_reuses": 0,
+        "collections": 30,
+        "cycle_objects_freed": 0
+      }
+    },
+    {
+      "name": "0-queens-native",
+      "mode": "native",
+      "round": 0,
+      "command": [
+        "bin/rc/bench_execution",
+        "queens",
+        "40",
+        "${EVIDENCE}/0-queens-native/suite"
+      ],
+      "log_sha256": "20df8e17753c0e1c571b4c7d8175c885fdac7013338a71b577bd55f704419b64",
+      "metrics": {
+        "case": "queens",
+        "repetitions": 40,
+        "setup_wall": 0.115083,
+        "wall": 0.621555,
+        "user": 0.617282,
+        "system": 0.003418,
+        "compiler_child_cpu": 0.0,
+        "interpreter_entries": 0,
+        "retain_calls": 134703520,
+        "release_calls": 134720680,
+        "system_allocations": 0,
+        "pair_reuses": 2238240,
+        "collections": 0,
+        "cycle_objects_freed": 0
+      }
+    },
+    {
+      "name": "0-queens-interpret",
+      "mode": "interpret",
+      "round": 0,
+      "command": [
+        "bin/rc/bench_execution",
+        "queens",
+        "40",
+        "${EVIDENCE}/0-queens-interpret/suite"
+      ],
+      "log_sha256": "88bc04d7f5e272f7dfcfcc4b1bacbf5c3cc0ccfe95f8c00555a63ecdd4eb324f",
+      "metrics": {
+        "case": "queens",
+        "repetitions": 40,
+        "setup_wall": 0.098156,
+        "wall": 1.212015,
+        "user": 1.199862,
+        "system": 0.004584,
+        "compiler_child_cpu": 0.0,
+        "interpreter_entries": 9694274,
+        "retain_calls": 201831464,
+        "release_calls": 207719953,
+        "system_allocations": 0,
+        "pair_reuses": 0,
+        "collections": 9,
+        "cycle_objects_freed": 0
+      }
+    },
+    {
+      "name": "0-prolog-native",
+      "mode": "native",
+      "round": 0,
+      "command": [
+        "bin/rc/bench_execution",
+        "prolog",
+        "3000",
+        "${EVIDENCE}/0-prolog-native/suite"
+      ],
+      "log_sha256": "2ebafe5741a7a47f75544f0dea9bbfbfae1963decd2f4f4854a0d4a10e4b8248",
+      "metrics": {
+        "case": "prolog",
+        "repetitions": 3000,
+        "setup_wall": 0.092264,
+        "wall": 0.399221,
+        "user": 0.395219,
+        "system": 0.003267,
+        "compiler_child_cpu": 0.0,
+        "interpreter_entries": 0,
+        "retain_calls": 55182000,
+        "release_calls": 62244000,
+        "system_allocations": 0,
+        "pair_reuses": 0,
+        "collections": 12,
+        "cycle_objects_freed": 0
+      }
+    },
+    {
+      "name": "0-prolog-interpret",
+      "mode": "interpret",
+      "round": 0,
+      "command": [
+        "bin/rc/bench_execution",
+        "prolog",
+        "3000",
+        "${EVIDENCE}/0-prolog-interpret/suite"
+      ],
+      "log_sha256": "da9f1b968ba853d758d8a9abe8b2a093162c0cd314cb2fe77209f959bdfbe095",
+      "metrics": {
+        "case": "prolog",
+        "repetitions": 3000,
+        "setup_wall": 0.056164,
+        "wall": 0.553145,
+        "user": 0.546594,
+        "system": 0.00292,
+        "compiler_child_cpu": 0.0,
+        "interpreter_entries": 3220420,
+        "retain_calls": 57938985,
+        "release_calls": 68600986,
+        "system_allocations": 795019,
+        "pair_reuses": 0,
+        "collections": 17,
+        "cycle_objects_freed": 0
+      }
+    },
+    {
+      "name": "0-typecheck-native",
+      "mode": "native",
+      "round": 0,
+      "command": [
+        "bin/rc/bench_execution",
+        "typecheck",
+        "15000",
+        "${EVIDENCE}/0-typecheck-native/suite"
+      ],
+      "log_sha256": "bb616fb8ae9f944de2ca5897ede03e5e2ed0d66d0f149a53b169a140780af026",
+      "metrics": {
+        "case": "typecheck",
+        "repetitions": 15000,
+        "setup_wall": 0.084066,
+        "wall": 0.389972,
+        "user": 0.387917,
+        "system": 0.001732,
+        "compiler_child_cpu": 0.0,
+        "interpreter_entries": 0,
+        "retain_calls": 56805000,
+        "release_calls": 62205000,
+        "system_allocations": 0,
+        "pair_reuses": 30000,
+        "collections": 9,
+        "cycle_objects_freed": 0
+      }
+    },
+    {
+      "name": "0-typecheck-interpret",
+      "mode": "interpret",
+      "round": 0,
+      "command": [
+        "bin/rc/bench_execution",
+        "typecheck",
+        "15000",
+        "${EVIDENCE}/0-typecheck-interpret/suite"
+      ],
+      "log_sha256": "5a79296d855a640535af1084ddcea795ac4d5808e14ccc51cb7ddb10598adea4",
+      "metrics": {
+        "case": "typecheck",
+        "repetitions": 15000,
+        "setup_wall": 0.047294,
+        "wall": 0.393973,
+        "user": 0.391919,
+        "system": 0.001866,
+        "compiler_child_cpu": 0.0,
+        "interpreter_entries": 285513,
+        "retain_calls": 57015178,
+        "release_calls": 62625229,
+        "system_allocations": 0,
+        "pair_reuses": 30000,
+        "collections": 9,
+        "cycle_objects_freed": 0
+      }
+    },
+    {
+      "name": "1-tail-count-interpret",
+      "mode": "interpret",
+      "round": 1,
+      "command": [
+        "bin/rc/bench_execution",
+        "tail-count",
+        "300",
+        "${EVIDENCE}/1-tail-count-interpret/suite"
+      ],
+      "log_sha256": "277a84bd57cd9ac9638cb87eb84071039c037c107c82804d574a11f7d9d3ace9",
+      "metrics": {
+        "case": "tail-count",
+        "repetitions": 300,
+        "setup_wall": 0.05388,
+        "wall": 2.112624,
+        "user": 2.096246,
+        "system": 0.013135,
+        "compiler_child_cpu": 0.0,
+        "interpreter_entries": 30000631,
+        "retain_calls": 180001534,
+        "release_calls": 210001837,
+        "system_allocations": 0,
+        "pair_reuses": 0,
+        "collections": 48,
+        "cycle_objects_freed": 0
+      }
+    },
+    {
+      "name": "1-tail-count-native",
+      "mode": "native",
+      "round": 1,
+      "command": [
+        "bin/rc/bench_execution",
+        "tail-count",
+        "300",
+        "${EVIDENCE}/1-tail-count-native/suite"
+      ],
+      "log_sha256": "c749d3038dd6654f1f8145f5a87b3fbd70a4f19ba48fdbab5b696175e905e145",
+      "metrics": {
+        "case": "tail-count",
+        "repetitions": 300,
+        "setup_wall": 0.092325,
+        "wall": 0.740204,
+        "user": 0.734904,
+        "system": 0.004112,
+        "compiler_child_cpu": 0.0,
+        "interpreter_entries": 0,
+        "retain_calls": 30000900,
+        "release_calls": 30001200,
+        "system_allocations": 0,
+        "pair_reuses": 0,
+        "collections": 0,
+        "cycle_objects_freed": 0
+      }
+    },
+    {
+      "name": "1-list-build-interpret",
+      "mode": "interpret",
+      "round": 1,
+      "command": [
+        "bin/rc/bench_execution",
+        "list-build",
+        "1000",
+        "${EVIDENCE}/1-list-build-interpret/suite"
+      ],
+      "log_sha256": "06024fc34f2ce12c281af46f9924683301dfc2b57d076cdd20d6b8dc2ff254c4",
+      "metrics": {
+        "case": "list-build",
+        "repetitions": 1000,
+        "setup_wall": 0.047564,
+        "wall": 0.996178,
+        "user": 0.990071,
+        "system": 0.005411,
+        "compiler_child_cpu": 0.0,
+        "interpreter_entries": 10002061,
+        "retain_calls": 100007035,
+        "release_calls": 120009040,
+        "system_allocations": 8978000,
+        "pair_reuses": 0,
+        "collections": 30,
+        "cycle_objects_freed": 0
+      }
+    },
+    {
+      "name": "1-list-build-native",
+      "mode": "native",
+      "round": 1,
+      "command": [
+        "bin/rc/bench_execution",
+        "list-build",
+        "1000",
+        "${EVIDENCE}/1-list-build-native/suite"
+      ],
+      "log_sha256": "4895b7a27827883e905b50c907f1e9baa1175d8b9314759e48b693b1e83de747",
+      "metrics": {
+        "case": "list-build",
+        "repetitions": 1000,
+        "setup_wall": 0.086118,
+        "wall": 0.612274,
+        "user": 0.608951,
+        "system": 0.002862,
+        "compiler_child_cpu": 0.0,
+        "interpreter_entries": 0,
+        "retain_calls": 60004000,
+        "release_calls": 70006000,
+        "system_allocations": 8978000,
+        "pair_reuses": 0,
+        "collections": 15,
+        "cycle_objects_freed": 0
+      }
+    },
+    {
+      "name": "1-queens-interpret",
+      "mode": "interpret",
+      "round": 1,
+      "command": [
+        "bin/rc/bench_execution",
+        "queens",
+        "40",
+        "${EVIDENCE}/1-queens-interpret/suite"
+      ],
+      "log_sha256": "bae9b3ce7e10a1786e348472cbe795dc0f0e183a1fe63423617491d2c4b062e5",
+      "metrics": {
+        "case": "queens",
+        "repetitions": 40,
+        "setup_wall": 0.092121,
+        "wall": 1.215669,
+        "user": 1.20819,
+        "system": 0.006671,
+        "compiler_child_cpu": 0.0,
+        "interpreter_entries": 9694274,
+        "retain_calls": 201831464,
+        "release_calls": 207719953,
+        "system_allocations": 0,
+        "pair_reuses": 0,
+        "collections": 9,
+        "cycle_objects_freed": 0
+      }
+    },
+    {
+      "name": "1-queens-native",
+      "mode": "native",
+      "round": 1,
+      "command": [
+        "bin/rc/bench_execution",
+        "queens",
+        "40",
+        "${EVIDENCE}/1-queens-native/suite"
+      ],
+      "log_sha256": "57242ed2884b2f89845c3f2bd8de034d6d2a2a1861559ae06532a10e4d4d98ac",
+      "metrics": {
+        "case": "queens",
+        "repetitions": 40,
+        "setup_wall": 0.114173,
+        "wall": 0.629467,
+        "user": 0.626004,
+        "system": 0.002902,
+        "compiler_child_cpu": 0.0,
+        "interpreter_entries": 0,
+        "retain_calls": 134703520,
+        "release_calls": 134720680,
+        "system_allocations": 0,
+        "pair_reuses": 2238240,
+        "collections": 0,
+        "cycle_objects_freed": 0
+      }
+    },
+    {
+      "name": "1-prolog-interpret",
+      "mode": "interpret",
+      "round": 1,
+      "command": [
+        "bin/rc/bench_execution",
+        "prolog",
+        "3000",
+        "${EVIDENCE}/1-prolog-interpret/suite"
+      ],
+      "log_sha256": "efe6596e93a8b136304ddfe14e0886c156315a24347bc87080cb96916abc9cae",
+      "metrics": {
+        "case": "prolog",
+        "repetitions": 3000,
+        "setup_wall": 0.054191,
+        "wall": 0.547646,
+        "user": 0.543796,
+        "system": 0.002927,
+        "compiler_child_cpu": 0.0,
+        "interpreter_entries": 3220420,
+        "retain_calls": 57938985,
+        "release_calls": 68600986,
+        "system_allocations": 795019,
+        "pair_reuses": 0,
+        "collections": 17,
+        "cycle_objects_freed": 0
+      }
+    },
+    {
+      "name": "1-prolog-native",
+      "mode": "native",
+      "round": 1,
+      "command": [
+        "bin/rc/bench_execution",
+        "prolog",
+        "3000",
+        "${EVIDENCE}/1-prolog-native/suite"
+      ],
+      "log_sha256": "b6773c84e97ab7c6f5af0ff36ea9cca4040996b5945067bf604ef3e279c0673c",
+      "metrics": {
+        "case": "prolog",
+        "repetitions": 3000,
+        "setup_wall": 0.09185,
+        "wall": 0.400794,
+        "user": 0.398638,
+        "system": 0.001928,
+        "compiler_child_cpu": 0.0,
+        "interpreter_entries": 0,
+        "retain_calls": 55182000,
+        "release_calls": 62244000,
+        "system_allocations": 0,
+        "pair_reuses": 0,
+        "collections": 12,
+        "cycle_objects_freed": 0
+      }
+    },
+    {
+      "name": "1-typecheck-interpret",
+      "mode": "interpret",
+      "round": 1,
+      "command": [
+        "bin/rc/bench_execution",
+        "typecheck",
+        "15000",
+        "${EVIDENCE}/1-typecheck-interpret/suite"
+      ],
+      "log_sha256": "526fbbadcc4ad68200e43a874af9c717c23669a5a24fa28935b00fb0ee2dc71c",
+      "metrics": {
+        "case": "typecheck",
+        "repetitions": 15000,
+        "setup_wall": 0.046797,
+        "wall": 0.397539,
+        "user": 0.396061,
+        "system": 0.001183,
+        "compiler_child_cpu": 0.0,
+        "interpreter_entries": 285513,
+        "retain_calls": 57015178,
+        "release_calls": 62625229,
+        "system_allocations": 0,
+        "pair_reuses": 30000,
+        "collections": 9,
+        "cycle_objects_freed": 0
+      }
+    },
+    {
+      "name": "1-typecheck-native",
+      "mode": "native",
+      "round": 1,
+      "command": [
+        "bin/rc/bench_execution",
+        "typecheck",
+        "15000",
+        "${EVIDENCE}/1-typecheck-native/suite"
+      ],
+      "log_sha256": "a22f82f03c38266ed24d923f49a0f5fafe31ddea9141f9391c743b1a15deea31",
+      "metrics": {
+        "case": "typecheck",
+        "repetitions": 15000,
+        "setup_wall": 0.083983,
+        "wall": 0.393473,
+        "user": 0.390572,
+        "system": 0.002293,
+        "compiler_child_cpu": 0.0,
+        "interpreter_entries": 0,
+        "retain_calls": 56805000,
+        "release_calls": 62205000,
+        "system_allocations": 0,
+        "pair_reuses": 30000,
+        "collections": 9,
+        "cycle_objects_freed": 0
+      }
+    },
+    {
+      "name": "2-tail-count-native",
+      "mode": "native",
+      "round": 2,
+      "command": [
+        "bin/rc/bench_execution",
+        "tail-count",
+        "300",
+        "${EVIDENCE}/2-tail-count-native/suite"
+      ],
+      "log_sha256": "8794711535f8cbfe1b3670994fe2edc378b2505d0e9a4de1caba5fa94011114d",
+      "metrics": {
+        "case": "tail-count",
+        "repetitions": 300,
+        "setup_wall": 0.087876,
+        "wall": 0.741598,
+        "user": 0.736751,
+        "system": 0.004385,
+        "compiler_child_cpu": 0.0,
+        "interpreter_entries": 0,
+        "retain_calls": 30000900,
+        "release_calls": 30001200,
+        "system_allocations": 0,
+        "pair_reuses": 0,
+        "collections": 0,
+        "cycle_objects_freed": 0
+      }
+    },
+    {
+      "name": "2-tail-count-interpret",
+      "mode": "interpret",
+      "round": 2,
+      "command": [
+        "bin/rc/bench_execution",
+        "tail-count",
+        "300",
+        "${EVIDENCE}/2-tail-count-interpret/suite"
+      ],
+      "log_sha256": "29ac0497f3887b65bfcab6ea65ad772f690cd82c2ae7ead0ba4c643dc222236c",
+      "metrics": {
+        "case": "tail-count",
+        "repetitions": 300,
+        "setup_wall": 0.057098,
+        "wall": 2.055878,
+        "user": 2.041146,
+        "system": 0.013134,
+        "compiler_child_cpu": 0.0,
+        "interpreter_entries": 30000631,
+        "retain_calls": 180001534,
+        "release_calls": 210001837,
+        "system_allocations": 0,
+        "pair_reuses": 0,
+        "collections": 48,
+        "cycle_objects_freed": 0
+      }
+    },
+    {
+      "name": "2-list-build-native",
+      "mode": "native",
+      "round": 2,
+      "command": [
+        "bin/rc/bench_execution",
+        "list-build",
+        "1000",
+        "${EVIDENCE}/2-list-build-native/suite"
+      ],
+      "log_sha256": "921b2315a2ac88601580da569d1191a8ed07342ad8d3837fd175cfb0441e4209",
+      "metrics": {
+        "case": "list-build",
+        "repetitions": 1000,
+        "setup_wall": 0.087691,
+        "wall": 0.616537,
+        "user": 0.614276,
+        "system": 0.001548,
+        "compiler_child_cpu": 0.0,
+        "interpreter_entries": 0,
+        "retain_calls": 60004000,
+        "release_calls": 70006000,
+        "system_allocations": 8978000,
+        "pair_reuses": 0,
+        "collections": 15,
+        "cycle_objects_freed": 0
+      }
+    },
+    {
+      "name": "2-list-build-interpret",
+      "mode": "interpret",
+      "round": 2,
+      "command": [
+        "bin/rc/bench_execution",
+        "list-build",
+        "1000",
+        "${EVIDENCE}/2-list-build-interpret/suite"
+      ],
+      "log_sha256": "bd008d108d8908bd47ad8c4ab10ae8b390ec0aca097c4ac835913bf72d70d02f",
+      "metrics": {
+        "case": "list-build",
+        "repetitions": 1000,
+        "setup_wall": 0.047644,
+        "wall": 1.026417,
+        "user": 1.020868,
+        "system": 0.003436,
+        "compiler_child_cpu": 0.0,
+        "interpreter_entries": 10002061,
+        "retain_calls": 100007035,
+        "release_calls": 120009040,
+        "system_allocations": 8978000,
+        "pair_reuses": 0,
+        "collections": 30,
+        "cycle_objects_freed": 0
+      }
+    },
+    {
+      "name": "2-queens-native",
+      "mode": "native",
+      "round": 2,
+      "command": [
+        "bin/rc/bench_execution",
+        "queens",
+        "40",
+        "${EVIDENCE}/2-queens-native/suite"
+      ],
+      "log_sha256": "49167ab7f7ad3df47d91d121c01b935175eae6bf0fedb9aa92d22d8289a07688",
+      "metrics": {
+        "case": "queens",
+        "repetitions": 40,
+        "setup_wall": 0.119142,
+        "wall": 0.662786,
+        "user": 0.658149,
+        "system": 0.004034,
+        "compiler_child_cpu": 0.0,
+        "interpreter_entries": 0,
+        "retain_calls": 134703520,
+        "release_calls": 134720680,
+        "system_allocations": 0,
+        "pair_reuses": 2238240,
+        "collections": 0,
+        "cycle_objects_freed": 0
+      }
+    },
+    {
+      "name": "2-queens-interpret",
+      "mode": "interpret",
+      "round": 2,
+      "command": [
+        "bin/rc/bench_execution",
+        "queens",
+        "40",
+        "${EVIDENCE}/2-queens-interpret/suite"
+      ],
+      "log_sha256": "65693625092a1199a5d0118bb1910d5dd463397330c6301216ad8d1ac245119d",
+      "metrics": {
+        "case": "queens",
+        "repetitions": 40,
+        "setup_wall": 0.091458,
+        "wall": 1.201451,
+        "user": 1.190802,
+        "system": 0.00828,
+        "compiler_child_cpu": 0.0,
+        "interpreter_entries": 9694274,
+        "retain_calls": 201831464,
+        "release_calls": 207719953,
+        "system_allocations": 0,
+        "pair_reuses": 0,
+        "collections": 9,
+        "cycle_objects_freed": 0
+      }
+    },
+    {
+      "name": "2-prolog-native",
+      "mode": "native",
+      "round": 2,
+      "command": [
+        "bin/rc/bench_execution",
+        "prolog",
+        "3000",
+        "${EVIDENCE}/2-prolog-native/suite"
+      ],
+      "log_sha256": "7a25c0425b40e8d280dcfeb4c99160bd3b36e2825b578fad1bdb04de3e68c975",
+      "metrics": {
+        "case": "prolog",
+        "repetitions": 3000,
+        "setup_wall": 0.095576,
+        "wall": 0.410266,
+        "user": 0.403512,
+        "system": 0.004076,
+        "compiler_child_cpu": 0.0,
+        "interpreter_entries": 0,
+        "retain_calls": 55182000,
+        "release_calls": 62244000,
+        "system_allocations": 0,
+        "pair_reuses": 0,
+        "collections": 12,
+        "cycle_objects_freed": 0
+      }
+    },
+    {
+      "name": "2-prolog-interpret",
+      "mode": "interpret",
+      "round": 2,
+      "command": [
+        "bin/rc/bench_execution",
+        "prolog",
+        "3000",
+        "${EVIDENCE}/2-prolog-interpret/suite"
+      ],
+      "log_sha256": "453c2722b917c83aea14d535a398b116f0b8270660737d5335a521f694a8a6d2",
+      "metrics": {
+        "case": "prolog",
+        "repetitions": 3000,
+        "setup_wall": 0.076892,
+        "wall": 0.597893,
+        "user": 0.58068,
+        "system": 0.008109,
+        "compiler_child_cpu": 0.0,
+        "interpreter_entries": 3220420,
+        "retain_calls": 57938985,
+        "release_calls": 68600986,
+        "system_allocations": 795019,
+        "pair_reuses": 0,
+        "collections": 17,
+        "cycle_objects_freed": 0
+      }
+    },
+    {
+      "name": "2-typecheck-native",
+      "mode": "native",
+      "round": 2,
+      "command": [
+        "bin/rc/bench_execution",
+        "typecheck",
+        "15000",
+        "${EVIDENCE}/2-typecheck-native/suite"
+      ],
+      "log_sha256": "a105278ace6d8ad00c0691df1c8d120ba8e16546e84569107bdcc9c7dd6cf337",
+      "metrics": {
+        "case": "typecheck",
+        "repetitions": 15000,
+        "setup_wall": 0.086533,
+        "wall": 0.415303,
+        "user": 0.40274,
+        "system": 0.006058,
+        "compiler_child_cpu": 0.0,
+        "interpreter_entries": 0,
+        "retain_calls": 56805000,
+        "release_calls": 62205000,
+        "system_allocations": 0,
+        "pair_reuses": 30000,
+        "collections": 9,
+        "cycle_objects_freed": 0
+      }
+    },
+    {
+      "name": "2-typecheck-interpret",
+      "mode": "interpret",
+      "round": 2,
+      "command": [
+        "bin/rc/bench_execution",
+        "typecheck",
+        "15000",
+        "${EVIDENCE}/2-typecheck-interpret/suite"
+      ],
+      "log_sha256": "36677ee129604e72d5dd40605d4d46975e33d8dfdd1e851591def831eeb7e3ac",
+      "metrics": {
+        "case": "typecheck",
+        "repetitions": 15000,
+        "setup_wall": 0.04849,
+        "wall": 0.429735,
+        "user": 0.412067,
+        "system": 0.009611,
+        "compiler_child_cpu": 0.0,
+        "interpreter_entries": 285513,
+        "retain_calls": 57015178,
+        "release_calls": 62625229,
+        "system_allocations": 0,
+        "pair_reuses": 30000,
+        "collections": 9,
+        "cycle_objects_freed": 0
+      }
+    }
+  ],
+  "comparisons": {
+    "tail-count": {
+      "paired_user_ratios": [
+        0.3657204721420051,
+        0.35058099097147954,
+        0.36094968218833934
+      ],
+      "median_user_ratio": 0.36094968218833934
+    },
+    "list-build": {
+      "paired_user_ratios": [
+        0.6176879112415294,
+        0.6150579099882736,
+        0.6017193212050921
+      ],
+      "median_user_ratio": 0.6150579099882736
+    },
+    "queens": {
+      "paired_user_ratios": [
+        0.5144608296620778,
+        0.5181337372433144,
+        0.5526938987337946
+      ],
+      "median_user_ratio": 0.5181337372433144
+    },
+    "prolog": {
+      "paired_user_ratios": [
+        0.7230576991331774,
+        0.7330653406792254,
+        0.6948956395949576
+      ],
+      "median_user_ratio": 0.7230576991331774
+    },
+    "typecheck": {
+      "paired_user_ratios": [
+        0.9897887063398304,
+        0.9861410237311928,
+        0.9773653313660157
+      ],
+      "median_user_ratio": 0.9861410237311928
+    }
+  },
+  "binary_unchanged": true,
+  "sources_unchanged": true,
+  "raw_result_sha256": "e26fb6990c003d4e59e5d0c951becd797415b1161bdc5cdaa6d1befd2a903c1c",
+  "artifact_note": "Portable derived receipt; original local receipt retained. Only absolute command paths are normalized.",
+  "compiler": "Apple clang version 21.0.0 (clang-2100.3.34.2)\nTarget: arm64-apple-darwin27.0.0\nThread model: posix\nInstalledDir: /Library/Developer/CommandLineTools/usr/bin\n",
+  "host_build_flags": "-O3 -g -std=c17 -flto=thin; dynamic cached modules -O1"
+}

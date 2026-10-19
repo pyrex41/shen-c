@@ -1,4 +1,5 @@
 #include "eval.h"
+#include "native_compile.h"
 #include "primitives.h"
 #include "rc_internal.h"
 #include <stdlib.h>
@@ -69,8 +70,13 @@ static bool parameters(RcContext *ctx, RcValue *params, size_t *arity) {
 }
 static RcValue *prepared_call(RcContext *,RcValue *,size_t,RcValue *const *);
 static RcValue *plan_prepare(RcContext *,RcValue *,RcValue *,size_t,RcValue *const *,bool);
+/* Optional native-tier hotness observer; absent hooks cost one branch. */
+static inline void tier_call(RcContext *ctx, RcValue *self) {
+    void *state; const RcTierHooks *hooks=rc_tier_hooks(ctx,&state);
+    if(hooks)hooks->call(ctx,state,self);
+}
 static RcValue *dynamic_call(RcContext *ctx, RcValue *self, size_t argc, RcValue *const *argv) {
-    if(!rc_stack_check(ctx))return NULL;
+    if(!rc_interpreter_enter(ctx)||!rc_stack_check(ctx))return NULL;
     RcValue *const *captures=rc_eval_captures(ctx,self,dynamic_call,argc);if(!captures)return NULL;
     RcValue *plan=plan_prepare(ctx,captures[0],captures[1],argc,captures+2,true);
     if(plan) {
@@ -78,6 +84,7 @@ static RcValue *dynamic_call(RcContext *ctx, RcValue *self, size_t argc, RcValue
         return prepared_call(ctx,self,argc,argv);
     }
     if(rc_has_error(ctx))return NULL;
+    tier_call(ctx,self);
     RcValue *body=NULL;
     RcValue *env=rc_eval_env_frame(ctx,self,dynamic_call,argc,argv,&body);
     if(!env)return NULL;
@@ -172,6 +179,7 @@ static RcValue *application(RcContext *ctx, RcValue *expr, RcValue *env, size_t 
 #include "eval_plan.h"
 
 static RcValue *evaluate(RcContext *ctx, RcValue *input, RcValue *environment, bool tail) {
+    if(!rc_interpreter_enter(ctx))return NULL;
     if (!input) return rc_error(ctx,"eval-kl: null expression");
     /* Atomic lookup cannot invoke callbacks or collect. The caller keeps the
      * expression/environment rooted until this owned result is retained. */
@@ -260,7 +268,12 @@ static RcValue *evaluate(RcContext *ctx, RcValue *input, RcValue *environment, b
             if (rc_type(name)!=RC_SYMBOL) { rc_error(ctx,"eval-kl: defun name must be a symbol"); break; }
             RcValue *fn=make_function(ctx,nth(args,1),nth(args,2),rc_nil());
             if (!fn) break;
-            if (rc_function_set(ctx,name,fn)) result=rc_retain(name);
+            const RcValue *old=rc_function_slot_borrowed(ctx,name);
+            if (rc_function_set(ctx,name,fn)) {
+                void *state; const RcTierHooks *hooks=rc_tier_hooks(ctx,&state);
+                if (hooks) hooks->defun(ctx,state,name,expr,fn,old);
+                result=rc_retain(name);
+            }
             rc_release(fn); break;
         }
         if (form==F_TRAP) {
@@ -291,6 +304,10 @@ RcValue *rc_eval(RcContext *ctx, RcValue *expression) {
     /* All environment binders and expression symbols then share one intern table,
      * so lexical lookup can compare symbol identity without structural equality. */
     if(!rc_call_values_belong(ctx,expression,0,NULL))return rc_error(ctx,"eval-kl: invalid expression/context");
+    if(getenv("SHEN_RC_NATIVE_TRACE")){fputs("RC_NATIVE_FORM ",stderr);rc_print(stderr,expression);fputc('\n',stderr);}
+    int backend=rc_execution_mode(ctx);
+    if(backend==0)return rc_native_eval(ctx,expression);
+    if(backend!=1)return rc_error(ctx,"unknown SHEN_RC_EXECUTION backend");
     /* Public borrowed inputs may lose an external owner during a callback.
      * Keep a pair root across the complete evaluation; atoms cannot invoke
      * callbacks and keep the allocation-free owned-result path above. */
@@ -301,7 +318,10 @@ RcValue *rc_eval(RcContext *ctx, RcValue *expression) {
     return result;
 }
 static RcValue *eval_native(RcContext *ctx, RcValue *self, size_t argc, RcValue *const *argv) {
-    (void)self; (void)argc; return rc_eval(ctx,argv[0]);
+    (void)self; (void)argc;
+    void *state; const RcTierHooks *hooks=rc_tier_hooks(ctx,&state);
+    if (hooks && !rc_has_error(ctx)) hooks->safepoint(ctx,state);
+    return rc_eval(ctx,argv[0]);
 }
 bool rc_install_eval(RcContext *ctx) {
     RcValue *name=rc_symbol(ctx,"eval-kl"), *fn=rc_closure(ctx,1,eval_native,0,NULL);

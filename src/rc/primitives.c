@@ -410,10 +410,23 @@ static int condition_finish(RcContext *c,int result,size_t argc,RcValue **args) 
  for(size_t i=0;i<argc;i++){RcValue *arg=args[i];args[i]=NULL;rc_release(arg);}
  if(rc_has_error(c))return -1;rc_safepoint(c);return result;
 }
+static int condition_slow_borrowed(RcContext *c,RcValue *fn,size_t argc,RcValue *const *args) {
+ RcValue *value=rc_apply(c,fn,argc,args);
+ if(!value)return -1;
+ if(!boolean(value)){rc_release(value);return -2;}
+ int result=rc_is_true(value);rc_release(value);return result;
+}
+static int condition_finish_borrowed(RcContext *c,int result) {
+ if(rc_has_error(c))return -1;rc_safepoint(c);return result;
+}
 #define UNARY_CONDITION(api,slot,test) \
 int rc_condition_##api##_owned(RcContext *c,RcValue *fn,RcValue **args) { \
  if(!rc_builtin_call_matches(c,slot,fn,1,args))return condition_slow(c,fn,1,args); \
  int result=(test);return condition_finish(c,result,1,args); \
+} \
+int rc_condition_##api##_borrowed(RcContext *c,RcValue *fn,RcValue *const *args) { \
+ if(!rc_builtin_call_matches(c,slot,fn,1,args))return condition_slow_borrowed(c,fn,1,args); \
+ int result=(test);return condition_finish_borrowed(c,result); \
 }
 UNARY_CONDITION(consp,RC_BUILTIN_CONSP,rc_type(args[0])==RC_PAIR)
 UNARY_CONDITION(numberp,RC_BUILTIN_NUMBERP,rc_type(args[0])==RC_NUMBER)
@@ -423,14 +436,25 @@ int rc_condition_eq_owned(RcContext *c,RcValue *fn,RcValue **args) {
  if(!rc_builtin_call_matches(c,RC_BUILTIN_EQ,fn,2,args))return condition_slow(c,fn,2,args);
  int result=rc_equal(args[0],args[1]);return condition_finish(c,result,2,args);
 }
+int rc_condition_eq_borrowed(RcContext *c,RcValue *fn,RcValue *const *args) {
+ if(!rc_builtin_call_matches(c,RC_BUILTIN_EQ,fn,2,args))return condition_slow_borrowed(c,fn,2,args);
+ return condition_finish_borrowed(c,rc_equal(args[0],args[1]));
+}
 #define NUMERIC_CONDITION(api,slot,comparison) \
-int rc_condition_##api##_owned(RcContext *c,RcValue *fn,RcValue **args) { \
- if(!rc_builtin_call_matches(c,slot,fn,2,args))return condition_slow(c,fn,2,args); \
+static int condition_##api##_value(RcContext *c,RcValue *const *args) { \
  RcValue *a=args[0],*b=args[1];int result=-1; \
  if(rc_type(a)!=RC_NUMBER||rc_type(b)!=RC_NUMBER)rc_error(c,"Arithmetic requires numbers"); \
  else if(rc_number_is_exact_integer(a)&&rc_number_is_exact_integer(b))result=rc_integer_value(a) comparison rc_integer_value(b); \
  else result=rc_number_value(a) comparison rc_number_value(b); \
- return condition_finish(c,result,2,args); \
+ return result; \
+} \
+int rc_condition_##api##_owned(RcContext *c,RcValue *fn,RcValue **args) { \
+ if(!rc_builtin_call_matches(c,slot,fn,2,args))return condition_slow(c,fn,2,args); \
+ return condition_finish(c,condition_##api##_value(c,args),2,args); \
+} \
+int rc_condition_##api##_borrowed(RcContext *c,RcValue *fn,RcValue *const *args) { \
+ if(!rc_builtin_call_matches(c,slot,fn,2,args))return condition_slow_borrowed(c,fn,2,args); \
+ return condition_finish_borrowed(c,condition_##api##_value(c,args)); \
 }
 NUMERIC_CONDITION(gt,RC_BUILTIN_GT,>)
 NUMERIC_CONDITION(lt,RC_BUILTIN_LT,<)

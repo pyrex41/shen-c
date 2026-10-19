@@ -1,0 +1,12 @@
+{
+  "status": "PASS",
+  "binary_sha256": "a7bda3cf095d8d61fee65756801a5e5af07cbdd4c905cd13325764b4e3f95690",
+  "driver_source_sha256": "1943a49562a4bf7b70f06e303cfd9b0b65433972c24c78dff77500f031e5c4c7",
+  "scope": "separate sampled loaded typecheck, no timing credit",
+  "exit": 0,
+  "sample_exit": 0,
+  "repetitions": 300000,
+  "inference_budget": 1000000000,
+  "run_log_sha256": "0250c6dfb0badfc95510760d00c8f6dfd224dfdc4e31d2c5832d5d93aa94af94",
+  "sample_sha256": "d5bc3fe400934b3b35c42a3d373324aef1fb9f718856f7c0bb4093e6889be978"
+}

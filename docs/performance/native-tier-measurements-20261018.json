@@ -1,0 +1,226 @@
+{
+ "uptime_start": "19:32  up 3 days,  4:01, 1 user, load averages: 8.38 8.50 10.58",
+ "cold": {
+  "on-cold": {
+   "status": "PASS",
+   "user": 19.0,
+   "sys": 0.67,
+   "l_load": 1.628766,
+   "stats": "shen-rc native-tier: mode=promote threshold=1000 defuns=454 redefined=48 promoted=92 failed=0 emit_failures=0 guard_misses=0 batches=21 compiles=21 cache_hits=0 fallbacks=0 disabled=0 emit_s=0.298 compile_s=15.548 load_s=0.000"
+  },
+  "forced-cold": {
+   "status": "PASS",
+   "user": 25.95,
+   "sys": 1.7,
+   "l_load": 1.622598,
+   "stats": "shen-rc native-tier: mode=promote threshold=1 defuns=454 redefined=14 promoted=292 failed=0 emit_failures=0 guard_misses=0 batches=64 compiles=64 cache_hits=0 fallbacks=0 disabled=0 emit_s=0.402 compile_s=22.719 load_s=0.001"
+  }
+ },
+ "runs": {
+  "base": [
+   {
+    "status": "PASS",
+    "user": 3.99,
+    "sys": 0.02,
+    "l_load": 1.920602,
+    "stats": ""
+   },
+   {
+    "status": "PASS",
+    "user": 3.85,
+    "sys": 0.01,
+    "l_load": 1.8298,
+    "stats": ""
+   },
+   {
+    "status": "PASS",
+    "user": 3.83,
+    "sys": 0.02,
+    "l_load": 1.804021,
+    "stats": ""
+   },
+   {
+    "status": "PASS",
+    "user": 3.81,
+    "sys": 0.02,
+    "l_load": 1.825452,
+    "stats": ""
+   },
+   {
+    "status": "PASS",
+    "user": 3.77,
+    "sys": 0.02,
+    "l_load": 1.802191,
+    "stats": ""
+   },
+   {
+    "status": "PASS",
+    "user": 3.79,
+    "sys": 0.01,
+    "l_load": 1.795403,
+    "stats": ""
+   }
+  ],
+  "off": [
+   {
+    "status": "PASS",
+    "user": 3.94,
+    "sys": 0.02,
+    "l_load": 1.837078,
+    "stats": ""
+   },
+   {
+    "status": "PASS",
+    "user": 3.85,
+    "sys": 0.02,
+    "l_load": 1.825179,
+    "stats": ""
+   },
+   {
+    "status": "PASS",
+    "user": 3.81,
+    "sys": 0.01,
+    "l_load": 1.808953,
+    "stats": ""
+   },
+   {
+    "status": "PASS",
+    "user": 3.81,
+    "sys": 0.01,
+    "l_load": 1.805391,
+    "stats": ""
+   },
+   {
+    "status": "PASS",
+    "user": 3.77,
+    "sys": 0.02,
+    "l_load": 1.79299,
+    "stats": ""
+   },
+   {
+    "status": "PASS",
+    "user": 3.77,
+    "sys": 0.02,
+    "l_load": 1.798968,
+    "stats": ""
+   }
+  ],
+  "on-warm": [
+   {
+    "status": "PASS",
+    "user": 3.44,
+    "sys": 0.02,
+    "l_load": 1.548059,
+    "stats": "shen-rc native-tier: mode=promote threshold=1000 defuns=454 redefined=48 promoted=92 failed=0 emit_failures=0 guard_misses=0 batches=21 compiles=0 cache_hits=21 fallbacks=0 disabled=0 emit_s=0.000 compile_s=0.000 load_s=0.000"
+   },
+   {
+    "status": "PASS",
+    "user": 3.44,
+    "sys": 0.02,
+    "l_load": 1.53932,
+    "stats": "shen-rc native-tier: mode=promote threshold=1000 defuns=454 redefined=48 promoted=92 failed=0 emit_failures=0 guard_misses=0 batches=21 compiles=0 cache_hits=21 fallbacks=0 disabled=0 emit_s=0.000 compile_s=0.000 load_s=0.000"
+   },
+   {
+    "status": "PASS",
+    "user": 3.44,
+    "sys": 0.02,
+    "l_load": 1.533495,
+    "stats": "shen-rc native-tier: mode=promote threshold=1000 defuns=454 redefined=48 promoted=92 failed=0 emit_failures=0 guard_misses=0 batches=21 compiles=0 cache_hits=21 fallbacks=0 disabled=0 emit_s=0.000 compile_s=0.000 load_s=0.000"
+   },
+   {
+    "status": "PASS",
+    "user": 3.43,
+    "sys": 0.02,
+    "l_load": 1.543748,
+    "stats": "shen-rc native-tier: mode=promote threshold=1000 defuns=454 redefined=48 promoted=92 failed=0 emit_failures=0 guard_misses=0 batches=21 compiles=0 cache_hits=21 fallbacks=0 disabled=0 emit_s=0.000 compile_s=0.000 load_s=0.000"
+   },
+   {
+    "status": "PASS",
+    "user": 3.47,
+    "sys": 0.02,
+    "l_load": 1.569756,
+    "stats": "shen-rc native-tier: mode=promote threshold=1000 defuns=454 redefined=48 promoted=92 failed=0 emit_failures=0 guard_misses=0 batches=21 compiles=0 cache_hits=21 fallbacks=0 disabled=0 emit_s=0.000 compile_s=0.000 load_s=0.000"
+   },
+   {
+    "status": "PASS",
+    "user": 3.43,
+    "sys": 0.02,
+    "l_load": 1.520423,
+    "stats": "shen-rc native-tier: mode=promote threshold=1000 defuns=454 redefined=48 promoted=92 failed=0 emit_failures=0 guard_misses=0 batches=21 compiles=0 cache_hits=21 fallbacks=0 disabled=0 emit_s=0.000 compile_s=0.000 load_s=0.000"
+   }
+  ],
+  "forced-warm": [
+   {
+    "status": "PASS",
+    "user": 3.43,
+    "sys": 0.02,
+    "l_load": 1.526824,
+    "stats": "shen-rc native-tier: mode=promote threshold=1 defuns=454 redefined=14 promoted=292 failed=0 emit_failures=0 guard_misses=0 batches=64 compiles=0 cache_hits=64 fallbacks=0 disabled=0 emit_s=0.000 compile_s=0.000 load_s=0.000"
+   },
+   {
+    "status": "PASS",
+    "user": 3.42,
+    "sys": 0.03,
+    "l_load": 1.52265,
+    "stats": "shen-rc native-tier: mode=promote threshold=1 defuns=454 redefined=14 promoted=292 failed=0 emit_failures=0 guard_misses=0 batches=64 compiles=0 cache_hits=64 fallbacks=0 disabled=0 emit_s=0.000 compile_s=0.000 load_s=0.000"
+   },
+   {
+    "status": "PASS",
+    "user": 3.44,
+    "sys": 0.03,
+    "l_load": 1.518434,
+    "stats": "shen-rc native-tier: mode=promote threshold=1 defuns=454 redefined=14 promoted=292 failed=0 emit_failures=0 guard_misses=0 batches=64 compiles=0 cache_hits=64 fallbacks=0 disabled=0 emit_s=0.000 compile_s=0.000 load_s=0.000"
+   },
+   {
+    "status": "PASS",
+    "user": 3.44,
+    "sys": 0.03,
+    "l_load": 1.519122,
+    "stats": "shen-rc native-tier: mode=promote threshold=1 defuns=454 redefined=14 promoted=292 failed=0 emit_failures=0 guard_misses=0 batches=64 compiles=0 cache_hits=64 fallbacks=0 disabled=0 emit_s=0.000 compile_s=0.000 load_s=0.000"
+   },
+   {
+    "status": "PASS",
+    "user": 3.46,
+    "sys": 0.02,
+    "l_load": 1.540509,
+    "stats": "shen-rc native-tier: mode=promote threshold=1 defuns=454 redefined=14 promoted=292 failed=0 emit_failures=0 guard_misses=0 batches=64 compiles=0 cache_hits=64 fallbacks=0 disabled=0 emit_s=0.000 compile_s=0.000 load_s=0.000"
+   },
+   {
+    "status": "PASS",
+    "user": 3.43,
+    "sys": 0.03,
+    "l_load": 1.517562,
+    "stats": "shen-rc native-tier: mode=promote threshold=1 defuns=454 redefined=14 promoted=292 failed=0 emit_failures=0 guard_misses=0 batches=64 compiles=0 cache_hits=64 fallbacks=0 disabled=0 emit_s=0.000 compile_s=0.000 load_s=0.000"
+   }
+  ]
+ },
+ "uptime_end": "19:35  up 3 days,  4:03, 1 user, load averages: 7.37 8.10 10.09",
+ "summary": {
+  "base": {
+   "median_user": 3.8200000000000003,
+   "median_l_load": 1.8147365,
+   "all_pass": true
+  },
+  "off": {
+   "median_user": 3.81,
+   "median_l_load": 1.807172,
+   "all_pass": true,
+   "median_paired_user_ratio_vs_base": 0.9974,
+   "median_paired_l_load_ratio_vs_base": 0.9962
+  },
+  "on-warm": {
+   "median_user": 3.44,
+   "median_l_load": 1.541534,
+   "all_pass": true,
+   "median_paired_user_ratio_vs_base": 0.8992,
+   "median_paired_l_load_ratio_vs_base": 0.8463
+  },
+  "forced-warm": {
+   "median_user": 3.435,
+   "median_l_load": 1.520886,
+   "all_pass": true,
+   "median_paired_user_ratio_vs_base": 0.9005,
+   "median_paired_l_load_ratio_vs_base": 0.8369
+  }
+ }
+}
