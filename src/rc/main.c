@@ -3,6 +3,7 @@
 #include "rc.h"
 #include "primitives.h"
 #include "read.h"
+#include "native_tier.h"
 #include <ctype.h>
 #include <inttypes.h>
 #include <math.h>
@@ -540,7 +541,9 @@ int main(int argc,char **argv) {
     RcContext *ctx=rc_context_new();
     if (!ctx) { fputs("shen-rc: cannot create runtime context\n",stderr); return 1; }
     int status=1;
-    if (rc_bootstrap_kernel(ctx) && initial_directory(ctx) &&
+    bool booted=rc_bootstrap_kernel(ctx);
+    if (booted) rc_native_tier_attach(ctx);
+    if (booted && initial_directory(ctx) &&
         command_arguments(ctx,command==SCRIPT ? argc-2 : argc,command==SCRIPT ? argv+2 : argv)) {
         if (command==REPL) status=repl(ctx);
         else if (command==SCRIPT) {
@@ -551,5 +554,6 @@ int main(int argc,char **argv) {
         else status=eval_arguments(ctx,argc,argv,start);
     }
     if (status) fprintf(stderr,"shen-rc: %s\n",rc_has_error(ctx) ? rc_error_message(ctx) : "operation failed");
+    rc_native_tier_detach(ctx);
     rc_context_free(ctx); return status;
 }
