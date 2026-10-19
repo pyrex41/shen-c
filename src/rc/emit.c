@@ -18,7 +18,7 @@ typedef struct { const char *name; int slot; } Binding;
 typedef struct Allocation { struct Allocation *prev,*next; max_align_t align; unsigned char data[]; } Allocation;
 typedef struct ModuleDef { size_t symbol; int id,arity; bool exact_hashkey,kernel_phase; struct ModuleDef *next; } ModuleDef;
 typedef struct ModuleCall { size_t symbol; struct ModuleCall *next; } ModuleCall;
-struct Program { RcEmitOptions options; RcContext *ctx; jmp_buf failure; Allocation *allocations; Buf functions,literals,transparent_do,pvar_identities; const char **symbols; size_t nsymbols,symbol_capacity; ModuleDef *module_defs; ModuleCall *module_calls; bool user_phase,drop_range_used,drop_range_emitted,transparent_do_used,lazyderef_used; RcValue *metadata_root; int next,next_literal; long defuns, lambdas, tops; };
+struct Program { RcEmitOptions options; RcContext *ctx; jmp_buf failure; Allocation *allocations; Buf functions,literals,constants,transparent_do,pvar_identities; const char **symbols; size_t nsymbols,symbol_capacity; ModuleDef *module_defs; ModuleCall *module_calls; bool user_phase,drop_range_used,drop_range_emitted,transparent_do_used,lazyderef_used; RcValue *metadata_root; int next,next_literal,next_constant; long defuns, lambdas, tops; };
 static _Noreturn void bad(Program *p,const char *message) { rc_error(p->ctx,"%s",message); longjmp(p->failure,1); }
 static void *resize(Program *p,void *old,size_t bytes) {
   if(bytes>SIZE_MAX-sizeof(Allocation)) bad(p,"compiler allocation overflow");
@@ -51,7 +51,7 @@ typedef struct {
   int arity, boolean_tail; bool self_loop,borrowed_fn_used,assoc_fast,pvar_fast,lazyderef_fast; size_t assoc_symbols[5],prolog_symbols[7];
   DoGuard *do_guard;
   int *physical,*free_slots,slot_cap,frame_slots,nfree; unsigned char *active,*borrowed_fn;
-  char fail[64]; struct Recycle *recycle;
+  char fail[64]; struct Recycle *recycle; long constant_min;
 } RcEmitFn;
 static void put(Buf *b, const char *fmt, ...) {
   Program *p=b->owner;
@@ -337,6 +337,14 @@ static const char *tiny_leaf_api(RcValue *head,int arity) {
 static int expr(RcEmitFn *,RcValue *,int,const Live *);
 static int compile(Program *,RcValue *,RcValue *,Binding *,int,int);
 static int literal(Program *,RcValue *);
+static int constant_data(RcEmitFn *,RcValue *,bool);
+static long constant_nodes(RcEmitFn *,RcValue *,bool);
+/* Smaller trees stay straight-line code; the table only pays off in bulk.
+ * A function holding thousands of constructors (the standard library's
+ * stored sources and type declarations) is data, so it tables small trees. */
+#define RC_CONSTANT_DATA_MIN 64
+#define RC_CONSTANT_DATA_BULK_MIN 8
+#define RC_CONSTANT_DATA_BULK 2048
 /* Assign one dense index per distinct static symbol in this emitted module. */
 static size_t symbol_index(RcEmitFn *f,const char *name) {
  Program *p=f->p;f->symbol_used=true;
@@ -479,6 +487,9 @@ static int expr(RcEmitFn *f,RcValue *x,int tail,const Live *after){
 static int expr_inner(RcEmitFn *f,RcValue *x,int tail,const Live *after){
  Program *p=f->p;if(!is_list(x)||rc_is_nil(x))return atom(f,x,tail,after);
  RcValue *head=first(x),*args=rest(x);bool special=is_symbol(head)&&binding(f,name(head))<0;
+ if(optimize(f)&&!tail&&special&&(named(head,"cons")||named(head,"protect"))&&constant_nodes(f,x,false)>=(f->constant_min?f->constant_min:RC_CONSTANT_DATA_MIN)){
+  int t=constant_data(f,x,false);drop_dead(f,after);return t;
+ }
  if(special&&named(head,"if"))return branch(f,args,tail,after);
  if(special&&named(head,"cond"))return cond(f,args,tail,after);
  if(special&&named(head,"let")){
@@ -657,8 +668,16 @@ static void finish_function(RcEmitFn *f,int id,int arity,int r){
  put(&p->functions,"}\n");
  if(optimize(f))put(&p->functions,"static RcValue *rc_native_%d(RcContext *ctx,RcValue *self,size_t argc,RcValue **argv) {\n  if(argc!=%d) return rc_error(ctx,\"native arity mismatch\");\n  return rc_native_body_%d(ctx,self,argv);\n}\n",id,arity,id);
 }
+/* Rough count of cons/protect occurrences in a body. Eligibility itself is
+ * still decided per tree, with lexical scope, by constant_nodes. */
+static long constructors(RcValue *x){
+ long n=0;
+ for(;is_pair(x);x=rest(x)){RcValue *y=first(x);if(named(y,"cons")||named(y,"protect"))n++;else n+=constructors(y);}
+ return n;
+}
 static int compile(Program *p,RcValue *params,RcValue *body,Binding *caps,int ncaps,int freeze){
- RcEmitFn f={0};f.p=p;f.code.owner=p;int id=p->next++,arity=freeze==1?0:(freeze==2?1:count(p,params));f.arity=arity;snprintf(f.fail,sizeof f.fail,"cleanup");
+ RcEmitFn f={0};f.p=p;f.code.owner=p;
+ if(constructors(body)>=RC_CONSTANT_DATA_BULK)f.constant_min=RC_CONSTANT_DATA_BULK_MIN;int id=p->next++,arity=freeze==1?0:(freeze==2?1:count(p,params));f.arity=arity;snprintf(f.fail,sizeof f.fail,"cleanup");
  if(!ncaps&&!freeze&&exact_assoc(&f,params,body)) {
   const char *deps[]={"assoc","=","cons?","hd","tl"};f.assoc_fast=true;
   for(size_t i=0;i<5;i++)f.assoc_symbols[i]=symbol_index(&f,deps[i]);
@@ -683,10 +702,120 @@ static int compile(Program *p,RcValue *params,RcValue *body,Binding *caps,int nc
  finish_function(&f,id,arity,r);
  discard(f.code.p);discard(f.bind);return id;
 }
+/* Large constant trees, such as the standard library's stored sources and
+ * type signatures, become a static table run by one small loop instead of one
+ * straight-line statement per cell. In expression mode the table replays the
+ * emitted call order exactly: each (cons A B) or (protect A) resolves its
+ * callee's current binding before its arguments, arguments run left to right,
+ * and the same owned-call APIs apply them, so redefinition stays observable.
+ * Raw mode builds reader data with rc_cons_owned, like literal_node. Every
+ * node allocates afresh: no sharing beyond what the straight-line code had. */
+enum { RC_CONST_NIL, RC_CONST_SYMBOL, RC_CONST_STRING, RC_CONST_INTEGER, RC_CONST_REAL,
+       RC_CONST_FUNCTION, RC_CONST_CONS, RC_CONST_CALL1, RC_CONST_PAIR };
+/* Node count of an eligible tree, or -1. Expression mode admits unbound
+ * symbols, nil, numbers, strings, and canonical-shape cons/protect calls. */
+static long constant_nodes(RcEmitFn *f,RcValue *x,bool raw){
+ if(rc_is_nil(x)||rc_type(x)==RC_NUMBER||rc_type(x)==RC_STRING)return 1;
+ if(is_symbol(x))return raw||binding(f,name(x))<0?1:-1;
+ if(!is_pair(x))return -1;
+ long n=1;RcValue *q=x;
+ if(!raw){
+  RcValue *head=first(x);int argc=named(head,"cons")?2:named(head,"protect")?1:0;
+  if(!argc||binding(f,name(head))>=0)return -1;
+  q=rest(x);for(int i=0;i<argc;i++,q=rest(q)){if(!is_pair(q))return -1;long k=constant_nodes(f,first(q),false);if(k<0)return -1;n+=k;}
+  return rc_is_nil(q)?n:-1;
+ }
+ long h=constant_nodes(f,first(x),true),t=h<0?-1:constant_nodes(f,rest(x),true);
+ return h<0||t<0?-1:n+h+t;
+}
+typedef struct { Buf code,strings,integers,reals; size_t words,nstrings,nintegers,nreals,sp,depth; bool symbols; } ConstTable;
+static void const_word(Program *p,ConstTable *c,unsigned op,size_t operand,int effect){
+ if(operand>(UINT32_MAX>>4))bad(p,"constant data table overflow");
+ put(&c->code,"%s%" PRIu32 "u",c->words?(c->words%16?",":",\n "):" ",(uint32_t)(op|(uint32_t)operand<<4));c->words++;
+ c->sp=(size_t)((long)c->sp+effect);if(c->sp>c->depth)c->depth=c->sp;
+}
+static void const_symbol(RcEmitFn *f,ConstTable *c,unsigned op,const char *s){
+ c->symbols=true;const_word(f->p,c,op,symbol_index(f,s),1);
+}
+static void const_node(RcEmitFn *f,ConstTable *c,RcValue *x,bool raw){
+ Program *p=f->p;
+ if(rc_is_nil(x))const_word(p,c,RC_CONST_NIL,0,1);
+ else if(rc_type(x)==RC_NUMBER&&rc_number_is_exact_integer(x)){
+  int64_t n=rc_integer_value(x);
+  if(n==INT64_MIN)put(&c->integers,"%sINT64_MIN",c->nintegers?",":"");
+  else put(&c->integers,"%sINT64_C(%" PRId64 ")",c->nintegers?",":"",n);
+  const_word(p,c,RC_CONST_INTEGER,c->nintegers++,1);
+ }else if(rc_type(x)==RC_NUMBER){double n=rc_number_value(x);
+  if(isnan(n))put(&c->reals,"%sNAN",c->nreals?",":"");
+  else if(isinf(n))put(&c->reals,"%s%sINFINITY",c->nreals?",":"",n<0?"-":"");
+  else put(&c->reals,"%s%a",c->nreals?",":"",n);
+  const_word(p,c,RC_CONST_REAL,c->nreals++,1);
+ }else if(rc_type(x)==RC_STRING){
+  put(&c->strings,"%s\n {",c->nstrings?",":"");quoted_n(&c->strings,rc_text(x),rc_text_length(x));put(&c->strings,",%zu}",rc_text_length(x));
+  const_word(p,c,RC_CONST_STRING,c->nstrings++,1);
+ }else if(is_symbol(x))const_symbol(f,c,RC_CONST_SYMBOL,name(x));
+ else if(raw){const_node(f,c,first(x),true);const_node(f,c,rest(x),true);const_word(p,c,RC_CONST_PAIR,0,-1);}
+ else{
+  bool cons=named(first(x),"cons");const_symbol(f,c,RC_CONST_FUNCTION,name(first(x)));
+  for(RcValue *q=rest(x);!rc_is_nil(q);q=rest(q))const_node(f,c,first(q),false);
+  const_word(p,c,cons?RC_CONST_CONS:RC_CONST_CALL1,0,cons?-2:-1);
+ }
+}
+static int constant_data(RcEmitFn *f,RcValue *x,bool raw){
+ Program *p=f->p;ConstTable c={0};c.code.owner=c.strings.owner=c.integers.owner=c.reals.owner=p;
+ const_node(f,&c,x,raw);if(c.sp!=1)bad(p,"constant data stack imbalance");
+ int id=p->next_constant++;
+ put(&p->constants,"static const uint32_t rc_constant_code_%d[]={\n%s\n};\n",id,c.code.p);
+ if(c.nstrings)put(&p->constants,"static const RcConstantString rc_constant_strings_%d[]={%s\n};\n",id,c.strings.p);
+ if(c.nintegers)put(&p->constants,"static const int64_t rc_constant_integers_%d[]={%s};\n",id,c.integers.p);
+ if(c.nreals)put(&p->constants,"static const double rc_constant_reals_%d[]={%s};\n",id,c.reals.p);
+ put(&p->constants,"static const RcConstantData rc_constant_%d={rc_constant_code_%d,%zu,%zu,",id,id,c.words,c.depth);
+ if(c.nstrings)put(&p->constants,"rc_constant_strings_%d,",id);else put(&p->constants,"NULL,");
+ if(c.nintegers)put(&p->constants,"rc_constant_integers_%d,",id);else put(&p->constants,"NULL,");
+ if(c.nreals)put(&p->constants,"rc_constant_reals_%d};\n",id);else put(&p->constants,"NULL};\n");
+ discard(c.code.p);discard(c.strings.p);discard(c.integers.p);discard(c.reals.p);
+ int t=fresh(f);put(&f->code,"  t[%d]=rc_constant_data(ctx,%s,&rc_constant_%d);\n",t,c.symbols?"symbols":"NULL",id);check(f,t);return t;
+}
+static void constant_helpers(FILE *out){
+ fprintf(out,"typedef struct { const char *text; size_t length; } RcConstantString;\n"
+       "typedef struct { const uint32_t *code; size_t length,depth; const RcConstantString *strings; const int64_t *integers; const double *reals; } RcConstantData;\n"
+       "/* Runs one constant table. Every stack entry is an owned value; calls\n"
+       " * consume their argument slots on every path, the callee is released\n"
+       " * after the call, and failure releases whatever remains. */\n"
+       "static RcValue *rc_constant_data(RcContext *ctx,RcValue *const *symbols,const RcConstantData *data) {\n"
+       "  RcValue *small[64],**stack=data->depth<=64?small:calloc(data->depth,sizeof(*stack)),*result=NULL;\n"
+       "  if(!stack) return rc_error(ctx,\"constant data allocation failed\");\n"
+       "  size_t sp=0;\n"
+       "  for(size_t pc=0;pc<data->length;pc++) {\n"
+       "    uint32_t op=data->code[pc]&15u,x=data->code[pc]>>4; RcValue *v=NULL,*fn;\n"
+       "    switch(op) {\n"
+       "    case %d: v=rc_nil(); break;\n"
+       "    case %d: v=rc_retain(symbols[x]); break;\n"
+       "    case %d: v=rc_string_n(ctx,data->strings[x].text,data->strings[x].length); break;\n"
+       "    case %d: v=rc_integer(ctx,data->integers[x]); break;\n"
+       "    case %d: v=rc_number(ctx,data->reals[x]); break;\n"
+       "    case %d: v=rc_function_get(ctx,symbols[x]); break;\n"
+       "    case %d: sp-=3; fn=stack[sp]; v=rc_primitive_cons_owned(ctx,fn,stack+sp+1,false); rc_release(fn); break;\n"
+       "    case %d: sp-=2; fn=stack[sp]; v=rc_apply_rooted_owned_args(ctx,fn,1,stack+sp+1); rc_release(fn); break;\n"
+       "    case %d: sp-=2; v=rc_cons_owned(ctx,stack[sp],stack[sp+1]); break;\n"
+       "    default: v=rc_error(ctx,\"invalid constant data\"); break;\n"
+       "    }\n"
+       "    if(!v) goto cleanup;\n"
+       "    stack[sp++]=v;\n"
+       "  }\n"
+       "  if(sp==1) { result=stack[0]; sp=0; } else rc_error(ctx,\"invalid constant data\");\n"
+       "cleanup:\n"
+       "  while(sp) rc_release(stack[--sp]);\n"
+       "  if(stack!=small) free(stack);\n"
+       "  return result;\n}\n",
+       RC_CONST_NIL,RC_CONST_SYMBOL,RC_CONST_STRING,RC_CONST_INTEGER,RC_CONST_REAL,
+       RC_CONST_FUNCTION,RC_CONST_CONS,RC_CONST_CALL1,RC_CONST_PAIR);
+}
 /* Construct source metadata as values, never by parsing/evaluating user code.
  * The helper owns each temporary and transfers only its completed AST result. */
 static int literal_node(RcEmitFn *f,RcValue *x){
  if(!is_pair(x))return atom(f,x,0,NULL);
+ if(constant_nodes(f,x,true)>=RC_CONSTANT_DATA_MIN)return constant_data(f,x,true);
  int h=literal_node(f,first(x)),t=literal_node(f,rest(x)),out=fresh(f);
  put(&f->code,"  t[%d]=rc_cons(ctx,t[%d],t[%d]);\n",out,h,t);drop(f,h);drop(f,t);check(f,out);return out;
 }
@@ -778,7 +907,7 @@ bool rc_emit_program(RcContext *ctx,FILE *out,RcValue *const *kernel,size_t nker
   if(report) *report=(RcEmitReport){0};
   Program *p=calloc(1,sizeof(*p));
   if(!p) { rc_error(ctx,"compiler out of memory"); return false; }
-  p->options=*options; p->ctx=ctx; p->functions.owner=p; p->literals.owner=p; p->transparent_do.owner=p; p->pvar_identities.owner=p;
+  p->options=*options; p->ctx=ctx; p->functions.owner=p; p->literals.owner=p; p->constants.owner=p; p->transparent_do.owner=p; p->pvar_identities.owner=p;
   if(setjmp(p->failure)) { clear_arena(p); free(p); return false; }
   Buf installs={.owner=p},kt={.owner=p},ut={.owner=p},events={.owner=p};
   if(options->source_events&&!options->source_metadata)bad(p,"source reader events require source metadata mode");
@@ -832,6 +961,7 @@ bool rc_emit_program(RcContext *ctx,FILE *out,RcValue *const *kernel,size_t nker
   if(p->lazyderef_used&&p->pvar_identities.n)fprintf(out,"static bool rc_certified_pvar(RcValue *fn) { return false%s; }\n",p->pvar_identities.p);
   else if(p->lazyderef_used)fputs("static bool rc_certified_pvar(RcValue *fn) { (void)fn; return false; }\n",out);
   if(p->transparent_do_used)fprintf(out,"static bool rc_transparent_do(RcValue *fn) {\n  return rc_arity(fn)==2 && (rc_primitive_is_do(fn)%s);\n}\n",p->transparent_do.p?p->transparent_do.p:"");
+  if(p->next_constant) { constant_helpers(out); fputs(p->constants.p,out); }
   if(p->next_literal) metadata_helpers(out);
   if(p->literals.p) fputs(p->literals.p,out);
   if(p->functions.p) fputs(p->functions.p,out);
