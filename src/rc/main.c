@@ -561,15 +561,28 @@ static bool stack_size(size_t *size) {
 static void *run_job(void *data) {
     Job *job=data;
     /* This frame is near the top of the thread's stack. */
-    volatile char top=0;
-    uintptr_t low=(uintptr_t)&top-job->stack;
+#if defined(__GNUC__) || defined(__clang__)
+    /* ASan can move locals onto its fake stack; use the actual thread frame. */
+    uintptr_t top=(uintptr_t)__builtin_frame_address(0);
+#else
+    volatile char probe=0;uintptr_t top=(uintptr_t)&probe;
+#endif
+    uintptr_t low=top-job->stack;
     guard_low=low-STACK_GUARD; guard_high=low+STACK_HEADROOM;
     static char alternate[1<<16];
-    stack_t signal_stack={.ss_sp=alternate,.ss_size=sizeof(alternate)};
+    stack_t signal_stack={.ss_sp=alternate,.ss_size=sizeof(alternate)},previous_stack;
     struct sigaction action={.sa_sigaction=stack_fault,.sa_flags=SA_SIGINFO|SA_ONSTACK};
+    struct sigaction previous_segv,previous_bus;
     sigemptyset(&action.sa_mask);
-    if (!sigaltstack(&signal_stack,NULL)) { sigaction(SIGSEGV,&action,NULL); sigaction(SIGBUS,&action,NULL); }
+    bool installed=!sigaltstack(&signal_stack,&previous_stack);
+    bool segv=installed&&!sigaction(SIGSEGV,&action,&previous_segv);
+    bool bus=installed&&!sigaction(SIGBUS,&action,&previous_bus);
     job->status=execute(job,low+STACK_HEADROOM);
+    /* Restore runtime-owned signal state before thread teardown. ASan owns its
+     * previous alternate stack and must never try to unmap our static buffer. */
+    if(segv)sigaction(SIGSEGV,&previous_segv,NULL);
+    if(bus)sigaction(SIGBUS,&previous_bus,NULL);
+    if(installed)sigaltstack(&previous_stack,NULL);
     return NULL;
 }
 int main(int argc,char **argv) {
