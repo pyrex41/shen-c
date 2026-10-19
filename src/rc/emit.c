@@ -612,8 +612,14 @@ static int expr_inner(RcEmitFn *f,RcValue *x,int tail,const Live *after){
    p->transparent_do_used=true;
   }
   int result=expr(f,end,guards?2:0,after);f->do_guard=saved;forget(p,guards);
-  for(int i=n-1;i>=0;i--){int next=fresh(f);call_argument(f,0,left[i]);call_argument(f,1,result);
-   if(optimize(f))put(&f->code,"  t[%d]=rc_primitive_call_owned(ctx,t[%d],2,a,%s);\n",next,functions[i],tail==1&&i==0?"true":"false");else put(&f->code,"  t[%d]=%s(ctx,t[%d],2,a);\n",next,call_api(f,tail==1&&i==0),functions[i]);drop(f,functions[i]);if(!optimize(f)){drop(f,left[i]);drop(f,result);}check(f,next);result=next;}
+  for(int i=n-1;i>=0;i--){int next=fresh(f);
+   /* Only a certified identity may forward a pending tail request. Applying
+    * even an identity through ordinary apply would drive it recursively. */
+   if(optimize(f)&&tail){put(&f->code,"  if(rc_transparent_do(ctx,t[%d])) {\n",functions[i]);drop(f,left[i]);move(f,next,result);put(&f->code,"  } else {\n");}
+   call_argument(f,0,left[i]);call_argument(f,1,result);
+   if(optimize(f))put(&f->code,"  t[%d]=rc_primitive_call_owned(ctx,t[%d],2,a,%s);\n",next,functions[i],tail==1&&i==0?"true":"false");else put(&f->code,"  t[%d]=%s(ctx,t[%d],2,a);\n",next,call_api(f,tail==1&&i==0),functions[i]);
+   if(optimize(f)&&tail)put(&f->code,"  }\n");
+   drop(f,functions[i]);if(!optimize(f)){drop(f,left[i]);drop(f,result);}check(f,next);result=next;}
   for(int i=0;i<=n;i++)clear_live(p,&suffix[i]);forget(p,suffix);forget(p,nodes);forget(p,functions);forget(p,left);drop_dead(f,after);return result;
  }
  if(special&&named(head,"lambda")){if(count(p,args)!=2||!is_symbol(first(args)))bad(p,"rc emit: lambda shape");return closure(f,first(args),second(args),0,after);}
@@ -689,6 +695,16 @@ static int expr_inner(RcEmitFn *f,RcValue *x,int tail,const Live *after){
   for(int i=0;i<n;i++)call_argument(f,i,av[i]);
   put(&f->code,"  goto recur;\n  }\n");
  }
+ /* A transparent do chain leaves only result forwarding (and any boolean
+  * completion guard). Use a runtime tail request when every saved callee is
+  * still the certified identity; arbitrary replacements stay eager. */
+ bool guarded_tail=optimize(f)&&tail==2&&f->do_guard;
+ if(guarded_tail){
+  put(&f->code,"  if(");bool first_guard=true;
+  for(DoGuard *g=f->do_guard;g;g=g->outer){put(&f->code,"%src_transparent_do(ctx,t[%d])",first_guard?"":" && ",g->slot);first_guard=false;}
+  put(&f->code,") {\n");for(int i=0;i<n;i++)call_argument(f,i,av[i]);
+  put(&f->code,"  t[%d]=rc_tailcall_owned_args(ctx,t[%d],%d,%s);\n  } else {\n",result,fn,n,n?"a":"NULL");
+ }
  if(project){put(&f->code,"  { RcValue *candidate=t[%d]; t[%d]=NULL; t[%d]=rc_tail_call_reuse(ctx,t[%d],candidate,&t[%d]); }\n",av[0],av[0],result,fn,project->token);}
  else if(recycle.binding>=0){
   put(&f->code,"  { RcValue *candidate=t[%d] ? t[%d] : t[%d]; t[%d]=NULL; t[%d]=NULL; t[%d]=rc_cons_call_reuse(ctx,t[%d],candidate,t[%d],t[%d],%s); }\n",recycle.token,recycle.token,recycle.binding,recycle.token,recycle.binding,result,fn,av[0],av[1],tail==1?"true":"false");
@@ -704,6 +720,7 @@ static int expr_inner(RcEmitFn *f,RcValue *x,int tail,const Live *after){
   else put(&f->code,"  t[%d]=%s(ctx,t[%d],%d,%s);\n",result,call_api(f,tail),fn,n,n?"a":"NULL");
   if(!optimize(f))for(int i=0;i<n;i++)drop(f,av[i]);
  }
+ if(guarded_tail)put(&f->code,"  }\n");
  if(recycle.binding>=0)f->recycle=recycle.outer;
  drop(f,fn);forget(p,av);check(f,result);drop_dead(f,after);return result;
 }

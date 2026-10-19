@@ -19,6 +19,9 @@ source='''
 (eval-kl (c-quote (interpreted-do-bool 20000)))
 (eval-kl (c-quote (defun interpreted-do-bad (N) (and true (do 0 (if (= N 0) 7 (interpreted-do-bad (- N 1))))))))
 (trap-error (eval-kl (c-quote (interpreted-do-bad 20000))) (lambda E 42))
+(eval-kl (c-quote (defun mutual-do-a (N) (and true (do 0 (if (= N 0) true (mutual-do-b (- N 1))))))))
+(eval-kl (c-quote (defun mutual-do-b (N) (and true (do 0 (do 1 (if (= N 0) true (mutual-do-a (- N 1)))))))))
+(eval-kl (c-quote (mutual-do-a 30000)))
 (eval-kl (c-quote (defun snapshot-do (X) (do (do (defun do (A B) A) (shen.gc)) (atom-id X)))))
 (eval-kl (c-quote (snapshot-do 42)))
 (eval-kl (c-quote (do 1 42)))
@@ -35,6 +38,9 @@ interpreted-do-bool
 true
 interpreted-do-bad
 42
+mutual-do-a
+mutual-do-b
+true
 snapshot-do
 42
 1
@@ -44,8 +50,8 @@ computed-do
 42
 42
 '''
-# The native KL emitter intentionally has no quote special form. Construct
-# each interpreted AST through ordinary cons values, preserving symbol atoms.
+# Construct eval-kl ASTs through ordinary cons values so both backends
+# exercise live reader values, preserving symbol atoms.
 tokens=iter(re.findall(r'[()]|[^\s()]+',source))
 def parse(token):
  if token!='(':return token
@@ -74,8 +80,12 @@ with tempfile.TemporaryDirectory(prefix='shen-rc-identity-tail.') as tmp:
   emitted=(dest/'app.c').read_text()
   constructor='rc_closure_return_second' if conservative else 'rc_closure_return_second_owned'
   assert emitted.count('='+constructor+'(')==2,(constructor,emitted.count('='+constructor+'('))
-  actual=subprocess.run([str(dest/'app')],env={**os.environ,'SHEN_RC_PRINT':'1'},capture_output=True,text=True)
-  assert actual.returncode==0,(conservative,actual.returncode,actual.stdout,actual.stderr)
-  assert actual.stdout==expected,(conservative,actual.stdout,actual.stderr)
-print('RC compiled/interpreted identity forwarding: 14 cases x owned/borrowed PASS')
+  for execution in ('native','interpret'):
+   actual=subprocess.run([str(dest/'app')],env={**os.environ,'SHEN_RC_PRINT':'1','SHEN_RC_EXECUTION':execution,'SHEN_RC_NATIVE_STATS':'1'},capture_output=True,text=True,timeout=120)
+   assert actual.returncode==0,(conservative,execution,actual.returncode,actual.stdout,actual.stderr)
+   assert actual.stdout==expected,(conservative,execution,actual.stdout,actual.stderr)
+   if execution=='native':
+    entries=re.findall(r'interpreter_entries=([0-9]+)',actual.stderr)
+    assert entries and all(int(x)==0 for x in entries),(execution,actual.stderr)
+print('RC identity forwarding: 17 cases x owned/borrowed x native/interpreter, guarded mutual tails PASS')
 PYCODE
