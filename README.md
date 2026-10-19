@@ -113,6 +113,10 @@ return value or a run time; a `load` it calls prints as an ordinary load.
 `eval -l` keeps its interactive load output. `eval -q` quiets language output to stdout while
 retaining explicit file writes.
 
+Commands run on a 1 GiB evaluator stack, so deep non-tail recursion works;
+`SHEN_RC_STACK_SIZE` (for example `4G`) changes it. Exhausting the stack is a
+`stack exhausted` error that `trap-error` can catch, not a crash.
+
 ## Compile applications
 
 See [the compiler guide](docs/RC-BACKEND.md) for Shen source compilation, KL
