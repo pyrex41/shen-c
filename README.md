@@ -29,7 +29,7 @@ Dynamic source, REPL and `eval-kl` compilation require a C17 compiler (`cc` on
 Make and Python 3.9+. On macOS, install the Xcode Command Line Tools with
 `xcode-select --install`. Closed AOT applications need no runtime compiler.
 
-The complete 136-test suite passed in the latest cached native qualification
+The complete 136-test suite passed in the latest packed-cache native qualification
 in **8.17 seconds wall / 7.27 seconds user CPU**, including startup, loading
 and typechecking, with zero compiler calls or interpreter entries. This is one
 shared-host Darwin run, excluding initial compilation; repeated current-backend

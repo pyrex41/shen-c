@@ -20,7 +20,7 @@
   a build receipt and is checked after extraction outside the build checkout.
 
 The complete suite passes in release and fully instrumented ASan/UBSan builds
-with zero interpreter entries. The latest cached Darwin qualification took
+with zero interpreter entries. The latest packed-cache Darwin qualification took
 8.17 seconds wall / 7.27 seconds user CPU, including startup, loading and
 typechecking; it was a single shared-host run, excluding initial compilation.
 Current matched Boehm performance acceptance remains **OPEN**. The 0.3.0

@@ -20,18 +20,22 @@ jobs:
           - os: ubuntu-24.04
             target: linux-x86_64
             lto: '0'
+            cflags: -O3 -g -Wno-misleading-indentation
           - os: ubuntu-24.04-arm
             target: linux-arm64
             lto: '0'
+            cflags: -O3 -g -Wno-misleading-indentation
           - os: macos-15
             target: macos-arm64
             lto: auto
+            cflags: -O3 -g
           - os: macos-15-intel
             target: macos-x86_64
             lto: auto
+            cflags: -O3 -g
     env:
       CC: cc
-      RC_CFLAGS: -O3 -g
+      RC_CFLAGS: ${{ matrix.cflags }}
       # Full GCC LTO exceeded a bounded 20-minute build experiment on both
       # Linux architectures. Match the non-LTO GCC configuration qualified by CI.
       RC_LTO: ${{ matrix.lto }}
