@@ -54,4 +54,20 @@ RcValue *rc_eval_plan_get(RcValue *expression);
 void rc_eval_plan_set(RcValue *expression,RcValue *plan);
 bool rc_eval_plan_heat(RcValue *expression);
 void rc_eval_plan_promote(RcValue *self,RcNative prepared,RcValue *plan);
+/* Optional evaluator observer for a host-side native tier. Generated
+ * applications never attach one. defun runs after an interpreted defun has
+ * published fn (old is the previous binding pointer, compared only); call runs
+ * at interpreted callback entry with self rooted by the dispatcher; safepoint
+ * runs at eval-kl entry with no error pending, where publishing a function
+ * binding is exactly as safe as an ordinary runtime redefinition. All inputs
+ * are borrowed; hooks must leave no error set and must not evaluate code
+ * other than through ordinary function publication. */
+typedef struct {
+    void (*defun)(RcContext *,void *state,RcValue *name,RcValue *definition,
+                  RcValue *fn,const RcValue *old);
+    void (*call)(RcContext *,void *state,RcValue *self);
+    void (*safepoint)(RcContext *,void *state);
+} RcTierHooks;
+void rc_tier_attach(RcContext *,const RcTierHooks *,void *state);
+const RcTierHooks *rc_tier_hooks(const RcContext *,void **state);
 #endif
