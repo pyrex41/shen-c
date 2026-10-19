@@ -57,11 +57,24 @@ int main(int argc,char **argv){
  number(c,"(+ 20 22)",42);number(c,"(+ 20 22)",42);
  discard(c,"(defun count-down (N A) (if (= N 0) A (count-down (- N 1) (+ A 1))))");
  number(c,"(count-down 100000 0)",100000);
+ discard(c,"(let Unused 42 (defun do (A B) B))");
+ discard(c,"(defun nested-do-loop (N) (if (= N 0) 42 (do 0 (nested-do-loop (- N 1)))))");
+ number(c,"(nested-do-loop 40000)",42);
  discard(c,"(defun outer () (defun inner () 7))");discard(c,"(outer)");number(c,"(inner)",7);
  number(c,"(((lambda X (lambda Y (+ X Y))) 20) 22)",42);
  discard(c,"(defun take-first (X Y) X)");
  number(c,"(take-first 7 (defun take-first (X Y) 99))",7);number(c,"(take-first 7 8)",99);
  number(c,"(trap-error (hd 4) (lambda E 42))",42);
+ /* A compiled body must respect the embedder's stack bound and return an
+  * ordinary error without consuming borrowed arguments or leaking owned ones. */
+ RcValue *guarded=run(c,"(lambda X (+ X 1))"),*one=rc_integer(c,1);
+ answer=rc_apply(c,guarded,1,&one);assert(answer&&rc_integer_value(answer)==2);rc_release(answer);
+ rc_set_stack_limit(c,(void *)UINTPTR_MAX);
+ answer=rc_apply(c,guarded,1,&one);
+ assert(!answer&&rc_has_error(c)&&strstr(rc_error_message(c),"stack exhausted"));
+ rc_set_stack_limit(c,NULL);rc_clear_error(c);
+ answer=rc_apply(c,guarded,1,&one);assert(answer&&rc_integer_value(answer)==2);rc_release(answer);
+ rc_release(guarded);rc_release(one);
  const char *quoted="(quote (a b))";RcValue *form=rc_read(c,&quoted);assert(form);
  RcValue *q=rc_eval(c,form);assert(q==rc_head_borrowed(rc_tail_borrowed(form)));rc_release(q);rc_release(form);
  literals(c,1);literals(c,2);assert(rc_interpreter_entries(c)==0);rc_context_free(c);

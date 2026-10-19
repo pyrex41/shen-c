@@ -218,7 +218,7 @@ bool rc_function_set(RcContext *ctx, RcValue *symbol, RcValue *function);
  * error. Callers distinguish failure with rc_has_error. Scalar equality never
  * allocates. */
 bool rc_equal(const RcValue *left, const RcValue *right);
-/* Optional lowest C stack address that interpreted calls on this context's
+/* Optional lowest C stack address that generated or interpreted calls on this context's
  * thread may reach (NULL, the default, disables the check). A call made below
  * it fails with an ordinary, trappable "stack exhausted" error instead of
  * overflowing the stack. The embedder keeps headroom below the limit for the

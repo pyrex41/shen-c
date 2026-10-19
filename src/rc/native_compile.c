@@ -26,10 +26,13 @@
 
 extern char **environ;
 
-typedef struct Module { struct Module *next; char key[33]; char *source; size_t length; void *handle; RcValue *(*entry)(RcContext *,RcValue *); } Module;
+typedef struct {const char *key,*source;size_t length;RcValue *(*entry)(RcContext *,RcValue *);} RcPackedEntry;
+typedef const RcPackedEntry *(*RcBundleLookup)(const char *,const char *,size_t);
+typedef struct Module { struct Module *next; char key[33]; char *source; size_t length; bool owns_source; void *handle; RcValue *(*entry)(RcContext *,RcValue *); } Module;
 typedef struct {
  RcContext *ctx; char *cc,*cflags,*cache,*include; char abi[33];
  bool cache_owned,stats; Module *modules;
+ void *bundle_handle; RcBundleLookup bundle_lookup; size_t bundle_hits;
  size_t lazy_closures,templates,definitions,evaluations,compiles,hits,memory_hits,emitted_bytes,failures;
  double emit_s,compile_s,compile_user_s,compile_system_s,load_s,timeout;
  size_t cache_limit;
@@ -52,8 +55,8 @@ static int mkdirs(const char *path) {
     return mkdir(b,0700)&&errno!=EEXIST?-1:0;
 }
 static bool write_file(const char *path,const char *text,size_t n) {
-    char tmp[4200]; snprintf(tmp,sizeof(tmp),"%s.%ld.tmp",path,(long)getpid());
-    int fd=open(tmp,O_WRONLY|O_CREAT|O_TRUNC|O_NOFOLLOW,0600); if(fd<0)return false;
+    char tmp[4200]; snprintf(tmp,sizeof(tmp),"%s.%ld.XXXXXX",path,(long)getpid());
+    int fd=mkstemp(tmp); if(fd<0)return false;
     bool ok=true;
     for(size_t off=0;ok && off<n;) { ssize_t w=write(fd,text+off,n-off); if(w<=0)ok=false; else off+=(size_t)w; }
     if(close(fd))ok=false;
@@ -162,8 +165,8 @@ static char *env_or(const char *name,const char *fallback) {
 void rc_native_compile_free(void *state) {
  Tier *t=state;if(!t)return;
  RcStats runtime=rc_stats(t->ctx);
- if(t->stats)fprintf(stderr,"RC_NATIVE lazy_closures=%zu templates=%zu definitions=%zu evaluations=%zu compiles=%zu disk_hits=%zu memory_hits=%zu emitted_bytes=%zu failures=%zu interpreter_entries=%zu emit_s=%.6f compile_s=%.6f compile_user_s=%.6f compile_system_s=%.6f load_s=%.6f retain_calls=%zu release_calls=%zu system_allocations=%zu pair_reuses=%zu collections=%zu cycle_objects_freed=%zu peak_objects=%zu live_bytes=%zu\n",t->lazy_closures,t->templates,t->definitions,t->evaluations,t->compiles,t->hits,t->memory_hits,t->emitted_bytes,t->failures,rc_interpreter_entries(t->ctx),t->emit_s,t->compile_s,t->compile_user_s,t->compile_system_s,t->load_s,runtime.retain_calls,runtime.release_calls,runtime.system_allocations,runtime.pair_reuses,runtime.collections,runtime.cycle_objects_freed,runtime.peak_objects,runtime.live_bytes);
- while(t->modules){Module *m=t->modules;t->modules=m->next;free(m->source);free(m);}
+ if(t->stats)fprintf(stderr,"RC_NATIVE lazy_closures=%zu templates=%zu definitions=%zu evaluations=%zu compiles=%zu disk_hits=%zu bundle_hits=%zu memory_hits=%zu emitted_bytes=%zu failures=%zu interpreter_entries=%zu emit_s=%.6f compile_s=%.6f compile_user_s=%.6f compile_system_s=%.6f load_s=%.6f retain_calls=%zu release_calls=%zu system_allocations=%zu pair_reuses=%zu collections=%zu cycle_objects_freed=%zu peak_objects=%zu live_bytes=%zu\n",t->lazy_closures,t->templates,t->definitions,t->evaluations,t->compiles,t->hits,t->bundle_hits,t->memory_hits,t->emitted_bytes,t->failures,rc_interpreter_entries(t->ctx),t->emit_s,t->compile_s,t->compile_user_s,t->compile_system_s,t->load_s,runtime.retain_calls,runtime.release_calls,runtime.system_allocations,runtime.pair_reuses,runtime.collections,runtime.cycle_objects_freed,runtime.peak_objects,runtime.live_bytes);
+ while(t->modules){Module *m=t->modules;t->modules=m->next;if(m->owns_source)free(m->source);free(m);}
  if(t->cache_owned){
   if(t->include){for(size_t i=0;i<sizeof(rc_tier_headers)/sizeof(*rc_tier_headers);i++){char *f=path_of(t->include,rc_tier_headers[i].name,"");if(f)unlink(f);free(f);}rmdir(t->include);}
   DIR *d=opendir(t->cache);if(d){struct dirent *e;while((e=readdir(d)))if(e->d_name[0]!='.'){char *f=path_of(t->cache,e->d_name,"");if(f)unlink(f);free(f);}closedir(d);}rmdir(t->cache);
@@ -175,6 +178,48 @@ static Tier *state_for(RcContext *ctx){
  t=calloc(1,sizeof(*t));if(!t){rc_error(ctx,"native compiler: out of memory");return NULL;}
  t->ctx=ctx;const char *stats=getenv("SHEN_RC_NATIVE_STATS");t->stats=stats&&strcmp(stats,"0");
  *rc_native_compile_slot(ctx)=t;return t;
+}
+static bool object_receipt(const char *,const char *,bool);
+static const char *const compiler_environment[]={"SDKROOT","MACOSX_DEPLOYMENT_TARGET","CPATH","C_INCLUDE_PATH","LIBRARY_PATH","DEVELOPER_DIR","NIX_CFLAGS_COMPILE","NIX_LDFLAGS","NIX_CFLAGS_LINK","NIX_CC","NIX_ENFORCE_PURITY"};
+static void config_word(FILE *out,const char *name,const char *value){
+ fprintf(out,"%s ",name);if(!value)fputc('-',out);
+ else for(const unsigned char *p=(const unsigned char*)value;*p;p++)fprintf(out,"%02x",*p);
+ fputc('\n',out);
+}
+static void save_configuration(Tier *t){
+ char *text=NULL;size_t length=0;FILE *out=open_memstream(&text,&length);if(!out)return;
+ fprintf(out,"SHEN_NATIVE_CONFIG_V1\nabi %s\nimmediate %d\nacyclic %d\n",t->abi,(int)SHEN_RC_IMMEDIATE_INTEGERS,
+#ifdef SHEN_RC_ACYCLIC_ONLY
+ 1
+#else
+ 0
+#endif
+ );
+ config_word(out,"cc",t->cc);config_word(out,"cflags",t->cflags);config_word(out,"host_flags",RC_TIER_HOST_FLAGS);
+ for(size_t i=0;i<sizeof(compiler_environment)/sizeof(*compiler_environment);i++){
+  char name[128];snprintf(name,sizeof(name),"env_%s",compiler_environment[i]);config_word(out,name,getenv(compiler_environment[i]));
+ }
+ if(fclose(out)){free(text);return;}
+ char stem[64];snprintf(stem,sizeof(stem),"compile-%s",t->abi);char *path=path_of(t->cache,stem,".config");
+ if(path&&!same_file(path,text,length))(void)write_file(path,text,length);
+ free(path);free(text);
+}
+static void load_bundle(Tier *t){
+ const char *mode=getenv("SHEN_RC_NATIVE_BUNDLE");if(mode&&!strcmp(mode,"off"))return;
+ char stem[64];snprintf(stem,sizeof(stem),"bundle-%s",t->abi);
+ char *path=path_of(t->cache,stem,".so"),*receipt=path_of(t->cache,stem,".receipt");
+ double begin=now();
+ if(path&&receipt&&object_receipt(path,receipt,false)){
+  void *handle=dlopen(path,RTLD_NOW|RTLD_LOCAL);
+  if(handle){
+   const char *(*abi)(void)=NULL;RcBundleLookup lookup=NULL;
+   *(void**)&abi=dlsym(handle,"rc_bundle_abi");*(void**)&lookup=dlsym(handle,"rc_bundle_lookup");
+   const char *actual=abi?abi():NULL;
+   if(actual&&!strcmp(actual,t->abi)&&lookup){t->bundle_handle=handle;t->bundle_lookup=lookup;}
+   else dlclose(handle);
+  }
+ }
+ t->load_s+=now()-begin;free(path);free(receipt);
 }
 static Tier *initialize(RcContext *ctx){
  Tier *t=state_for(ctx);if(!t)return NULL;
@@ -202,13 +247,13 @@ static Tier *initialize(RcContext *ctx){
  }
  (void)stat(resolved,&st);
  char identity[16384];snprintf(identity,sizeof(identity),"compile-first-v2\n%s\n%llu/%llu/%lld/%lld\n%d\n%s\n%s\n%s",resolved,(unsigned long long)st.st_dev,(unsigned long long)st.st_ino,(long long)st.st_size,(long long)st.st_mtime,(int)SHEN_RC_IMMEDIATE_INTEGERS,t->cc,t->cflags,RC_TIER_HOST_FLAGS);
- const char *names[]={"SDKROOT","MACOSX_DEPLOYMENT_TARGET","CPATH","C_INCLUDE_PATH","LIBRARY_PATH","DEVELOPER_DIR"};
- for(size_t i=0;i<sizeof(names)/sizeof(*names);i++){
-  const char *value=getenv(names[i]);size_t used=strlen(identity);
-  if(value)snprintf(identity+used,sizeof(identity)-used,"\n%s=%s",names[i],value);
+ for(size_t i=0;i<sizeof(compiler_environment)/sizeof(*compiler_environment);i++){
+  const char *value=getenv(compiler_environment[i]);size_t used=strlen(identity);
+  if(value)snprintf(identity+used,sizeof(identity)-used,"\n%s=%s",compiler_environment[i],value);
  }
  digest(identity,strlen(identity),RC_TIER_HEADER_DIGEST,strlen(RC_TIER_HEADER_DIGEST),t->abi);
  if(!prepare_include(t))goto failed;
+ save_configuration(t);load_bundle(t);
  *rc_native_compile_slot(ctx)=t;return t;
 failed:rc_error(ctx,"native compiler: cannot initialize private cache/compiler configuration");*rc_native_compile_slot(ctx)=NULL;rc_native_compile_free(t);return NULL;
 }
@@ -269,6 +314,15 @@ static RcValue *compile_execute(RcContext *ctx,RcValue *expression,RcValue *para
  char key[33];digest(t->abi,strlen(t->abi),text,length,key);
  Module *m;for(m=t->modules;m;m=m->next)if(!strcmp(m->key,key)&&m->length==length&&!memcmp(m->source,text,length))break;
  if(m){t->memory_hits++;result=m->entry(ctx,literals);goto done;}
+ if(t->bundle_lookup){
+  const RcPackedEntry *packed=t->bundle_lookup(key,text,length);
+  if(packed){
+   m=calloc(1,sizeof(*m));if(!m){rc_error(ctx,"native compiler: out of memory");goto done;}
+   memcpy(m->key,key,sizeof(key));m->source=(char*)packed->source;m->length=length;m->entry=packed->entry;m->handle=t->bundle_handle;
+   m->next=t->modules;t->modules=m;free(text);text=NULL;t->bundle_hits++;
+   result=m->entry(ctx,literals);goto done;
+  }
+ }
  source=path_of(t->cache,key,".c");object=path_of(t->cache,key,".so");receipt=path_of(t->cache,key,".receipt");lockfile=path_of(t->cache,"cache",".lock");log=path_of(t->cache,key,".log");
  if(!source||!object||!receipt||!lockfile||!log){rc_error(ctx,"native compiler: out of memory");goto done;}
  lock=open(lockfile,O_RDWR|O_CREAT,0600);if(lock<0||flock(lock,LOCK_EX)){rc_error(ctx,"native compiler: cannot lock cache entry");goto done;}
@@ -289,7 +343,7 @@ static RcValue *compile_execute(RcContext *ctx,RcValue *expression,RcValue *para
   if(!m->handle||!bind_entry(m)){rc_error(ctx,"native compiler: cannot load module: %s",dlerror());if(m->handle)dlclose(m->handle);free(m);goto done;}
   unlink(log);
  }
- t->load_s+=now()-begin;memcpy(m->key,key,sizeof(key));m->source=text;text=NULL;m->length=length;m->next=t->modules;t->modules=m;
+ t->load_s+=now()-begin;memcpy(m->key,key,sizeof(key));m->source=text;m->owns_source=true;text=NULL;m->length=length;m->next=t->modules;t->modules=m;
  account_cache(t,previous_bytes,entry_bytes(t,key));
  flock(lock,LOCK_UN);close(lock);lock=-1;
  result=m->entry(ctx,literals);

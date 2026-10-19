@@ -558,7 +558,10 @@ static int expr_inner(RcEmitFn *f,RcValue *x,int tail,const Live *after){
   symbol_slot(f,t,name(first(args)));check(f,t);
   if(p->options.expression_entry){
    if(f->max_args<1)f->max_args=1;
-   put(&f->code,"  a[0]=rc_capture(self,%d);\n  t[%d]=%s(ctx,%d,rc_native_%d,1,a);\n",f->literal_capture,cl,closure_api(p),count(p,second(args)),id);
+   put(&f->code,"  a[0]=rc_capture(self,%d);\n",f->literal_capture);
+   if(exact_second_identity(second(args),at(p,args,2),count(p,second(args))))
+    put(&f->code,"  t[%d]=%s(ctx,rc_native_%d,1,a);\n",cl,p->options.conservative_ownership?"rc_closure_return_second":"rc_closure_return_second_owned",id);
+   else put(&f->code,"  t[%d]=%s(ctx,%d,rc_native_%d,1,a);\n",cl,closure_api(p),count(p,second(args)),id);
   }else if(exact_second_identity(second(args),at(p,args,2),count(p,second(args))))
    put(&f->code,"  t[%d]=%s(ctx,rc_native_%d,0,NULL);\n",cl,p->options.conservative_ownership?"rc_closure_return_second":"rc_closure_return_second_owned",id);
   else put(&f->code,"  t[%d]=%s(ctx,%d,rc_native_%d,0,NULL);\n",cl,closure_api(p),count(p,second(args)),id);
@@ -651,8 +654,8 @@ static bool exact_prolog(RcEmitFn *f,RcValue *params,RcValue *body,bool lazy) {
 }
 static void finish_function(RcEmitFn *f,int id,int arity,int r){
  Program *p=f->p;
- if(optimize(f))put(&p->functions,"static RcValue *rc_native_body_%d(RcContext *ctx,RcValue *self,RcValue **argv) {\n  (void)self; (void)argv;\n  RcValue *result=NULL;\n",id);
- else put(&p->functions,"static RcValue *rc_native_%d(RcContext *ctx,RcValue *self,size_t argc,RcValue *const *argv) {\n  (void)self; (void)argv;\n  if(argc!=%d) return rc_error(ctx,\"native arity mismatch\");\n  RcValue *result=NULL;\n",id,arity);
+ if(optimize(f))put(&p->functions,"static RcValue *rc_native_body_%d(RcContext *ctx,RcValue *self,RcValue **argv) {\n  (void)self; (void)argv;\n  if(!rc_stack_check(ctx)) return NULL;\n  RcValue *result=NULL;\n",id);
+ else put(&p->functions,"static RcValue *rc_native_%d(RcContext *ctx,RcValue *self,size_t argc,RcValue *const *argv) {\n  (void)self; (void)argv;\n  if(argc!=%d) return rc_error(ctx,\"native arity mismatch\");\n  if(!rc_stack_check(ctx)) return NULL;\n  RcValue *result=NULL;\n",id,arity);
  symbol_frame(&p->functions,f);
  if(f->assoc_fast)put(&p->functions,"  { bool handled=false; RcValue *deps[]={symbols[%zu],symbols[%zu],symbols[%zu],symbols[%zu],symbols[%zu]};\n    RcValue *fast=rc_assoc_try_owned(ctx,self,argv,deps,&handled); if(handled) return fast; }\n",f->assoc_symbols[0],f->assoc_symbols[1],f->assoc_symbols[2],f->assoc_symbols[3],f->assoc_symbols[4]);
  if(f->pvar_fast)put(&p->functions,"  { bool handled=false; RcValue *deps[]={symbols[%zu],symbols[%zu],symbols[%zu],symbols[%zu]};\n    RcValue *fast=rc_pvar_try_owned(ctx,self,argv,deps,&handled); if(handled) return fast; }\n",f->prolog_symbols[0],f->prolog_symbols[1],f->prolog_symbols[2],f->prolog_symbols[3]);
@@ -725,7 +728,7 @@ static int literal_node(RcEmitFn *f,RcValue *x){
 static int literal(Program *p,RcValue *x){
  RcEmitFn f={0};f.p=p;f.code.owner=p;snprintf(f.fail,sizeof f.fail,"cleanup");
  int id=p->next_literal++,result=literal_node(&f,x);
- put(&p->literals,"static RcValue *rc_literal_%d(RcContext *ctx) {\n  RcValue *result=NULL;\n",id);
+ put(&p->literals,"static RcValue *rc_literal_%d(RcContext *ctx) {\n  if(!rc_stack_check(ctx)) return NULL;\n  RcValue *result=NULL;\n",id);
  symbol_frame(&p->literals,&f);
  if(f.slots>64)put(&p->literals,"  RcValue **t=calloc(%d,sizeof(*t)); if(!t) return rc_error(ctx,\"source metadata allocation failed\");\n",f.slots);
  else put(&p->literals,"  RcValue *t[%d]={0};\n",f.slots?f.slots:1);

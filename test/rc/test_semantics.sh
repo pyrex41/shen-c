@@ -148,7 +148,7 @@ fi
 count=$(wc -l < "$work/expected" | tr -d ' ')
 printf 'RC emitted semantics: %s/%s cases PASS\n' "$count" "$count"
 # A tail operand under do must retain the snapshotted-do identity guard.
-grep -q '&& rc_transparent_do(t\[' "$work/app/app.c"
+grep -q '&& rc_transparent_do(ctx,t\[' "$work/app/app.c"
 grep -q 'rc_compiled_call_matches(fn,rc_native_' "$work/app/app.c"
 # Audit the actual generated executable, independently from the host compiler.
 "$root/scripts/test-rc.sh" --audit-only "$work/app/app"

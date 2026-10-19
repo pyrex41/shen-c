@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Failure and concurrent cache controls for the strict native backend."""
-import argparse, json, os, re, subprocess, tempfile, time
+import argparse, json, os, re, subprocess, sys, tempfile, time
 from pathlib import Path
 
 def main():
@@ -8,16 +8,29 @@ def main():
     with tempfile.TemporaryDirectory(prefix='shen-compile-cache-') as directory:
         root=Path(directory);cache=root/'cache'
         base=dict(os.environ,SHEN_RC_EXECUTION='native',SHEN_RC_VERIFY_NATIVE='1',SHEN_RC_NATIVE_STATS='1',SHEN_RC_NATIVE_CACHE=str(cache))
-        def run(extra=None,success=True):
-            p=subprocess.run([str(probe),'(+ 1 2)'],env=dict(base,**(extra or {})),capture_output=True,text=True,timeout=30)
+        def run(extra=None,success=True,expression='(+ 1 2)',expected='3\n'):
+            p=subprocess.run([str(probe),expression],env=dict(base,**(extra or {})),capture_output=True,text=True,timeout=30)
             assert (p.returncode==0)==success,(p.returncode,p.stdout,p.stderr)
-            if success:assert p.stdout=='3\n',p.stdout
+            if success:assert p.stdout==expected,p.stdout
             metrics=[dict(re.findall(r'(\w+)=([0-9.]+)',x)) for x in p.stderr.splitlines() if x.startswith('RC_NATIVE ')]
             assert metrics,p.stderr
             assert all(x['interpreter_entries']=='0' for x in metrics),metrics
             return metrics[-1],p
         s,_=run();assert s['compiles']=='1',s
         s,_=run();assert s['compiles']=='0' and s['disk_hits']=='1',s
+        # The packed image must bind current literals, reject damaged images,
+        # and preserve ordinary native compilation for an unseen code shape.
+        packer=Path(__file__).resolve().with_name('bundle-native-cache.py')
+        subprocess.run([sys.executable,str(packer),'--cache',str(cache)],env=base,check=True,timeout=60,capture_output=True)
+        s,_=run(expression='(+ 20 22)',expected='42\n')
+        assert s['compiles']=='0' and s['disk_hits']=='0' and s['bundle_hits']=='1',s
+        s,_=run({'SHEN_RC_NATIVE_BUNDLE':'off'});assert s['disk_hits']=='1' and s['bundle_hits']=='0',s
+        s,_=run(expression='(if true 41 42)',expected='41\n');assert s['compiles']=='1' and s['bundle_hits']=='0',s
+        packed=next(cache.glob('bundle-*.so'));receipt=packed.with_suffix('.receipt')
+        valid_receipt=receipt.read_bytes();receipt.write_bytes(b'bad receipt')
+        s,_=run();assert s['disk_hits']=='1' and s['bundle_hits']=='0',s
+        receipt.write_bytes(valid_receipt);packed.write_bytes(b'bad native image')
+        s,_=run();assert s['disk_hits']=='1' and s['bundle_hits']=='0',s
         for obj in cache.glob('*.so'):obj.write_bytes(b'corrupt object')
         s,_=run();assert s['compiles']=='1',s
         # Two writers must publish a complete matching object/source/receipt.
@@ -40,5 +53,5 @@ def main():
         private=root/'not-private';private.mkdir(mode=0o777);private.chmod(0o777)
         p=subprocess.run([str(probe),'(+ 1 2)'],env=dict(base,SHEN_RC_NATIVE_CACHE=str(private)),capture_output=True,text=True,timeout=30)
         assert p.returncode!=0 and 'private cache' in p.stderr,p.stderr
-        print('RC strict cache: cold/warm, corruption, concurrency, flags, missing/failing/timed-out compiler, pruning and private directory PASS')
+        print('RC strict cache: cold/warm, packed literals/misses/corruption, concurrency, flags, compiler failures, pruning and private directory PASS')
 if __name__=='__main__':main()

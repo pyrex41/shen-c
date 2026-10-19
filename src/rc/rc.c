@@ -174,8 +174,14 @@ RcValue *rc_error(RcContext *ctx, const char *format, ...) {
 bool rc_has_error(const RcContext *ctx) { return ctx && ctx->error_active; }
 void rc_set_stack_limit(RcContext *ctx, const void *limit) { if (ctx) ctx->stack_limit = (uintptr_t)limit; }
 bool rc_stack_check(RcContext *ctx) {
-    volatile char probe = 0;
-    if (!ctx->stack_limit || (uintptr_t)&probe >= ctx->stack_limit) return true;
+    if(!ctx->stack_limit)return true;
+#if defined(__GNUC__) || defined(__clang__)
+    /* ASan may place local objects on its fake stack. Inspect the real frame. */
+    uintptr_t address=(uintptr_t)__builtin_frame_address(0);
+#else
+    volatile char probe=0;uintptr_t address=(uintptr_t)&probe;
+#endif
+    if(address>=ctx->stack_limit)return true;
     rc_error(ctx, "stack exhausted: recursion is too deep");
     return false;
 }
