@@ -91,4 +91,4 @@ jobs:
       - name: Native tier with every defun promoted (instrumented CLI and modules)
         run: |
           nix develop -c make -f Makefile.rc CC=clang RC_SANITIZE=1 RC_CPPFLAGS=-DSHEN_RC_VERIFY_OWNERSHIP=1 RC_BUILD=obj/tier-sanitize RC_BIN=bin/tier-sanitize RC_TOOL_BIN=bin/tier-sanitize bin/tier-sanitize/shen-rc
-          nix develop -c env ASAN_OPTIONS=abort_on_error=1 UBSAN_OPTIONS=halt_on_error=1 python3 scripts/test-native-tier.py bin/tier-sanitize/shen-rc --timeout 1200 --cflags '-O0 -g' --configs off,force-cold,force-warm
+          nix develop -c env ASAN_OPTIONS=abort_on_error=1 UBSAN_OPTIONS=halt_on_error=1 python3 scripts/test-native-tier.py bin/tier-sanitize/shen-rc --timeout 1200 --cflags '-O1 -g' --configs off,force-cold,force-warm
