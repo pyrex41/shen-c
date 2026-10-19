@@ -70,6 +70,9 @@ $(RC_BUILD)/release.h: FORCE_RELEASE $(RC_RELEASE_MANIFEST) scripts/release_mani
 
 all: $(RC_TOOL_BIN)/rc-build $(RC_TOOL_BIN)/shen-rc
 
+$(RC_BIN)/bench_execution: test/rc/bench_execution.c $(RC_BUILD)/kernel.o $(RC_BIN)/libshenrc.a | $(RC_BIN)
+	$(CC) $(RC_CPPFLAGS) $(RC_CFLAGS) $< $(RC_BUILD)/kernel.o $(RC_BIN)/libshenrc.a $(RC_LDFLAGS) $(RC_TIER_LDFLAGS) $(RC_LDLIBS) $(RC_TIER_LDLIBS) -o $@
+
 runtime: $(RC_BIN)/libshenrc.a
 
 $(sort $(RC_BUILD) $(RC_BIN) $(RC_TOOL_BIN)):
