@@ -380,7 +380,7 @@ static int runtime_literal(RcEmitFn *f,RcValue *x) {
 }
 static int atom(RcEmitFn *f,RcValue *x,int tail,const Live *after) {
  Program *p=f->p;
- if(p->options.expression_entry && rc_type(x)!=RC_NIL && rc_type(x)!=RC_NUMBER && rc_type(x)!=RC_STRING && rc_type(x)!=RC_SYMBOL)
+ if(p->options.expression_entry && rc_type(x)!=RC_NIL && rc_type(x)!=RC_SYMBOL)
   return runtime_literal(f,x);
  int t=fresh(f);
  if(rc_is_nil(x))put(&f->code,"  t[%d]=rc_nil();\n",t);
@@ -601,7 +601,7 @@ static int expr_inner(RcEmitFn *f,RcValue *x,int tail,const Live *after){
  if(optimize(f)&&tail&&!f->boolean_tail&&n==f->arity){
   f->self_loop=true;
   put(&f->code,"  if(t[%d]==self && rc_arity(self)==%d",fn,n);
-  if(tail==2)for(DoGuard *g=f->do_guard;g;g=g->outer)put(&f->code," && rc_transparent_do(t[%d])",g->slot);
+  if(tail==2)for(DoGuard *g=f->do_guard;g;g=g->outer)put(&f->code," && rc_transparent_do(ctx,t[%d])",g->slot);
   put(&f->code,") {\n");
   for(int i=0;i<n;i++)call_argument(f,i,av[i]);
   put(&f->code,"  goto recur;\n  }\n");
@@ -877,7 +877,7 @@ bool rc_emit_program(RcContext *ctx,FILE *out,RcValue *const *kernel,size_t nker
   }
   if(p->lazyderef_used&&p->pvar_identities.n)fprintf(out,"static bool rc_certified_pvar(RcValue *fn) { return false%s; }\n",p->pvar_identities.p);
   else if(p->lazyderef_used)fputs("static bool rc_certified_pvar(RcValue *fn) { (void)fn; return false; }\n",out);
-  if(p->transparent_do_used)fprintf(out,"static bool rc_transparent_do(RcValue *fn) {\n  return rc_arity(fn)==2 && (rc_primitive_is_do(fn)%s);\n}\n",p->transparent_do.p?p->transparent_do.p:"");
+  if(p->transparent_do_used)fprintf(out,"static bool rc_transparent_do(RcContext *ctx,RcValue *fn) {\n  return rc_arity(fn)==2 && (rc_closure_returns_second(ctx,fn) || rc_primitive_is_do(fn)%s);\n}\n",p->transparent_do.p?p->transparent_do.p:"");
   if(p->next_literal) metadata_helpers(out);
   if(p->literals.p) fputs(p->literals.p,out);
   if(p->functions.p) fputs(p->functions.p,out);

@@ -13,6 +13,7 @@
 #include <signal.h>
 #include <math.h>
 #include <sys/file.h>
+#include <sys/resource.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <spawn.h>
@@ -29,8 +30,8 @@ typedef struct Module { struct Module *next; char key[33]; char *source; size_t 
 typedef struct {
  RcContext *ctx; char *cc,*cflags,*cache,*include; char abi[33];
  bool cache_owned,stats; Module *modules;
- size_t definitions,evaluations,compiles,hits,memory_hits,emitted_bytes,failures;
- double emit_s,compile_s,load_s,timeout;
+ size_t lazy_closures,templates,definitions,evaluations,compiles,hits,memory_hits,emitted_bytes,failures;
+ double emit_s,compile_s,compile_user_s,compile_system_s,load_s,timeout;
  size_t cache_limit;
 } Tier;
 static double now(void) {
@@ -85,6 +86,11 @@ static size_t words(char *text,char **argv,size_t n,size_t cap) {
     }
     return n;
 }
+static void compiler_usage(Tier *t,const struct rusage *before){
+ struct rusage after;getrusage(RUSAGE_CHILDREN,&after);
+ t->compile_user_s+=(after.ru_utime.tv_sec-before->ru_utime.tv_sec)+(after.ru_utime.tv_usec-before->ru_utime.tv_usec)*1e-6;
+ t->compile_system_s+=(after.ru_stime.tv_sec-before->ru_stime.tv_sec)+(after.ru_stime.tv_usec-before->ru_stime.tv_usec)*1e-6;
+}
 /* Returns 0 on success, 127 when the compiler could not be executed. */
 static int run_compiler(Tier *t,const char *source,const char *object,const char *log) {
     char *flags=join(t->cflags," " RC_TIER_HOST_FLAGS); if(!flags)return 1;
@@ -108,6 +114,7 @@ static int run_compiler(Tier *t,const char *source,const char *object,const char
     posix_spawn_file_actions_addopen(&actions,0,"/dev/null",O_RDONLY,0);
     posix_spawn_file_actions_addopen(&actions,1,log,O_WRONLY|O_CREAT|O_TRUNC,0600);
     posix_spawn_file_actions_adddup2(&actions,1,2);
+    struct rusage usage;getrusage(RUSAGE_CHILDREN,&usage);
     pid_t pid; int status=0;
     posix_spawnattr_t attr;posix_spawnattr_init(&attr);
     posix_spawnattr_setflags(&attr,POSIX_SPAWN_SETPGROUP);posix_spawnattr_setpgroup(&attr,0);
@@ -120,9 +127,14 @@ static int run_compiler(Tier *t,const char *source,const char *object,const char
       pid_t got=waitpid(pid,&status,WNOHANG);
       if(got==pid)break;
       if(got<0&&errno!=EINTR)return 1;
-      if(now()>=deadline){kill(-pid,SIGKILL);kill(pid,SIGKILL);while(waitpid(pid,&status,0)<0&&errno==EINTR){}return 124;}
+      struct stat info;bool too_large=!stat(log,&info)&&info.st_size>8*1024*1024;
+      if(now()>=deadline||too_large){
+       kill(-pid,SIGKILL);kill(pid,SIGKILL);while(waitpid(pid,&status,0)<0&&errno==EINTR){}
+       compiler_usage(t,&usage);if(too_large)(void)truncate(log,8*1024*1024);return too_large?125:124;
+      }
       struct timespec pause={0,10000000};nanosleep(&pause,NULL);
     }
+    compiler_usage(t,&usage);
     if(!WIFEXITED(status))return 1;
     return WEXITSTATUS(status);
 }
@@ -149,7 +161,8 @@ static char *env_or(const char *name,const char *fallback) {
  * values: live literals belong to the normal closure graph and cycle collector. */
 void rc_native_compile_free(void *state) {
  Tier *t=state;if(!t)return;
- if(t->stats)fprintf(stderr,"RC_NATIVE definitions=%zu evaluations=%zu compiles=%zu disk_hits=%zu memory_hits=%zu emitted_bytes=%zu failures=%zu interpreter_entries=%zu emit_s=%.6f compile_s=%.6f load_s=%.6f\n",t->definitions,t->evaluations,t->compiles,t->hits,t->memory_hits,t->emitted_bytes,t->failures,rc_interpreter_entries(t->ctx),t->emit_s,t->compile_s,t->load_s);
+ RcStats runtime=rc_stats(t->ctx);
+ if(t->stats)fprintf(stderr,"RC_NATIVE lazy_closures=%zu templates=%zu definitions=%zu evaluations=%zu compiles=%zu disk_hits=%zu memory_hits=%zu emitted_bytes=%zu failures=%zu interpreter_entries=%zu emit_s=%.6f compile_s=%.6f compile_user_s=%.6f compile_system_s=%.6f load_s=%.6f retain_calls=%zu release_calls=%zu system_allocations=%zu pair_reuses=%zu collections=%zu cycle_objects_freed=%zu peak_objects=%zu live_bytes=%zu\n",t->lazy_closures,t->templates,t->definitions,t->evaluations,t->compiles,t->hits,t->memory_hits,t->emitted_bytes,t->failures,rc_interpreter_entries(t->ctx),t->emit_s,t->compile_s,t->compile_user_s,t->compile_system_s,t->load_s,runtime.retain_calls,runtime.release_calls,runtime.system_allocations,runtime.pair_reuses,runtime.collections,runtime.cycle_objects_freed,runtime.peak_objects,runtime.live_bytes);
  while(t->modules){Module *m=t->modules;t->modules=m->next;free(m->source);free(m);}
  if(t->cache_owned){
   if(t->include){for(size_t i=0;i<sizeof(rc_tier_headers)/sizeof(*rc_tier_headers);i++){char *f=path_of(t->include,rc_tier_headers[i].name,"");if(f)unlink(f);free(f);}rmdir(t->include);}
@@ -157,9 +170,14 @@ void rc_native_compile_free(void *state) {
  }
  free(t->cc);free(t->cflags);free(t->cache);free(t->include);free(t);
 }
+static Tier *state_for(RcContext *ctx){
+ Tier *t=*rc_native_compile_slot(ctx);if(t)return t;
+ t=calloc(1,sizeof(*t));if(!t){rc_error(ctx,"native compiler: out of memory");return NULL;}
+ t->ctx=ctx;const char *stats=getenv("SHEN_RC_NATIVE_STATS");t->stats=stats&&strcmp(stats,"0");
+ *rc_native_compile_slot(ctx)=t;return t;
+}
 static Tier *initialize(RcContext *ctx){
- Tier *t=calloc(1,sizeof(*t));if(!t){rc_error(ctx,"native compiler: out of memory");return NULL;}
- t->ctx=ctx;
+ Tier *t=state_for(ctx);if(!t)return NULL;
  const char *limit=getenv("SHEN_RC_NATIVE_CACHE_BYTES");t->cache_limit=limit?strtoull(limit,NULL,10):1024u*1024u*1024u;
  t->cc=env_or("SHEN_RC_NATIVE_CC",RC_TIER_DEFAULT_CC);t->cflags=env_or("SHEN_RC_NATIVE_CFLAGS","-O1");
  const char *timeout=getenv("SHEN_RC_COMPILE_TIMEOUT");t->timeout=timeout?strtod(timeout,NULL):120;
@@ -183,11 +201,16 @@ static Tier *initialize(RcContext *ctx){
   }free(paths);}
  }
  (void)stat(resolved,&st);
- char identity[8192];snprintf(identity,sizeof(identity),"compile-first-v1\n%s\n%llu/%llu/%lld/%lld\n%d\n%s\n%s\n%s",resolved,(unsigned long long)st.st_dev,(unsigned long long)st.st_ino,(long long)st.st_size,(long long)st.st_mtime,(int)SHEN_RC_IMMEDIATE_INTEGERS,t->cc,t->cflags,RC_TIER_HOST_FLAGS);
+ char identity[16384];snprintf(identity,sizeof(identity),"compile-first-v2\n%s\n%llu/%llu/%lld/%lld\n%d\n%s\n%s\n%s",resolved,(unsigned long long)st.st_dev,(unsigned long long)st.st_ino,(long long)st.st_size,(long long)st.st_mtime,(int)SHEN_RC_IMMEDIATE_INTEGERS,t->cc,t->cflags,RC_TIER_HOST_FLAGS);
+ const char *names[]={"SDKROOT","MACOSX_DEPLOYMENT_TARGET","CPATH","C_INCLUDE_PATH","LIBRARY_PATH","DEVELOPER_DIR"};
+ for(size_t i=0;i<sizeof(names)/sizeof(*names);i++){
+  const char *value=getenv(names[i]);size_t used=strlen(identity);
+  if(value)snprintf(identity+used,sizeof(identity)-used,"\n%s=%s",names[i],value);
+ }
  digest(identity,strlen(identity),RC_TIER_HEADER_DIGEST,strlen(RC_TIER_HEADER_DIGEST),t->abi);
  if(!prepare_include(t))goto failed;
  *rc_native_compile_slot(ctx)=t;return t;
-failed:rc_error(ctx,"native compiler: cannot initialize private cache/compiler configuration");rc_native_compile_free(t);return NULL;
+failed:rc_error(ctx,"native compiler: cannot initialize private cache/compiler configuration");*rc_native_compile_slot(ctx)=NULL;rc_native_compile_free(t);return NULL;
 }
 typedef struct {char key[33];time_t age;size_t bytes;} CacheEntry;
 static int oldest_first(const void *a,const void *b){const CacheEntry *x=a,*y=b;return (x->age>y->age)-(x->age<y->age);}
@@ -208,6 +231,21 @@ static void prune_cache(Tier *t){
  }
  free(items);
 }
+static size_t entry_bytes(Tier *t,const char *key){
+ size_t bytes=0;const char *suffix[]={".c",".so",".receipt",".log"};
+ for(size_t j=0;j<4;j++){char *p=path_of(t->cache,key,suffix[j]);struct stat st;if(p&&!lstat(p,&st)&&S_ISREG(st.st_mode))bytes+=(size_t)st.st_size;free(p);}return bytes;
+}
+/* A serialized accounting file avoids rescanning every cache artifact on
+ * every module load. Missing/invalid accounting reconstructs it by scanning. */
+static void account_cache(Tier *t,size_t old_bytes,size_t new_bytes){
+ char *path=path_of(t->cache,"cache",".size");if(!path)return;
+ FILE *f=fopen(path,"r");unsigned long long total=0;bool valid=f&&fscanf(f,"%llu",&total)==1;if(f)fclose(f);
+ if(!valid||total<old_bytes||total-old_bytes>SIZE_MAX-new_bytes||total-old_bytes+new_bytes>t->cache_limit){
+  prune_cache(t);DIR *dir=opendir(t->cache);total=0;
+  if(dir){struct dirent *e;while((e=readdir(dir)))if(strlen(e->d_name)==34&&!strcmp(e->d_name+32,".c")){char key[33]={0};memcpy(key,e->d_name,32);total+=entry_bytes(t,key);}closedir(dir);}
+ }else total=total-old_bytes+new_bytes;
+ char text[64];int n=snprintf(text,sizeof(text),"%llu\n",total);(void)write_file(path,text,(size_t)n);free(path);
+}
 static bool object_receipt(const char *object,const char *receipt,bool publish){
  FILE *f=fopen(object,"rb");if(!f)return false;
  char *data=NULL;size_t n=0,cap=0;char block[8192];size_t k;bool ok=true;
@@ -217,10 +255,10 @@ static bool object_receipt(const char *object,const char *receipt,bool publish){
 }
 static bool bind_entry(Module *m){*(void**)&m->entry=dlsym(m->handle,"rc_expression_module");return m->entry!=NULL;}
 static RcValue *compile_execute(RcContext *ctx,RcValue *expression,RcValue *parameters){
- Tier *t=*rc_native_compile_slot(ctx);if(!t)t=initialize(ctx);if(!t)return NULL;
+ Tier *t=*rc_native_compile_slot(ctx);if(!t||!t->include)t=initialize(ctx);if(!t)return NULL;
  t->evaluations++;
  RcValue *root=rc_retain(expression),**bindings=NULL,*literals=NULL,*result=NULL;size_t nb=0,length=0;
- char *text=NULL,*source=NULL,*object=NULL,*receipt=NULL,*lockfile=NULL,*log=NULL;int lock=-1;
+ char *text=NULL,*source=NULL,*object=NULL,*receipt=NULL,*lockfile=NULL,*log=NULL;int lock=-1;size_t previous_bytes=0;
  double begin=now();FILE *out=open_memstream(&text,&length);
  RcEmitOptions opts={.expression_entry="rc_expression_module",.function_parameters=parameters,.literal_bindings=&bindings,.literal_count=&nb};
  bool emitted=out&&rc_emit_program(ctx,out,&root,1,NULL,0,&opts,NULL);if(out&&fclose(out))emitted=false;
@@ -234,6 +272,7 @@ static RcValue *compile_execute(RcContext *ctx,RcValue *expression,RcValue *para
  source=path_of(t->cache,key,".c");object=path_of(t->cache,key,".so");receipt=path_of(t->cache,key,".receipt");lockfile=path_of(t->cache,"cache",".lock");log=path_of(t->cache,key,".log");
  if(!source||!object||!receipt||!lockfile||!log){rc_error(ctx,"native compiler: out of memory");goto done;}
  lock=open(lockfile,O_RDWR|O_CREAT,0600);if(lock<0||flock(lock,LOCK_EX)){rc_error(ctx,"native compiler: cannot lock cache entry");goto done;}
+ previous_bytes=entry_bytes(t,key);
  m=calloc(1,sizeof(*m));if(!m){rc_error(ctx,"native compiler: out of memory");goto done;}
  begin=now();
  if(same_file(source,text,length)&&object_receipt(object,receipt,false)){
@@ -251,28 +290,39 @@ static RcValue *compile_execute(RcContext *ctx,RcValue *expression,RcValue *para
   unlink(log);
  }
  t->load_s+=now()-begin;memcpy(m->key,key,sizeof(key));m->source=text;text=NULL;m->length=length;m->next=t->modules;t->modules=m;
- prune_cache(t);
+ account_cache(t,previous_bytes,entry_bytes(t,key));
  flock(lock,LOCK_UN);close(lock);lock=-1;
  result=m->entry(ctx,literals);
 done:
- if(lock>=0){flock(lock,LOCK_UN);close(lock);}
+ if(lock>=0){account_cache(t,previous_bytes,entry_bytes(t,key));flock(lock,LOCK_UN);close(lock);}
  if(!result)t->failures++;
  free(bindings);free(text);free(source);free(object);free(receipt);free(lockfile);free(log);rc_release(literals);rc_release(root);return result;
 }
 
 static bool symbol_named(RcValue *x,const char *name){return rc_type(x)==RC_SYMBOL&&!strcmp(rc_text(x),name);}
 static RcValue *lazy_call(RcContext *ctx,RcValue *self,size_t argc,RcValue *const *argv){
- RcValue *cell=rc_capture(self,2),*fn=rc_vector_slot_borrowed(cell,0);
+ RcValue *cell=rc_capture(self,0),*fn=rc_vector_slot_borrowed(cell,0);
  if(rc_is_nil(fn)){
-  fn=compile_execute(ctx,rc_capture(self,1),rc_capture(self,0));if(!fn)return NULL;
+  fn=compile_execute(ctx,rc_vector_slot_borrowed(cell,2),rc_vector_slot_borrowed(cell,1));if(!fn)return NULL;
   bool ok=rc_vector_set(ctx,cell,0,fn);rc_release(fn);if(!ok)return NULL;
   fn=rc_vector_slot_borrowed(cell,0);
+  if(!rc_vector_set(ctx,cell,1,rc_nil())||!rc_vector_set(ctx,cell,2,rc_nil()))return NULL;
  }
- RcValue *name=rc_capture(self,3);
+ RcValue *name=rc_capture(self,1);
  /* Only replace our own binding. Historical closures remain callable after
   * redefinition and must never overwrite the replacement. */
- if(rc_function_slot_borrowed(ctx,name)==self&&!rc_function_set(ctx,name,fn))return NULL;
+ if(rc_type(name)==RC_SYMBOL&&rc_function_slot_borrowed(ctx,name)==self&&!rc_function_set(ctx,name,fn))return NULL;
  return rc_tailcall(ctx,fn,argc,argv);
+}
+static RcValue *make_lazy(RcContext *ctx,size_t arity,RcValue *parameters,RcValue *body,RcValue *name){
+ RcValue *cell=rc_vector(ctx,3);if(!cell)return NULL;
+ bool ok=rc_vector_set(ctx,cell,1,parameters)&&rc_vector_set(ctx,cell,2,body);
+ RcValue *captures[]={cell,name};RcValue *fn=ok?rc_closure(ctx,arity,lazy_call,2,captures):NULL;
+ rc_release(cell);return fn;
+}
+static RcValue *identity_second(RcContext *ctx,RcValue *self,size_t argc,RcValue **argv){
+ (void)ctx;(void)self;(void)argc;rc_release(argv[0]);argv[0]=NULL;
+ RcValue *result=argv[1];argv[1]=NULL;return result;
 }
 static RcValue *define_lazy(RcContext *ctx,RcValue *args){
  RcValue *values[3],*q=args;for(size_t i=0;i<3;i++){if(rc_type(q)!=RC_PAIR)return rc_error(ctx,"defun: expected name, parameters and body");values[i]=rc_head_borrowed(q);q=rc_tail_borrowed(q);}
@@ -283,18 +333,83 @@ static RcValue *define_lazy(RcContext *ctx,RcValue *args){
   for(RcValue *r=values[1];r!=q;r=rc_tail_borrowed(r))if(rc_head_borrowed(r)==rc_head_borrowed(q))return rc_error(ctx,"defun: duplicate parameter");
   arity++;
  }
- Tier *t=*rc_native_compile_slot(ctx);if(!t)t=initialize(ctx);if(!t)return NULL;t->definitions++;
- RcValue *cell=rc_vector(ctx,1);if(!cell)return NULL;
- RcValue *captures[]={values[1],values[2],cell,values[0]};
- RcValue *fn=rc_closure(ctx,arity,lazy_call,4,captures);rc_release(cell);if(!fn)return NULL;
+ Tier *t=state_for(ctx);if(!t)return NULL;t->definitions++;
+ if(arity==2&&values[2]==rc_head_borrowed(rc_tail_borrowed(values[1]))){
+  RcValue *fn=rc_closure_return_second_owned(ctx,identity_second,0,NULL);if(!fn)return NULL;
+  bool ok=rc_function_set(ctx,values[0],fn);rc_release(fn);return ok?rc_retain(values[0]):NULL;
+ }
+ RcValue *fn=make_lazy(ctx,arity,values[1],values[2],values[0]);if(!fn)return NULL;
  bool ok=rc_function_set(ctx,values[0],fn);rc_release(fn);return ok?rc_retain(values[0]):NULL;
+}
+/* A compiled template for exact curried eta expansions. There is no syntax
+ * traversal at execution: captures are a target symbol and bound argument
+ * values. Lookup occurs on the final application, preserving redefinition. */
+#define ETA_LIMIT 16
+static RcValue *eta_call(RcContext *ctx,RcValue *self,size_t argc,RcValue **argv){
+ (void)argc;RcValue *bound=rc_capture(self,1);size_t n=rc_vector_length(bound);
+ size_t arity=(size_t)rc_integer_value(rc_capture(self,2));
+ if(argc!=1||!arity||arity>ETA_LIMIT||n>=arity)return rc_error(ctx,"invalid native eta closure");
+ if(n+1<arity){
+  RcValue *next=rc_vector(ctx,n+1);if(!next)return NULL;
+  bool ok=true;for(size_t i=0;i<n;i++)if(!rc_vector_set(ctx,next,i,rc_vector_slot_borrowed(bound,i)))ok=false;
+  if(!rc_vector_set(ctx,next,n,argv[0]))ok=false;
+  RcValue *caps[]={rc_capture(self,0),next,rc_capture(self,2)};
+  RcValue *fn=ok?rc_closure_owned(ctx,1,eta_call,3,caps):NULL;rc_release(next);
+  if(fn){rc_release(argv[0]);argv[0]=NULL;}return fn;
+ }
+ RcValue *fn=rc_function_get(ctx,rc_capture(self,0));if(!fn)return NULL;
+ RcValue *args[ETA_LIMIT];for(size_t i=0;i<n;i++)args[i]=rc_retain(rc_vector_slot_borrowed(bound,i));
+ args[n]=argv[0];argv[0]=NULL;
+ RcValue *result=rc_tailcall_owned_args(ctx,fn,n+1,args);rc_release(fn);return result;
+}
+static bool list_width(RcValue *x,size_t width){
+ for(size_t i=0;i<width;i++){if(rc_type(x)!=RC_PAIR)return false;x=rc_tail_borrowed(x);}return rc_is_nil(x);
+}
+static RcValue *eta_template(RcContext *ctx,RcValue *expression,bool *matched){
+ RcValue *parameters[ETA_LIMIT],*body=expression;size_t n=0;*matched=false;
+ while(rc_type(body)==RC_PAIR&&symbol_named(rc_head_borrowed(body),"lambda")){
+  if(n==ETA_LIMIT||!list_width(body,3))return NULL;
+  RcValue *args=rc_tail_borrowed(body),*param=rc_head_borrowed(args);
+  if(rc_type(param)!=RC_SYMBOL)return NULL;
+  for(size_t i=0;i<n;i++)if(parameters[i]==param)return NULL;
+  parameters[n++]=param;body=rc_head_borrowed(rc_tail_borrowed(args));
+ }
+ if(!n||!list_width(body,n+1))return NULL;
+ RcValue *target=rc_head_borrowed(body);if(rc_type(target)!=RC_SYMBOL)return NULL;
+ for(size_t i=0;i<n;i++)if(parameters[i]==target)return NULL;
+ const char *special[]={"if","cond","let","lambda","freeze","defun","trap-error","type","quote","c-quote","and","or"};
+ for(size_t i=0;i<sizeof(special)/sizeof(*special);i++)if(symbol_named(target,special[i]))return NULL;
+ RcValue *args=rc_tail_borrowed(body);for(size_t i=0;i<n;i++,args=rc_tail_borrowed(args))if(rc_head_borrowed(args)!=parameters[i])return NULL;
+ *matched=true;Tier *t=state_for(ctx);if(!t)return NULL;t->templates++;t->evaluations++;
+ RcValue *bound=rc_vector(ctx,0),*arity=rc_integer(ctx,(int64_t)n);
+ RcValue *caps[]={target,bound,arity};RcValue *fn=bound&&arity?rc_closure_owned(ctx,1,eta_call,3,caps):NULL;
+ rc_release(bound);rc_release(arity);return fn;
 }
 RcValue *rc_native_eval(RcContext *ctx,RcValue *expression){
  /* Native definition instruction: install a compiler thunk. Its body is
   * compiled before its first call, and is never evaluated by the interpreter.
   * Eager mode is retained only as a measurement/differential control. */
+ const char *templates=getenv("SHEN_RC_NATIVE_TEMPLATES");
+ if(!templates||strcmp(templates,"0")){
+  bool matched=false;RcValue *fn=eta_template(ctx,expression,&matched);if(matched)return fn;
+ }
  const char *eager=getenv("SHEN_RC_NATIVE_EAGER");
  if((!eager||!strcmp(eager,"0"))&&rc_type(expression)==RC_PAIR&&symbol_named(rc_head_borrowed(expression),"defun"))
   return define_lazy(ctx,rc_tail_borrowed(expression));
+ if(rc_type(expression)==RC_PAIR){
+  RcValue *head=rc_head_borrowed(expression),*args=rc_tail_borrowed(expression);
+  bool lambda=symbol_named(head,"lambda"),freeze=symbol_named(head,"freeze");
+  if((!eager||!strcmp(eager,"0"))&&((lambda&&list_width(args,2)&&rc_type(rc_head_borrowed(args))==RC_SYMBOL)||(freeze&&list_width(args,1)))){
+   Tier *t=state_for(ctx);if(!t)return NULL;t->lazy_closures++;t->evaluations++;
+   RcValue *parameters=lambda?rc_cons(ctx,rc_head_borrowed(args),rc_nil()):rc_nil();if(!parameters)return NULL;
+   RcValue *body=lambda?rc_head_borrowed(rc_tail_borrowed(args)):rc_head_borrowed(args);
+   RcValue *fn=make_lazy(ctx,lambda?1:0,parameters,body,rc_nil());rc_release(parameters);return fn;
+  }
+  if((symbol_named(head,"quote")||symbol_named(head,"c-quote"))&&list_width(args,1)){
+   Tier *t=state_for(ctx);if(!t)return NULL;t->templates++;t->evaluations++;return rc_retain(rc_head_borrowed(args));
+  }
+ }else{
+  Tier *t=state_for(ctx);if(!t)return NULL;t->templates++;t->evaluations++;return rc_retain(expression);
+ }
  return compile_execute(ctx,expression,NULL);
 }

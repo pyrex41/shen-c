@@ -44,6 +44,16 @@ int main(int argc,char **argv){
   if(value){rc_print(stdout,value);putchar('\n');rc_release(value);}else fprintf(stderr,"%s\n",rc_error_message(c));
   int status=value?0:1;assert(rc_interpreter_entries(c)==0);rc_context_free(c);return status;
  }
+ /* Root lambda compilation is deferred until call; final name lookup must
+  * observe a redefinition made after partial application. */
+ discard(c,"(defun eta-target (A B) A)");
+ RcValue *eta=run(c,"(lambda A (lambda B (eta-target A B)))"),*twenty=rc_integer(c,20),*twotwo=rc_integer(c,22);
+ RcValue *partial=rc_apply(c,eta,1,&twenty);assert(partial);
+ discard(c,"(defun eta-target (A B) (+ A B))");
+ RcValue *answer=rc_apply(c,partial,1,&twotwo);assert(answer&&rc_integer_value(answer)==42);rc_release(answer);
+ rc_release(partial);rc_release(eta);rc_release(twenty);rc_release(twotwo);
+ RcValue *frozen=run(c,"(freeze (+ 40 2))");answer=rc_apply(c,frozen,0,NULL);assert(answer&&rc_integer_value(answer)==42);rc_release(answer);rc_release(frozen);
+ answer=run(c,"(((lambda A (lambda B (and A B))) false) 7)");assert(rc_is_boolean(answer)&&!rc_is_true(answer));rc_release(answer);
  number(c,"(+ 20 22)",42);number(c,"(+ 20 22)",42);
  discard(c,"(defun count-down (N A) (if (= N 0) A (count-down (- N 1) (+ A 1))))");
  number(c,"(count-down 100000 0)",100000);
@@ -52,7 +62,8 @@ int main(int argc,char **argv){
  discard(c,"(defun take-first (X Y) X)");
  number(c,"(take-first 7 (defun take-first (X Y) 99))",7);number(c,"(take-first 7 8)",99);
  number(c,"(trap-error (hd 4) (lambda E 42))",42);
- RcValue *q=run(c,"(quote (a b))");assert(rc_type(q)==RC_PAIR);rc_release(q);
+ const char *quoted="(quote (a b))";RcValue *form=rc_read(c,&quoted);assert(form);
+ RcValue *q=rc_eval(c,form);assert(q==rc_head_borrowed(rc_tail_borrowed(form)));rc_release(q);rc_release(form);
  literals(c,1);literals(c,2);assert(rc_interpreter_entries(c)==0);rc_context_free(c);
  /* The same cached machine code binds a different context's literal roots. */
  c=rc_context_new();assert(c&&rc_install_primitives(c)&&rc_install_eval(c));literals(c,3);assert(rc_interpreter_entries(c)==0);rc_context_free(c);

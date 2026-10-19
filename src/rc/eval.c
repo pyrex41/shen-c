@@ -304,6 +304,7 @@ RcValue *rc_eval(RcContext *ctx, RcValue *expression) {
     /* All environment binders and expression symbols then share one intern table,
      * so lexical lookup can compare symbol identity without structural equality. */
     if(!rc_call_values_belong(ctx,expression,0,NULL))return rc_error(ctx,"eval-kl: invalid expression/context");
+    if(getenv("SHEN_RC_NATIVE_TRACE")){fputs("RC_NATIVE_FORM ",stderr);rc_print(stderr,expression);fputc('\n',stderr);}
     int backend=rc_execution_mode(ctx);
     if(backend==0)return rc_native_eval(ctx,expression);
     if(backend!=1)return rc_error(ctx,"unknown SHEN_RC_EXECUTION backend");

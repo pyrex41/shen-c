@@ -70,12 +70,12 @@ with tempfile.TemporaryDirectory(prefix='shen-rc-identity-tail.') as tmp:
   dest=work/('borrowed' if conservative else 'owned')
   cmd=[os.environ['RC_IDENTITY_BUILDER']]+(['--conservative-ownership'] if conservative else [])+[str(inp),str(dest)]
   built=subprocess.run(cmd,env={**os.environ,'SHEN_C_HOME':str(root)},capture_output=True,text=True)
-  assert built.returncode==0,(conservative,built.stdout,built.stderr)
+  assert built.returncode==0,(conservative,built.returncode,built.stdout,built.stderr)
   emitted=(dest/'app.c').read_text()
   constructor='rc_closure_return_second' if conservative else 'rc_closure_return_second_owned'
   assert emitted.count('='+constructor+'(')==2,(constructor,emitted.count('='+constructor+'('))
   actual=subprocess.run([str(dest/'app')],env={**os.environ,'SHEN_RC_PRINT':'1'},capture_output=True,text=True)
-  assert actual.returncode==0,(conservative,actual.stdout,actual.stderr)
+  assert actual.returncode==0,(conservative,actual.returncode,actual.stdout,actual.stderr)
   assert actual.stdout==expected,(conservative,actual.stdout,actual.stderr)
 print('RC compiled/interpreted identity forwarding: 14 cases x owned/borrowed PASS')
 PYCODE
