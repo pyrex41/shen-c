@@ -59,10 +59,19 @@ source='''
 (if (< 1 2) 42 0)
 (defun cons? (X) (and true 7))
 (trap-error (if (cons? 1) 0 0) (lambda E (error-to-string E)))
+(defun cons? (X) false)
+(cpair (cons 1 ()))
+(cequal (cons 1 ()) (cons 1 ()))
+(trap-error (cstring "x") (lambda E (error-to-string E)))
+(trap-error (cnumber 1) (lambda E (error-to-string E)))
+(clt 1 2)
+(defun cons? (X) (do (defun cons? (Y) false) (do (shen.gc) true)))
+(cpair (cons 1 ()))
 '''
 expected=['42','0','42','0','42','0','42','0','42','42','42','42','42','42','42','42','42','42','42',
  '"boolean expected"','"condition is not a boolean"','"boolean expected"','"condition is not a boolean"','"boolean expected"',
- '"Arithmetic requires numbers"','42','42','42','42','"condition is not a boolean"','"boolean expected"','"condition is not a boolean"','"condition is not a boolean"','42','"boolean expected"']
+ '"Arithmetic requires numbers"','42','42','42','42','"condition is not a boolean"','"boolean expected"','"condition is not a boolean"','"condition is not a boolean"','42','"boolean expected"',
+ '0','0','"condition is not a boolean"','"condition is not a boolean"','42','42']
 with tempfile.TemporaryDirectory(prefix='rc-condition-emit.') as temp:
     work=Path(temp);inputs=work/'input';inputs.mkdir();(inputs/'kernel.kl').write_text('');(inputs/'user.kl').write_text(source)
     env=dict(os.environ,SHEN_C_HOME=str(root))
@@ -72,9 +81,9 @@ with tempfile.TemporaryDirectory(prefix='rc-condition-emit.') as temp:
         assert built.returncode==0,(mode,built.stdout,built.stderr)
         code=(dest/'app.c').read_text()
         for api in ('consp','numberp','stringp','eq','gt','lt','ge','le'):
-            assert ('rc_condition_'+api+'_owned(' in code)==(mode=='optimized'),(mode,api)
+            assert ('rc_condition_'+api+'_borrowed(' in code)==(mode=='optimized'),(mode,api)
         ran=subprocess.run([str(dest/'app')],env=dict(env,SHEN_RC_PRINT='1'),capture_output=True,text=True,timeout=30)
         assert ran.returncode==0,(mode,ran.stdout,ran.stderr)
         assert ran.stdout.splitlines()==expected,(mode,ran.stdout.splitlines(),expected,ran.stderr)
-print('native conditions: 8 predicates, 35 differential results, snapshots, shadowing, exact errors and call fallbacks PASS')
+print('native conditions: 8 predicates, 41 differential results, borrowed operands, snapshots, shadowing, errors and call fallbacks PASS')
 PY

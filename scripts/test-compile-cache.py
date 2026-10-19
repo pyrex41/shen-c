@@ -24,6 +24,23 @@ def main():
         subprocess.run([sys.executable,str(packer),'--cache',str(cache)],env=base,check=True,timeout=60,capture_output=True)
         s,_=run(expression='(+ 20 22)',expected='42\n')
         assert s['compiles']=='0' and s['disk_hits']=='0' and s['bundle_hits']=='1',s
+        usage=root/'used-keys.txt'
+        subprocess.run([sys.executable,str(packer),'--cache',str(cache),'--record-usage',str(usage)],env=base,check=True,timeout=60,capture_output=True)
+        s,_=run();assert s['bundle_hits']=='1' and len(usage.read_text().splitlines())==1,s
+        subprocess.run([sys.executable,str(packer),'--cache',str(cache),'--only-used',str(usage)],env=base,check=True,timeout=60,capture_output=True)
+        s,_=run();assert s['bundle_hits']=='1' and s['compiles']=='0',s
+        writers=[subprocess.Popen([sys.executable,str(packer),'--cache',str(cache),'--only-used',str(usage)],env=base,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True) for _ in range(2)]
+        for writer in writers:
+            out,err=writer.communicate(timeout=60);assert writer.returncode==0,(out,err)
+        s,_=run();assert s['bundle_hits']=='1' and s['compiles']=='0',s
+        # Rebuilding another image from canonical source requires neither the
+        # original machine code nor individual cached source files.
+        for path in cache.glob('*.c'):
+            if re.fullmatch('[0-9a-f]{32}',path.stem):path.unlink()
+        manifest=next(cache.glob('bundle-*.json'))
+        subprocess.run([sys.executable,str(packer),'--cache',str(cache),'--source-bundle',str(manifest)],env=base,check=True,timeout=60,capture_output=True)
+        s,_=run();assert s['bundle_hits']=='1' and s['compiles']=='0',s
+        s,_=run({'SHEN_RC_NATIVE_BUNDLE':'off'});assert s['compiles']=='1' and s['bundle_hits']=='0',s
         s,_=run({'SHEN_RC_NATIVE_BUNDLE':'off'});assert s['disk_hits']=='1' and s['bundle_hits']=='0',s
         s,_=run(expression='(if true 41 42)',expected='41\n');assert s['compiles']=='1' and s['bundle_hits']=='0',s
         packed=next(cache.glob('bundle-*.so'));receipt=packed.with_suffix('.receipt')

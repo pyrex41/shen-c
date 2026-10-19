@@ -68,6 +68,17 @@ int rc_condition_gt_owned(RcContext *,RcValue *,RcValue **);
 int rc_condition_lt_owned(RcContext *,RcValue *,RcValue **);
 int rc_condition_ge_owned(RcContext *,RcValue *,RcValue **);
 int rc_condition_le_owned(RcContext *,RcValue *,RcValue **);
+/* Private compiler predicate borrows. The caller roots each operand through
+ * completion; arrays and values are untouched. Redefinitions use public
+ * checked borrowed apply, including its snapshots and error handling. */
+int rc_condition_consp_borrowed(RcContext *,RcValue *,RcValue *const *);
+int rc_condition_numberp_borrowed(RcContext *,RcValue *,RcValue *const *);
+int rc_condition_stringp_borrowed(RcContext *,RcValue *,RcValue *const *);
+int rc_condition_eq_borrowed(RcContext *,RcValue *,RcValue *const *);
+int rc_condition_gt_borrowed(RcContext *,RcValue *,RcValue *const *);
+int rc_condition_lt_borrowed(RcContext *,RcValue *,RcValue *const *);
+int rc_condition_ge_borrowed(RcContext *,RcValue *,RcValue *const *);
+int rc_condition_le_borrowed(RcContext *,RcValue *,RcValue *const *);
 /* Internal emitted intrinsic for the complete pinned assoc AST only. deps are
  * interned symbols assoc, =, cons?, hd, tl; args/deps/handled must be non-NULL.
  * On deoptimization, args and errors

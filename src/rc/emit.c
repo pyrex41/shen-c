@@ -481,10 +481,21 @@ static int condition_checked(RcEmitFn *f,RcValue *x,const Live *after,bool rhs_b
    bool borrow=true;
    for(RcValue *q=args;!rc_is_nil(q);q=rest(q))if(is_pair(first(q)))borrow=false;
    Live live=sequence_live(f,args,after);int fn=function_head(f,head,&live,borrow);clear_live(p,&live);
-   int av[2];RcValue *q=args;
-   for(int i=0;i<n;i++,q=rest(q)){Live next=sequence_live(f,rest(q),after);av[i]=expr(f,first(q),0,&next);clear_live(p,&next);}
-   for(int i=0;i<n;i++)call_argument(f,i,av[i]);
-   put(&f->code,"  test_%d=rc_condition_%s_owned(ctx,t[%d],a);\n",id,api,fn);drop(f,fn);
+   /* Bound atoms are already strong roots in this activation. Lookup invokes
+    * no callback, and keeping the bindings live through the predicate avoids
+    * creating and consuming temporary owners. Generic replacements still use
+    * checked borrowed apply; effectful/uncertain operands keep the owned path. */
+   bool rooted=true;
+   for(RcValue *q=args;!rc_is_nil(q);q=rest(q))
+    if(!is_symbol(first(q))||binding(f,name(first(q)))<0)rooted=false;
+   if(rooted){
+    int i=0;for(RcValue *q=args;!rc_is_nil(q);q=rest(q))argument(f,i++,binding(f,name(first(q))));
+   }else{
+    int av[2];RcValue *q=args;
+    for(int i=0;i<n;i++,q=rest(q)){Live next=sequence_live(f,rest(q),after);av[i]=expr(f,first(q),0,&next);clear_live(p,&next);}
+    for(int i=0;i<n;i++)call_argument(f,i,av[i]);
+   }
+   put(&f->code,"  test_%d=rc_condition_%s_%s(ctx,t[%d],a);\n",id,api,rooted?"borrowed":"owned",fn);drop(f,fn);
    put(&f->code,"  if(test_%d==-2) { rc_error(ctx,\"%s\"); goto %s; }\n  if(test_%d<0) goto %s;\n",id,rhs_boolean?"boolean expected":"condition is not a boolean",f->fail,id,f->fail);drop_dead(f,after);
   }else{
    int value=expr(f,x,0,after);
