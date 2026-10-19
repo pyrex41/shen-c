@@ -114,6 +114,8 @@ struct RcContext {
     size_t collection_interval, since_collection, graph_slots, visit_epoch, cycle_sources;
     char *error;
     bool collecting, error_active, adaptive_collection, acyclic;
+    /* Optional evaluator observer; NULL unless a host attaches a tier. */
+    const RcTierHooks *tier_hooks; void *tier_state;
 };
 static RcValue nil_value = {.type = RC_NIL, .refs = SIZE_MAX};
 
@@ -521,6 +523,13 @@ RcValue *rc_function_slot_borrowed(RcContext *ctx,RcValue *symbol) {
 }
 RcValue *rc_vector_slot_borrowed(RcValue *vector,size_t index) {
     return rc_type(vector)==RC_VECTOR&&index<vector->as.vector.length ? vector->as.vector.items[index] : NULL;
+}
+void rc_tier_attach(RcContext *ctx,const RcTierHooks *hooks,void *state) {
+    ctx->tier_hooks=hooks; ctx->tier_state=hooks ? state : NULL;
+}
+const RcTierHooks *rc_tier_hooks(const RcContext *ctx,void **state) {
+    if(!ctx->tier_hooks)return NULL;
+    *state=ctx->tier_state; return ctx->tier_hooks;
 }
 bool rc_eval_plan_environment(const RcValue *environment) {
     return rc_is_nil(environment) || (rc_type(environment)==RC_ENV && !(environment->as.env.key_classes&2));
