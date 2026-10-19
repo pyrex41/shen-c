@@ -44,6 +44,7 @@ def main():
     ap.add_argument('--rounds', type=int, default=5)
     ap.add_argument('--out', type=Path)
     args = ap.parse_args()
+    args.base, args.candidate = str(Path(args.base).resolve()), str(Path(args.candidate).resolve())
     release = load_release(ROOT / 'shen/releases/s43.1.json')
     tmp = Path(tempfile.mkdtemp(prefix='native-tier-measure-'))
     on = {'SHEN_RC_NATIVE': '1', 'SHEN_RC_NATIVE_CACHE': str(tmp / 'cache-on')}
