@@ -58,7 +58,12 @@ def normalize(text):
 PROGRAMS = {
     'redefine-after-promotion': ['(define f X -> (+ X 1))', '(f (f 3))', '(f 10)',
                                  '(define f X -> (* X 100))', '(f 2)'],
-    'redefine-while-pending': ['(define g X -> [g X])', '(g 1)', '(define g X -> [new X])', '(g 2)', '(g 3)'],
+    # Registered but cold (threshold 2) when redefined: the old entry retires.
+    'redefine-while-cold': (['(define g X -> [g X])', '(g 1)', '(define g X -> [new X])', '(g 2)', '(g 3)', '(g 4)'],
+                            {'SHEN_RC_NATIVE_THRESHOLD': '2'}, lambda s: s.get('redefined', 0) >= 1),
+    # Pending (called) and redefined within one eval-kl form, before any safepoint.
+    'redefine-while-pending': (['(define h X -> [h X])', '(do (h 1) (define h X -> [new X]))', '(h 2)', '(h 3)'],
+                               {}, lambda s: s.get('redefined', 0) >= 1),
     'tail-loop': ['(define loop N Acc -> (if (= N 0) Acc (loop (- N 1) (+ Acc 1))))',
                   '(loop 10 0)', '(loop 1000000 0)'],
     'partial-and-closures': ['(define add X Y -> (+ X Y))', '(add 1 2)', '(map (add 1) [1 2 3])',
@@ -174,14 +179,16 @@ def main():
     if not args.no_programs:
         cache = base / 'cache-programs'
         mask = lambda t: re.sub(r'\{0x[0-9a-f]+\}', '{ADDR}', normalize(t))  # function addresses
-        for name, exprs in PROGRAMS.items():
-            forced = dict(force, SHEN_RC_NATIVE_CACHE=str(cache), SHEN_RC_NATIVE_STATS='1')
+        for name, program in PROGRAMS.items():
+            exprs, extra, expect = program if isinstance(program, tuple) else (program, {}, lambda s: True)
+            forced = dict(force, SHEN_RC_NATIVE_CACHE=str(cache), SHEN_RC_NATIVE_STATS='1', **extra)
             code0, plain = run_program(binary, exprs, {})
             code1, cold = run_program(binary, exprs, forced)
             code2, warm = run_program(binary, exprs, forced)
             s1, s2 = stats_of(cold), stats_of(warm)
             good = (code0 == code1 == code2 == 0 and mask(plain) == mask(cold) == mask(warm)
-                    and s1.get('promoted', 0) > 0 and s1.get('failed') == 0 and s2.get('compiles') == 0)
+                    and s1.get('promoted', 0) > 0 and s1.get('failed') == 0 and s2.get('compiles') == 0
+                    and expect(s1) and expect(s2))
             records['program-' + name] = {'pass': good, 'cold': s1, 'warm': s2, 'output': mask(plain)}
             ok &= good
             print(f"program {name}: {'PASS' if good else 'FAIL'} promoted={s1.get('promoted')} "

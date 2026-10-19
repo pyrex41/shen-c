@@ -136,10 +136,15 @@ also overflowed the stack (see below).
   - a missing absolute compiler path, and `cc` with an empty `PATH` (both
     disable the tier).
 
-  Six focused programs give identical output with the tier off and forced,
-  cold and warm: redefinition after promotion, redefinition while pending, a
-  1,000,000-iteration tail loop, partial application and closures, errors
-  under `trap-error`, and mutual recursion.
+  Seven focused programs give identical output with the tier off and forced,
+  cold and warm: redefinition after promotion; redefinition of a registered
+  cold defun and of a pending defun within one form (each asserts that the
+  old registration retires, `redefined >= 1`, and that the new definition
+  wins); a 1,000,000-iteration tail loop; partial application and closures;
+  errors under `trap-error`; and mutual recursion. The define callback's
+  identity-guard miss requires a binding change that bypasses interpreted
+  `defun` between snapshot and publication, which Shen code cannot cause, so
+  that path is UNKNOWN (not exercised).
 - With ASan, UBSan and `SHEN_RC_VERIFY_OWNERSHIP=1` in both the CLI and the
   modules (`RC_SANITIZE=1`, modules at `-O1 -g`), the forced cold and warm
   suites both pass 136/0 with identical output. With modules at `-O0 -g`,
@@ -162,6 +167,9 @@ also overflowed the stack (see below).
 - Evict stale cache entries; the cache is currently never pruned.
 - Decide whether to turn the tier on by default. With the costs above, it
   should stay off unless a warm cache is expected.
+- Measure tier-off overhead in `rc-build` applications, which compile the
+  `tier_call` check without LTO. Unmeasured; the CLI's tier-off ratio is
+  0.997.
 - Requalify timing on a quiet host, on Linux, and through the existing
   phase-profile protocol. `build-phase-profile.py` instruments
   `rc-build` application C, not the CLI, so it was not used here.
