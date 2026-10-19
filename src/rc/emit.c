@@ -130,9 +130,12 @@ static void frame_code(Buf *out,const RcEmitFn *f) {
  Buf rewritten={.owner=f->p};rewrite_frame_code(&rewritten,f);
  unsigned char *nulls=alloc(f->p,(size_t)(f->frame_slots?f->frame_slots:1));
  memset(nulls,1,(size_t)f->frame_slots);
- const char *line=rewritten.p?rewritten.p:"";
+ char empty[1]="",*line=rewritten.p?rewritten.p:empty;
  while(*line) {
-  const char *end=strchr(line,'\n');size_t len=end?(size_t)(end-line)+1:strlen(line);
+  char *end=strchr(line,'\n');size_t len=end?(size_t)(end-line)+1:strlen(line);
+  /* Terminate the line while matching: sscanf may measure its whole input,
+   * which made matching quadratic in function size. */
+  if(end)*end=0;
   int a=-1,b=-1,c=-1,n=0;char label[64];bool omit=false,recognized=false;
   if((n=0,sscanf(line,"  if(t[%d]) rc_release(t[%d]); t[%d]=NULL;%n",&a,&b,&c,&n))==3&&
      a==b&&b==c&&a>=0&&a<f->frame_slots&&n==(int)(len-(end?1:0))) {
@@ -171,6 +174,7 @@ static void frame_code(Buf *out,const RcEmitFn *f) {
    }
    if(safe&&semicolons==1&&!quote){nulls[a]=0;recognized=true;}
   }
+  if(end)*end='\n';
   if(!recognized)memset(nulls,0,(size_t)f->frame_slots);
   if(!omit)put(out,"%.*s",(int)len,line);
   line+=len;
