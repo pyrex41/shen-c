@@ -41,7 +41,16 @@ jobs:
         if: runner.os == 'macOS'
         run: echo 'MACOSX_DEPLOYMENT_TARGET=15.0' >> "$GITHUB_ENV"
       - name: Build native toolchain and run unit tests
-        run: make -j2 all test
+        shell: bash
+        run: |
+          mkdir -p dist
+          # Generated C produces many GCC indentation warnings. Preserve the
+          # diagnostics without flooding the runner's live annotation stream.
+          if ! make -j2 all test > dist/build.log 2>&1; then
+            tail -n 100 dist/build.log
+            exit 1
+          fi
+          tail -n 30 dist/build.log
       - name: Package relocatable binaries and source compiler
         run: python3 scripts/package-release.py
       - name: Test extracted toolchain, source compiler and full suite
@@ -59,6 +68,7 @@ jobs:
           path: |
             dist/*.tar.gz
             dist/*.sha256
+            dist/build.log
             dist/qualification/result.json
             dist/qualification/*/run.log
             dist/qualification/*/run.time
