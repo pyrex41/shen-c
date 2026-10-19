@@ -5,14 +5,36 @@ A [Shen](https://shenlanguage.org/) implementation in C17, based on
 kernel. Shen provides pattern matching, macros, optional types, Prolog, and
 Shen-YACC.
 
-**Shen-C 0.3.0 brings a native C17 compiler, the complete Shen 43.1 portable
+**Shen-C 0.4.0 brings a native C17 compiler, the complete Shen 43.1 portable
 kernel, and reference counting with exact cycle reclamation.** The default
 compiler, standalone CLI and generated C applications have no Boehm dependency.
-The development backend also compiles loaded source, REPL forms, and explicit
+The default backend also compiles loaded source, REPL forms, and explicit
 `eval-kl` to native C before execution. Function bodies may compile on their
 first call; they never run interpreted in native mode. See the
 [compile-first design and qualification](docs/design/compile-first-runtime.md)
 and [released-version notes](CHANGELOG.md).
+
+## Binary downloads
+
+Download a macOS or Linux archive for arm64 or x86_64 from the
+[latest release](https://github.com/pyrex41/shen-c/releases/latest), verify it
+against the attached `SHA256SUMS`, and extract it. Add its `bin` directory to
+`PATH`; the whole directory can be moved without installation. The archive
+includes `shen-c`, `shen-rc`, `rc-build`, the Shen source compiler and runtime
+sources. Linux binaries target Ubuntu 24.04 or newer compatible glibc systems;
+macOS binaries target macOS 15 or newer. macOS downloads are not notarized.
+
+Dynamic source, REPL and `eval-kl` compilation require a C17 compiler (`cc` on
+`PATH`, or set `SHEN_RC_NATIVE_CC`). Source application builds also require
+Make and Python 3.9+. On macOS, install the Xcode Command Line Tools with
+`xcode-select --install`. Closed AOT applications need no runtime compiler.
+
+The complete 136-test suite passed in the latest packed-cache native qualification
+in **8.17 seconds wall / 7.27 seconds user CPU**, including startup, loading
+and typechecking, with zero compiler calls or interpreter entries. This is one
+shared-host Darwin run, excluding initial compilation; repeated current-backend
+performance acceptance remains open. See the
+[timing receipt](docs/evidence/native-tail-qualification-20261019/release-suite.json).
 
 ## Released 0.3.0 full-suite performance
 
@@ -37,7 +59,7 @@ complete implementations; they do not isolate the cost of either memory manager.
 The [qualification report](docs/performance/rc-43.1-final-20261017.md) preserves
 every sample, artifact identity, reproduction command and rejected experiment.
 These released-version measurements precede the compile-first backend; its cold
-compilation and cached execution are measured separately. The development
+compilation and cached execution are measured separately. The current
 [loaded execution controls](docs/performance/compiled-execution-20261019.md) and
 [ownership and compile-time experiments](docs/performance/native-optimization-20261019.md)
 record current evidence; repeated whole-suite acceptance remains open.
@@ -177,6 +199,6 @@ Historical Boehm results are described in
 
 Shen: Copyright 2010–2022 Mark Tarver, [BSD license](shen/LICENSE.txt).
 Shen-C: Copyright 2022 Tatsuya Tsuda and contributors,
-[MIT license](http://www.opensource.org/licenses/MIT).
+[MIT license](LICENSE).
 
 The [43.1 continuation](docs/qualification/shen-43.1-continuation.md) records the current upgrade, matched comparator, and acceptance gates. Release manifests live in `shen/releases/`; select one with `SHEN_RELEASE_MANIFEST` for certification and source compilation, `--manifest` for benchmarks, `RC_RELEASE_MANIFEST` for Make, or `SHEN_RELEASE_MANIFEST` for CMake. Historical S42 timings remain separate.
