@@ -2,9 +2,12 @@
 
 The default build is independent of Boehm. `rc-build` reads KL with the RC
 reader and emits native C functions; `shen-rc`/`shen-c` embeds the complete
-compiled S42 kernel. Explicit `eval-kl` and dynamic source loading use the
-RC evaluator. The compiler does not turn native definitions into evaluator
-wrappers.
+compiled Shen 43.1 kernel. Loaded source, REPL expressions and explicit
+`eval-kl` use native compile-before-execute by default. A system C compiler is
+needed for uncached dynamic code; failures are reported as errors. Native
+compilation thunks may defer a function body until its first call, without
+interpreting it. `SHEN_RC_EXECUTION=interpret`, selected at context creation,
+provides the explicit diagnostic interpreter.
 
 ## Build and run
 
@@ -128,9 +131,34 @@ bin/rc-build --acyclic input-dir out/acyclic-app
 that would create a cycle, before changing the vector. This changes which Shen
 programs are accepted. It is not the default language compatibility mode.
 
-## Native tier for hot runtime definitions (experimental, opt-in)
+## Runtime compilation
 
-Source loading and `eval-kl` interpret runtime-defined defuns. With
+Native expression modules return owned values without bootstrapping the kernel
+or printing results. Captured runtime bindings preserve the identity of live
+vectors, streams and closures. Numeric/string constants and symbols are also
+bound separately, allowing identical code shapes to share cached machine code.
+Root closures and definitions can compile their bodies lazily; exact curried
+forwarders and identity bodies use precompiled native templates. Dynamic name
+lookup, redefinition, partial application and escaping closures remain available.
+
+`SHEN_RC_NATIVE_CC` selects the compiler and `SHEN_RC_NATIVE_CFLAGS` defaults to
+`-O1`. `SHEN_RC_NATIVE_CACHE` selects a private cache directory (`off` uses a
+private temporary directory); `SHEN_RC_NATIVE_CACHE_BYTES` bounds code artifacts
+(default 1 GiB, with header/accounting overhead). `SHEN_RC_COMPILE_TIMEOUT` bounds
+each compiler invocation (default 120 seconds). Compiler diagnostics are capped
+at 8 MiB. Cache publication is serialized and atomic, and object receipts reject
+corrupt artifacts. `SHEN_RC_NATIVE_STATS=1` reports compilation, allocation,
+collection and ownership counters. Loaded native modules stay mapped until
+process exit; the disk budget does not bound resident code growth.
+
+Closed AOT applications execute without launching a compiler when they perform
+no dynamic code generation. Applications using `load` or `eval-kl` share the
+native backend. Both Make and CMake link runtime compilation support; generated
+Makefiles include its sources and embedded-header configuration.
+
+## Historical hot-definition tier (diagnostic interpreter only)
+
+In explicit interpreter mode, source loading and `eval-kl` interpret runtime-defined defuns. With
 `SHEN_RC_NATIVE=1`, the CLI counts calls to them; once a defun reaches
 `SHEN_RC_NATIVE_THRESHOLD` calls (default 1000), it is compiled with this
 emitter and the system C compiler, loaded with `dlopen`, and published while
@@ -143,7 +171,7 @@ but a cold compile costs several times the whole suite. See
 applications never attach the tier.
 
 ```sh
-SHEN_RC_NATIVE=1 bin/shen-c eval -l program.shen
+SHEN_RC_EXECUTION=interpret SHEN_RC_NATIVE=1 bin/shen-c eval -l program.shen
 python3 scripts/test-native-tier.py bin/shen-c
 ```
 
