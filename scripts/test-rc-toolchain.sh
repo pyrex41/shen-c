@@ -218,8 +218,9 @@ try:
     quiet_script = empty / 'script-result-quiet.shen'
     quiet_script.write_text('(output "CLI-SCRIPT-OUTPUT~%" )\n')
     quiet_output = cli_case('script-result-quiet', ['script', str(quiet_script)], contains='CLI-SCRIPT-OUTPUT')
-    check(quiet_output.count('CLI-SCRIPT-OUTPUT') == 1 and '"CLI-SCRIPT-OUTPUT' not in quiet_output,
-          'CLI script does not echo its final string result')
+    check(quiet_output.count('CLI-SCRIPT-OUTPUT') == 1 and '"CLI-SCRIPT-OUTPUT' not in quiet_output
+          and 'run time' not in quiet_output and 'loaded' not in quiet_output,
+          'CLI script does not echo its final string result, timing or load result')
     redefine_script = empty / 'script-redefinition.shen'
     redefine_script.write_text('(define shen.shen->kl X -> 42)\n(output "SHOULD-NOT-RUN~%")\n')
     redefine_output = cli_case('script-redefinition', ['script', str(redefine_script)])
@@ -230,8 +231,12 @@ try:
     outer = empty / 'outer.shen'
     outer.write_text('(load "nested.shen")\n(output "OUTER~%")\n')
     nested_output = cli_case('script-nested-load', ['script', str(outer)], contains='NESTED')
-    check(nested_output.count('NESTED') == 1 and nested_output.count('OUTER') == 1,
-          'CLI nested script preserves program output without result echoes')
+    # As in the standard launcher, only the script's own forms are quiet; a
+    # load it calls prints its results and timing like any other load.
+    check(nested_output.count('NESTED') == 2 and '"NESTED' in nested_output
+          and nested_output.count('OUTER') == 1 and '"OUTER' not in nested_output
+          and nested_output.count('run time') == 1,
+          'CLI script is quiet while its nested load prints as an ordinary load')
     error_script = empty / 'script-error.shen'
     error_script.write_text('(simple-error "script-error")\n')
     cli_case('script-error', ['script', str(error_script)], fail=True)
