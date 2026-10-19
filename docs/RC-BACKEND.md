@@ -128,6 +128,25 @@ bin/rc-build --acyclic input-dir out/acyclic-app
 that would create a cycle, before changing the vector. This changes which Shen
 programs are accepted. It is not the default language compatibility mode.
 
+## Native tier for hot runtime definitions (experimental, opt-in)
+
+Source loading and `eval-kl` interpret runtime-defined defuns. With
+`SHEN_RC_NATIVE=1`, the CLI counts calls to them; once a defun reaches
+`SHEN_RC_NATIVE_THRESHOLD` calls (default 1000), it is compiled with this
+emitter and the system C compiler, loaded with `dlopen`, and published while
+its binding is unchanged. Objects are cached by content under
+`SHEN_RC_NATIVE_CACHE` (`off` disables the cache). Any failure, including a
+missing compiler, keeps interpreting. `SHEN_RC_NATIVE_STATS=1` reports
+counters. A warm cache saves about 10% of suite CPU on the measured host,
+but a cold compile costs several times the whole suite. See
+[the measurements](performance/rc-native-tier-20261018.md). Generated
+applications never attach the tier.
+
+```sh
+SHEN_RC_NATIVE=1 bin/shen-c eval -l program.shen
+python3 scripts/test-native-tier.py bin/shen-c
+```
+
 ## Validation
 
 ```sh

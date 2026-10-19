@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- Add an experimental, opt-in native tier (`SHEN_RC_NATIVE=1`) that compiles
+  hot runtime-defined defuns with the system C compiler, with a content-addressed
+  cache and full interpreter fallback. It is off by default.
+- Make emitter peephole matching linear in function size and cache compiled
+  symbol-table resolution per context.
+
 ## 0.3.0
 
 - Make the native C17 compiler and reference-counted runtime the default
