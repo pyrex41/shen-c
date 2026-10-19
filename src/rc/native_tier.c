@@ -199,6 +199,12 @@ static int run_compiler(Tier *t,const char *source,const char *object,const char
     argv[n++]=t->cc;
     n=words(flags,argv,n,80);
     snprintf(incflag,sizeof(incflag),"-I%s",t->include);
+    /* The module must use this host's value representation and policy,
+     * whatever flags the host was built with. */
+    argv[n++]=SHEN_RC_IMMEDIATE_INTEGERS ? "-DSHEN_RC_IMMEDIATE_INTEGERS=1" : "-DSHEN_RC_IMMEDIATE_INTEGERS=0";
+#ifdef SHEN_RC_ACYCLIC_ONLY
+    argv[n++]="-DSHEN_RC_ACYCLIC_ONLY";
+#endif
     argv[n++]="-std=c17"; argv[n++]="-w"; argv[n++]="-fPIC"; argv[n++]="-shared";
     argv[n++]="-fvisibility=hidden";
 #ifdef __APPLE__

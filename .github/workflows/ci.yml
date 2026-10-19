@@ -38,6 +38,8 @@ jobs:
           nix develop -c ./bin/shen-c --version
           nix develop -c scripts/test-rc.sh --audit-only bin/shen-rc
           nix develop -c scripts/test-rc.sh --audit-only bin/rc-build
+      - name: Native tier fallbacks and focused promoted programs
+        run: nix develop -c python3 scripts/test-native-tier.py bin/shen-c --configs off,no-compiler,no-path,failing-cc
       - name: Reader capture and unsupported-state boundaries
         run: nix develop -c test/rc/test_reader_capture.sh ./bin/shen-rc
       - name: Shen source compilation
