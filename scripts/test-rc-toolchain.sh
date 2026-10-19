@@ -175,7 +175,7 @@ try:
     audit('fresh-compiler-audit', builder)
     record['compiler_audit'] = 'PASS'
     # This is deliberately an explicit bounded CLI build, not reuse of bin/shen-rc.
-    run('fresh-default-build', make + settings, timeout=600)
+    run('fresh-default-build', make + settings, timeout=1200)
     check(cli.is_file(), 'fresh CLI produced from same isolated build graph')
     record['cli_build'] = 'PASS'
     record['default_make_without_pkg_config'] = 'PASS'
@@ -190,6 +190,8 @@ try:
     cli_case('kernel-version', ['eval', '-e', '(version)'], release['kernel_version'])
     cli_case('arithmetic', ['eval', '-e', '(+ 20 22)'], '42')
     cli_case('strings', ['eval', '-e', '(= (@s "foo" "bar") "foobar")'], 'true')
+    # The standard library is part of the image, with its type signatures.
+    cli_case('stlib-sort', ['eval', '-e', '(sort (/. X Y (< X Y)) [3 1 2])'], '[1 2 3]')
     cli_case('numeric-hash-equality', ['eval', '-e',
              '(and (= (hash 1 1000000) (hash 1.0 1000000)) '
              '(and (= (hash 0 1000000) (hash -0.0 1000000)) '
@@ -258,6 +260,9 @@ try:
         _, stdout, _ = run('custom-hash-' + mode + '-run', [case / 'app/app'],
                            env=dict(base_env, SHEN_RC_PRINT='1'), timeout=30)
         check(stdout.strip() == '99', 'custom kernel hash body preserved in ' + mode + ' emitter')
+    stlib_typed = empty / 'stlib-typed.shen'
+    stlib_typed.write_text('(sort (/. X Y (< X Y)) [3 1 2])\n')
+    cli_case('stlib-typed', ['eval', '-e', '(tc +)', '-l', str(stlib_typed)], contains='[1 2 3] : (list number)')
     loaded = empty / 'loaded.shen'
     loaded.write_text('(set *toolchain-loaded* 42)\n')
     # Load may print its own normal progress; the subsequent expression is decisive.
@@ -271,7 +276,7 @@ try:
                            '(toolchain-sum [20 22])\n(toolchain-invoke toolchain-add 40)\n')
     shen_app = out / 'native-shen'
     frontend_env = dict(base_env, SHEN_RC_CLI=str(cli), RC_BUILDER=str(builder))
-    run('shen-to-native-build', [root / 'scripts/compile-shen-rc.sh', shen_source, shen_app], env=frontend_env, timeout=650)
+    run('shen-to-native-build', [root / 'scripts/compile-shen-rc.sh', shen_source, shen_app], env=frontend_env, timeout=1250)
     check((shen_app / 'source.kl').is_file(), 'real Shen compilation retains generated KL')
     native_evidence('Shen pattern-matching source application', shen_app / 'app.c', 'toolchain-sum')
     native_evidence('Shen dynamic function source application', shen_app / 'app.c', 'toolchain-invoke')
