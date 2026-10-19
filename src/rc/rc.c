@@ -99,6 +99,9 @@ struct RcContext {
     RcValue **symbols;
     size_t symbol_capacity, symbol_count;
     RcResolvedSymbols *compiled_symbols;
+    /* Direct-mapped lookup over compiled_symbols; entries are borrowed. With
+     * runtime-loaded modules the list grows, and every native call reads it. */
+    RcResolvedSymbols *compiled_symbol_cache[64];
     RcValue *true_symbol, *false_symbol; /* Borrowed intern-table roots. */
     /* Owned context roots, bounded by the specialized builtin set. */
     RcValue *builtin_roots[RC_BUILTIN_COUNT];
@@ -647,8 +650,10 @@ RcValue *rc_symbol(RcContext *ctx, const char *name) {
 }
 RcValue *const *rc_symbol_table(RcContext *ctx, const RcSymbolTable *table) {
     if (!ctx || !table) { rc_error(ctx, "invalid compiled symbol table"); return NULL; }
+    RcResolvedSymbols **cached = &ctx->compiled_symbol_cache[((uintptr_t)table >> 4) & 63];
+    if (*cached && (*cached)->table == table) return (*cached)->values;
     for (RcResolvedSymbols *entry = ctx->compiled_symbols; entry; entry = entry->next)
-        if (entry->table == table) return entry->values;
+        if (entry->table == table) { *cached = entry; return entry->values; }
     if ((table->count && !table->names) ||
         table->count > (SIZE_MAX - sizeof(RcResolvedSymbols)) / sizeof(RcValue *)) {
         rc_error(ctx, "invalid compiled symbol table size"); return NULL;
@@ -666,6 +671,7 @@ RcValue *const *rc_symbol_table(RcContext *ctx, const RcSymbolTable *table) {
     entry->table = table;
     entry->next = ctx->compiled_symbols;
     ctx->compiled_symbols = entry;
+    *cached = entry;
     return entry->values;
 }
 const char *rc_text(const RcValue *v) { return v && (rc_type(v) == RC_STRING || rc_type(v) == RC_SYMBOL) ? v->as.text.data : NULL; }
