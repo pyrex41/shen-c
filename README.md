@@ -84,6 +84,9 @@ make CC=clang
 
 `bin/shen-c` and `bin/shen-rc` run the same standalone implementation. The
 compiled kernel is embedded; the executable can run outside the source tree.
+Like the other ports' images, it includes the Shen Standard Library (`sort`,
+`for`, string, maths, tuple and file functions), taken unchanged from the
+shen-sources 43.1 `klambda/stlib.kl` and pinned in the release manifest.
 `bin/rc-build` compiles KL input into native C applications.
 
 CMake also defaults to the Boehm-free toolchain:
@@ -104,9 +107,10 @@ ctest --test-dir build --output-on-failure
 ./bin/shen-c script FILE ARGUMENTS
 ```
 
-The script receives `[FILE | ARGUMENTS]` in `*argv*`. Ordinary script loads
-print program output without echoing each form's return value; `eval -l` keeps
-its interactive load output. `eval -q` quiets language output to stdout while
+The script receives `[FILE | ARGUMENTS]` in `*argv*`. As in other ports'
+launchers, a script prints its program output without echoing each form's
+return value or a run time; a `load` it calls prints as an ordinary load.
+`eval -l` keeps its interactive load output. `eval -q` quiets language output to stdout while
 retaining explicit file writes.
 
 Commands run on a 1 GiB evaluator stack, so deep non-tail recursion works;
@@ -131,7 +135,7 @@ scripts/certify-rc.sh
 ```
 
 The certification command rebuilds a fresh Boehm-free compiler, compiles all
-14 bundled kernel modules, runs the pinned release suite in a fresh writable directory, and audits both the
+14 bundled kernel modules and the standard library, runs the pinned release suite in a fresh writable directory, and audits both the
 compiler and generated executable. Passing requires **136 passed, 0 failed**, all 36 intermediate reports, and the expected redirect output,
 successful process exit, matching source hashes, and no Boehm dependencies.
 Each run has bounded execution and a separate evidence directory.
