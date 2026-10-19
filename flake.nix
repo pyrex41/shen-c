@@ -52,6 +52,7 @@
       '';
       installedSmoke = ''
         runHook preInstallCheck
+        export XDG_CACHE_HOME="$TMPDIR/shen-c-installed-cache"
         unset SHEN_C_HOME SHEN_RC_HOME SHEN_RC_CLI RC_BUILDER
         "$out/bin/shen-c" --version
         test "$("$out/bin/shen-rc" eval -e '(+ 20 22)')" = 42
@@ -82,6 +83,7 @@
         doCheck = true;
         checkPhase = ''
           runHook preCheck
+          export XDG_CACHE_HOME="$TMPDIR/shen-c-check-cache"
           make CC="$CC" test
           test/rc/test_reader_capture.sh ./bin/shen-rc
           test "$(./bin/shen-c eval -e '(+ 20 22)')" = 42
@@ -116,6 +118,7 @@
           doCheck = true;
           checkPhase = ''
             runHook preCheck
+            export XDG_CACHE_HOME="$TMPDIR/shen-c-check-cache"
             ctest --output-on-failure
             ../test/rc/test_reader_capture.sh ./shen-rc
             test "$(./shen-rc eval -e '(+ 20 22)')" = 42
