@@ -48,7 +48,7 @@ ifeq ($(RC_SANITIZE),1)
 override RC_CFLAGS += -O1 -fsanitize=address,undefined -fno-sanitize-recover=all -fno-omit-frame-pointer
 override RC_LDFLAGS += -fsanitize=address,undefined
 endif
-RC_SOURCES := src/rc/rc.c src/rc/primitives.c src/rc/eval.c src/rc/read.c
+RC_SOURCES := src/rc/rc.c src/rc/primitives.c src/rc/eval.c src/rc/read.c src/rc/emit.c src/rc/native_compile.c
 RC_OBJECTS := $(patsubst src/rc/%.c,$(RC_BUILD)/%.o,$(RC_SOURCES))
 ifeq ($(RC_ACYCLIC_ONLY),1)
 RC_TESTS := test_acyclic
@@ -81,8 +81,8 @@ $(RC_BUILD)/%.o: src/rc/%.c $(wildcard src/rc/*.h) | $(RC_BUILD)
 $(RC_BIN)/libshenrc.a: $(RC_OBJECTS) | $(RC_BIN)
 	$(AR) rcs $@ $^
 
-$(RC_TOOL_BIN)/rc-build: tools/rc-build.c $(RC_BUILD)/release.h $(RC_BUILD)/emit.o $(RC_BIN)/libshenrc.a | $(RC_TOOL_BIN)
-	$(CC) $(RC_CPPFLAGS) $(RC_CFLAGS) -I$(RC_BUILD) tools/rc-build.c $(RC_BUILD)/emit.o $(RC_BIN)/libshenrc.a $(RC_LDFLAGS) $(RC_LDLIBS) -o $@
+$(RC_TOOL_BIN)/rc-build: tools/rc-build.c $(RC_BUILD)/release.h $(RC_BIN)/libshenrc.a | $(RC_TOOL_BIN)
+	$(CC) $(RC_CPPFLAGS) $(RC_CFLAGS) -I$(RC_BUILD) tools/rc-build.c $(RC_BIN)/libshenrc.a $(RC_LDFLAGS) $(RC_TIER_LDFLAGS) $(RC_LDLIBS) $(RC_TIER_LDLIBS) -o $@
 
 $(RC_BUILD)/kernel.c: $(RC_TOOL_BIN)/rc-build $(RC_KERNEL_INPUTS) | $(RC_BUILD)
 	$(RC_TOOL_BIN)/rc-build --emit-kernel $(RC_KERNEL_DIR) $@
@@ -103,22 +103,26 @@ RC_TIER_LDFLAGS ?= -rdynamic
 RC_TIER_LDLIBS ?= -ldl
 endif
 
-$(RC_BUILD)/tier_config.h: FORCE_RELEASE scripts/embed-tier-config.py $(RC_TIER_HEADERS) src/rc/emit.c src/rc/emit.h | $(RC_BUILD)
-	python3 scripts/embed-tier-config.py $@ $(call rc_tier_quote,$(CC)) $(call rc_tier_quote,$(RC_TIER_HOST_FLAGS)) $(RC_TIER_HEADERS) -- src/rc/emit.c src/rc/emit.h
+$(RC_BUILD)/tier_config.h: FORCE_RELEASE scripts/embed-tier-config.py $(RC_TIER_HEADERS) src/rc/emit.c src/rc/emit.h src/rc/rc.c src/rc/primitives.c src/rc/eval.c src/rc/native_compile.c | $(RC_BUILD)
+	python3 scripts/embed-tier-config.py $@ $(call rc_tier_quote,$(CC)) $(call rc_tier_quote,$(RC_TIER_HOST_FLAGS)) $(RC_TIER_HEADERS) -- src/rc/emit.c src/rc/emit.h src/rc/rc.c src/rc/primitives.c src/rc/eval.c src/rc/native_compile.c
+
+$(RC_BUILD)/native_compile.o: src/rc/native_compile.c $(RC_BUILD)/tier_config.h $(wildcard src/rc/*.h) | $(RC_BUILD)
+	$(CC) $(RC_CPPFLAGS) $(RC_CFLAGS) -I$(RC_BUILD) -c $< -o $@
 
 $(RC_BUILD)/native_tier.o: src/rc/native_tier.c $(RC_BUILD)/tier_config.h $(wildcard src/rc/*.h) | $(RC_BUILD)
 	$(CC) $(RC_CPPFLAGS) $(RC_CFLAGS) -I$(RC_BUILD) -c $< -o $@
 
-$(RC_TOOL_BIN)/shen-rc: $(RC_BUILD)/main.o $(RC_BUILD)/kernel.o $(RC_BUILD)/native_tier.o $(RC_BUILD)/emit.o $(RC_BIN)/libshenrc.a | $(RC_TOOL_BIN)
+$(RC_TOOL_BIN)/shen-rc: $(RC_BUILD)/main.o $(RC_BUILD)/kernel.o $(RC_BUILD)/native_tier.o $(RC_BIN)/libshenrc.a | $(RC_TOOL_BIN)
 	$(CC) $(RC_CPPFLAGS) $(RC_CFLAGS) $^ $(RC_LDFLAGS) $(RC_TIER_LDFLAGS) $(RC_LDLIBS) $(RC_TIER_LDLIBS) -o $@
 
 $(RC_BIN)/test_%: test/rc/test_%.c $(RC_BIN)/libshenrc.a
-	$(CC) $(RC_CPPFLAGS) $(RC_CFLAGS) $< $(RC_BIN)/libshenrc.a $(RC_LDFLAGS) $(RC_LDLIBS) -o $@
+	$(CC) $(RC_CPPFLAGS) $(RC_CFLAGS) $< $(RC_BIN)/libshenrc.a $(RC_LDFLAGS) $(RC_TIER_LDFLAGS) $(RC_LDLIBS) $(RC_TIER_LDLIBS) -o $@
 
-test-binaries: $(RC_TEST_BINS)
+test-binaries: $(RC_TEST_BINS) $(RC_BIN)/test_native_compile
 
 test: test-binaries
-	@set -e; for test in $(RC_TEST_BINS); do "$$test"; done
+	@set -e; for test in $(RC_TEST_BINS); do SHEN_RC_EXECUTION=interpret "$$test"; done
+	$(RC_BIN)/test_native_compile
 
 # Separate output directories keep sanitizer objects out of release artifacts.
 sanitize:

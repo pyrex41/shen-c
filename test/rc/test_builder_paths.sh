@@ -17,6 +17,7 @@ with tempfile.TemporaryDirectory(prefix='shen-rc-paths.') as temp:
     home = temp / "checkout with spaces and 'quote'"; home.mkdir()
     (home / 'src').symlink_to(root / 'src', target_is_directory=True)
     (home / 'shen').symlink_to(root / 'shen', target_is_directory=True)
+    (home / 'scripts').symlink_to(root / 'scripts', target_is_directory=True)
     source = temp / 'input with spaces'; source.mkdir()
     (source / 'kernel.kl').write_text('')
     (source / 'user.kl').write_text('(+ 20 22)\n')

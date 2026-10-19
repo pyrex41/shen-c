@@ -18,7 +18,7 @@ typedef struct { const char *name; int slot; } Binding;
 typedef struct Allocation { struct Allocation *prev,*next; max_align_t align; unsigned char data[]; } Allocation;
 typedef struct ModuleDef { size_t symbol; int id,arity; bool exact_hashkey,kernel_phase; struct ModuleDef *next; } ModuleDef;
 typedef struct ModuleCall { size_t symbol; struct ModuleCall *next; } ModuleCall;
-struct Program { RcEmitOptions options; RcContext *ctx; jmp_buf failure; Allocation *allocations; Buf functions,literals,transparent_do,pvar_identities; const char **symbols; size_t nsymbols,symbol_capacity; ModuleDef *module_defs; ModuleCall *module_calls; bool user_phase,drop_range_used,drop_range_emitted,transparent_do_used,lazyderef_used; RcValue *metadata_root; int next,next_literal; long defuns, lambdas, tops; };
+struct Program { RcEmitOptions options; RcContext *ctx; jmp_buf failure; Allocation *allocations; Buf functions,literals,transparent_do,pvar_identities; const char **symbols; size_t nsymbols,symbol_capacity; ModuleDef *module_defs; ModuleCall *module_calls; bool user_phase,drop_range_used,drop_range_emitted,transparent_do_used,lazyderef_used; RcValue **runtime_literals; size_t nruntime_literals; RcValue *metadata_root; int next,next_literal; long defuns, lambdas, tops; };
 static _Noreturn void bad(Program *p,const char *message) { rc_error(p->ctx,"%s",message); longjmp(p->failure,1); }
 static void *resize(Program *p,void *old,size_t bytes) {
   if(bytes>SIZE_MAX-sizeof(Allocation)) bad(p,"compiler allocation overflow");
@@ -48,7 +48,7 @@ struct Recycle;
 typedef struct DoGuard { int slot; struct DoGuard *outer; } DoGuard;
 typedef struct {
   Program *p; Buf code; Binding *bind; int nb, cap, slots, label, max_args; bool symbol_used;
-  int arity, boolean_tail; bool self_loop,borrowed_fn_used,assoc_fast,pvar_fast,lazyderef_fast; size_t assoc_symbols[5],prolog_symbols[7];
+  int arity, boolean_tail, literal_capture; bool self_loop,borrowed_fn_used,assoc_fast,pvar_fast,lazyderef_fast; size_t assoc_symbols[5],prolog_symbols[7];
   DoGuard *do_guard;
   int *physical,*free_slots,slot_cap,frame_slots,nfree; unsigned char *active,*borrowed_fn;
   char fail[64]; struct Recycle *recycle;
@@ -361,11 +361,28 @@ static size_t module_call(RcEmitFn *f,const char *name){
  for(ModuleCall *c=f->p->module_calls;c;c=c->next)if(c->symbol==symbol)return symbol;
  ModuleCall *c=alloc(f->p,sizeof(*c));*c=(ModuleCall){symbol,f->p->module_calls};f->p->module_calls=c;return symbol;
 }
-static void symbol_frame(Buf *out,bool used) {
- if(used)put(out,"  RcValue *const *symbols=rc_symbol_table(ctx,&rc_module_symbols);\n  if(!symbols) return NULL;\n");
+static void symbol_frame(Buf *out,const RcEmitFn *f) {
+ if(!f->symbol_used)return;
+ if(f->p->options.expression_entry)
+  put(out,"  RcValue *const *symbols=rc_compiled_literal_slots(self,%d,RC_LITERAL_SYMBOL_OFFSET);\n  if(!symbols)return rc_error(ctx,\"invalid compiled literal frame\");\n",f->literal_capture);
+ else put(out,"  RcValue *const *symbols=rc_symbol_table(ctx,&rc_module_symbols);\n  if(!symbols) return NULL;\n");
+}
+static int runtime_literal(RcEmitFn *f,RcValue *x) {
+ Program *p=f->p; size_t i=0;
+ for(;i<p->nruntime_literals;i++)if(p->runtime_literals[i]==x)break;
+ if(i==p->nruntime_literals){
+  p->runtime_literals=resize(p,p->runtime_literals,(i+1)*sizeof(*p->runtime_literals));
+  p->runtime_literals[p->nruntime_literals++]=x;
+ }
+ int t=fresh(f);
+ put(&f->code,"  t[%d]=rc_vector_get(ctx,rc_capture(self,%d),%zu);\n",t,f->literal_capture,i);
+ check(f,t); return t;
 }
 static int atom(RcEmitFn *f,RcValue *x,int tail,const Live *after) {
- Program *p=f->p;int t=fresh(f);
+ Program *p=f->p;
+ if(p->options.expression_entry && rc_type(x)!=RC_NIL && rc_type(x)!=RC_NUMBER && rc_type(x)!=RC_STRING && rc_type(x)!=RC_SYMBOL)
+  return runtime_literal(f,x);
+ int t=fresh(f);
  if(rc_is_nil(x))put(&f->code,"  t[%d]=rc_nil();\n",t);
  else if(rc_type(x)==RC_NUMBER&&rc_number_is_exact_integer(x)){
   int64_t n=rc_integer_value(x);if(n==INT64_MIN)put(&f->code,"  t[%d]=rc_integer(ctx,INT64_MIN);\n",t);
@@ -411,7 +428,9 @@ static int closure(RcEmitFn *f,RcValue *params,RcValue *body,int isfreeze,const 
  for(int i=0;i<f->nb;i++)if(binding(f,f->bind[i].name)==f->bind[i].slot&&(!optimize(f)||has(&freevars,f->bind[i].slot)))caps[n++]=f->bind[i];
  clear_live(p,&freevars);int id=compile(p,params,body,caps,n,isfreeze?1:2);
  for(int i=0;i<n;i++)argument(f,i,caps[i].slot);
- put(&f->code,"  t[%d]=%s(ctx,%d,rc_native_%d,%d,%s);\n",t,closure_api(p),isfreeze?0:1,id,n,n?"a":"NULL");
+ if(p->options.expression_entry){if(f->max_args<n+1)f->max_args=n+1;put(&f->code,"  a[%d]=rc_capture(self,%d);\n",n,f->literal_capture);}
+ int captures=n+(p->options.expression_entry?1:0);
+ put(&f->code,"  t[%d]=%s(ctx,%d,rc_native_%d,%d,%s);\n",t,closure_api(p),isfreeze?0:1,id,captures,captures?"a":"NULL");
  check(f,t);drop_dead(f,after);discard(caps);p->lambdas++;return t;
 }
 static int trap(RcEmitFn *f,RcValue *args,int tail,const Live *after){
@@ -483,6 +502,12 @@ static int expr(RcEmitFn *f,RcValue *x,int tail,const Live *after){
 static int expr_inner(RcEmitFn *f,RcValue *x,int tail,const Live *after){
  Program *p=f->p;if(!is_list(x)||rc_is_nil(x))return atom(f,x,tail,after);
  RcValue *head=first(x),*args=rest(x);bool special=is_symbol(head)&&binding(f,name(head))<0;
+ if(special&&(named(head,"quote")||named(head,"c-quote"))){
+  if(count(p,args)!=1)bad(p,"rc emit: quote arity");
+  if(p->options.expression_entry)return runtime_literal(f,first(args));
+  int quoted=fresh(f),data=literal(p,first(args));
+  put(&f->code,"  t[%d]=rc_literal_%d(ctx);\n",quoted,data);check(f,quoted);return quoted;
+ }
  if(special&&named(head,"if"))return branch(f,args,tail,after);
  if(special&&named(head,"cond"))return cond(f,args,tail,after);
  if(special&&named(head,"let")){
@@ -531,7 +556,10 @@ static int expr_inner(RcEmitFn *f,RcValue *x,int tail,const Live *after){
     p->module_defs=d;
   }
   symbol_slot(f,t,name(first(args)));check(f,t);
-  if(exact_second_identity(second(args),at(p,args,2),count(p,second(args))))
+  if(p->options.expression_entry){
+   if(f->max_args<1)f->max_args=1;
+   put(&f->code,"  a[0]=rc_capture(self,%d);\n  t[%d]=%s(ctx,%d,rc_native_%d,1,a);\n",f->literal_capture,cl,closure_api(p),count(p,second(args)),id);
+  }else if(exact_second_identity(second(args),at(p,args,2),count(p,second(args))))
    put(&f->code,"  t[%d]=%s(ctx,rc_native_%d,0,NULL);\n",cl,p->options.conservative_ownership?"rc_closure_return_second":"rc_closure_return_second_owned",id);
   else put(&f->code,"  t[%d]=%s(ctx,%d,rc_native_%d,0,NULL);\n",cl,closure_api(p),count(p,second(args)),id);
   check(f,cl);
@@ -625,7 +653,7 @@ static void finish_function(RcEmitFn *f,int id,int arity,int r){
  Program *p=f->p;
  if(optimize(f))put(&p->functions,"static RcValue *rc_native_body_%d(RcContext *ctx,RcValue *self,RcValue **argv) {\n  (void)self; (void)argv;\n  RcValue *result=NULL;\n",id);
  else put(&p->functions,"static RcValue *rc_native_%d(RcContext *ctx,RcValue *self,size_t argc,RcValue *const *argv) {\n  (void)self; (void)argv;\n  if(argc!=%d) return rc_error(ctx,\"native arity mismatch\");\n  RcValue *result=NULL;\n",id,arity);
- symbol_frame(&p->functions,f->symbol_used);
+ symbol_frame(&p->functions,f);
  if(f->assoc_fast)put(&p->functions,"  { bool handled=false; RcValue *deps[]={symbols[%zu],symbols[%zu],symbols[%zu],symbols[%zu],symbols[%zu]};\n    RcValue *fast=rc_assoc_try_owned(ctx,self,argv,deps,&handled); if(handled) return fast; }\n",f->assoc_symbols[0],f->assoc_symbols[1],f->assoc_symbols[2],f->assoc_symbols[3],f->assoc_symbols[4]);
  if(f->pvar_fast)put(&p->functions,"  { bool handled=false; RcValue *deps[]={symbols[%zu],symbols[%zu],symbols[%zu],symbols[%zu]};\n    RcValue *fast=rc_pvar_try_owned(ctx,self,argv,deps,&handled); if(handled) return fast; }\n",f->prolog_symbols[0],f->prolog_symbols[1],f->prolog_symbols[2],f->prolog_symbols[3]);
  if(f->lazyderef_fast)put(&p->functions,"  { bool handled=false; RcValue *deps[]={symbols[%zu],symbols[%zu],symbols[%zu],symbols[%zu],symbols[%zu],symbols[%zu],symbols[%zu]};\n    RcValue *fast=rc_lazyderef_try_owned(ctx,self,argv,deps,rc_certified_pvar,&handled); if(handled) return fast; }\n",f->prolog_symbols[0],f->prolog_symbols[1],f->prolog_symbols[2],f->prolog_symbols[3],f->prolog_symbols[4],f->prolog_symbols[5],f->prolog_symbols[6]);
@@ -662,7 +690,7 @@ static void finish_function(RcEmitFn *f,int id,int arity,int r){
  if(optimize(f))put(&p->functions,"static RcValue *rc_native_%d(RcContext *ctx,RcValue *self,size_t argc,RcValue **argv) {\n  if(argc!=%d) return rc_error(ctx,\"native arity mismatch\");\n  return rc_native_body_%d(ctx,self,argv);\n}\n",id,arity,id);
 }
 static int compile(Program *p,RcValue *params,RcValue *body,Binding *caps,int ncaps,int freeze){
- RcEmitFn f={0};f.p=p;f.code.owner=p;int id=p->next++,arity=freeze==1?0:(freeze==2?1:count(p,params));f.arity=arity;snprintf(f.fail,sizeof f.fail,"cleanup");
+ RcEmitFn f={0};f.p=p;f.code.owner=p;int id=p->next++,arity=freeze==1?0:(freeze==2?1:count(p,params));f.arity=arity;f.literal_capture=ncaps;snprintf(f.fail,sizeof f.fail,"cleanup");
  if(!ncaps&&!freeze&&exact_assoc(&f,params,body)) {
   const char *deps[]={"assoc","=","cons?","hd","tl"};f.assoc_fast=true;
   for(size_t i=0;i<5;i++)f.assoc_symbols[i]=symbol_index(&f,deps[i]);
@@ -698,7 +726,7 @@ static int literal(Program *p,RcValue *x){
  RcEmitFn f={0};f.p=p;f.code.owner=p;snprintf(f.fail,sizeof f.fail,"cleanup");
  int id=p->next_literal++,result=literal_node(&f,x);
  put(&p->literals,"static RcValue *rc_literal_%d(RcContext *ctx) {\n  RcValue *result=NULL;\n",id);
- symbol_frame(&p->literals,f.symbol_used);
+ symbol_frame(&p->literals,&f);
  if(f.slots>64)put(&p->literals,"  RcValue **t=calloc(%d,sizeof(*t)); if(!t) return rc_error(ctx,\"source metadata allocation failed\");\n",f.slots);
  else put(&p->literals,"  RcValue *t[%d]={0};\n",f.slots?f.slots:1);
  put(&p->literals,"%s  result=t[%d]; t[%d]=NULL;\ncleanup:\n  for(size_t i=0;i<%d;i++) if(t[i]) rc_release(t[i]);\n",f.code.p?f.code.p:"",result,result,f.slots);
@@ -784,8 +812,14 @@ bool rc_emit_program(RcContext *ctx,FILE *out,RcValue *const *kernel,size_t nker
   if(!p) { rc_error(ctx,"compiler out of memory"); return false; }
   p->options=*options; p->ctx=ctx; p->functions.owner=p; p->literals.owner=p; p->transparent_do.owner=p; p->pvar_identities.owner=p;
   if(setjmp(p->failure)) { clear_arena(p); free(p); return false; }
+  int expression_id=-1;
   Buf installs={.owner=p},kt={.owner=p},ut={.owner=p},events={.owner=p};
   if(options->source_events&&!options->source_metadata)bad(p,"source reader events require source metadata mode");
+  if(options->expression_entry){
+    if(!identifier(options->expression_entry)||nkernel!=1||nuser||options->module_entry||options->source_events||options->source_metadata||options->emit_main||options->init_name||!options->literal_bindings||!options->literal_count)
+      bad(p,"invalid expression module options");
+    *options->literal_bindings=NULL;*options->literal_count=0;
+  }
   if(options->module_entry){
     if(!identifier(options->module_entry)||nuser||options->source_events||options->source_metadata||options->emit_main||options->init_name)
       bad(p,"invalid native module options");
@@ -803,7 +837,8 @@ bool rc_emit_program(RcContext *ctx,FILE *out,RcValue *const *kernel,size_t nker
     for(size_t i=0;i<n;i++) {
       if(!forms[i]) bad(p,"null KLambda form");
       p->metadata_root=phase?forms[i]:NULL;
-      int id=compile(p,rc_nil(),forms[i],NULL,0,0);
+      int id=compile(p,options->function_parameters?options->function_parameters:rc_nil(),forms[i],NULL,0,0);
+      if(options->expression_entry)expression_id=id;
       int def=is_pair(forms[i])&&named(first(forms[i]),"defun");
       Buf *where=phase?&ut:(def?&installs:&kt);
       put(where,"  if(!run_top(ctx,rc_native_%d,%d)) return false;\n",id,phase&&!def);
@@ -815,7 +850,8 @@ bool rc_emit_program(RcContext *ctx,FILE *out,RcValue *const *kernel,size_t nker
         "#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n"
         "#include <stdint.h>\n#include <math.h>\n#include \"rc.h\"\n#include \"primitives.h\"\n#include \"eval.h\"\n",out);
   if(options->module_entry)fputs("static bool (*rc_module_define)(RcContext*,RcValue*,RcValue*);\n",out);
-  if(p->nsymbols) {
+  if(options->expression_entry)fprintf(out,"#define RC_LITERAL_SYMBOL_OFFSET %zu\n",p->nruntime_literals);
+  if(p->nsymbols&&!options->expression_entry) {
     Buf names={.owner=p};
     for(size_t i=0;i<p->nsymbols;i++){if(i)put(&names,",\n");quoted(&names,p->symbols[i]);}
     fprintf(out,"static const char *const rc_module_symbol_names[]={\n%s\n};\nstatic const RcSymbolTable rc_module_symbols={rc_module_symbol_names,%zu};\n",names.p,p->nsymbols);
@@ -845,6 +881,25 @@ bool rc_emit_program(RcContext *ctx,FILE *out,RcValue *const *kernel,size_t nker
   if(p->next_literal) metadata_helpers(out);
   if(p->literals.p) fputs(p->literals.p,out);
   if(p->functions.p) fputs(p->functions.p,out);
+  if(options->expression_entry){
+    int arity=options->function_parameters?count(p,options->function_parameters):0;
+    fprintf(out,"__attribute__((visibility(\"default\"))) RcValue *%s(RcContext *ctx,RcValue *literals) {\n  RcValue *fn=%s(ctx,%d,rc_native_%d,1,&literals);\n",options->expression_entry,closure_api(p),arity,expression_id);
+    if(options->function_parameters)fputs("  return fn;\n}\n",out);
+    else fputs("  if(!fn)return NULL;\n  RcValue *result=rc_apply(ctx,fn,0,NULL);rc_release(fn);return result;\n}\n",out);
+    size_t n=p->nruntime_literals+p->nsymbols;
+    RcValue **bindings=n?malloc(n*sizeof(*bindings)):NULL;
+    if(n&&!bindings)bad(p,"expression literal bindings allocation failed");
+    if(p->nruntime_literals)memcpy(bindings,p->runtime_literals,p->nruntime_literals*sizeof(*bindings));
+    for(size_t i=0;i<p->nsymbols;i++){
+      RcValue *symbol=rc_symbol(ctx,p->symbols[i]);
+      if(!symbol){free(bindings);bad(p,"cannot bind compiled symbols");}
+      bindings[p->nruntime_literals+i]=symbol;rc_release(symbol); /* Intern table roots it. */
+    }
+    bool ok=!ferror(out);if(!ok){free(bindings);rc_error(ctx,"failed writing generated C");}
+    else {*options->literal_bindings=bindings;*options->literal_count=n;}
+    if(report)*report=(RcEmitReport){p->defuns,p->tops,p->lambdas};
+    clear_arena(p);free(p);return ok;
+  }
   fprintf(out,"static bool run_top(RcContext *ctx,%s native,int print) {\n  RcValue *fn=%s(ctx,0,native,0,NULL);\n",options->conservative_ownership?"RcNative":"RcNativeOwned",closure_api(p));
   fputs(
         "  if(!fn) return false;\n"

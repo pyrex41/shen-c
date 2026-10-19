@@ -1,5 +1,6 @@
 #include "rc.h"
 #include "rc_internal.h"
+#include "native_compile.h"
 
 #include <limits.h>
 #include <math.h>
@@ -93,6 +94,10 @@ _Static_assert(offsetof(RcValue, ctx) ==
                  _Alignof(RcContext *) - 1) / _Alignof(RcContext *)) * _Alignof(RcContext *),
                "builtin tag must not shift the value header");
 struct RcContext {
+    void *native_compile_state;
+    size_t interpreter_entries;
+    bool verify_native;
+    int execution_mode;
     RcValue *objects;
     RcValue *object_cache[RC_OBJECT_CACHE_LIMIT];
     bool destroying;
@@ -220,6 +225,9 @@ RcContext *rc_context_new_with_policy(RcCyclePolicy policy) {
     RcContext *ctx = calloc(1, sizeof(*ctx));
     if (ctx) {
         ctx->collection_interval = 4096; ctx->adaptive_collection = true;
+        const char *strict=getenv("SHEN_RC_VERIFY_NATIVE");ctx->verify_native=strict&&strcmp(strict,"0");
+        const char *backend=getenv("SHEN_RC_EXECUTION");
+        ctx->execution_mode=!backend||!strcmp(backend,"native")?0:!strcmp(backend,"interpret")?1:-1;
 #if defined(SHEN_RC_ACYCLIC_ONLY) && SHEN_RC_ACYCLIC_ONLY
         ctx->acyclic = true;
 #else
@@ -397,8 +405,16 @@ RcStats rc_stats(const RcContext *ctx) {
     }
     return result;
 }
+int rc_execution_mode(const RcContext *ctx){return ctx->execution_mode;}
+void **rc_native_compile_slot(RcContext *ctx){return &ctx->native_compile_state;}
+size_t rc_interpreter_entries(const RcContext *ctx){return ctx->interpreter_entries;}
+bool rc_interpreter_enter(RcContext *ctx){
+ ctx->interpreter_entries++;
+ if(ctx->verify_native||ctx->execution_mode!=1){rc_error(ctx,"strict native execution entered interpreter");return false;}return true;
+}
 void rc_context_free(RcContext *ctx) {
     if (!ctx) return;
+    rc_native_compile_free(ctx->native_compile_state);
     while (ctx->compiled_symbols) {
         RcResolvedSymbols *next = ctx->compiled_symbols->next;
         free(ctx->compiled_symbols);
@@ -976,6 +992,11 @@ RcValue *rc_eval_env_frame(RcContext *ctx,RcValue *self,RcNative callback,size_t
     RcValue *env=env_frame_construct(ctx,captures[1],arity,captures+2,argv,bytes);
     if(env)*body=captures[0];
     return env;
+}
+RcValue *const *rc_compiled_literal_slots(const RcValue *self,size_t capture,size_t first){
+ RcValue *v=rc_capture(self,capture);
+ if(rc_type(v)!=RC_VECTOR||first>v->as.vector.length)return NULL;
+ return v->as.vector.items+first;
 }
 size_t rc_arity(const RcValue *v) {
     return v && rc_type(v) == RC_CLOSURE ? v->as.closure.arity - v->as.closure.bound_count : 0;

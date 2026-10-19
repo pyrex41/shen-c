@@ -70,4 +70,9 @@ typedef struct {
 } RcTierHooks;
 void rc_tier_attach(RcContext *,const RcTierHooks *,void *state);
 const RcTierHooks *rc_tier_hooks(const RcContext *,void **state);
+/* Context-local compiler configuration; native code remains process resident. */
+int rc_execution_mode(const RcContext *);
+void **rc_native_compile_slot(RcContext *);
+size_t rc_interpreter_entries(const RcContext *);
+bool rc_interpreter_enter(RcContext *);
 #endif

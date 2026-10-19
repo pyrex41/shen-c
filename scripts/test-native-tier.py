@@ -18,6 +18,7 @@ STATS = 'shen-rc native-tier:'
 
 def clean_env(extra):
     env = {k: v for k, v in os.environ.items() if not k.startswith('SHEN_RC_NATIVE')}
+    env["SHEN_RC_EXECUTION"] = "interpret"
     env.update(extra)
     return env
 

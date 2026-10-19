@@ -5,7 +5,7 @@ builder=${1:-"$root/bin/rc-build"}
 case "$builder" in /*) ;; *) builder="$PWD/$builder" ;; esac
 export RC_ASSOC_ROOT="$root" RC_ASSOC_BUILDER="$builder"
 exec python3 - <<'PY'
-import os,re,subprocess,tempfile
+import sys, os,re,subprocess,tempfile
 from pathlib import Path
 root=Path(os.environ['RC_ASSOC_ROOT'])
 # Preserve the entire pinned AST, including its literal newline error suffix.
@@ -60,7 +60,7 @@ RcValue*k1=rc_integer(c,1),*val=rc_integer(c,42),*e1=rc_cons(c,k1,val),*e2=rc_co
 RcValue*r=rc_apply(c,part,1,&pool);if(r){rc_print(stdout,r);putchar('\n');}else printf("ERROR %s\n",rc_error_message(c));
 rc_release(r);rc_release(pool);rc_release(end);rc_release(e1);rc_release(e2);rc_release(k1);rc_release(val);rc_release(part);rc_release(key);rc_release(f);rc_release(s);rc_context_free(c);return 0;}''')
   import shlex
-  cmd=shlex.split(os.environ.get('CC','cc'))+shlex.split(os.environ.get('CFLAGS','-O2'))+['-std=c17','-I'+str(root/'src/rc'),str(dest/'partial.c')]+[str(root/'src/rc'/x) for x in ['rc.c','primitives.c','eval.c','read.c']]+['-lm','-o',str(dest/'partial')]
+  cmd=shlex.split(os.environ.get('CC','cc'))+shlex.split(os.environ.get('CFLAGS','-O2'))+['-std=c17','-I'+str(root/'src/rc'),'-I'+str(dest),str(dest/'partial.c')]+[str(root/'src/rc'/x) for x in ['rc.c','primitives.c','eval.c','read.c','emit.c','native_compile.c']]+(['-Wl,-export_dynamic'] if sys.platform=='darwin' else ['-rdynamic','-ldl'])+['-lm','-o',str(dest/'partial')]
   p=subprocess.run(cmd,env=env,capture_output=True,text=True,timeout=90);assert p.returncode==0,p.stderr
   p=subprocess.run([str(dest/'partial')],env=env,capture_output=True,text=True,timeout=30);assert p.returncode==0,(p.returncode,p.stderr);outputs.append(p.stdout)
  assert outputs[0]==outputs[1] and outputs[0].startswith('ERROR '),outputs

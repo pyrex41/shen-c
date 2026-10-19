@@ -38,8 +38,10 @@ jobs:
           nix develop -c ./bin/shen-c --version
           nix develop -c scripts/test-rc.sh --audit-only bin/shen-rc
           nix develop -c scripts/test-rc.sh --audit-only bin/rc-build
-      - name: Native tier fallbacks and focused promoted programs
-        run: nix develop -c python3 scripts/test-native-tier.py bin/shen-c --configs off,no-compiler,no-path,failing-cc
+      - name: Strict native cache and compiler failures
+        run: nix develop -c python3 scripts/test-compile-cache.py bin/rc/test_native_compile
+      - name: Compile-first pinned suite (cold and cached; zero interpreter entries)
+        run: nix develop -c python3 scripts/test-compile-first.py bin/shen-c --timeout 1200
       - name: Reader capture and unsupported-state boundaries
         run: nix develop -c test/rc/test_reader_capture.sh ./bin/shen-rc
       - name: Shen source compilation
@@ -90,7 +92,5 @@ jobs:
           nix develop -c env CC=clang CFLAGS='-O1 -g -DSHEN_RC_VERIFY_OWNERSHIP=1 -fsanitize=address,undefined -fno-sanitize-recover=all -fno-omit-frame-pointer' RC_BIN=bin/rc-sanitize ASAN_OPTIONS=abort_on_error=1 UBSAN_OPTIONS=halt_on_error=1 scripts/test-rc.sh --no-build bin/sanitize/rc-build
       - name: Fully instrumented generated kernel and complete suite
         run: nix develop -c env CC=clang CFLAGS='-O1 -g -DSHEN_RC_VERIFY_OWNERSHIP=1 -fsanitize=address,undefined -fno-sanitize-recover=all -fno-omit-frame-pointer' ASAN_OPTIONS=abort_on_error=1 UBSAN_OPTIONS=halt_on_error=1 scripts/certify-rc.sh
-      - name: Native tier with every defun promoted (instrumented CLI and modules)
-        run: |
-          nix develop -c make -f Makefile.rc CC=clang RC_SANITIZE=1 RC_CPPFLAGS=-DSHEN_RC_VERIFY_OWNERSHIP=1 RC_BUILD=obj/tier-sanitize RC_BIN=bin/tier-sanitize RC_TOOL_BIN=bin/tier-sanitize bin/tier-sanitize/shen-rc
-          nix develop -c env ASAN_OPTIONS=abort_on_error=1 UBSAN_OPTIONS=halt_on_error=1 python3 scripts/test-native-tier.py bin/tier-sanitize/shen-rc --timeout 1200 --cflags '-O1 -g' --configs off,force-cold,force-warm
+      - name: Strict native cache controls under fatal sanitizers
+        run: nix develop -c env ASAN_OPTIONS=abort_on_error=1 UBSAN_OPTIONS=halt_on_error=1 python3 scripts/test-compile-cache.py bin/rc-sanitize/test_native_compile

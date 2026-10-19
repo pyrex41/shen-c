@@ -1,4 +1,5 @@
 #include "eval.h"
+#include "native_compile.h"
 #include "primitives.h"
 #include "rc_internal.h"
 #include <stdlib.h>
@@ -75,6 +76,7 @@ static inline void tier_call(RcContext *ctx, RcValue *self) {
     if(hooks)hooks->call(ctx,state,self);
 }
 static RcValue *dynamic_call(RcContext *ctx, RcValue *self, size_t argc, RcValue *const *argv) {
+    if(!rc_interpreter_enter(ctx))return NULL;
     RcValue *const *captures=rc_eval_captures(ctx,self,dynamic_call,argc);if(!captures)return NULL;
     RcValue *plan=plan_prepare(ctx,captures[0],captures[1],argc,captures+2,true);
     if(plan) {
@@ -177,6 +179,7 @@ static RcValue *application(RcContext *ctx, RcValue *expr, RcValue *env, size_t 
 #include "eval_plan.h"
 
 static RcValue *evaluate(RcContext *ctx, RcValue *input, RcValue *environment, bool tail) {
+    if(!rc_interpreter_enter(ctx))return NULL;
     if (!input) return rc_error(ctx,"eval-kl: null expression");
     /* Atomic lookup cannot invoke callbacks or collect. The caller keeps the
      * expression/environment rooted until this owned result is retained. */
@@ -301,6 +304,9 @@ RcValue *rc_eval(RcContext *ctx, RcValue *expression) {
     /* All environment binders and expression symbols then share one intern table,
      * so lexical lookup can compare symbol identity without structural equality. */
     if(!rc_call_values_belong(ctx,expression,0,NULL))return rc_error(ctx,"eval-kl: invalid expression/context");
+    int backend=rc_execution_mode(ctx);
+    if(backend==0)return rc_native_eval(ctx,expression);
+    if(backend!=1)return rc_error(ctx,"unknown SHEN_RC_EXECUTION backend");
     /* Public borrowed inputs may lose an external owner during a callback.
      * Keep a pair root across the complete evaluation; atoms cannot invoke
      * callbacks and keep the allocation-free owned-result path above. */

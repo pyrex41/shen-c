@@ -176,6 +176,9 @@ bool rc_call_values_belong(RcContext *ctx, RcValue *function, size_t argc,
 RcValue *rc_native_call_capture(RcContext *ctx, RcValue *function, size_t argc,
                                  RcValue *const *argv, RcNative native);
 RcValue *rc_capture(const RcValue *self, size_t index); /* Borrowed. */
+/* Compiler ABI: borrowed contiguous literal slots rooted by self's captured
+ * vector. No callbacks or allocation; valid while that closure stays rooted. */
+RcValue *const *rc_compiled_literal_slots(const RcValue *self,size_t capture,size_t first);
 size_t rc_arity(const RcValue *function);
 RcValue *rc_apply(RcContext *ctx, RcValue *function, size_t argc,
                   RcValue *const *argv);

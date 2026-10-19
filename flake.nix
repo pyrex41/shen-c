@@ -22,7 +22,7 @@
           ]);
       };
       # Installed compilation needs a C toolchain, make, the complete KL kernel,
-      # and the independent runtime sources. CLI execution needs only its binary.
+      # and the independent runtime sources. Dynamic execution also needs a compiler.
       installArtifacts = pkgs: binaries: sources: ''
         runHook preInstall
         mkdir -p "$out/bin" "$out/libexec/shen-c" \
@@ -32,12 +32,18 @@
         cp ${binaries}/rc-build "$out/libexec/shen-c/rc-build"
         cp -R ${sources}/src/rc "$out/share/shen-c/src/rc"
         cp -R ${sources}/shen "$out/share/shen-c/shen"
+        cp ${sources}/scripts/embed-tier-config.py "$out/share/shen-c/scripts/"
         cp ${sources}/scripts/release_manifest.py "$out/share/shen-c/scripts/"
         cp ${sources}/scripts/compile-shen-rc.sh "$out/bin/compile-shen-rc.sh"
+        for executable in shen-rc shen-c; do
+          wrapProgram "$out/bin/$executable" \
+            --set-default SHEN_RC_NATIVE_CC ${pkgs.clang}/bin/clang \
+            --prefix PATH : ${pkgs.lib.makeBinPath [ pkgs.clang ]}
+        done
         makeWrapper "$out/libexec/shen-c/rc-build" "$out/bin/rc-build" \
           --set-default SHEN_C_HOME "$out/share/shen-c" \
           --set-default CC clang \
-          --prefix PATH : ${pkgs.lib.makeBinPath [ pkgs.clang pkgs.gnumake ]}
+          --prefix PATH : ${pkgs.lib.makeBinPath [ pkgs.python3 pkgs.clang pkgs.gnumake ]}
         wrapProgram "$out/bin/compile-shen-rc.sh" \
           --set-default SHEN_C_HOME "$out/share/shen-c" \
           --set-default CC clang \
@@ -49,7 +55,7 @@
         unset SHEN_C_HOME SHEN_RC_HOME SHEN_RC_CLI RC_BUILDER
         "$out/bin/shen-c" --version
         test "$("$out/bin/shen-rc" eval -e '(+ 20 22)')" = 42
-        python3 -c 'import subprocess,sys; p=subprocess.run([sys.argv[1],"repl"],input=b"[314159 271828]",capture_output=True,timeout=15); assert p.returncode==0 and b"[314159 271828]" in p.stdout and not p.stderr' "$out/bin/shen-rc"
+        python3 -c 'import subprocess,sys; p=subprocess.run([sys.argv[1],"repl"],input=b"[314159 271828]",capture_output=True,timeout=120); assert p.returncode==0 and b"[314159 271828]" in p.stdout and not p.stderr' "$out/bin/shen-rc"
         rc_check_dir=$(mktemp -d)
         printf '(define nix-answer X -> (+ X 1))\n(nix-answer 41)\n' > "$rc_check_dir/input.shen"
         "$out/bin/compile-shen-rc.sh" "$rc_check_dir/input.shen" "$rc_check_dir/native"

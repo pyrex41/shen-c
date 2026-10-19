@@ -273,6 +273,7 @@ done:
     return result;
 }
 static RcValue *prepared_call(RcContext *ctx,RcValue *self,size_t argc,RcValue *const *argv) {
+    if(!rc_interpreter_enter(ctx))return NULL;
     RcValue *const *captures=rc_eval_captures(ctx,self,prepared_call,argc);if(!captures)return NULL;
     tier_call(ctx,self);
     RcValue *plan=captures[0];const PlanHeader *h=plan_header(plan);

@@ -47,7 +47,7 @@ else
 fi
 bin_dir=${RC_BIN:-bin/rc}
 for test in test_cycles test_primitives test_eval test_env test_bool_tail test_apply_fast test_object_cache test_immediates test_collection test_reuse test_acyclic test_symbols test_primitive_fast test_equal test_canonical_primitives test_canonical_numeric test_canonical_hash test_canonical_cons test_generic_builtin_tag test_trial_work_union test_callee test_identity_tail test_list_length test_eval_plan test_rooted_call; do
-    "$bin_dir/$test"
+    SHEN_RC_EXECUTION=interpret "$bin_dir/$test"
     audit "$bin_dir/$test"
 done
 # Runtime-only checks can run independently of the native compiler.

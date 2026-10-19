@@ -8,10 +8,13 @@ Shen-YACC.
 **Shen-C 0.3.0 brings a native C17 compiler, the complete Shen 43.1 portable
 kernel, and reference counting with exact cycle reclamation.** The default
 compiler, standalone CLI and generated C applications have no Boehm dependency.
-The kernel is compiled to native C; source loading and explicit `eval-kl` use
-the RC evaluator. See the [release notes](CHANGELOG.md).
+The development backend also compiles loaded source, REPL forms, and explicit
+`eval-kl` to native C before execution. Function bodies may compile on their
+first call; they never run interpreted in native mode. See the
+[compile-first design and qualification](docs/design/compile-first-runtime.md)
+and [released-version notes](CHANGELOG.md).
 
-## Full-suite performance
+## Released 0.3.0 full-suite performance
 
 On the measured Darwin arm64 host, RC used **16.4% and 16.6% less user CPU than
 rebuilt Boehm** in two batches of five alternating pairs, winning all ten CPU
@@ -33,6 +36,8 @@ complete implementations; they do not isolate the cost of either memory manager.
 
 The [qualification report](docs/performance/rc-43.1-final-20261017.md) preserves
 every sample, artifact identity, reproduction command and rejected experiment.
+These released-version measurements precede the compile-first backend; its cold
+compilation and cached execution are measured separately.
 Historical [S42 measurements](docs/performance/rc-suite-identity-tail-20261016.md)
 remain separate from the 43.1 comparison.
 
@@ -53,9 +58,23 @@ formalizes the stronger goal of checking that functional algorithms need no
 allocation. It is related research: Shen-C currently provides local ownership
 analysis and selective reuse, without FP²'s checker or a guarantee of execution
 without allocation. Exact cycle reclamation supports Shen's mutable graphs,
-while bounded evaluation plans separately reduce repeated syntax classification
-and lexical lookup. See the [compiler guide](docs/RC-BACKEND.md) and
+while the explicit diagnostic interpreter retains bounded evaluation plans. See the [compiler guide](docs/RC-BACKEND.md) and
 [implementation record](docs/performance/rc-prepared-evaluator-20261017.md).
+
+Runtime compilation uses a system C compiler and a persistent cache. Symbol and
+live literal bindings are supplied to compiled modules separately, allowing code
+with the same shape to share machine code while preserving object identity and
+dynamic redefinition. Compiled closures use the same ownership moves, releases,
+and guarded reuse as ahead-of-time applications. Compilation errors are reported
+without an interpreter fallback; `SHEN_RC_EXECUTION=interpret` explicitly selects
+the diagnostic backend when creating a context.
+
+Cold compilation costs more than cached execution. `SHEN_RC_NATIVE_CC` selects
+the compiler, `SHEN_RC_NATIVE_CACHE` selects the cache directory (`off` disables
+persistence), and `SHEN_RC_NATIVE_STATS=1` reports compilation counters. The disk
+cache defaults to 1 GiB (`SHEN_RC_NATIVE_CACHE_BYTES`); loaded modules remain
+resident until process exit. Closed AOT applications need no runtime compiler;
+uncached dynamic code does.
 
 ## String and vector work
 
