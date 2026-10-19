@@ -79,6 +79,8 @@ def main():
                        system=platform.platform(), architecture=arch,
                        compiler=capture(shlex.split(os.environ.get('CC', 'cc')) + ['--version']),
                        cflags=os.environ.get('RC_CFLAGS', os.environ.get('CFLAGS', 'Makefile.rc default')),
+                       lto_policy=os.environ.get('RC_LTO', 'auto'),
+                       makefile_sha256=digest(ROOT / 'Makefile.rc'),
                        dependencies=dependencies,
                        files={str(p.relative_to(package)): digest(p) for p in sorted(package.rglob('*')) if p.is_file()})
         if system == 'macos':
