@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+- Cut compiled-path ownership work (#7). Interned symbols are immortal, and so
+  are capture-free top-level definitions and builtins: named calls through them
+  perform no reference-count operations. Per-operation retain/release counters
+  are compiled only with `SHEN_RC_STATS_COUNTERS=1` (`make counters`). RcValue
+  shrinks from 128 to 112 bytes. Suite ownership operations fall from 1.18
+  billion to 0.51 billion and peak RSS by about 13%. See
+  [the measurements](docs/performance/rc-ownership-overhead-20261018.md).
+
 ## 0.3.0
 
 - Make the native C17 compiler and reference-counted runtime the default

@@ -40,15 +40,19 @@ static unsigned compose_guards(unsigned first,unsigned after) {
     return !first ? after : first==GUARD_CONTEXT ? first|after : first;
 }
 struct RcValue {
-    RcType type;
-    size_t refs, bytes;
+    /* One word: a 32-bit count (RC_IMMORTAL saturates), the type and flags.
+     * Hot flags keep whole bytes; the two closure-only certificates, written
+     * once at construction/installation, share the last byte. */
+    uint32_t refs;
+    uint8_t type; /* RcType */
+    bool marked, reaches_vector;
+    unsigned builtin_slot : 7; /* Canonical slot + 1, zero for ordinary values. */
+    bool returns_second : 1; /* Immutable trusted exact identity-body certificate. */
+    size_t bytes;
     /* Trial counts are consumed before work links become live. Root discovery
      * only pushes its current object; transitive marking starts afterward. */
     union { size_t trial; RcValue *work; };
     size_t visit_epoch;
-    bool marked, reaches_vector, cycle_source;
-    uint8_t builtin_slot; /* Canonical slot + 1, zero for ordinary values. */
-    bool returns_second; /* Immutable trusted exact identity-body certificate. */
     RcContext *ctx;
     RcValue *prev, *next;
     union {
@@ -58,7 +62,8 @@ struct RcValue {
             RcValue *intern_next, *global, *function;
         } text;
         struct { RcValue *head, *tail; size_t proper_length; RcValue *eval_plan; size_t eval_calls; } pair;
-        struct { RcValue **items; size_t length; } vector;
+        /* A source stays marked until freed; see rc_vector_set. */
+        struct { RcValue **items; size_t length; bool cycle_source; } vector;
         struct {
             RcValue *parent, **keys, **values; size_t count;
             RcValue *inline_binding[2];
@@ -79,8 +84,8 @@ struct RcValue {
 };
 _Static_assert(sizeof(((RcValue *)0)->as.pair)<=sizeof(((RcValue *)0)->as.closure),
                "pair length cache must fit the existing payload union");
-_Static_assert(UINTPTR_MAX!=UINT64_MAX || sizeof(RcValue)==128,
-               "64-bit RcValue storage must remain 128 bytes");
+_Static_assert(UINTPTR_MAX!=UINT64_MAX || sizeof(RcValue)==112,
+               "64-bit RcValue storage must remain 112 bytes");
 /* Three inline tail arguments fit in the pre-existing closure-sized union. */
 _Static_assert(sizeof(((RcValue *)0)->as.tail) <= sizeof(((RcValue *)0)->as.closure),
                "inline tail arguments must not enlarge RcValue");
@@ -91,13 +96,10 @@ typedef struct RcResolvedSymbols {
     struct RcResolvedSymbols *next;
     RcValue *values[];
 } RcResolvedSymbols;
-_Static_assert(RC_BUILTIN_COUNT <= UINT8_MAX, "builtin tags must fit in one byte");
-/* The builtin and semantic certificate bytes occupy pre-existing padding
- * before ctx, including on boxed builds. */
-_Static_assert(offsetof(RcValue, ctx) ==
-               ((offsetof(RcValue, cycle_source) + sizeof(bool) +
-                 _Alignof(RcContext *) - 1) / _Alignof(RcContext *)) * _Alignof(RcContext *),
-               "builtin tag must not shift the value header");
+_Static_assert(RC_BUILTIN_COUNT < 127, "builtin tags must fit in seven bits");
+/* The count, type, builtin tag and flags share the first header word. */
+_Static_assert(offsetof(RcValue, bytes) == 8,
+               "count, type and flags must fit one 8-byte header word");
 struct RcContext {
     RcValue *objects;
     RcValue *object_cache[RC_OBJECT_CACHE_LIMIT];
@@ -125,8 +127,9 @@ struct RcContext {
 /* Immortal values carry this sentinel count. Retain/release skip them with
  * one test; they are freed only at context teardown. Interned symbols are
  * immortal because the intern table already keeps them alive until then. A
- * counted object would need 2^64-1 owners to reach the sentinel. */
-#define RC_IMMORTAL SIZE_MAX
+ * counted object that reaches 2^32-1 owners saturates into an immortal: it is
+ * then freed at teardown, never early. */
+#define RC_IMMORTAL UINT32_MAX
 static RcValue nil_value = {.type = RC_NIL, .refs = RC_IMMORTAL};
 
 #if SHEN_RC_IMMEDIATE_INTEGERS
@@ -200,7 +203,7 @@ static RcValue *allocate(RcContext *ctx, RcType type, size_t extra) {
      * are reset before a collection, and work links are set before insertion.
      * Reset the lifetime-wide defaults that must not survive pooled reuse. */
     v->prev = NULL; v->visit_epoch = 0;
-    v->marked = false; v->reaches_vector = false; v->cycle_source = false; v->builtin_slot = 0; v->returns_second = false;
+    v->marked = false; v->reaches_vector = false; v->builtin_slot = 0; v->returns_second = false;
     v->type = type; v->refs = 1; v->ctx = ctx; v->bytes = sizeof(*v) + extra;
     v->next = ctx->objects;
     if (v->next) v->next->prev = v;
@@ -285,7 +288,7 @@ static void unlink_object(RcValue *v) {
     case RC_PAIR: ctx->graph_slots -= 2+(v->as.pair.eval_plan!=NULL); break;
     case RC_VECTOR:
         ctx->graph_slots -= v->as.vector.length;
-        if (v->cycle_source) ctx->cycle_sources--;
+        if (v->as.vector.cycle_source) ctx->cycle_sources--;
         break;
     case RC_ENV: ctx->graph_slots -= 1 + v->as.env.count; break;
     case RC_CLOSURE:
@@ -371,7 +374,8 @@ void rc_collect(RcContext *ctx) {
         /* Residual refs after subtracting every heap edge are exactly the owned C
          * handles and context roots. Reachability from them is the live graph.
          * No stack addresses or payload bytes are interpreted as pointers. */
-        for (RcValue *v = ctx->objects; v; v = v->next) { v->trial = v->refs; v->marked = false; }
+        /* Immortals are roots whatever their incoming edge count. */
+        for (RcValue *v = ctx->objects; v; v = v->next) { v->trial = v->refs == RC_IMMORTAL ? SIZE_MAX : v->refs; v->marked = false; }
         for (RcValue *v = ctx->objects; v; v = v->next) edges(v, subtract_edge, NULL);
         RcValue *work = NULL;
         /* Each trial is read once here. mark_edge only overwrites that same
@@ -434,7 +438,9 @@ void rc_context_free(RcContext *ctx) {
     free(ctx->error); free(ctx);
 }
 RcType rc_type(const RcValue *v) { return is_immediate(v) ? RC_NUMBER : v ? v->type : RC_NIL; }
-size_t rc_refcount(const RcValue *v) { return is_immediate(v) ? SIZE_MAX : v ? v->refs : 0; }
+size_t rc_refcount(const RcValue *v) {
+    return is_immediate(v) ? SIZE_MAX : !v ? 0 : v->refs == RC_IMMORTAL ? SIZE_MAX : v->refs;
+}
 RcValue *rc_nil(void) { return &nil_value; }
 bool rc_is_nil(const RcValue *v) { return v == &nil_value; }
 static bool belongs(RcContext *ctx, const RcValue *v) { return v && (v == &nil_value || is_immediate(v) || v->ctx == ctx); }
@@ -822,7 +828,7 @@ RcValue *rc_vector(RcContext *ctx, size_t length) {
     for (size_t i = 0; i < length; ++i) items[i] = rc_nil();
     RcValue *v = allocate(ctx, RC_VECTOR, length * sizeof(*items));
     if (!v) { free(items); return NULL; }
-    v->as.vector.items = items; v->as.vector.length = length;
+    v->as.vector.items = items; v->as.vector.length = length; v->as.vector.cycle_source = false;
     v->reaches_vector = true;
     return v;
 }
@@ -882,13 +888,13 @@ bool rc_vector_set(RcContext *ctx, RcValue *v, size_t i, RcValue *item) {
      * plus slots, then conservatively mark a source. A marked source stays
      * marked until freed;
      * removing edges may leave a harmless false positive. */
-    if (may_reach_vector(item) && (ctx->acyclic || !v->cycle_source) &&
+    if (may_reach_vector(item) && (ctx->acyclic || !v->as.vector.cycle_source) &&
         would_create_cycle(ctx, v, item, ctx->acyclic ? SIZE_MAX : 256)) {
         if (ctx->acyclic) {
             rc_error(ctx, "acyclic mode rejects vector assignment that would create a cycle");
             return false;
         }
-        v->cycle_source = true;
+        v->as.vector.cycle_source = true;
         ctx->cycle_sources++;
     }
     RcValue *old = v->as.vector.items[i];

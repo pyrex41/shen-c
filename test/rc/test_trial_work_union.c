@@ -20,7 +20,7 @@ int main(void) {
   if(!i)header=bytes;else assert(bytes==header);
  }
 #if UINTPTR_MAX == UINT64_MAX
- assert(header==128); /* This experiment's 64-bit physical header contract. */
+ assert(header==112); /* 64-bit physical header contract (128 before #7). */
 #else
  assert(header>0);
 #endif
