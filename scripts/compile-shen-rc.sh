@@ -103,7 +103,7 @@ try:
             command.append('--acyclic')
         command += [str(inputs), str(temp / 'app')]
         record['build_seconds'] = run('native compiler', command, output / 'build.log',
-                                      float(os.environ.get('RC_SOURCE_BUILD_TIMEOUT', '900')), env)
+                                      float(os.environ.get('RC_SOURCE_BUILD_TIMEOUT', '300')), env)
         if digest(source) != original_hash:
             raise RuntimeError('source changed while compilation was running; no executable published')
         for filename in ('app.c', 'Makefile', 'app'):

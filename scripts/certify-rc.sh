@@ -105,7 +105,7 @@ save()
 if record['compiler_audit'] != 'PASS':
     raise SystemExit(1)
 if not run('build', [str(builder), str(source), str(output)], root,
-           float(os.environ.get('RC_BUILD_TIMEOUT', '900'))):
+           float(os.environ.get('RC_BUILD_TIMEOUT', '300'))):
     record['build'] = 'UNKNOWN' if 'build_termination' in record else 'FAIL'; save(); raise SystemExit(1)
 record['build'] = 'PASS'
 record['generated_sha256'] = {name: hashlib.sha256((output / name).read_bytes()).hexdigest()
