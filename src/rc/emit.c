@@ -181,6 +181,64 @@ static void frame_code(Buf *out,const RcEmitFn *f) {
  }
  discard(nulls);discard(rewritten.p);
 }
+static bool c_ident(char c){return (c>='a'&&c<='z')||(c>='A'&&c<='Z')||(c>='0'&&c<='9')||c=='_';}
+/* Bound the C optimizer's work on enormous initializer bodies. Helpers share
+ * the activation's existing owned slots and scratch arguments. They add no
+ * allocations, safepoints or language callbacks. Only error exits cross a
+ * helper boundary; the original outer cleanup still owns every live slot.
+ * Dynamic modules, loops, borrowed-callee storage, labels and C locals keep
+ * their original lowering. Quoted text is never rewritten. */
+static int function_chunks(RcEmitFn *f,int id){
+ Program *p=f->p;
+ if(p->options.expression_entry||p->options.conservative_ownership||f->self_loop||f->borrowed_fn_used||f->code.n<131072)return 0;
+ Buf code={.owner=p};frame_code(&code,f);size_t n=code.n;
+ char *mask=alloc(p,n+1);memcpy(mask,code.p,n+1);
+ for(size_t i=0;i<n;){
+  size_t start=i;
+  if(mask[i]=='"'||mask[i]=='\''){
+   char quote=mask[i++];while(i<n){if(mask[i]=='\\'&&i+1<n)i+=2;else if(mask[i++]==quote)break;}
+  }else if(mask[i]=='/'&&i+1<n&&mask[i+1]=='/'){
+   while(i<n&&mask[i]!='\n')i++;
+  }else if(mask[i]=='/'&&i+1<n&&mask[i+1]=='*'){
+   i+=2;while(i+1<n&&(mask[i]!='*'||mask[i+1]!='/'))i++;if(i+1<n)i+=2;
+  }else{i++;continue;}
+  for(size_t j=start;j<i;j++)if(mask[j]!='\n')mask[j]=' ';
+ }
+ for(size_t i=0;i<n;){
+  if(!((mask[i]>='a'&&mask[i]<='z')||(mask[i]>='A'&&mask[i]<='Z')||mask[i]=='_')){i++;continue;}
+  size_t end=i+1;while(end<n&&c_ident(mask[end]))end++;
+  size_t next=end;while(next<n&&(mask[next]==' '||mask[next]=='\t'||mask[next]=='\n'))next++;
+  if(next<n&&mask[next]==':')return 0;
+  static const char *const disallowed[]={"RcValue","bool","int","size_t","int64_t","uint64_t","double","float","char","const","return","switch","case","default","break","continue","for","while","do"};
+  for(size_t j=0;j<sizeof(disallowed)/sizeof(*disallowed);j++)
+   if(strlen(disallowed[j])==end-i&&!memcmp(mask+i,disallowed[j],end-i))return 0;
+  if(end-i==4&&!memcmp(mask+i,"goto",4)&&strncmp(mask+i,"goto cleanup;",13))return 0;
+  i=end;
+ }
+ const size_t target=65536;size_t *cuts=alloc(p,(n/target+3)*sizeof(*cuts)),count=0,start=0;
+ int depth=0;char last=0;
+ for(size_t i=0;i<n;i++){
+  if(mask[i]=='{')depth++;else if(mask[i]=='}')depth--;
+  if(depth<0)return 0;
+  if(mask[i]=='\n'&&!depth&&i+1-start>=target&&(last==';'||last=='}')){
+   size_t next=i+1;while(next<n&&(mask[next]==' '||mask[next]=='\t'||mask[next]=='\n'))next++;
+   if(next+4<=n&&!memcmp(mask+next,"else",4)&&!c_ident(mask[next+4]))continue;
+   cuts[count++]=i+1;start=i+1;
+  }
+  if(mask[i]!=' '&&mask[i]!='\t'&&mask[i]!='\n')last=mask[i];
+ }
+ if(depth)return 0;if(start<n)cuts[count++]=n;if(count<2)return 0;
+ start=0;
+ for(size_t part=0;part<count;part++){
+  put(&p->functions,"#if defined(__GNUC__) || defined(__clang__)\n__attribute__((noinline))\n#endif\nstatic bool rc_native_chunk_%d_%zu(RcContext *ctx,RcValue *self,RcValue **argv,RcValue **t,RcValue **a,RcValue *const *symbols) {\n  (void)ctx; (void)self; (void)argv; (void)t; (void)a; (void)symbols;\n",id,part);
+  size_t copied=start;
+  for(size_t i=start;i<cuts[part];i++)if(!strncmp(mask+i,"goto cleanup;",13)){
+   put(&p->functions,"%.*sreturn false;",(int)(i-copied),code.p+copied);i+=12;copied=i+1;
+  }
+  put(&p->functions,"%.*s  return true;\n}\n",(int)(cuts[part]-copied),code.p+copied);start=cuts[part];
+ }
+ return (int)count;
+}
 static void drop(RcEmitFn *f,int x) {
  if(f->borrowed_fn[x])put(&f->code,"  t[%d]=NULL;\n",x);
  else put(&f->code,"  if(t[%d]) rc_release(t[%d]); t[%d]=NULL;\n",x,x,x);
@@ -665,6 +723,7 @@ static bool exact_prolog(RcEmitFn *f,RcValue *params,RcValue *body,bool lazy) {
 }
 static void finish_function(RcEmitFn *f,int id,int arity,int r){
  Program *p=f->p;
+ int chunks=function_chunks(f,id);
  if(optimize(f))put(&p->functions,"static RcValue *rc_native_body_%d(RcContext *ctx,RcValue *self,RcValue **argv) {\n  (void)self; (void)argv;\n  if(!rc_stack_check(ctx)) return NULL;\n  RcValue *result=NULL;\n",id);
  else put(&p->functions,"static RcValue *rc_native_%d(RcContext *ctx,RcValue *self,size_t argc,RcValue *const *argv) {\n  (void)self; (void)argv;\n  if(argc!=%d) return rc_error(ctx,\"native arity mismatch\");\n  if(!rc_stack_check(ctx)) return NULL;\n  RcValue *result=NULL;\n",id,arity);
  symbol_frame(&p->functions,f);
@@ -677,7 +736,10 @@ static void finish_function(RcEmitFn *f,int id,int arity,int r){
   * this activation, so all logical borrowed slots share one scalar. */
  if(f->borrowed_fn_used)put(&p->functions,"  RcValue *borrowed_fn=NULL; (void)borrowed_fn;\n");
  if(f->self_loop)put(&p->functions,"entry:;\n");
- frame_code(&p->functions,f);r=f->physical[r];
+ if(chunks)for(int part=0;part<chunks;part++)
+  put(&p->functions,"  if(!rc_native_chunk_%d_%d(ctx,self,argv,t,a,%s)) goto cleanup;\n",id,part,f->symbol_used?"symbols":"NULL");
+ else frame_code(&p->functions,f);
+ r=f->physical[r];
  put(&p->functions,"  result=t[%d]; t[%d]=NULL;\n",r,r);
  if(optimize(f)) {
   /* Inductive owned-expression contract: successful emission leaves only its

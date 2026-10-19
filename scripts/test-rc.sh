@@ -72,4 +72,5 @@ audit "${1:-$root/bin/rc-build}"
 "$root/test/rc/test_identity_tail.sh" "${1:-$root/bin/rc-build}"
 
 "$root/test/rc/test_condition_emit.sh" "${1:-$root/bin/rc-build}"
+"$root/test/rc/test_native_chunks.sh" "${1:-$root/bin/rc-build}"
 "$root/test/rc/test_prolog_fast.sh" "${1:-$root/bin/rc-build}"
