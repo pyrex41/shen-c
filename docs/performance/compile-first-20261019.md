@@ -96,3 +96,5 @@ success. If CPU remains short, profile the packed release build separately
 before choosing the next ownership or dispatch change.
 
 The later [16-module generated-kernel sanitizer receipt](../evidence/compile-first-sanitizer-20261019/README.md) passes 136/0 and clean process exit after the CLI alternate-stack restoration fix. This supersedes the earlier shutdown failure; platform CI and repeated Boehm acceptance remain separate gates.
+
+The [native optimization checkpoint](native-optimization-20261019.md) records the next ownership candidate, noisy whole-suite results, rejected oversized preparation and the measured generated-C compiler bottleneck.

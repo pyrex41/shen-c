@@ -1,0 +1,82 @@
+{
+  "original_sha256": "27460003313918b60a15ea2b7ec3ba14656da0bdab67a4bf81ee012e429991ec",
+  "configuration": {
+    "repetitions": 3,
+    "source_identity": {
+      "scope": "Exploratory matched native baseline and rooted-predicate candidate; not Boehm acceptance",
+      "baseline_revision": "385b2f3",
+      "candidate_parent": "4818a75",
+      "candidate_source_sha256": {
+        "src/rc/eval.c": "b000cf643055e687f343ac45286bfd30a461b62b87c1c7421051f81d34abde13",
+        "src/rc/native_tier.h": "7b4aaf3d8b9b80b12b924bc2108ce87ba6cf7bfbf190120c9e9abdf1b4afedf8",
+        "src/rc/native_compile.c": "252ea6b53ebeff35f797f117be909f340c0f74ae2e1867b6c2fec8fff5e4afd1",
+        "src/rc/rc.c": "00ba62ca2758d824744c2187de582ee443dfb847aedf3b9edafaa43c5ec25208",
+        "src/rc/rc_internal.h": "0d108dd171930d1a23f336433553616472be5e2b69ef1e8adfc144e1205741b7",
+        "src/rc/emit.c": "b3095fa5e3f88fc57c2b7fddb97b66ba549fbbff3be0f92b9e8b72f8f2e8e6bd",
+        "src/rc/primitives.c": "e59979dea0f1565d89247bc3ab34785675abd21d5dbf68bea91c5bcca7d18b68",
+        "src/rc/read.c": "f61444980f2d34d3986f9640103b3478501c4d368f6c2dd5058a4b39b3143667",
+        "src/rc/eval.h": "8cf30f46144317237e6f1d99b154c7392d6302f292b2f81625bf63a05c92c026",
+        "src/rc/main.c": "77188560d1f414cc8b6ce5b658552f763ab67b0835a46ee7abb19d4bdd325b7a",
+        "src/rc/native_compile.h": "92612137b3f8e78458b808f1d265fdcc35d4ced883357ca51c5a341265b0dd6d",
+        "src/rc/native_tier.c": "ec513a8614615f823e158ea2aed554cfe3ceb1c4551af057dddca40e53b637bd",
+        "src/rc/primitives.h": "f41a8417b26f9b25430b5b074b943e1aa384ab715625735698a5dafb397b8bb9",
+        "src/rc/rc.h": "763963bec313541e55027d983ffba7b81c9ced457dbcea154a831d37206eb37e",
+        "src/rc/emit.h": "ccc73db9fa1a11522a91a34a0cebf534b85b83fef99f8e04cc22a42d2b1c0d72",
+        "src/rc/eval_plan.h": "400f3c6de332b937693580de529c2fdd6935e84a939f1c2d01f9379381287e23",
+        "src/rc/read.h": "71fb3e8ce757174ee47dde95f732200ae1b023c66f8164ac0a4d82ebb241fea5"
+      },
+      "candidate_generated_c_sha256": "69c530edace2bf2125730ed6fac546d7416b960324edab04d068d4c02433d0d4",
+      "host_flags": "-O3 -g -flto=thin; cached dynamic code -O1"
+    },
+    "cases": [
+      {
+        "label": "baseline",
+        "argv": [
+          "${PROJECTS}/shen-c-borrowed-predicates/evidence/predicate/frozen/baseline/shen-rc",
+          "eval",
+          "-l",
+          "runme.shen"
+        ],
+        "env": {
+          "SHEN_RC_EXECUTION": "native",
+          "SHEN_RC_VERIFY_NATIVE": "1",
+          "SHEN_RC_NATIVE_STATS": "1",
+          "SHEN_RC_NATIVE_CACHE": "${PROJECTS}/shen-c-borrowed-predicates/evidence/predicate/frozen/baseline/cache"
+        },
+        "dependency_sha256": {
+          "${PROJECTS}/shen-c-borrowed-predicates/evidence/predicate/frozen/baseline/cache/compile-256b211f3cc0b9165c15268166c645da.config": "38d38ba6a917303b74d2a3426a4442d2f501a3e53c536e3df3bbda67f64417d4",
+          "${PROJECTS}/shen-c-borrowed-predicates/evidence/predicate/frozen/baseline/cache/bundle-256b211f3cc0b9165c15268166c645da.json": "3706d8a7b5f30f7b01e26a26e23313e00adc4fe77dc5a99fbb146e7367f3f65b",
+          "${PROJECTS}/shen-c-borrowed-predicates/evidence/predicate/frozen/baseline/cache/bundle-256b211f3cc0b9165c15268166c645da.so": "20715eb2474ce4df2d9e03d2eacb49465a30e86ed48ac913347d21a26b9a6820",
+          "${PROJECTS}/shen-c-borrowed-predicates/evidence/predicate/frozen/baseline/cache/bundle-256b211f3cc0b9165c15268166c645da.receipt": "3ff52788fd87626a2cc2b6c5def82f70de3e3ae16c2f720f6ac441473739927a",
+          "${PROJECTS}/shen-c-borrowed-predicates/evidence/predicate/frozen/baseline/cache/include-256b211f3cc0b9165c15268166c645da/eval.h": "8cf30f46144317237e6f1d99b154c7392d6302f292b2f81625bf63a05c92c026",
+          "${PROJECTS}/shen-c-borrowed-predicates/evidence/predicate/frozen/baseline/cache/include-256b211f3cc0b9165c15268166c645da/primitives.h": "036f928535fc8c2504e18c67891e52f6c7c873599b61e18a80d7528f5bb963b3",
+          "${PROJECTS}/shen-c-borrowed-predicates/evidence/predicate/frozen/baseline/cache/include-256b211f3cc0b9165c15268166c645da/rc.h": "763963bec313541e55027d983ffba7b81c9ced457dbcea154a831d37206eb37e"
+        }
+      },
+      {
+        "label": "candidate",
+        "argv": [
+          "${PROJECTS}/shen-c-borrowed-predicates/evidence/predicate/frozen/candidate/shen-rc",
+          "eval",
+          "-l",
+          "runme.shen"
+        ],
+        "env": {
+          "SHEN_RC_EXECUTION": "native",
+          "SHEN_RC_VERIFY_NATIVE": "1",
+          "SHEN_RC_NATIVE_STATS": "1",
+          "SHEN_RC_NATIVE_CACHE": "${PROJECTS}/shen-c-borrowed-predicates/evidence/predicate/frozen/candidate/cache"
+        },
+        "dependency_sha256": {
+          "${PROJECTS}/shen-c-borrowed-predicates/evidence/predicate/frozen/candidate/cache/bundle-981f4594907060762ee47c50e1558d8e.json": "b1cedd884e3a81dfbd803cf1630361ea7375ed4d9d5cc6636938284704c06e39",
+          "${PROJECTS}/shen-c-borrowed-predicates/evidence/predicate/frozen/candidate/cache/bundle-981f4594907060762ee47c50e1558d8e.so": "ecbc708fe06e6d427e45db39e90f40d1c30161757cf044099e8d7b58acf91212",
+          "${PROJECTS}/shen-c-borrowed-predicates/evidence/predicate/frozen/candidate/cache/bundle-981f4594907060762ee47c50e1558d8e.receipt": "fb8eb9b55a0b0c36d9f71cf38f8016bc0f540aa4bc9ad4ac32853ef366d91feb",
+          "${PROJECTS}/shen-c-borrowed-predicates/evidence/predicate/frozen/candidate/cache/compile-981f4594907060762ee47c50e1558d8e.config": "618abda9529ae2c7b1faec83766d6e36ec0e57f811008ade7241613d67a16582",
+          "${PROJECTS}/shen-c-borrowed-predicates/evidence/predicate/frozen/candidate/cache/include-981f4594907060762ee47c50e1558d8e/eval.h": "8cf30f46144317237e6f1d99b154c7392d6302f292b2f81625bf63a05c92c026",
+          "${PROJECTS}/shen-c-borrowed-predicates/evidence/predicate/frozen/candidate/cache/include-981f4594907060762ee47c50e1558d8e/primitives.h": "f41a8417b26f9b25430b5b074b943e1aa384ab715625735698a5dafb397b8bb9",
+          "${PROJECTS}/shen-c-borrowed-predicates/evidence/predicate/frozen/candidate/cache/include-981f4594907060762ee47c50e1558d8e/rc.h": "763963bec313541e55027d983ffba7b81c9ced457dbcea154a831d37206eb37e"
+        }
+      }
+    ]
+  }
+}

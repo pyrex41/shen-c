@@ -60,6 +60,9 @@ int main(int argc,char **argv){
   if(!load(c,"nreverseprolog.shen")||!shen(c,"(define rc-bench-run -> (prolog? (nreverse [1 2 3 4 5 6 7 8 9 10 11 12] Out) (return Out)))"))goto done;
   expected_text="(12 11 10 9 8 7 6 5 4 3 2 1)";
  }else if(!strcmp(argv[1],"typecheck")){
+  /* The bounded long-running profile must not exhaust the default inference
+   * budget. This changes a resource limit, not the checked query or result. */
+  if(!kl(c,"(maxinferences 1000000000)"))goto done;
   if(!kl(c,"(defun rc-bench-run () (shen.typecheck (quote (+ 1 (* 2 3))) (quote number)))"))goto done;
   expected_text="number";
  }else{fprintf(stderr,"unknown execution case\n");goto done;}

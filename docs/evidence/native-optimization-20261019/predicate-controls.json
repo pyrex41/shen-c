@@ -1,0 +1,917 @@
+{
+  "status": "PASS",
+  "host": "macOS-27.0.1-arm64-arm-64bit",
+  "machine": "arm64",
+  "binary_sha256": "20d4cf858460e8f6773630f283ff821f924302de5e7be4676a0ea646f65e18c4",
+  "source_sha256": {
+    "test/rc/bench_execution.c": "0ef6bf823f3a08adf4f5bf950d92ea6c23aea945feebab715e5ca7261c3afe16",
+    "scripts/measure-execution.py": "92eee721b653407269feb9f5da177069d82762f03e62758c8c69bd2f754d2f76",
+    "shen/releases/s43.1.json": "df423ea11c4aa46a3fc530281543b992864fb46e7416d78c118030ab68a30e9c",
+    "src/rc/eval.c": "b000cf643055e687f343ac45286bfd30a461b62b87c1c7421051f81d34abde13",
+    "src/rc/native_tier.h": "7b4aaf3d8b9b80b12b924bc2108ce87ba6cf7bfbf190120c9e9abdf1b4afedf8",
+    "src/rc/native_compile.c": "252ea6b53ebeff35f797f117be909f340c0f74ae2e1867b6c2fec8fff5e4afd1",
+    "src/rc/rc.c": "00ba62ca2758d824744c2187de582ee443dfb847aedf3b9edafaa43c5ec25208",
+    "src/rc/rc_internal.h": "0d108dd171930d1a23f336433553616472be5e2b69ef1e8adfc144e1205741b7",
+    "src/rc/emit.c": "b3095fa5e3f88fc57c2b7fddb97b66ba549fbbff3be0f92b9e8b72f8f2e8e6bd",
+    "src/rc/primitives.c": "e59979dea0f1565d89247bc3ab34785675abd21d5dbf68bea91c5bcca7d18b68",
+    "src/rc/read.c": "f61444980f2d34d3986f9640103b3478501c4d368f6c2dd5058a4b39b3143667",
+    "src/rc/eval.h": "8cf30f46144317237e6f1d99b154c7392d6302f292b2f81625bf63a05c92c026",
+    "src/rc/main.c": "07a8a237e0de386e9ef773593ed09ae8b4b674bcbfeaa302660cbfe5316fc175",
+    "src/rc/native_compile.h": "92612137b3f8e78458b808f1d265fdcc35d4ced883357ca51c5a341265b0dd6d",
+    "src/rc/native_tier.c": "ec513a8614615f823e158ea2aed554cfe3ceb1c4551af057dddca40e53b637bd",
+    "src/rc/primitives.h": "f41a8417b26f9b25430b5b074b943e1aa384ab715625735698a5dafb397b8bb9",
+    "src/rc/rc.h": "763963bec313541e55027d983ffba7b81c9ced457dbcea154a831d37206eb37e",
+    "src/rc/emit.h": "ccc73db9fa1a11522a91a34a0cebf534b85b83fef99f8e04cc22a42d2b1c0d72",
+    "src/rc/eval_plan.h": "400f3c6de332b937693580de529c2fdd6935e84a939f1c2d01f9379381287e23",
+    "src/rc/read.h": "71fb3e8ce757174ee47dde95f732200ae1b023c66f8164ac0a4d82ebb241fea5"
+  },
+  "scope": "warmed representative execution; not whole-suite or Boehm acceptance",
+  "samples": [
+    {
+      "name": "0-tail-count-candidate",
+      "mode": "candidate",
+      "round": 0,
+      "command": [
+        "${PROJECTS}/shen-c-borrowed-predicates/bin/release/bench_execution",
+        "tail-count",
+        "300",
+        "${PROJECTS}/shen-c-borrowed-predicates/evidence/rc/execution-20261019T194119Z/0-tail-count-candidate/suite"
+      ],
+      "log_sha256": "40747b75d642543b9f60ed50efdea9c2a3dc542391851b8e34b3be5183a39487",
+      "metrics": {
+        "case": "tail-count",
+        "repetitions": 300,
+        "setup_wall": 4.02136,
+        "wall": 0.933126,
+        "user": 0.903216,
+        "system": 0.007178,
+        "compiler_child_cpu": 0.0,
+        "interpreter_entries": 0,
+        "retain_calls": 30000900,
+        "release_calls": 30001200,
+        "system_allocations": 0,
+        "pair_reuses": 0,
+        "collections": 0,
+        "cycle_objects_freed": 0
+      }
+    },
+    {
+      "name": "0-tail-count-baseline",
+      "mode": "baseline",
+      "round": 0,
+      "command": [
+        "${PROJECTS}/shen-c-compile-first-bundle/bin/rc/bench_execution",
+        "tail-count",
+        "300",
+        "${PROJECTS}/shen-c-borrowed-predicates/evidence/rc/execution-20261019T194119Z/0-tail-count-baseline/suite"
+      ],
+      "log_sha256": "76c2d8dc36e942e5202bfe1da504c9605a8fbdc92527467423065b389f87ba73",
+      "metrics": {
+        "case": "tail-count",
+        "repetitions": 300,
+        "setup_wall": 3.437344,
+        "wall": 0.933414,
+        "user": 0.89554,
+        "system": 0.008555,
+        "compiler_child_cpu": 0.0,
+        "interpreter_entries": 0,
+        "retain_calls": 30000900,
+        "release_calls": 30001200,
+        "system_allocations": 0,
+        "pair_reuses": 0,
+        "collections": 0,
+        "cycle_objects_freed": 0
+      }
+    },
+    {
+      "name": "0-list-build-candidate",
+      "mode": "candidate",
+      "round": 0,
+      "command": [
+        "${PROJECTS}/shen-c-borrowed-predicates/bin/release/bench_execution",
+        "list-build",
+        "1000",
+        "${PROJECTS}/shen-c-borrowed-predicates/evidence/rc/execution-20261019T194119Z/0-list-build-candidate/suite"
+      ],
+      "log_sha256": "de227279a4b29640ac996b03c4d40c2a7acaea8132f07fed0af2275f66aa8bf9",
+      "metrics": {
+        "case": "list-build",
+        "repetitions": 1000,
+        "setup_wall": 2.267495,
+        "wall": 0.7954,
+        "user": 0.767192,
+        "system": 0.008134,
+        "compiler_child_cpu": 0.0,
+        "interpreter_entries": 0,
+        "retain_calls": 60004000,
+        "release_calls": 70006000,
+        "system_allocations": 8978000,
+        "pair_reuses": 0,
+        "collections": 15,
+        "cycle_objects_freed": 0
+      }
+    },
+    {
+      "name": "0-list-build-baseline",
+      "mode": "baseline",
+      "round": 0,
+      "command": [
+        "${PROJECTS}/shen-c-compile-first-bundle/bin/rc/bench_execution",
+        "list-build",
+        "1000",
+        "${PROJECTS}/shen-c-borrowed-predicates/evidence/rc/execution-20261019T194119Z/0-list-build-baseline/suite"
+      ],
+      "log_sha256": "015840322b795943e80fa8a8a477e6f152f832137383b366817ee4cd7d22369d",
+      "metrics": {
+        "case": "list-build",
+        "repetitions": 1000,
+        "setup_wall": 2.013116,
+        "wall": 0.957626,
+        "user": 0.915839,
+        "system": 0.008324,
+        "compiler_child_cpu": 0.0,
+        "interpreter_entries": 0,
+        "retain_calls": 60004000,
+        "release_calls": 70006000,
+        "system_allocations": 8978000,
+        "pair_reuses": 0,
+        "collections": 15,
+        "cycle_objects_freed": 0
+      }
+    },
+    {
+      "name": "0-queens-candidate",
+      "mode": "candidate",
+      "round": 0,
+      "command": [
+        "${PROJECTS}/shen-c-borrowed-predicates/bin/release/bench_execution",
+        "queens",
+        "40",
+        "${PROJECTS}/shen-c-borrowed-predicates/evidence/rc/execution-20261019T194119Z/0-queens-candidate/suite"
+      ],
+      "log_sha256": "8b2a1d35fcb084865bb878fcb65f2a57e80e8f6e0198a369eacdc4bcbeaa5bfd",
+      "metrics": {
+        "case": "queens",
+        "repetitions": 40,
+        "setup_wall": 11.000233,
+        "wall": 0.702746,
+        "user": 0.686056,
+        "system": 0.004488,
+        "compiler_child_cpu": 0.0,
+        "interpreter_entries": 0,
+        "retain_calls": 105601320,
+        "release_calls": 105618480,
+        "system_allocations": 0,
+        "pair_reuses": 2238240,
+        "collections": 0,
+        "cycle_objects_freed": 0
+      }
+    },
+    {
+      "name": "0-queens-baseline",
+      "mode": "baseline",
+      "round": 0,
+      "command": [
+        "${PROJECTS}/shen-c-compile-first-bundle/bin/rc/bench_execution",
+        "queens",
+        "40",
+        "${PROJECTS}/shen-c-borrowed-predicates/evidence/rc/execution-20261019T194119Z/0-queens-baseline/suite"
+      ],
+      "log_sha256": "362f12372f1a2b5966c8e14432d4bc3fd7e870d6532d5f2115f8be2077e9cec1",
+      "metrics": {
+        "case": "queens",
+        "repetitions": 40,
+        "setup_wall": 1.04845,
+        "wall": 0.701676,
+        "user": 0.689808,
+        "system": 0.00432,
+        "compiler_child_cpu": 0.0,
+        "interpreter_entries": 0,
+        "retain_calls": 134703520,
+        "release_calls": 134720680,
+        "system_allocations": 0,
+        "pair_reuses": 2238240,
+        "collections": 0,
+        "cycle_objects_freed": 0
+      }
+    },
+    {
+      "name": "0-prolog-candidate",
+      "mode": "candidate",
+      "round": 0,
+      "command": [
+        "${PROJECTS}/shen-c-borrowed-predicates/bin/release/bench_execution",
+        "prolog",
+        "3000",
+        "${PROJECTS}/shen-c-borrowed-predicates/evidence/rc/execution-20261019T194119Z/0-prolog-candidate/suite"
+      ],
+      "log_sha256": "884075a6a1ad7d2e511b1faeb9b5d3b2c05f373dbd59726f9e1da36d9dd51d9b",
+      "metrics": {
+        "case": "prolog",
+        "repetitions": 3000,
+        "setup_wall": 3.690231,
+        "wall": 0.484082,
+        "user": 0.473287,
+        "system": 0.003158,
+        "compiler_child_cpu": 0.0,
+        "interpreter_entries": 0,
+        "retain_calls": 53961000,
+        "release_calls": 61023000,
+        "system_allocations": 0,
+        "pair_reuses": 0,
+        "collections": 12,
+        "cycle_objects_freed": 0
+      }
+    },
+    {
+      "name": "0-prolog-baseline",
+      "mode": "baseline",
+      "round": 0,
+      "command": [
+        "${PROJECTS}/shen-c-compile-first-bundle/bin/rc/bench_execution",
+        "prolog",
+        "3000",
+        "${PROJECTS}/shen-c-borrowed-predicates/evidence/rc/execution-20261019T194119Z/0-prolog-baseline/suite"
+      ],
+      "log_sha256": "4beb227a560e63dcda15656741a882a8a7bd81f839e5309f2b7591926b69968a",
+      "metrics": {
+        "case": "prolog",
+        "repetitions": 3000,
+        "setup_wall": 0.830353,
+        "wall": 0.45189,
+        "user": 0.44058,
+        "system": 0.002394,
+        "compiler_child_cpu": 0.0,
+        "interpreter_entries": 0,
+        "retain_calls": 55182000,
+        "release_calls": 62244000,
+        "system_allocations": 0,
+        "pair_reuses": 0,
+        "collections": 12,
+        "cycle_objects_freed": 0
+      }
+    },
+    {
+      "name": "0-typecheck-candidate",
+      "mode": "candidate",
+      "round": 0,
+      "command": [
+        "${PROJECTS}/shen-c-borrowed-predicates/bin/release/bench_execution",
+        "typecheck",
+        "15000",
+        "${PROJECTS}/shen-c-borrowed-predicates/evidence/rc/execution-20261019T194119Z/0-typecheck-candidate/suite"
+      ],
+      "log_sha256": "5c50751a339551c2bd44600cc1b31fbe469e0186afcadf2a386b16ed4c06f90d",
+      "metrics": {
+        "case": "typecheck",
+        "repetitions": 15000,
+        "setup_wall": 0.173036,
+        "wall": 0.467485,
+        "user": 0.447716,
+        "system": 0.006609,
+        "compiler_child_cpu": 0.0,
+        "interpreter_entries": 0,
+        "retain_calls": 52005000,
+        "release_calls": 57405000,
+        "system_allocations": 0,
+        "pair_reuses": 30000,
+        "collections": 9,
+        "cycle_objects_freed": 0
+      }
+    },
+    {
+      "name": "0-typecheck-baseline",
+      "mode": "baseline",
+      "round": 0,
+      "command": [
+        "${PROJECTS}/shen-c-compile-first-bundle/bin/rc/bench_execution",
+        "typecheck",
+        "15000",
+        "${PROJECTS}/shen-c-borrowed-predicates/evidence/rc/execution-20261019T194119Z/0-typecheck-baseline/suite"
+      ],
+      "log_sha256": "1087dcdf91332eb34ef27e4c7c08a37d2ecb6e799bcfcbb5a9eb347385cf8a0a",
+      "metrics": {
+        "case": "typecheck",
+        "repetitions": 15000,
+        "setup_wall": 0.120812,
+        "wall": 0.52625,
+        "user": 0.510091,
+        "system": 0.005058,
+        "compiler_child_cpu": 0.0,
+        "interpreter_entries": 0,
+        "retain_calls": 56805000,
+        "release_calls": 62205000,
+        "system_allocations": 0,
+        "pair_reuses": 30000,
+        "collections": 9,
+        "cycle_objects_freed": 0
+      }
+    },
+    {
+      "name": "1-tail-count-baseline",
+      "mode": "baseline",
+      "round": 1,
+      "command": [
+        "${PROJECTS}/shen-c-compile-first-bundle/bin/rc/bench_execution",
+        "tail-count",
+        "300",
+        "${PROJECTS}/shen-c-borrowed-predicates/evidence/rc/execution-20261019T194119Z/1-tail-count-baseline/suite"
+      ],
+      "log_sha256": "9531a84472166acac399ae7279cfdff91857ddc90606e17d75a63f7f90564f4b",
+      "metrics": {
+        "case": "tail-count",
+        "repetitions": 300,
+        "setup_wall": 0.149965,
+        "wall": 0.903615,
+        "user": 0.885764,
+        "system": 0.005708,
+        "compiler_child_cpu": 0.0,
+        "interpreter_entries": 0,
+        "retain_calls": 30000900,
+        "release_calls": 30001200,
+        "system_allocations": 0,
+        "pair_reuses": 0,
+        "collections": 0,
+        "cycle_objects_freed": 0
+      }
+    },
+    {
+      "name": "1-tail-count-candidate",
+      "mode": "candidate",
+      "round": 1,
+      "command": [
+        "${PROJECTS}/shen-c-borrowed-predicates/bin/release/bench_execution",
+        "tail-count",
+        "300",
+        "${PROJECTS}/shen-c-borrowed-predicates/evidence/rc/execution-20261019T194119Z/1-tail-count-candidate/suite"
+      ],
+      "log_sha256": "0cc55e3dc8438a2d8ef2b7930992f4d221bc9b02b02b25aaf41254f41435ed03",
+      "metrics": {
+        "case": "tail-count",
+        "repetitions": 300,
+        "setup_wall": 0.154666,
+        "wall": 0.79189,
+        "user": 0.77466,
+        "system": 0.004646,
+        "compiler_child_cpu": 0.0,
+        "interpreter_entries": 0,
+        "retain_calls": 30000900,
+        "release_calls": 30001200,
+        "system_allocations": 0,
+        "pair_reuses": 0,
+        "collections": 0,
+        "cycle_objects_freed": 0
+      }
+    },
+    {
+      "name": "1-list-build-baseline",
+      "mode": "baseline",
+      "round": 1,
+      "command": [
+        "${PROJECTS}/shen-c-compile-first-bundle/bin/rc/bench_execution",
+        "list-build",
+        "1000",
+        "${PROJECTS}/shen-c-borrowed-predicates/evidence/rc/execution-20261019T194119Z/1-list-build-baseline/suite"
+      ],
+      "log_sha256": "cf9f4870cdfcdf66456fe33baf31729d90d360ac2e76e294584c0cc11f5229ae",
+      "metrics": {
+        "case": "list-build",
+        "repetitions": 1000,
+        "setup_wall": 0.134094,
+        "wall": 0.64414,
+        "user": 0.638241,
+        "system": 0.002358,
+        "compiler_child_cpu": 0.0,
+        "interpreter_entries": 0,
+        "retain_calls": 60004000,
+        "release_calls": 70006000,
+        "system_allocations": 8978000,
+        "pair_reuses": 0,
+        "collections": 15,
+        "cycle_objects_freed": 0
+      }
+    },
+    {
+      "name": "1-list-build-candidate",
+      "mode": "candidate",
+      "round": 1,
+      "command": [
+        "${PROJECTS}/shen-c-borrowed-predicates/bin/release/bench_execution",
+        "list-build",
+        "1000",
+        "${PROJECTS}/shen-c-borrowed-predicates/evidence/rc/execution-20261019T194119Z/1-list-build-candidate/suite"
+      ],
+      "log_sha256": "31780a6619ba5ebbe3e56b81f20872f905503b3e02fe1141aad56bf071c94959",
+      "metrics": {
+        "case": "list-build",
+        "repetitions": 1000,
+        "setup_wall": 0.14993,
+        "wall": 0.690962,
+        "user": 0.682247,
+        "system": 0.003805,
+        "compiler_child_cpu": 0.0,
+        "interpreter_entries": 0,
+        "retain_calls": 60004000,
+        "release_calls": 70006000,
+        "system_allocations": 8978000,
+        "pair_reuses": 0,
+        "collections": 15,
+        "cycle_objects_freed": 0
+      }
+    },
+    {
+      "name": "1-queens-baseline",
+      "mode": "baseline",
+      "round": 1,
+      "command": [
+        "${PROJECTS}/shen-c-compile-first-bundle/bin/rc/bench_execution",
+        "queens",
+        "40",
+        "${PROJECTS}/shen-c-borrowed-predicates/evidence/rc/execution-20261019T194119Z/1-queens-baseline/suite"
+      ],
+      "log_sha256": "ec20772de6702ebb548da40f3d54971eadefe9f32daac9a0674e433ccf9378bf",
+      "metrics": {
+        "case": "queens",
+        "repetitions": 40,
+        "setup_wall": 0.207316,
+        "wall": 0.658758,
+        "user": 0.656326,
+        "system": 0.001158,
+        "compiler_child_cpu": 0.0,
+        "interpreter_entries": 0,
+        "retain_calls": 134703520,
+        "release_calls": 134720680,
+        "system_allocations": 0,
+        "pair_reuses": 2238240,
+        "collections": 0,
+        "cycle_objects_freed": 0
+      }
+    },
+    {
+      "name": "1-queens-candidate",
+      "mode": "candidate",
+      "round": 1,
+      "command": [
+        "${PROJECTS}/shen-c-borrowed-predicates/bin/release/bench_execution",
+        "queens",
+        "40",
+        "${PROJECTS}/shen-c-borrowed-predicates/evidence/rc/execution-20261019T194119Z/1-queens-candidate/suite"
+      ],
+      "log_sha256": "dcc1b1a2e94e6be7196aaf57a562e94d536abacd82961cda6a667648fce85643",
+      "metrics": {
+        "case": "queens",
+        "repetitions": 40,
+        "setup_wall": 0.99183,
+        "wall": 0.620861,
+        "user": 0.618927,
+        "system": 0.000976,
+        "compiler_child_cpu": 0.0,
+        "interpreter_entries": 0,
+        "retain_calls": 105601320,
+        "release_calls": 105618480,
+        "system_allocations": 0,
+        "pair_reuses": 2238240,
+        "collections": 0,
+        "cycle_objects_freed": 0
+      }
+    },
+    {
+      "name": "1-prolog-baseline",
+      "mode": "baseline",
+      "round": 1,
+      "command": [
+        "${PROJECTS}/shen-c-compile-first-bundle/bin/rc/bench_execution",
+        "prolog",
+        "3000",
+        "${PROJECTS}/shen-c-borrowed-predicates/evidence/rc/execution-20261019T194119Z/1-prolog-baseline/suite"
+      ],
+      "log_sha256": "7f11a346b4ff4b5642ad5c9186376b3eb10b7d5dc9a09714dadca21c0eeaefda",
+      "metrics": {
+        "case": "prolog",
+        "repetitions": 3000,
+        "setup_wall": 0.180338,
+        "wall": 0.399974,
+        "user": 0.398813,
+        "system": 0.000475,
+        "compiler_child_cpu": 0.0,
+        "interpreter_entries": 0,
+        "retain_calls": 55182000,
+        "release_calls": 62244000,
+        "system_allocations": 0,
+        "pair_reuses": 0,
+        "collections": 12,
+        "cycle_objects_freed": 0
+      }
+    },
+    {
+      "name": "1-prolog-candidate",
+      "mode": "candidate",
+      "round": 1,
+      "command": [
+        "${PROJECTS}/shen-c-borrowed-predicates/bin/release/bench_execution",
+        "prolog",
+        "3000",
+        "${PROJECTS}/shen-c-borrowed-predicates/evidence/rc/execution-20261019T194119Z/1-prolog-candidate/suite"
+      ],
+      "log_sha256": "d9ed6cd7c0d3a426b0a7e541b89521734fd63556bb6b31d36096987ca8fdc611",
+      "metrics": {
+        "case": "prolog",
+        "repetitions": 3000,
+        "setup_wall": 0.398865,
+        "wall": 0.405127,
+        "user": 0.403529,
+        "system": 0.000712,
+        "compiler_child_cpu": 0.0,
+        "interpreter_entries": 0,
+        "retain_calls": 53961000,
+        "release_calls": 61023000,
+        "system_allocations": 0,
+        "pair_reuses": 0,
+        "collections": 12,
+        "cycle_objects_freed": 0
+      }
+    },
+    {
+      "name": "1-typecheck-baseline",
+      "mode": "baseline",
+      "round": 1,
+      "command": [
+        "${PROJECTS}/shen-c-compile-first-bundle/bin/rc/bench_execution",
+        "typecheck",
+        "15000",
+        "${PROJECTS}/shen-c-borrowed-predicates/evidence/rc/execution-20261019T194119Z/1-typecheck-baseline/suite"
+      ],
+      "log_sha256": "49acd9c875c01de53e655ac56664fa5ce19c0270ed2e9d48fe53ab6e250bbfcf",
+      "metrics": {
+        "case": "typecheck",
+        "repetitions": 15000,
+        "setup_wall": 0.126132,
+        "wall": 0.402349,
+        "user": 0.400738,
+        "system": 0.000716,
+        "compiler_child_cpu": 0.0,
+        "interpreter_entries": 0,
+        "retain_calls": 56805000,
+        "release_calls": 62205000,
+        "system_allocations": 0,
+        "pair_reuses": 30000,
+        "collections": 9,
+        "cycle_objects_freed": 0
+      }
+    },
+    {
+      "name": "1-typecheck-candidate",
+      "mode": "candidate",
+      "round": 1,
+      "command": [
+        "${PROJECTS}/shen-c-borrowed-predicates/bin/release/bench_execution",
+        "typecheck",
+        "15000",
+        "${PROJECTS}/shen-c-borrowed-predicates/evidence/rc/execution-20261019T194119Z/1-typecheck-candidate/suite"
+      ],
+      "log_sha256": "7042b5a8bb6937d468def53c85bc51b4e142254c478e10fbf6dd7476e669ab57",
+      "metrics": {
+        "case": "typecheck",
+        "repetitions": 15000,
+        "setup_wall": 0.170041,
+        "wall": 0.395657,
+        "user": 0.394054,
+        "system": 0.000678,
+        "compiler_child_cpu": 0.0,
+        "interpreter_entries": 0,
+        "retain_calls": 52005000,
+        "release_calls": 57405000,
+        "system_allocations": 0,
+        "pair_reuses": 30000,
+        "collections": 9,
+        "cycle_objects_freed": 0
+      }
+    },
+    {
+      "name": "2-tail-count-candidate",
+      "mode": "candidate",
+      "round": 2,
+      "command": [
+        "${PROJECTS}/shen-c-borrowed-predicates/bin/release/bench_execution",
+        "tail-count",
+        "300",
+        "${PROJECTS}/shen-c-borrowed-predicates/evidence/rc/execution-20261019T194119Z/2-tail-count-candidate/suite"
+      ],
+      "log_sha256": "8e3d4a780956b079b43944ad75947e1a187547d2662c7110e94412692d49552e",
+      "metrics": {
+        "case": "tail-count",
+        "repetitions": 300,
+        "setup_wall": 0.076072,
+        "wall": 0.827812,
+        "user": 0.798421,
+        "system": 0.008432,
+        "compiler_child_cpu": 0.0,
+        "interpreter_entries": 0,
+        "retain_calls": 30000900,
+        "release_calls": 30001200,
+        "system_allocations": 0,
+        "pair_reuses": 0,
+        "collections": 0,
+        "cycle_objects_freed": 0
+      }
+    },
+    {
+      "name": "2-tail-count-baseline",
+      "mode": "baseline",
+      "round": 2,
+      "command": [
+        "${PROJECTS}/shen-c-compile-first-bundle/bin/rc/bench_execution",
+        "tail-count",
+        "300",
+        "${PROJECTS}/shen-c-borrowed-predicates/evidence/rc/execution-20261019T194119Z/2-tail-count-baseline/suite"
+      ],
+      "log_sha256": "609cee023ffe3aed66ed6c4ea0ad8fcc624562c7cbf8e4dafed562dc751fea1b",
+      "metrics": {
+        "case": "tail-count",
+        "repetitions": 300,
+        "setup_wall": 0.209638,
+        "wall": 0.734302,
+        "user": 0.732689,
+        "system": 0.000774,
+        "compiler_child_cpu": 0.0,
+        "interpreter_entries": 0,
+        "retain_calls": 30000900,
+        "release_calls": 30001200,
+        "system_allocations": 0,
+        "pair_reuses": 0,
+        "collections": 0,
+        "cycle_objects_freed": 0
+      }
+    },
+    {
+      "name": "2-list-build-candidate",
+      "mode": "candidate",
+      "round": 2,
+      "command": [
+        "${PROJECTS}/shen-c-borrowed-predicates/bin/release/bench_execution",
+        "list-build",
+        "1000",
+        "${PROJECTS}/shen-c-borrowed-predicates/evidence/rc/execution-20261019T194119Z/2-list-build-candidate/suite"
+      ],
+      "log_sha256": "2613129d80c8f04f7d8525c8a1cc798b82d04ebd78ad3773d7ea5d1c72e6f684",
+      "metrics": {
+        "case": "list-build",
+        "repetitions": 1000,
+        "setup_wall": 0.369008,
+        "wall": 0.612943,
+        "user": 0.611724,
+        "system": 0.000635,
+        "compiler_child_cpu": 0.0,
+        "interpreter_entries": 0,
+        "retain_calls": 60004000,
+        "release_calls": 70006000,
+        "system_allocations": 8978000,
+        "pair_reuses": 0,
+        "collections": 15,
+        "cycle_objects_freed": 0
+      }
+    },
+    {
+      "name": "2-list-build-baseline",
+      "mode": "baseline",
+      "round": 2,
+      "command": [
+        "${PROJECTS}/shen-c-compile-first-bundle/bin/rc/bench_execution",
+        "list-build",
+        "1000",
+        "${PROJECTS}/shen-c-borrowed-predicates/evidence/rc/execution-20261019T194119Z/2-list-build-baseline/suite"
+      ],
+      "log_sha256": "ba03478ec028db9adb84522bf801e61b92b6dd062ddc56ff0524c76f6d727cc4",
+      "metrics": {
+        "case": "list-build",
+        "repetitions": 1000,
+        "setup_wall": 0.199617,
+        "wall": 0.618881,
+        "user": 0.617484,
+        "system": 0.000657,
+        "compiler_child_cpu": 0.0,
+        "interpreter_entries": 0,
+        "retain_calls": 60004000,
+        "release_calls": 70006000,
+        "system_allocations": 8978000,
+        "pair_reuses": 0,
+        "collections": 15,
+        "cycle_objects_freed": 0
+      }
+    },
+    {
+      "name": "2-queens-candidate",
+      "mode": "candidate",
+      "round": 2,
+      "command": [
+        "${PROJECTS}/shen-c-borrowed-predicates/bin/release/bench_execution",
+        "queens",
+        "40",
+        "${PROJECTS}/shen-c-borrowed-predicates/evidence/rc/execution-20261019T194119Z/2-queens-candidate/suite"
+      ],
+      "log_sha256": "9ebceb667430535a32603bbfe39e0b528e91215d49bdd65f1e61a135f914db6e",
+      "metrics": {
+        "case": "queens",
+        "repetitions": 40,
+        "setup_wall": 0.674998,
+        "wall": 0.631174,
+        "user": 0.62923,
+        "system": 0.000836,
+        "compiler_child_cpu": 0.0,
+        "interpreter_entries": 0,
+        "retain_calls": 105601320,
+        "release_calls": 105618480,
+        "system_allocations": 0,
+        "pair_reuses": 2238240,
+        "collections": 0,
+        "cycle_objects_freed": 0
+      }
+    },
+    {
+      "name": "2-queens-baseline",
+      "mode": "baseline",
+      "round": 2,
+      "command": [
+        "${PROJECTS}/shen-c-compile-first-bundle/bin/rc/bench_execution",
+        "queens",
+        "40",
+        "${PROJECTS}/shen-c-borrowed-predicates/evidence/rc/execution-20261019T194119Z/2-queens-baseline/suite"
+      ],
+      "log_sha256": "37d69b5566edb698174c90b61bd21676b3805d1dc827101e20c05741300c8ccd",
+      "metrics": {
+        "case": "queens",
+        "repetitions": 40,
+        "setup_wall": 0.187619,
+        "wall": 0.670856,
+        "user": 0.668509,
+        "system": 0.000855,
+        "compiler_child_cpu": 0.0,
+        "interpreter_entries": 0,
+        "retain_calls": 134703520,
+        "release_calls": 134720680,
+        "system_allocations": 0,
+        "pair_reuses": 2238240,
+        "collections": 0,
+        "cycle_objects_freed": 0
+      }
+    },
+    {
+      "name": "2-prolog-candidate",
+      "mode": "candidate",
+      "round": 2,
+      "command": [
+        "${PROJECTS}/shen-c-borrowed-predicates/bin/release/bench_execution",
+        "prolog",
+        "3000",
+        "${PROJECTS}/shen-c-borrowed-predicates/evidence/rc/execution-20261019T194119Z/2-prolog-candidate/suite"
+      ],
+      "log_sha256": "70c883b44571b2bb8db6710615cd62d8b7f3433d55a687523b088c75f2ad6af6",
+      "metrics": {
+        "case": "prolog",
+        "repetitions": 3000,
+        "setup_wall": 0.295075,
+        "wall": 0.411984,
+        "user": 0.410651,
+        "system": 0.000554,
+        "compiler_child_cpu": 0.0,
+        "interpreter_entries": 0,
+        "retain_calls": 53961000,
+        "release_calls": 61023000,
+        "system_allocations": 0,
+        "pair_reuses": 0,
+        "collections": 12,
+        "cycle_objects_freed": 0
+      }
+    },
+    {
+      "name": "2-prolog-baseline",
+      "mode": "baseline",
+      "round": 2,
+      "command": [
+        "${PROJECTS}/shen-c-compile-first-bundle/bin/rc/bench_execution",
+        "prolog",
+        "3000",
+        "${PROJECTS}/shen-c-borrowed-predicates/evidence/rc/execution-20261019T194119Z/2-prolog-baseline/suite"
+      ],
+      "log_sha256": "c3016ec5f83988020e66c5322bf80506246385bc5e7af7a86451d8d4c243e70a",
+      "metrics": {
+        "case": "prolog",
+        "repetitions": 3000,
+        "setup_wall": 0.162657,
+        "wall": 0.408408,
+        "user": 0.407007,
+        "system": 0.000562,
+        "compiler_child_cpu": 0.0,
+        "interpreter_entries": 0,
+        "retain_calls": 55182000,
+        "release_calls": 62244000,
+        "system_allocations": 0,
+        "pair_reuses": 0,
+        "collections": 12,
+        "cycle_objects_freed": 0
+      }
+    },
+    {
+      "name": "2-typecheck-candidate",
+      "mode": "candidate",
+      "round": 2,
+      "command": [
+        "${PROJECTS}/shen-c-borrowed-predicates/bin/release/bench_execution",
+        "typecheck",
+        "15000",
+        "${PROJECTS}/shen-c-borrowed-predicates/evidence/rc/execution-20261019T194119Z/2-typecheck-candidate/suite"
+      ],
+      "log_sha256": "ba5e4602c7bb075831bc156c8bafbbdeef49c71200ad5774a4e0dd7414c99f33",
+      "metrics": {
+        "case": "typecheck",
+        "repetitions": 15000,
+        "setup_wall": 0.138894,
+        "wall": 0.400118,
+        "user": 0.398973,
+        "system": 0.000545,
+        "compiler_child_cpu": 0.0,
+        "interpreter_entries": 0,
+        "retain_calls": 52005000,
+        "release_calls": 57405000,
+        "system_allocations": 0,
+        "pair_reuses": 30000,
+        "collections": 9,
+        "cycle_objects_freed": 0
+      }
+    },
+    {
+      "name": "2-typecheck-baseline",
+      "mode": "baseline",
+      "round": 2,
+      "command": [
+        "${PROJECTS}/shen-c-compile-first-bundle/bin/rc/bench_execution",
+        "typecheck",
+        "15000",
+        "${PROJECTS}/shen-c-borrowed-predicates/evidence/rc/execution-20261019T194119Z/2-typecheck-baseline/suite"
+      ],
+      "log_sha256": "9a3fff2c863b21c51b7a8db8cefe9c27b182a0b95a2fa500e6dd4928b0ca1177",
+      "metrics": {
+        "case": "typecheck",
+        "repetitions": 15000,
+        "setup_wall": 0.125345,
+        "wall": 0.404262,
+        "user": 0.399524,
+        "system": 0.000621,
+        "compiler_child_cpu": 0.0,
+        "interpreter_entries": 0,
+        "retain_calls": 56805000,
+        "release_calls": 62205000,
+        "system_allocations": 0,
+        "pair_reuses": 30000,
+        "collections": 9,
+        "cycle_objects_freed": 0
+      }
+    }
+  ],
+  "baseline_binary_sha256": "2dfabbb614c45244237542ec04952f993c4a28934e1b2609921ff3f245b9f988",
+  "comparisons": {
+    "tail-count": {
+      "paired_user_ratios": [
+        1.0085713647631598,
+        0.8745670404306339,
+        1.089713370884509
+      ],
+      "median_user_ratio": 1.0085713647631598
+    },
+    "list-build": {
+      "paired_user_ratios": [
+        0.8376930879772536,
+        1.0689488766782456,
+        0.9906718230755777
+      ],
+      "median_user_ratio": 0.9906718230755777
+    },
+    "queens": {
+      "paired_user_ratios": [
+        0.9945608053255399,
+        0.9430176467182468,
+        0.9412438725581853
+      ],
+      "median_user_ratio": 0.9430176467182468
+    },
+    "prolog": {
+      "paired_user_ratios": [
+        1.074236234055109,
+        1.0118250909574162,
+        1.008953162967713
+      ],
+      "median_user_ratio": 1.0118250909574162
+    },
+    "typecheck": {
+      "paired_user_ratios": [
+        0.8777178973947787,
+        0.983320773173495,
+        0.9986208588219982
+      ],
+      "median_user_ratio": 0.983320773173495
+    }
+  },
+  "binary_unchanged": true,
+  "sources_unchanged": true,
+  "original_receipt_sha256": "d2bf615601bb81152247f02904446d6c9e44594d7ceec1999fc454bd000bba12"
+}

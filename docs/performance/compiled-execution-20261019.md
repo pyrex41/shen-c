@@ -71,3 +71,5 @@ The benchmark prepares a fresh writable pinned suite for every sample. Its
 `RC_EXEC_BEGIN` / `RC_EXEC_END` markers delimit the timed window; `RC_NATIVE`
 diagnostics cover the entire process, including excluded setup compilation.
 Profiles must run separately from the timing batch.
+
+The subsequent [bounded ownership and compile-time experiments](native-optimization-20261019.md) retain the counter evidence separately from CPU acceptance and restrict borrowing to lexical owners live after the condition.

@@ -1,0 +1,102 @@
+{
+  "native-integrated-release-build.log": {
+    "source": "/tmp/native-integrated-release-build.log",
+    "original_sha256": "52ccd899db9cb5b26dc940c8047dc1d6b776995e93e57210d3f6b86ba679f153"
+  },
+  "native-integrated-sanitize-build.log": {
+    "source": "/tmp/native-integrated-sanitize-build.log",
+    "original_sha256": "69439af00d51d46273f519e42e8a46d67a1e1d979c40efebfd7551a2da3bce6c"
+  },
+  "native-integrated-cache-controls.log": {
+    "source": "/tmp/native-integrated-cache-controls.log",
+    "original_sha256": "d88f9988757044c6698066926d621a0c8e2b6d894323f91d64c7e32ae002c168"
+  },
+  "native-integrated-cache-defaultflags.log": {
+    "source": "/tmp/native-integrated-cache-defaultflags.log",
+    "original_sha256": "d88f9988757044c6698066926d621a0c8e2b6d894323f91d64c7e32ae002c168"
+  },
+  "native-integrated-emitted-fixed.log": {
+    "source": "/tmp/native-integrated-emitted-fixed.log",
+    "original_sha256": "502f65a688f3b2042fe9e62c7b83d3cdcf39a97d3c8fb4427aa2489888194b8d"
+  },
+  "native-integrated-boxed-corrected.log": {
+    "source": "/tmp/native-integrated-boxed-corrected.log",
+    "original_sha256": "6171fdcdb61047fdc723ec55c07f0c23085972b437668a45f486014742cfa7ca"
+  },
+  "native-integrated-boxed-conditions.log": {
+    "source": "/tmp/native-integrated-boxed-conditions.log",
+    "original_sha256": "44025a53fbb791d2f1c057ac4463e8ffe028e152e32c050762345c7c3ab16c8a"
+  },
+  "native-integrated-cmake.log": {
+    "source": "/tmp/native-integrated-cmake.log",
+    "original_sha256": "e79ec4f8d5af21c31ff576979c9f2bb0bf4c7eb622a8f50866bef46c99b1810b"
+  },
+  "native-integrated-toolchain.log": {
+    "source": "/tmp/native-integrated-toolchain.log",
+    "original_sha256": "a57d456c833c0c2a77b9f7fbd2033e3092d579674616590a73f935ba863a735d"
+  },
+  "native-integrated-profile.log": {
+    "source": "/tmp/native-integrated-profile.log",
+    "original_sha256": "7cd1af99ca57838fc054d0b40e7edb8f5daed17ba04d808f391529761800aacd"
+  },
+  "native-integrated-profile-v2.log": {
+    "source": "/tmp/native-integrated-profile-v2.log",
+    "original_sha256": "6cd7e14c909297c10515999c135044a00050732bb4c093595b044e1f0e9b1930"
+  },
+  "native-integrated-release-prune.log": {
+    "source": "/tmp/native-integrated-release-prune.log",
+    "original_sha256": "1e53912fd0e2fe5a5d69360b49ed8cce8ff6120717eebaa892e206f7622c581d"
+  },
+  "integrated-sanitizer-preparation": {
+    "source": "evidence/rc/compile-first-20261019T211637Z/result.json",
+    "original_sha256": "b59298784ba9828cec7eeca93ab895befa93283795023c73d9779b74281c1aad"
+  },
+  "superseded-source-drift": {
+    "source": "evidence/rc/compile-first-20261019T210620Z/result.json",
+    "original_sha256": "fab987f97ec087d09240c1b9266ce4f85138c6aa0678f7e673e9d0abb908580a"
+  },
+  "integrated-release-suite": {
+    "source": "${PROJECTS}/shen-c-native-chunks/evidence/rc/compile-first-20261019T211904Z/result.json",
+    "original_sha256": "9d49bf9972d27920ffb8c8b29358a3a923a5aa3d9a368f0fff2e77d74d8c0997"
+  },
+  "integrated-release-1-native-warm.log": {
+    "source": "${PROJECTS}/shen-c-native-chunks/evidence/rc/compile-first-20261019T211904Z/1-native-warm/run.log",
+    "original_sha256": "15c26fbc21f0ff5d3bea83b82e8cd770ce5a8f20222d18d2e089de320f791920"
+  },
+  "integrated-release-1-native-warm.time": {
+    "source": "${PROJECTS}/shen-c-native-chunks/evidence/rc/compile-first-20261019T211904Z/1-native-warm/run.time",
+    "original_sha256": "f219622d5ead7e0e9f9daf3b62bb4bcac37a592c2961e2730a2b1c6db29cb10f"
+  },
+  "integrated-release-0-interpret.log": {
+    "source": "${PROJECTS}/shen-c-native-chunks/evidence/rc/compile-first-20261019T211904Z/0-interpret/run.log",
+    "original_sha256": "4deaa2d6d137f6308a18e29259a1a9d35f71161fecb2b950bd74b18008ea2f16"
+  },
+  "integrated-release-0-interpret.time": {
+    "source": "${PROJECTS}/shen-c-native-chunks/evidence/rc/compile-first-20261019T211904Z/0-interpret/run.time",
+    "original_sha256": "b87d2601ade2439fcb4d15996bb458f836c373e2ea022f51211a8775f52bc765"
+  },
+  "integrated-release-image": {
+    "source": "evidence/integrated/release-cache/bundle-593ac3b4476470ae8d38ec4a61f56b08.json",
+    "original_sha256": "37ba43e8a98bf1afd161415fe3e75fc08b211a8ac32b69f0a63ef827b525cdd7"
+  },
+  "integrated-sanitize-suite": {
+    "source": "${PROJECTS}/shen-c-native-chunks/evidence/rc/compile-first-20261019T211907Z/result.json",
+    "original_sha256": "5b702f4c9ec30482c3981e7cb1f56aa45203a1bf8ebfa3bab3a79272eeef085f"
+  },
+  "integrated-sanitize-0-native-warm.log": {
+    "source": "${PROJECTS}/shen-c-native-chunks/evidence/rc/compile-first-20261019T211907Z/0-native-warm/run.log",
+    "original_sha256": "1dcf97a599d3b721a5a9f964ce6c1234613216177475e2cc748e62ee2b3512da"
+  },
+  "integrated-sanitize-0-native-warm.time": {
+    "source": "${PROJECTS}/shen-c-native-chunks/evidence/rc/compile-first-20261019T211907Z/0-native-warm/run.time",
+    "original_sha256": "59d94428f18aabc51a9dc69cb0841964d057c43835286818717e75efe0b6f8c3"
+  },
+  "integrated-sanitize-image": {
+    "source": "evidence/integrated/sanitize-cache/bundle-c97a031fba55d78c11fde3964f9f50b8.json",
+    "original_sha256": "618ea79e3b1f22be394c523b6031fea423d6cabdf7452bc7ce2cde096aa41b1e"
+  },
+  "boxed-mixed-flags-rejected.log": {
+    "source": "/tmp/native-integrated-boxed.log",
+    "original_sha256": "8a337752a9cdf4c5b1d784335369295a369b11cd28a56824804be027a49384d5"
+  }
+}

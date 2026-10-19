@@ -37,7 +37,10 @@ complete implementations; they do not isolate the cost of either memory manager.
 The [qualification report](docs/performance/rc-43.1-final-20261017.md) preserves
 every sample, artifact identity, reproduction command and rejected experiment.
 These released-version measurements precede the compile-first backend; its cold
-compilation and cached execution are measured separately.
+compilation and cached execution are measured separately. The development
+[loaded execution controls](docs/performance/compiled-execution-20261019.md) and
+[ownership and compile-time experiments](docs/performance/native-optimization-20261019.md)
+record current evidence; repeated whole-suite acceptance remains open.
 Historical [S42 measurements](docs/performance/rc-suite-identity-tail-20261016.md)
 remain separate from the 43.1 comparison.
 

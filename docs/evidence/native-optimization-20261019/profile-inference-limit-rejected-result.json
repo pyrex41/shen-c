@@ -1,0 +1,10 @@
+{
+  "status": "FAIL",
+  "binary_sha256": "769a971b7cf2552b0b210cd1cdf9acb6635d660ecca489659bfae962a7180cc2",
+  "scope": "separate sampled loaded typecheck, no timing credit",
+  "exit": 1,
+  "sample_exit": 255,
+  "repetitions": 300000,
+  "run_log_sha256": "2e748c69297d6cc605a9398600c3d4329eb20e8ec089ced35b7e211eca17818a",
+  "sample_sha256": null
+}
