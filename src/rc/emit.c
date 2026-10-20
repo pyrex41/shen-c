@@ -17,7 +17,7 @@ typedef struct { Program *owner; char *p; size_t n, cap; } Buf;
 typedef struct { const char *name; int slot; } Binding;
 typedef struct Allocation { struct Allocation *prev,*next; max_align_t align; unsigned char data[]; } Allocation;
 typedef struct ModuleDef { size_t symbol; int id,arity; bool exact_hashkey,kernel_phase; struct ModuleDef *next; } ModuleDef;
-typedef struct ModuleCall { size_t symbol; struct ModuleCall *next; } ModuleCall;
+typedef struct ModuleCall { size_t symbol; struct ModuleCall *next; bool call, tail; } ModuleCall;
 struct Program { RcEmitOptions options; RcContext *ctx; jmp_buf failure; Allocation *allocations; Buf functions,literals,constants,transparent_do,pvar_identities; const char **symbols; size_t nsymbols,symbol_capacity; ModuleDef *module_defs; ModuleCall *module_calls; bool user_phase,top_body,drop_range_used,drop_range_emitted,transparent_do_used,lazyderef_used; RcValue **runtime_literals; size_t nruntime_literals; RcValue *metadata_root; int next,next_literal,next_constant; long defuns, lambdas, tops; };
 static _Noreturn void bad(Program *p,const char *message) { rc_error(p->ctx,"%s",message); longjmp(p->failure,1); }
 static void *resize(Program *p,void *old,size_t bytes) {
@@ -48,7 +48,7 @@ struct Recycle;
 typedef struct DoGuard { int slot; struct DoGuard *outer; } DoGuard;
 typedef struct {
   Program *p; Buf code; Binding *bind; int nb, cap, slots, label, max_args; bool symbol_used;
-  int arity, boolean_tail, literal_capture; bool once,self_loop,borrowed_fn_used,assoc_fast,pvar_fast,lazyderef_fast; size_t assoc_symbols[5],prolog_symbols[7];
+  int arity, boolean_tail, literal_capture; bool once,self_loop,musttail_used,borrowed_fn_used,assoc_fast,pvar_fast,lazyderef_fast; size_t assoc_symbols[5],prolog_symbols[7];
   DoGuard *do_guard;
   int *physical,*free_slots,slot_cap,frame_slots,nfree; unsigned char *active,*borrowed_fn;
   char fail[64]; struct Recycle *recycle; long constant_min;
@@ -190,7 +190,7 @@ static bool c_ident(char c){return (c>='a'&&c<='z')||(c>='A'&&c<='Z')||(c>='0'&&
  * their original lowering. Quoted text is never rewritten. */
 static int function_chunks(RcEmitFn *f,int id){
  Program *p=f->p;
- if(p->options.expression_entry||p->options.conservative_ownership||f->self_loop||f->borrowed_fn_used||f->code.n<131072)return 0;
+ if(p->options.expression_entry||p->options.conservative_ownership||f->self_loop||f->musttail_used||f->borrowed_fn_used||f->code.n<131072)return 0;
  Buf code={.owner=p};frame_code(&code,f);size_t n=code.n;
  char *mask=alloc(p,n+1);memcpy(mask,code.p,n+1);
  for(size_t i=0;i<n;){
@@ -424,11 +424,15 @@ static void symbol_slot(RcEmitFn *f,int slot,const char *name) {
  size_t index=symbol_index(f,name);
  put(&f->code,"  t[%d]=symbols[%zu];\n",slot,index);
 }
-static size_t module_call(RcEmitFn *f,const char *name){
+static size_t module_call_kind(RcEmitFn *f,const char *name,bool tail){
  size_t symbol=symbol_index(f,name);
- for(ModuleCall *c=f->p->module_calls;c;c=c->next)if(c->symbol==symbol)return symbol;
- ModuleCall *c=alloc(f->p,sizeof(*c));*c=(ModuleCall){symbol,f->p->module_calls};f->p->module_calls=c;return symbol;
+ for(ModuleCall *c=f->p->module_calls;c;c=c->next)if(c->symbol==symbol){if(tail)c->tail=true;else c->call=true;return symbol;}
+ ModuleCall *c=alloc(f->p,sizeof(*c));*c=(ModuleCall){symbol,f->p->module_calls,!tail,tail};f->p->module_calls=c;return symbol;
 }
+static size_t module_call(RcEmitFn *f,const char *name){return module_call_kind(f,name,false);}
+/* Arguments of a native tail call outlive the caller's frame, so they pass
+ * through this module buffer; the callee moves them out at entry. */
+#define RC_MUSTTAIL_ARGS 8
 static void symbol_frame(Buf *out,const RcEmitFn *f) {
  if(!f->symbol_used)return;
  if(f->p->options.expression_entry)
@@ -726,7 +730,20 @@ static int expr_inner(RcEmitFn *f,RcValue *x,int tail,const Live *after){
    put(&f->code,"  t[%d]=rc_primitive_call_owned(ctx,t[%d],%d,%s,%s);\n",result,fn,n,n?"a":"NULL",tail==1?"true":"false");
   else if(optimize(f)&&special&&tail!=1)
    put(&f->code,"  t[%d]=rc_module_call_%zu(ctx,t[%d],%d,%s);\n",result,module_call(f,name(head)),fn,n,n?"a":"NULL");
-  else put(&f->code,"  t[%d]=%s(ctx,t[%d],%d,%s);\n",result,call_api(f,tail),fn,n,n?"a":"NULL");
+  else {
+   /* A tail call to an immortal definition of this module becomes a C tail
+    * call: no heap request, no trampoline bounce. The frame is released
+    * first, as the request path also does before the callee runs, and the
+    * collector's safepoint still runs once per bounce. Replaced, captured or
+    * partial callees and other modules keep the runtime request. */
+   if(optimize(f)&&special&&tail==1&&!f->boolean_tail&&n<=RC_MUSTTAIL_ARGS&&!p->options.expression_entry){
+    size_t k=module_call_kind(f,name(head),true);f->musttail_used=true;
+    put(&f->code,"#ifdef RC_MUSTTAIL\n  if(rc_module_tail_ok_%zu(t[%d],%d)) {\n    RcValue *callee=t[%d]; t[%d]=NULL;\n",k,fn,n,fn,fn);
+    for(int i=0;i<n;i++)put(&f->code,"    rc_tail_argv[%d]=a[%d];\n",i,i);
+    put(&f->code,"    rc_tail_release_frame(t,rc_frame_slots,rc_frame_heap);\n    rc_safepoint(ctx);\n    RC_MUSTTAIL return rc_module_tail_%zu(ctx,callee,rc_tail_argv);\n  }\n#endif\n",k);
+   }
+   put(&f->code,"  t[%d]=%s(ctx,t[%d],%d,%s);\n",result,call_api(f,tail),fn,n,n?"a":"NULL");
+  }
   if(!optimize(f))for(int i=0;i<n;i++)drop(f,av[i]);
  }
  if(guarded_tail)put(&f->code,"  }\n");
@@ -769,6 +786,7 @@ static void finish_function(RcEmitFn *f,int id,int arity,int r){
  if(f->lazyderef_fast)put(&p->functions,"  { bool handled=false; RcValue *deps[]={symbols[%zu],symbols[%zu],symbols[%zu],symbols[%zu],symbols[%zu],symbols[%zu],symbols[%zu]};\n    RcValue *fast=rc_lazyderef_try_owned(ctx,self,argv,deps,rc_certified_pvar,&handled); if(handled) return fast; }\n",f->prolog_symbols[0],f->prolog_symbols[1],f->prolog_symbols[2],f->prolog_symbols[3],f->prolog_symbols[4],f->prolog_symbols[5],f->prolog_symbols[6]);
  if(f->frame_slots>64)put(&p->functions,"  RcValue **t=calloc(%d,sizeof(*t));\n  if(!t) return rc_error(ctx,\"native frame allocation failed\");\n  RcValue **a=t+%d; (void)a;\n",f->frame_slots+f->max_args,f->frame_slots);
  else put(&p->functions,"  RcValue *t[%d]={0}; RcValue *a[%d]; (void)a;\n",f->frame_slots?f->frame_slots:1,f->max_args?f->max_args:1);
+ if(f->musttail_used)put(&p->functions,"  enum { rc_frame_slots=%d, rc_frame_heap=%d };\n",f->frame_slots,f->frame_slots>64);
  /* Atom-only argument evaluation prevents overlapping borrowed callees in
   * this activation, so all logical borrowed slots share one scalar. */
  if(f->borrowed_fn_used)put(&p->functions,"  RcValue *borrowed_fn=NULL; (void)borrowed_fn;\n");
@@ -1097,7 +1115,27 @@ bool rc_emit_program(RcContext *ctx,FILE *out,RcValue *const *kernel,size_t nker
    for(int i=0;i<p->next;i++)fprintf(out,"static RcValue *rc_native_body_%d(RcContext*,RcValue*,RcValue**);\n",i);
    /* The name only selects possible module callbacks. The snapshotted closure
     * decides every call, including redefinitions during argument evaluation. */
-   for(ModuleCall *c=p->module_calls;c;c=c->next){
+   bool any_tail=false;
+   for(ModuleCall *c=p->module_calls;c;c=c->next)any_tail|=c->tail;
+   if(any_tail){
+    fputs("#if defined(__has_attribute)\n#if __has_attribute(musttail)\n#define RC_MUSTTAIL __attribute__((musttail))\n#endif\n#endif\n",out);
+    fprintf(out,"#ifdef RC_MUSTTAIL\nstatic _Thread_local RcValue *rc_tail_argv[%d];\n",RC_MUSTTAIL_ARGS);
+    fputs("static void rc_tail_release_frame(RcValue **t,size_t n,int heap) {\n  for(size_t i=0;i<n;i++) if(t[i]) { rc_release(t[i]); t[i]=NULL; }\n  if(heap) free(t);\n}\n",out);
+   }
+   for(ModuleCall *c=p->module_calls;c;c=c->next)if(c->tail){
+    /* Only an immortal callee may outlive the caller's frame: nothing else
+     * roots it once that frame is gone. */
+    fprintf(out,"static bool rc_module_tail_ok_%zu(RcValue *fn,int argc) {\n  (void)fn; (void)argc;\n  return rc_refcount(fn)==SIZE_MAX && (false",c->symbol);
+    for(ModuleDef *d=p->module_defs;d;d=d->next)if(d->symbol==c->symbol)
+     fprintf(out," || (argc==%d && rc_compiled_call_matches(fn,rc_native_%d,%d))",d->arity,d->id,d->arity);
+    fputs(");\n}\n",out);
+    fprintf(out,"static RcValue *rc_module_tail_%zu(RcContext *ctx,RcValue *fn,RcValue **argv) {\n  (void)fn; (void)argv;\n",c->symbol);
+    for(ModuleDef *d=p->module_defs;d;d=d->next)if(d->symbol==c->symbol)
+     fprintf(out,"  if(rc_arity(fn)==%d && rc_compiled_call_matches(fn,rc_native_%d,%d)) RC_MUSTTAIL return rc_native_body_%d(ctx,fn,argv);\n",d->arity,d->id,d->arity,d->id);
+    fputs("  return rc_error(ctx,\"native tail call target changed\");\n}\n",out);
+   }
+   if(any_tail)fputs("#endif\n",out);
+   for(ModuleCall *c=p->module_calls;c;c=c->next)if(c->call){
     bool first=true;
     fprintf(out,"static RcValue *rc_module_call_%zu(RcContext *ctx,RcValue *fn,size_t argc,RcValue **argv) {\n",c->symbol);
     for(ModuleDef *d=p->module_defs;d;d=d->next)if(d->symbol==c->symbol){
