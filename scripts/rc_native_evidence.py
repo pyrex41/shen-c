@@ -76,9 +76,10 @@ def _symbols(source):
 
 
 def _symbol_value(expression, names):
-    cached = re.fullmatch(r'rc_retain\(symbols\[(\d+)\]\)', expression.strip())
+    # Immortal symbols are loaded directly; older output retained them.
+    cached = re.fullmatch(r'(?:rc_retain\(symbols\[(\d+)\]\)|symbols\[(\d+)\])', expression.strip())
     if cached:
-        index = int(cached[1])
+        index = int(cached[1] or cached[2])
         if index >= len(names):
             raise ValueError('compiled symbol index out of range')
         return names[index]
@@ -101,8 +102,12 @@ def native_definition_evidence(source, symbol=None):
                 registered = _symbol_value(slots.get(setter[1], ''), names)
                 if registered is None:
                     raise ValueError('unknown generated symbol registration')
-                closure = re.fullmatch(r'rc_closure(?:_owned)?\(ctx,(\d+),(rc_native_\d+),\d+,[^;]+\)', slots.get(setter[2], ''))
-                identity = re.fullmatch(r'rc_closure_return_second(?:_owned)?\(ctx,(rc_native_\d+),\d+,[^;]+\)', slots.get(setter[2], ''))
+                constructor = slots.get(setter[2], '')
+                # Top-level definitions wrap the constructor to make it immortal.
+                static = re.fullmatch(r'rc_closure_static\((.*)\)', constructor)
+                constructor = static[1] if static else constructor
+                closure = re.fullmatch(r'rc_closure(?:_owned)?\(ctx,(\d+),(rc_native_\d+),\d+,[^;]+\)', constructor)
+                identity = re.fullmatch(r'rc_closure_return_second(?:_owned)?\(ctx,(rc_native_\d+),\d+,[^;]+\)', constructor)
                 if closure:
                     target, target_arity = closure[2], int(closure[1])
                 elif identity:

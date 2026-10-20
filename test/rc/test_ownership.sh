@@ -18,6 +18,8 @@ source = '''
 (defun rebuild (Xs) (if (cons? Xs) (cons (+ 1 (hd Xs)) (rebuild (tl Xs))) Xs))
 (defun total (Xs A) (if (cons? Xs) (total (tl Xs) (+ A (hd Xs))) A))
 (defun keep (Wanted Waste) (freeze Wanted))
+(defun selfdef (N) (if (= N 0) (do (defun selfdef (N) 42) (selfdef 5)) (selfdef (- N 1))))
+(defun keeprun (N) (+ (do (defun keeprun (N) 100) 1) (if (= N 0) 0 (keeprun 0))))
 '''
 cases = [
     ('unique-traversal', '(total (rebuild (make 100 ())) 0)', '5150'),
@@ -35,6 +37,10 @@ cases = [
     ('handler-blocks-detach', '(let X (cons 42 ()) (trap-error (cons 0 (do (tl X) (simple-error "fault"))) (lambda E (hd X))))', '42'),
     ('short-circuit', '(let X 42 (if (and false (simple-error "bad")) 0 X))', '42'),
     ('boolean-error', '(trap-error (and true 42) (lambda E 42))', '42'),
+    # Immortal top-level definitions replaced while their old body still runs
+    # (before later cases redefine do/cons/tl).
+    ('static-self-redefinition', '(selfdef 3)', '42'),
+    ('static-redefinition-running', '(keeprun 1)', '101'),
     ('redefined-projection', '(= (let X (cons 1 ()) (cons 2 (do (defun tl (Y) 42) (tl X)))) (cons 2 42))', 'true'),
     ('callee-before-args', '(let X (cons 1 ()) (hd (cons (do (defun cons (H T) H) 42) (tl X))))', '42'),
     ('redefined-cons', '(cons 42 ())', '42'),
@@ -46,7 +52,9 @@ with tempfile.TemporaryDirectory(prefix='shen-rc-ownership.') as tmp:
     inp = work / 'input'; inp.mkdir()
     (inp / 'kernel.kl').write_text('')
     (inp / 'user.kl').write_text(source + '\n'.join(x[1] for x in cases) + '\n')
-    env = dict(os.environ, SHEN_C_HOME=str(root))
+    # Retain/release totals need a counting runtime; release builds omit them.
+    cppflags = (os.environ.get('CPPFLAGS', '') + ' -DSHEN_RC_STATS_COUNTERS=1').strip()
+    env = dict(os.environ, SHEN_C_HOME=str(root), CPPFLAGS=cppflags)
     metrics = {}
     for mode, flags in [('conservative', ['--conservative-ownership']), ('optimized', [])]:
         dest = work / mode
@@ -72,7 +80,9 @@ with tempfile.TemporaryDirectory(prefix='shen-rc-ownership.') as tmp:
     assert opt['capture_edges_created'] < base['capture_edges_created'], metrics
     # Dropping the unused 200-element capture must free its 200 pairs.
     # Small integer leaves are immediate and do not add physical heap objects.
-    assert opt['live_objects'] + 200 <= base['live_objects'], metrics
+    # Optimized top-level definitions are immortal: the displaced selfdef and
+    # keeprun closures stay live until teardown (conservative ones are freed).
+    assert opt['live_objects'] + 200 <= base['live_objects'] + 2, metrics
     assert opt['retain_calls'] + opt['release_calls'] < base['retain_calls'] + base['release_calls'], metrics
     print('RC ownership: %d differential cases PASS; unique traversal reused cells; aliases/handlers/redefinitions preserved' % len(cases))
     print('RC ownership metrics ' + json.dumps(metrics, sort_keys=True))

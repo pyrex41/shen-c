@@ -12,6 +12,8 @@ RC_LDFLAGS ?= $(LDFLAGS)
 RC_LDLIBS ?= -lm
 RC_SANITIZE ?= 0
 RC_ACYCLIC_ONLY ?= 0
+# Diagnostic per-operation retain/release counters; release builds omit them.
+RC_STATS_COUNTERS ?= 0
 # auto falls back if this compiler/archive/link combination cannot use LTO.
 # Set RC_LTO=0 to disable, RC_LTO=1 to require it, or RC_LTO_FLAGS to
 # override the compiler-specific flag (the override is still link-probed).
@@ -43,6 +45,9 @@ endif
 endif
 ifeq ($(RC_ACYCLIC_ONLY),1)
 override RC_CFLAGS += -DSHEN_RC_ACYCLIC_ONLY
+endif
+ifeq ($(RC_STATS_COUNTERS),1)
+override RC_CFLAGS += -DSHEN_RC_STATS_COUNTERS=1
 endif
 ifeq ($(RC_SANITIZE),1)
 override RC_CFLAGS += -O1 -fsanitize=address,undefined -fno-sanitize-recover=all -fno-omit-frame-pointer
@@ -128,8 +133,14 @@ test: test-binaries
 	$(RC_BIN)/test_native_compile
 
 # Separate output directories keep sanitizer objects out of release artifacts.
+# The sanitizer lane is diagnostic, so it also checks the ownership counters.
 sanitize:
-	$(MAKE) -f Makefile.rc RC_SANITIZE=1 RC_BUILD=obj/rc-sanitize RC_BIN=bin/rc-sanitize test
+	$(MAKE) -f Makefile.rc RC_SANITIZE=1 RC_STATS_COUNTERS=1 RC_BUILD=obj/rc-sanitize RC_BIN=bin/rc-sanitize test
+
+# Release runtime tests skip exact retain/release count assertions; this lane
+# runs them against a counting runtime.
+counters:
+	$(MAKE) -f Makefile.rc RC_STATS_COUNTERS=1 RC_BUILD=obj/rc-counters RC_BIN=bin/rc-counters test
 
 acyclic:
 	$(MAKE) -f Makefile.rc RC_ACYCLIC_ONLY=1 RC_BUILD=obj/rc-acyclic RC_BIN=bin/rc-acyclic/runtime RC_TOOL_BIN=bin/rc-acyclic all test
@@ -137,7 +148,7 @@ acyclic:
 clean:
 	rm -rf $(RC_BUILD) $(RC_BIN)
 
-.PHONY: all runtime test-binaries test sanitize acyclic clean
+.PHONY: all runtime test-binaries test sanitize counters acyclic clean
 
 # Recheck release selection even when switching to an older manifest. The
 # generator preserves mtime when content is unchanged.

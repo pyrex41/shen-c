@@ -76,7 +76,11 @@ generated executables do not need it at runtime.
 
 `SHEN_RC_PRINT=1` prints user top-level expression results for diagnostics.
 `SHEN_RC_STATS=1` reports allocation, reference-count, closure-capture, and pair
-reuse counters on stderr. `--conservative-ownership` disables ownership
+reuse counters on stderr. The per-operation `retain_calls`/`release_calls`
+totals are compiled only with `CPPFLAGS=-DSHEN_RC_STATS_COUNTERS=1` (Make:
+`RC_STATS_COUNTERS=1`, CMake: `-DSHEN_RC_STATS_COUNTERS=ON`); release builds
+report them as zero. Immortal values (nil, immediate integers and interned
+symbols) are never counted. `--conservative-ownership` disables ownership
 optimizations for semantic and allocation comparisons.
 
 ## Ownership and reuse
@@ -179,6 +183,7 @@ python3 scripts/test-native-tier.py bin/shen-c
 
 ```sh
 make test
+make counters
 make sanitize
 scripts/test-rc.sh --no-build bin/rc-build
 scripts/certify-rc.sh

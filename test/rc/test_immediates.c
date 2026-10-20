@@ -38,7 +38,8 @@ static void boundaries(void) {
         assert(rc_stats(ctx).total_allocations - before.total_allocations == (immediate ? 0 : 2));
         assert(rc_refcount(v) == (immediate ? SIZE_MAX : 1));
         assert(rc_retain(v) == v); rc_release(v);
-        assert(rc_stats(ctx).retain_calls - before.retain_calls == (immediate ? 0 : 1));
+        assert(rc_stats(ctx).retain_calls - before.retain_calls ==
+               (immediate || !rc_stats_counts_ownership() ? 0 : 1));
         RcValue *floating = rc_number(ctx, (double)n);
         assert(floating && !rc_number_is_exact_integer(floating));
         double d = (double)n;

@@ -18,7 +18,7 @@ typedef struct { const char *name; int slot; } Binding;
 typedef struct Allocation { struct Allocation *prev,*next; max_align_t align; unsigned char data[]; } Allocation;
 typedef struct ModuleDef { size_t symbol; int id,arity; bool exact_hashkey,kernel_phase; struct ModuleDef *next; } ModuleDef;
 typedef struct ModuleCall { size_t symbol; struct ModuleCall *next; } ModuleCall;
-struct Program { RcEmitOptions options; RcContext *ctx; jmp_buf failure; Allocation *allocations; Buf functions,literals,constants,transparent_do,pvar_identities; const char **symbols; size_t nsymbols,symbol_capacity; ModuleDef *module_defs; ModuleCall *module_calls; bool user_phase,drop_range_used,drop_range_emitted,transparent_do_used,lazyderef_used; RcValue **runtime_literals; size_t nruntime_literals; RcValue *metadata_root; int next,next_literal,next_constant; long defuns, lambdas, tops; };
+struct Program { RcEmitOptions options; RcContext *ctx; jmp_buf failure; Allocation *allocations; Buf functions,literals,constants,transparent_do,pvar_identities; const char **symbols; size_t nsymbols,symbol_capacity; ModuleDef *module_defs; ModuleCall *module_calls; bool user_phase,top_body,drop_range_used,drop_range_emitted,transparent_do_used,lazyderef_used; RcValue **runtime_literals; size_t nruntime_literals; RcValue *metadata_root; int next,next_literal,next_constant; long defuns, lambdas, tops; };
 static _Noreturn void bad(Program *p,const char *message) { rc_error(p->ctx,"%s",message); longjmp(p->failure,1); }
 static void *resize(Program *p,void *old,size_t bytes) {
   if(bytes>SIZE_MAX-sizeof(Allocation)) bad(p,"compiler allocation overflow");
@@ -48,7 +48,7 @@ struct Recycle;
 typedef struct DoGuard { int slot; struct DoGuard *outer; } DoGuard;
 typedef struct {
   Program *p; Buf code; Binding *bind; int nb, cap, slots, label, max_args; bool symbol_used;
-  int arity, boolean_tail, literal_capture; bool self_loop,borrowed_fn_used,assoc_fast,pvar_fast,lazyderef_fast; size_t assoc_symbols[5],prolog_symbols[7];
+  int arity, boolean_tail, literal_capture; bool once,self_loop,borrowed_fn_used,assoc_fast,pvar_fast,lazyderef_fast; size_t assoc_symbols[5],prolog_symbols[7];
   DoGuard *do_guard;
   int *physical,*free_slots,slot_cap,frame_slots,nfree; unsigned char *active,*borrowed_fn;
   char fail[64]; struct Recycle *recycle; long constant_min;
@@ -418,9 +418,11 @@ static size_t symbol_index(RcEmitFn *f,const char *name) {
  }
  return p->symbols[p->nsymbols]=name,p->nsymbols++;
 }
+/* Interned symbols are immortal: the table pointer is already an owner, and
+ * the slot's later release is a no-op. */
 static void symbol_slot(RcEmitFn *f,int slot,const char *name) {
  size_t index=symbol_index(f,name);
- put(&f->code,"  t[%d]=rc_retain(symbols[%zu]);\n",slot,index);
+ put(&f->code,"  t[%d]=symbols[%zu];\n",slot,index);
 }
 static size_t module_call(RcEmitFn *f,const char *name){
  size_t symbol=symbol_index(f,name);
@@ -642,6 +644,13 @@ static int expr_inner(RcEmitFn *f,RcValue *x,int tail,const Live *after){
     p->module_defs=d;
   }
   symbol_slot(f,t,name(first(args)));check(f,t);
+  /* A definition executed at most once per context gets an immortal,
+   * capture-free closure: named calls through it need no reference counts.
+   * Definitions that may run repeatedly keep ordinary closures, so replaced
+   * bindings are still freed. Dynamic expression modules capture their
+   * literal vector and may be re-run from the code cache, so they never
+   * qualify. */
+  bool once=optimize(f)&&f->once&&!p->options.expression_entry;
   if(p->options.expression_entry){
    if(f->max_args<1)f->max_args=1;
    put(&f->code,"  a[0]=rc_capture(self,%d);\n",f->literal_capture);
@@ -649,8 +658,8 @@ static int expr_inner(RcEmitFn *f,RcValue *x,int tail,const Live *after){
     put(&f->code,"  t[%d]=%s(ctx,rc_native_%d,1,a);\n",cl,p->options.conservative_ownership?"rc_closure_return_second":"rc_closure_return_second_owned",id);
    else put(&f->code,"  t[%d]=%s(ctx,%d,rc_native_%d,1,a);\n",cl,closure_api(p),count(p,second(args)),id);
   }else if(exact_second_identity(second(args),at(p,args,2),count(p,second(args))))
-   put(&f->code,"  t[%d]=%s(ctx,rc_native_%d,0,NULL);\n",cl,p->options.conservative_ownership?"rc_closure_return_second":"rc_closure_return_second_owned",id);
-  else put(&f->code,"  t[%d]=%s(ctx,%d,rc_native_%d,0,NULL);\n",cl,closure_api(p),count(p,second(args)),id);
+   put(&f->code,"  t[%d]=%s%s(ctx,rc_native_%d,0,NULL)%s;\n",cl,once?"rc_closure_static(":"",p->options.conservative_ownership?"rc_closure_return_second":"rc_closure_return_second_owned",id,once?")":"");
+  else put(&f->code,"  t[%d]=%s%s(ctx,%d,rc_native_%d,0,NULL)%s;\n",cl,once?"rc_closure_static(":"",closure_api(p),count(p,second(args)),id,once?")":"");
   check(f,cl);
   if(p->options.source_metadata&&p->user_phase&&x==p->metadata_root){
    int quoted=fresh(f),data=literal(p,x);
@@ -801,7 +810,10 @@ static long constructors(RcValue *x){
  return n;
 }
 static int compile(Program *p,RcValue *params,RcValue *body,Binding *caps,int ncaps,int freeze){
- RcEmitFn f={0};f.p=p;f.code.owner=p;
+ /* A top-level body runs once per bootstrap and cannot loop: it has no name
+  * to recurse through. Nested lambdas and definitions are compiled below with
+  * the flag cleared. */
+ RcEmitFn f={0};f.once=p->top_body;p->top_body=false;f.p=p;f.code.owner=p;
  if(constructors(body)>=RC_CONSTANT_DATA_BULK)f.constant_min=RC_CONSTANT_DATA_BULK_MIN;int id=p->next++,arity=freeze==1?0:(freeze==2?1:count(p,params));f.arity=arity;f.literal_capture=ncaps;snprintf(f.fail,sizeof f.fail,"cleanup");
  if(!ncaps&&!freeze&&exact_assoc(&f,params,body)) {
   const char *deps[]={"assoc","=","cons?","hd","tl"};f.assoc_fast=true;
@@ -987,7 +999,7 @@ static int compile_event(Program *p,RcValue *event){
  RcValue *kind=first(event),*args=rest(event);
  if(named(kind,"definition")){
   if(count(p,args)!=1||!is_pair(first(args))||!named(first(first(args)),"defun"))bad(p,"invalid native source definition event");
-  return compile(p,rc_nil(),first(args),NULL,0,0);
+  p->top_body=true;return compile(p,rc_nil(),first(args),NULL,0,0);
  }
  RcEmitFn f={0};f.p=p;f.code.owner=p;snprintf(f.fail,sizeof f.fail,"cleanup");int id=p->next++,result;
  if(named(kind,"call")){
@@ -1059,7 +1071,7 @@ bool rc_emit_program(RcContext *ctx,FILE *out,RcValue *const *kernel,size_t nker
     for(size_t i=0;i<n;i++) {
       if(!forms[i]) bad(p,"null KLambda form");
       p->metadata_root=phase?forms[i]:NULL;
-      int id=compile(p,options->function_parameters?options->function_parameters:rc_nil(),forms[i],NULL,0,0);
+      p->top_body=true;int id=compile(p,options->function_parameters?options->function_parameters:rc_nil(),forms[i],NULL,0,0);
       if(options->expression_entry)expression_id=id;
       int def=is_pair(forms[i])&&named(first(forms[i]),"defun");
       Buf *where=phase?&ut:(def?&installs:&kt);

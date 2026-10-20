@@ -2,7 +2,8 @@
 """Diagnostic ownership controls from source snapshots.
 
 Default: remove only two telemetry increments. --typed: retain those increments
-and add per-type counters. The product runtime and RcStats contract stay unchanged.
+and add per-type counters, compiling rc.c with SHEN_RC_STATS_COUNTERS=1 (release
+builds omit the increments since #7; the define is harmless for older sources). The product runtime and RcStats contract stay unchanged.
 These executables are experiments, not production candidates or acceptance results.
 """
 import argparse
@@ -38,7 +39,7 @@ __attribute__((destructor)) static void sp_type_counts(void) {
 }
 '''
 source.write_text(text)
-flags=['-O3','-g','-flto=thin','-std=c17','-Wall','-Wextra','-Wpedantic','-I'+str(sources)]
+flags=['-O3','-g','-flto=thin','-std=c17','-Wall','-Wextra','-Wpedantic','-I'+str(sources)]+(['-DSHEN_RC_STATS_COUNTERS=1'] if a.typed else [])
 def run(argv):
     commands.append(argv)
     with (out/'build.log').open('ab') as log:subprocess.run(argv,stdout=log,stderr=subprocess.STDOUT,check=True,timeout=180)
