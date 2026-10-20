@@ -64,7 +64,7 @@ struct RcValue {
         } text;
         struct { RcValue *head, *tail; size_t proper_length; RcValue *eval_plan; size_t eval_calls; } pair;
         /* A source stays marked until freed; see rc_vector_set. */
-        struct { RcValue **items; size_t length; bool cycle_source; } vector;
+        struct { RcValue **items; size_t length; bool cycle_source; RcValue *source_prev, *source_next; } vector;
         struct {
             RcValue *parent, **keys, **values; size_t count;
             RcValue *inline_binding[2];
@@ -140,6 +140,10 @@ struct RcContext {
     } perceus;
 #endif
     size_t collection_interval, since_collection, graph_slots, visit_epoch, cycle_sources;
+    /* Live cycle-source vectors, linked through their payloads; the cycle
+     * collector starts only from these. gc_nodes is its reusable scratch. */
+    RcValue *sources;
+    RcValue **gc_nodes; size_t gc_capacity;
     char *error;
     uintptr_t stack_limit;
     bool collecting, error_active, adaptive_collection, acyclic;
@@ -301,6 +305,7 @@ RcValue *rc_retain(RcValue *v) {
     return v;
 }
 typedef void (*EdgeFn)(RcValue *, void *);
+static bool next_epoch(RcContext *ctx);
 static void edges(RcValue *v, EdgeFn fn, void *data) {
     switch (rc_type(v)) {
     case RC_PAIR: fn(v->as.pair.head, data); fn(v->as.pair.tail, data); if(v->as.pair.eval_plan)fn(v->as.pair.eval_plan,data); break;
@@ -322,6 +327,18 @@ static void edges(RcValue *v, EdgeFn fn, void *data) {
     default: break;
     }
 }
+static void source_link(RcContext *ctx, RcValue *v) {
+    v->as.vector.cycle_source = true;
+    v->as.vector.source_prev = NULL; v->as.vector.source_next = ctx->sources;
+    if (ctx->sources) ctx->sources->as.vector.source_prev = v;
+    ctx->sources = v; ctx->cycle_sources++;
+}
+static void source_unlink(RcContext *ctx, RcValue *v) {
+    RcValue *prev = v->as.vector.source_prev, *next = v->as.vector.source_next;
+    if (prev) prev->as.vector.source_next = next; else ctx->sources = next;
+    if (next) next->as.vector.source_prev = prev;
+    v->as.vector.cycle_source = false; ctx->cycle_sources--;
+}
 static void unlink_object(RcValue *v) {
     RcContext *ctx = v->ctx;
     if (v->prev) v->prev->next = v->next; else ctx->objects = v->next;
@@ -333,7 +350,7 @@ static void unlink_object(RcValue *v) {
     case RC_PAIR: ctx->graph_slots -= 2+(v->as.pair.eval_plan!=NULL); break;
     case RC_VECTOR:
         ctx->graph_slots -= v->as.vector.length;
-        if (v->as.vector.cycle_source) ctx->cycle_sources--;
+        if (v->as.vector.cycle_source) source_unlink(ctx, v);
         break;
     case RC_ENV: ctx->graph_slots -= 1 + v->as.env.count; break;
     case RC_CLOSURE:
@@ -402,21 +419,6 @@ void rc_release(RcValue *v) {
         raw_free(dead);
     }
 }
-#if !defined(SHEN_RC_ACYCLIC_ONLY) || !SHEN_RC_ACYCLIC_ONLY
-static void subtract_edge(RcValue *v, void *unused) {
-    (void)unused;
-    if (is_heap(v)) { if (!v->trial) abort(); v->trial--; }
-}
-static void mark_edge(RcValue *v, void *data) {
-    if (!is_heap(v) || v->marked) return;
-    RcValue **work = data;
-    v->marked = true; v->work = *work; *work = v;
-}
-static void release_live_edge(RcValue *v, void *unused) {
-    (void)unused;
-    if (is_heap(v) && v->marked) rc_release(v);
-}
-#endif
 #if SHEN_RC_STATS_COUNTERS && (!defined(SHEN_RC_ACYCLIC_ONLY) || !SHEN_RC_ACYCLIC_ONLY)
 /* Diagnostic only: how much of the heap a collector that started from the
  * live cycle sources, and followed only vector-reaching edges, would visit. */
@@ -427,22 +429,107 @@ static void source_reach_edge(RcValue *v, void *data) {
     v->visit_epoch = r->ctx->visit_epoch; v->work = r->work; r->work = v; r->seen++;
 }
 static void perceus_source_reach(RcContext *ctx) {
-    if (++ctx->visit_epoch == 0) {
-        for (RcValue *v = ctx->objects; v; v = v->next) v->visit_epoch = 0;
-        ctx->visit_epoch = 1;
-    }
+    next_epoch(ctx);
     SourceReach r = {ctx, NULL, 0};
-    for (RcValue *v = ctx->objects; v; v = v->next) {
-        ctx->perceus.collect_scanned++;
-        if (v->reaches_vector) ctx->perceus.collect_live_vector_reachers++;
-        if (v->type == RC_VECTOR && v->as.vector.cycle_source) {
-            ctx->perceus.collect_sources++;
-            if (v->visit_epoch != ctx->visit_epoch) { v->visit_epoch = ctx->visit_epoch; v->work = r.work; r.work = v; r.seen++; }
-        }
+    ctx->perceus.collect_scanned += ctx->stats.live_objects;
+    for (RcValue *v = ctx->sources; v; v = v->as.vector.source_next) {
+        ctx->perceus.collect_sources++;
+        if (v->visit_epoch != ctx->visit_epoch) { v->visit_epoch = ctx->visit_epoch; v->work = r.work; r.work = v; r.seen++; }
     }
     while (r.work) { RcValue *v = r.work; r.work = v->work; edges(v, source_reach_edge, &r); }
     ctx->perceus.collect_source_reach += r.seen;
     ctx->perceus.full_collections++;
+}
+#endif
+#if !defined(SHEN_RC_ACYCLIC_ONLY) || !SHEN_RC_ACYCLIC_ONLY
+static bool on_cycle(RcContext *ctx, RcValue *source);
+static bool gc_push(RcContext *ctx, size_t *n, RcValue *v) {
+    if (*n == ctx->gc_capacity) {
+        size_t capacity = ctx->gc_capacity ? ctx->gc_capacity * 2 : 1024;
+        if (capacity > SIZE_MAX / sizeof(RcValue *)) return false;
+        RcValue **grown = realloc(ctx->gc_nodes, capacity * sizeof(*grown));
+        if (!grown) return false;
+        ctx->gc_nodes = grown; ctx->gc_capacity = capacity;
+    }
+    ctx->gc_nodes[(*n)++] = v;
+    return true;
+}
+typedef struct { RcContext *ctx; size_t n; bool failed; } GcScan;
+/* Only vector-reaching objects can lie on a cycle, and every cycle contains a
+ * live source. So a garbage cycle lies inside G: the vector-reaching objects
+ * reachable from the sources. Any edge into G from outside it comes from a
+ * vector-reaching object that no source reaches, which is live or acyclically
+ * rooted; it stays in the trial count as an external reference. */
+static void gc_discover_edge(RcValue *v, void *data) {
+    GcScan *scan = data;
+    if (!may_reach_vector(v) || v->visit_epoch == scan->ctx->visit_epoch) return;
+    v->visit_epoch = scan->ctx->visit_epoch;
+    v->trial = v->refs == RC_IMMORTAL ? SIZE_MAX : v->refs; v->marked = false;
+    if (!gc_push(scan->ctx, &scan->n, v)) scan->failed = true;
+}
+static void gc_subtract_edge(RcValue *v, void *data) {
+    RcContext *ctx = data;
+    if (!may_reach_vector(v) || v->visit_epoch != ctx->visit_epoch) return;
+    if (!v->trial) abort();
+    v->trial--;
+}
+static void gc_mark_edge(RcValue *v, void *data) {
+    RcContext *ctx = ((GcScan *)data)->ctx;
+    if (!may_reach_vector(v) || v->visit_epoch != ctx->visit_epoch || v->marked) return;
+    v->marked = true;
+    if (!gc_push(ctx, &((GcScan *)data)->n, v)) ((GcScan *)data)->failed = true;
+}
+/* Dead objects are exactly the unmarked members of G. Every other heap child
+ * keeps its edge count, so a dead object releases its edge to it. */
+static void gc_release_edge(RcValue *v, void *data) {
+    RcContext *ctx = data;
+    if (!is_heap(v)) return;
+    if (v->visit_epoch == ctx->visit_epoch && may_reach_vector(v) && !v->marked) return;
+    rc_release(v);
+}
+static void collect_from_sources(RcContext *ctx) {
+    if (!next_epoch(ctx)) return;
+    GcScan scan = {ctx, 0, false};
+    for (RcValue *v = ctx->sources; v && !scan.failed; v = v->as.vector.source_next) gc_discover_edge(v, &scan);
+    for (size_t i = 0; i < scan.n && !scan.failed; ++i) edges(ctx->gc_nodes[i], gc_discover_edge, &scan);
+    /* Out of scratch memory: collect nothing. No object has changed yet. */
+    if (scan.failed) return;
+    size_t n = scan.n;
+    for (size_t i = 0; i < n; ++i) edges(ctx->gc_nodes[i], gc_subtract_edge, ctx);
+    /* Residual trial counts are the references from outside G: C handles,
+     * context roots and live outside objects. Mark from them, using the
+     * scratch array past the first n entries as the work stack. */
+    GcScan mark = {ctx, n, false};
+    for (size_t i = 0; i < n; ++i) {
+        RcValue *v = ctx->gc_nodes[i];
+        if (v->trial && !v->marked) { v->marked = true; if (!gc_push(ctx, &mark.n, v)) { mark.failed = true; break; } }
+        while (mark.n > n && !mark.failed) { RcValue *w = ctx->gc_nodes[--mark.n]; edges(w, gc_mark_edge, &mark); }
+    }
+    if (mark.failed) {
+        /* Treat everything as live; only marks and trial counts were written. */
+        return;
+    }
+    /* Count the garbage only a cycle kept alive, including acyclic objects
+     * outside G that die when the cycle releases them, as a full-heap trial
+     * deletion would. */
+    size_t frees = ctx->stats.total_frees;
+    RcValue *dead = NULL;
+    for (size_t i = 0; i < n; ++i) {
+        RcValue *v = ctx->gc_nodes[i];
+        if (!v->marked) { unlink_object(v); v->work = dead; dead = v; }
+    }
+    /* Keep every dead object allocated until all edge classifications are done. */
+    for (RcValue *v = dead; v; v = v->work) edges(v, gc_release_edge, ctx);
+    while (dead) { RcValue *next = dead->work; raw_free(dead); dead = next; }
+    ctx->stats.cycle_objects_freed += ctx->stats.total_frees - frees;
+    /* A source that no longer lies on a cycle can drop its mark: the cycle
+     * invariant concerns only cycles through it. Writes re-mark it. The
+     * check is bounded so a heap with many sources stays linear. */
+    size_t checked = 0;
+    for (RcValue *v = ctx->sources, *next; v && checked < 64; v = next, ++checked) {
+        next = v->as.vector.source_next;
+        if (!on_cycle(ctx, v)) source_unlink(ctx, v);
+    }
 }
 #endif
 void rc_collect(RcContext *ctx) {
@@ -460,29 +547,10 @@ void rc_collect(RcContext *ctx) {
     if (!ctx->cycle_sources) {
         ctx->stats.acyclic_collections++;
     } else {
-        /* Residual refs after subtracting every heap edge are exactly the owned C
-         * handles and context roots. Reachability from them is the live graph.
-         * No stack addresses or payload bytes are interpreted as pointers. */
-        /* Immortals are roots whatever their incoming edge count. */
 #if SHEN_RC_STATS_COUNTERS
         perceus_source_reach(ctx);
 #endif
-        for (RcValue *v = ctx->objects; v; v = v->next) { v->trial = v->refs == RC_IMMORTAL ? SIZE_MAX : v->refs; v->marked = false; }
-        for (RcValue *v = ctx->objects; v; v = v->next) edges(v, subtract_edge, NULL);
-        RcValue *work = NULL;
-        /* Each trial is read once here. mark_edge only overwrites that same
-         * object's trial with its work link; it cannot touch a later trial.
-         * Child traversal starts after this entire root-discovery loop. */
-        for (RcValue *v = ctx->objects; v; v = v->next) if (v->trial) mark_edge(v, &work);
-        while (work) { RcValue *v = work; work = v->work; edges(v, mark_edge, &work); }
-        RcValue *dead = NULL;
-        for (RcValue *v = ctx->objects, *next; v; v = next) {
-            next = v->next;
-            if (!v->marked) { unlink_object(v); v->work = dead; dead = v; ctx->stats.cycle_objects_freed++; }
-        }
-        /* Keep every dead object allocated until all edge classifications are done. */
-        for (RcValue *v = dead; v; v = v->work) edges(v, release_live_edge, NULL);
-        while (dead) { RcValue *next = dead->work; raw_free(dead); dead = next; }
+        collect_from_sources(ctx);
     }
     if (ctx->adaptive_collection) {
         /* Freeze the next budget from survivors, including pointer slots in
@@ -548,7 +616,7 @@ void rc_context_free(RcContext *ctx) {
         ctx->compiled_symbols = next;
     }
     ctx->destroying = true;
-    free(ctx->symbols); free(ctx->static_closures);
+    free(ctx->symbols); free(ctx->static_closures); free(ctx->gc_nodes);
     RcValue *v = ctx->objects;
     while (v) { RcValue *next = v->next; raw_free(v); v = next; }
     while (ctx->stats.cached_objects) {
@@ -980,15 +1048,29 @@ static void cycle_search_edge(RcValue *v, void *data) {
     v->visit_epoch = search->ctx->visit_epoch;
     v->work = search->work; search->work = v;
 }
-static bool would_create_cycle(RcContext *ctx, RcValue *target, RcValue *item, size_t budget) {
-    /* An allocation-free graph walk. The next epoch invalidates leftover work
-     * marks even on an early hit, and objects remain unchanged throughout. */
+/* A 64-bit epoch cannot wrap; 32-bit targets reset every mark. */
+static bool next_epoch(RcContext *ctx) {
     if (++ctx->visit_epoch == 0) {
         for (RcValue *v = ctx->objects; v; v = v->next) v->visit_epoch = 0;
         ctx->visit_epoch = 1;
     }
+    return true;
+}
+static bool reaches(RcContext *ctx, RcValue *target, RcValue *item, size_t budget, bool from_children);
+static bool would_create_cycle(RcContext *ctx, RcValue *target, RcValue *item, size_t budget) {
+    return reaches(ctx, target, item, budget, false);
+}
+/* Whether a path of one or more edges leads from source back to itself. */
+static bool on_cycle(RcContext *ctx, RcValue *source) {
+    return reaches(ctx, source, source, SIZE_MAX, true);
+}
+static bool reaches(RcContext *ctx, RcValue *target, RcValue *item, size_t budget, bool from_children) {
+    /* An allocation-free graph walk. The next epoch invalidates leftover work
+     * marks even on an early hit, and objects remain unchanged throughout. */
+    next_epoch(ctx);
     CycleSearch search = {ctx, target, NULL, false};
-    cycle_search_edge(item, &search);
+    if (from_children) edges(item, cycle_search_edge, &search);
+    else cycle_search_edge(item, &search);
     while (search.work && !search.found) {
         RcValue *v = search.work; search.work = v->work;
         size_t width = 0;
@@ -1025,8 +1107,7 @@ bool rc_vector_set(RcContext *ctx, RcValue *v, size_t i, RcValue *item) {
             rc_error(ctx, "acyclic mode rejects vector assignment that would create a cycle");
             return false;
         }
-        v->as.vector.cycle_source = true;
-        ctx->cycle_sources++;
+        source_link(ctx, v);
 #if SHEN_RC_STATS_COUNTERS
         ctx->perceus.cycle_source_marks++;
 #endif
