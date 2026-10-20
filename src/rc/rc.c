@@ -128,6 +128,17 @@ struct RcContext {
     RcValue *prolog_guard_keys[3];
     unsigned prolog_guard_mask;
     RcStats stats;
+#if SHEN_RC_STATS_COUNTERS
+    /* Reuse-headroom diagnostics (SHEN_RC_PERCEUS_STATS); see
+     * docs/performance/tight-perceus-log.md. Counter builds only. */
+    struct {
+        size_t alloc_by_type[RC_ENV + 1], death_root[RC_ENV + 1], death_cascade[RC_ENV + 1];
+        size_t release_to_zero, pair_alloc_after_pair_free, cycle_source_marks;
+        size_t full_collections, collect_scanned, collect_sources, collect_source_reach;
+        size_t collect_live_vector_reachers;
+        bool pair_freed_since_alloc;
+    } perceus;
+#endif
     size_t collection_interval, since_collection, graph_slots, visit_epoch, cycle_sources;
     char *error;
     uintptr_t stack_limit;
@@ -236,6 +247,13 @@ static RcValue *allocate(RcContext *ctx, RcType type, size_t extra) {
     ctx->stats.live_bytes += v->bytes;
     ctx->stats.total_allocations++;
     if (type == RC_PAIR) ctx->stats.pair_allocations++;
+#if SHEN_RC_STATS_COUNTERS
+    ctx->perceus.alloc_by_type[type]++;
+    if (type == RC_PAIR) {
+        ctx->perceus.pair_alloc_after_pair_free += ctx->perceus.pair_freed_since_alloc;
+        ctx->perceus.pair_freed_since_alloc = false;
+    }
+#endif
     if (type == RC_CLOSURE) {
         size_t captures = extra / sizeof(RcValue *);
         ctx->stats.capture_edges_created += captures;
@@ -355,14 +373,30 @@ static void release_edge(RcValue *v, void *data) {
 #if SHEN_RC_STATS_COUNTERS
     v->ctx->stats.release_calls++;
 #endif
-    if (--v->refs == 0) { v->work = *work; *work = v; }
+    if (--v->refs == 0) {
+#if SHEN_RC_STATS_COUNTERS
+        v->ctx->perceus.release_to_zero++;
+#endif
+        v->work = *work; *work = v;
+    }
 }
 void rc_release(RcValue *v) {
     RcValue *work = NULL;
     release_edge(v, &work);
+#if SHEN_RC_STATS_COUNTERS
+    bool root = true;
+#endif
     while (work) {
         RcValue *dead = work;
         work = dead->work;
+#if SHEN_RC_STATS_COUNTERS
+        /* The first death is the owner's own drop: the point where Perceus
+         * could reuse the cell. Later ones are its release cascade. */
+        if (root) dead->ctx->perceus.death_root[dead->type]++;
+        else dead->ctx->perceus.death_cascade[dead->type]++;
+        root = false;
+        if (dead->type == RC_PAIR) dead->ctx->perceus.pair_freed_since_alloc = true;
+#endif
         unlink_object(dead);
         edges(dead, release_edge, &work);
         raw_free(dead);
@@ -381,6 +415,34 @@ static void mark_edge(RcValue *v, void *data) {
 static void release_live_edge(RcValue *v, void *unused) {
     (void)unused;
     if (is_heap(v) && v->marked) rc_release(v);
+}
+#endif
+#if SHEN_RC_STATS_COUNTERS && (!defined(SHEN_RC_ACYCLIC_ONLY) || !SHEN_RC_ACYCLIC_ONLY)
+/* Diagnostic only: how much of the heap a collector that started from the
+ * live cycle sources, and followed only vector-reaching edges, would visit. */
+typedef struct { RcContext *ctx; RcValue *work; size_t seen; } SourceReach;
+static void source_reach_edge(RcValue *v, void *data) {
+    SourceReach *r = data;
+    if (!may_reach_vector(v) || v->visit_epoch == r->ctx->visit_epoch) return;
+    v->visit_epoch = r->ctx->visit_epoch; v->work = r->work; r->work = v; r->seen++;
+}
+static void perceus_source_reach(RcContext *ctx) {
+    if (++ctx->visit_epoch == 0) {
+        for (RcValue *v = ctx->objects; v; v = v->next) v->visit_epoch = 0;
+        ctx->visit_epoch = 1;
+    }
+    SourceReach r = {ctx, NULL, 0};
+    for (RcValue *v = ctx->objects; v; v = v->next) {
+        ctx->perceus.collect_scanned++;
+        if (v->reaches_vector) ctx->perceus.collect_live_vector_reachers++;
+        if (v->type == RC_VECTOR && v->as.vector.cycle_source) {
+            ctx->perceus.collect_sources++;
+            if (v->visit_epoch != ctx->visit_epoch) { v->visit_epoch = ctx->visit_epoch; v->work = r.work; r.work = v; r.seen++; }
+        }
+    }
+    while (r.work) { RcValue *v = r.work; r.work = v->work; edges(v, source_reach_edge, &r); }
+    ctx->perceus.collect_source_reach += r.seen;
+    ctx->perceus.full_collections++;
 }
 #endif
 void rc_collect(RcContext *ctx) {
@@ -402,6 +464,9 @@ void rc_collect(RcContext *ctx) {
          * handles and context roots. Reachability from them is the live graph.
          * No stack addresses or payload bytes are interpreted as pointers. */
         /* Immortals are roots whatever their incoming edge count. */
+#if SHEN_RC_STATS_COUNTERS
+        perceus_source_reach(ctx);
+#endif
         for (RcValue *v = ctx->objects; v; v = v->next) { v->trial = v->refs == RC_IMMORTAL ? SIZE_MAX : v->refs; v->marked = false; }
         for (RcValue *v = ctx->objects; v; v = v->next) edges(v, subtract_edge, NULL);
         RcValue *work = NULL;
@@ -453,8 +518,29 @@ bool rc_interpreter_enter(RcContext *ctx){
  ctx->interpreter_entries++;
  if(ctx->verify_native||ctx->execution_mode!=1){rc_error(ctx,"strict native execution entered interpreter");return false;}return true;
 }
+#if SHEN_RC_STATS_COUNTERS
+static void perceus_report(const RcContext *ctx) {
+    if (!getenv("SHEN_RC_PERCEUS_STATS")) return;
+    static const char *const names[] = {"nil","number","string","symbol","pair","vector","closure","stream","tail","env"};
+    const RcStats *s = &ctx->stats;
+    fprintf(stderr, "RC_PERCEUS {\"total_allocations\":%zu,\"pair_allocations\":%zu,\"pair_reuse_attempts\":%zu,\"pair_reuses\":%zu,\"pair_tail_transfers\":%zu,"
+            "\"retain_calls\":%zu,\"release_calls\":%zu,\"release_to_zero\":%zu,\"pair_alloc_after_pair_free\":%zu,"
+            "\"collections\":%zu,\"acyclic_collections\":%zu,\"full_collections\":%zu,\"collect_scanned\":%zu,\"collect_live_vector_reachers\":%zu,"
+            "\"collect_sources\":%zu,\"collect_source_reach\":%zu,\"cycle_source_marks\":%zu,\"cycle_objects_freed\":%zu,\"peak_objects\":%zu",
+            s->total_allocations, s->pair_allocations, s->pair_reuse_attempts, s->pair_reuses, s->pair_tail_transfers,
+            s->retain_calls, s->release_calls, ctx->perceus.release_to_zero, ctx->perceus.pair_alloc_after_pair_free,
+            s->collections, s->acyclic_collections, ctx->perceus.full_collections, ctx->perceus.collect_scanned, ctx->perceus.collect_live_vector_reachers,
+            ctx->perceus.collect_sources, ctx->perceus.collect_source_reach, ctx->perceus.cycle_source_marks, s->cycle_objects_freed, s->peak_objects);
+    for (int t = 0; t <= RC_ENV; t++)
+        fprintf(stderr, ",\"%s\":[%zu,%zu,%zu]", names[t], ctx->perceus.alloc_by_type[t], ctx->perceus.death_root[t], ctx->perceus.death_cascade[t]);
+    fputs("}\n", stderr);
+}
+#endif
 void rc_context_free(RcContext *ctx) {
     if (!ctx) return;
+#if SHEN_RC_STATS_COUNTERS
+    perceus_report(ctx);
+#endif
     rc_native_compile_free(ctx->native_compile_state);
     while (ctx->compiled_symbols) {
         RcResolvedSymbols *next = ctx->compiled_symbols->next;
@@ -941,6 +1027,9 @@ bool rc_vector_set(RcContext *ctx, RcValue *v, size_t i, RcValue *item) {
         }
         v->as.vector.cycle_source = true;
         ctx->cycle_sources++;
+#if SHEN_RC_STATS_COUNTERS
+        ctx->perceus.cycle_source_marks++;
+#endif
     }
     RcValue *old = v->as.vector.items[i];
     v->as.vector.items[i] = rc_retain(item);
