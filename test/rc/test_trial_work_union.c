@@ -20,7 +20,7 @@ int main(void) {
   if(!i)header=bytes;else assert(bytes==header);
  }
 #if UINTPTR_MAX == UINT64_MAX
- assert(header==112); /* 64-bit physical header contract (128 before #7). */
+ assert(header==32); /* 64-bit pair cell (128 bytes before #7, 112 after it). */
 #else
  assert(header>0);
 #endif

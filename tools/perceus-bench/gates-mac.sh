@@ -6,6 +6,8 @@ set -u
 wt=$1; logs=$2; bifrost=$3
 mkdir -p "$logs"; cd "$wt" || exit 2
 export SHEN_RC_NATIVE_CACHE="$logs/native-cache"
+# The host load swings between 25 and 170: give certify room.
+export RC_SUITE_TIMEOUT=7200 RC_BUILD_TIMEOUT=7200 SHEN_RC_COMPILE_TIMEOUT=1200
 status=0
 step() { name=$1; shift; start=$(date +%s); "$@" > "$logs/$name.log" 2>&1; rc=$?
   echo "$name rc=$rc $(( $(date +%s) - start ))s" | tee -a "$logs/summary.txt"; [ $rc -eq 0 ] || status=1; }
