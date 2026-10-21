@@ -73,7 +73,7 @@ replaces the kernel defun. Bodies compared after normalising variable names.
 | `value/or`, `<-address/or`, `read-file-as-charlist` | overwrites | no / no | — | kept | port extras; no kernel code calls them |
 | `shen.char-stinput?`, `shen.char-stoutput?`, `shen.write-string`, `shen.read-unit-string` | overwrites/core | no / no | — | **removed** | 42.x port hooks that 43.1 replaced with the public `char-stream?`, `read-unit-string`, `write-string` (doc/port-upgrades.md) |
 | `char-stream?`, `read-unit-string`, `write-string` | core | no / no | — | kept | 43.1 port interface; `char-stream?` is `false` (byte streams), so `pr` and the reader use the byte paths |
-| `shen.hashkey` wrapper | installed after the kernel when the defun has the certified shape | yes / yes | identical | kept | **deliberate deviation, unchanged**: an integral float hashes as the integer, so `(put 1 ...)` is found by `(get 1.0 ...)`, consistent with `=`. In 43.1 this governs `shen.dict` bucket placement (all properties) |
+| `shen.hashkey` wrapper | installed after the kernel when the defun has the certified shape | yes / yes | identical | kept | **deliberate deviation, unchanged**: an integral float hashes as the integer, so `(put 1 ...)` is found by `(get 1.0 ...)`, consistent with `=`. In 43.1 this governs `shen.dict` bucket placement (all properties). Kept: in Shen `(= 1 1.0)` is true, so equal keys must hash equally; the kernel's string-based hash breaks that |
 | `assoc` fast path | emitter template | yes / yes | identical up to names | template now alpha-equivalent | identical (guarded differential tests) |
 | `shen.pvar?` fast path | emitter template | yes / yes | **changed**: 43.1 traps only the `<-address` read and compares the trapped `shen.not-pvar` with `=` | template updated; runtime now requires canonical `=` for every vector | identical; the old runtime returned `false` for an empty vector when `=` was redefined, the kernel calls `=` |
 | `shen.lazyderef` fast path | emitter template | yes / yes | identical up to names | template now alpha-equivalent | identical |
@@ -98,7 +98,7 @@ compile-timeout fallback). Final CLI binary sha256 `50d1311f…8efc`.
 | Bifrost corpus (pinned def3047) | macOS e620cba; CI ubuntu | 72 PASS, 2 KERNEL_SKIP (was 70 PASS, 2 SKIP, 2 KERNEL_SKIP) |
 | `(version)` | e620cba | `43.1` |
 | `fetch-kernel.sh --check` against the tarball | macOS | all three vendored trees match |
-| CI macOS jobs | CI | not run: no macOS runner was assigned (0 steps, cancelled) on this branch and on `main` |
+| CI macOS jobs | CI | not a gate: since 2026-10-21 macOS jobs are cancelled before a runner is assigned (account-wide). Local macOS runs are the source of truth. The one macOS job that did run (15:00:37, at 6f211dc) failed reader capture with `compile-kl: unsupported literal in compiler output`; that is the synonyms closure fixed in 8399944, and reader capture passes locally on macOS at 41c0f22 |
 | Historical S42 manifest (`RC_RELEASE_MANIFEST=shen/releases/s42.json`) | macOS e620cba | builds, `(version)` = 42, S42 suite 134/0 |
 
 Bifrost: the two former SKIPs are `source-form-before-macros` and
@@ -127,6 +127,19 @@ An earlier run on the shared `~/.cache/shen-c` failed three d-g5 drivers
 with compile status 124 (timeout while other agents held the cache lock);
 those runs are superseded, and on main the fallback now interprets such a
 form instead.
+
+### Known limitations and follow-ups
+
+- **b-typed native.** Cold native compilation of b-typed's generated modules
+  (about 11 MB of C each) is not practical; byte-identity is established in
+  interpret mode, and main's compile-timeout fallback interprets any form
+  whose compile times out.
+- **Peak RSS.** b-typed peak RSS is about 10% higher on 43.1; accepted.
+- **Bifrost.** The pinned corpus's adapter note still describes shen-c's
+  kernel as S43; update it in the bifrost repo.
+- **Kernel 43.1.x.** This branch is pristine community 43.1. The type
+  checker fix (Shen-Language/shen-sources#117) will arrive in a separate PR
+  once its release exists.
 
 ### Performance sanity
 
