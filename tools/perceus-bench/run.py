@@ -1,6 +1,6 @@
 """Time shen-c binaries on shenbench workloads with /usr/bin/time -l.
 
-usage: python3 -I run.py LOG LABEL=BIN[,LABEL=BIN...] WORKLOAD[,...] ROUNDS [--warm] [--timeout S]
+usage: python3 -I run.py LOG LABEL=BIN[,LABEL=BIN...] WORKLOAD[,...] ROUNDS [--warm] [--timeout S] [--env K=V]...
 
 Each driver runs as `/usr/bin/time -l BIN script driver.shen` with cwd set to
 the driver directory. Native code is cached per binary (SHEN_RC_NATIVE_CACHE
@@ -104,6 +104,9 @@ def main():
         env = {**os.environ, "SHEN_RC_NATIVE_CACHE": str(CACHE / h[:16]), "SHEN_RC_NATIVE_STATS": "1"}
         for k in ("SHEN_RC_PRINT", "SHEN_RC_STATS"):
             env.pop(k, None)
+        for i, arg in enumerate(a):
+            if arg == "--env":
+                k, v = a[i + 1].split("=", 1); env[k] = v
         envs[label] = (b, h, env)
     if "--warm" in a:
         for label, (b, h, env) in envs.items():
@@ -118,6 +121,7 @@ def main():
                     r = run(b, w, env, timeout)
                     la1 = os.getloadavg()[0]
                     row = {"ts": int(time.time()), "round": rnd, "workload": w, "label": label, "bin": b,
+                           "mode": env.get("SHEN_RC_EXECUTION", "native"),
                            "bin_sha256": h, "load_before": round(la0, 1), "load_after": round(la1, 1), **r}
                     fh.write(json.dumps(row) + "\n"); fh.flush()
                     print(f"r{rnd} {w:10} {label:10} cpu={r['cpu']:8.2f}s real={r['real']:8.2f}s "
