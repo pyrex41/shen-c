@@ -22,17 +22,12 @@ step toolchain env CC=clang CFLAGS=-O2 scripts/test-rc-toolchain.sh --canonical-
 # ASan/UBSan lanes run in gates-asan-linux.sh: ASan hangs at init on this host.
 step bifrost env BIFROST_SHEN_C="$wt/bin/shen-c" "$bifrost" --impls shen-c --json
 python3 - "$logs/bifrost.log" >> "$logs/summary.txt" <<'PY'
-import json, sys, collections
-text = open(sys.argv[1]).read()
-try:
-    data = json.loads(text[text.index('{') if text.lstrip().startswith('{') else text.index('['):])
-except Exception as exc:
-    print("bifrost parse UNKNOWN", exc); sys.exit()
-rows = data if isinstance(data, list) else data.get('results') or data.get('rows') or []
-c = collections.Counter()
-for r in rows:
-    c[str(r.get('status') or r.get('outcome') or r.get('result'))] += 1
-print("bifrost rows", len(rows), dict(c))
+import re, sys
+t = open(sys.argv[1]).read()
+summary = re.findall(r"SUMMARY: .*", t)
+cap = t.count("SKIPPED: every implementation reported an unavailable capability")
+kern = t.count("skipped: no matching kernels")
+print("bifrost", summary[-1] if summary else "SUMMARY UNKNOWN", "| capability skips", cap, "| kernel skips", kern)
 PY
 echo "status $status" >> "$logs/summary.txt"
 exit $status
