@@ -75,7 +75,7 @@ from the interpreter.
 | full collections / objects scanned / freed | 188 / 148M / 0 |
 | objects reachable from live sources | 303K (0.2% of scanned) |
 
-On b-typed, pairs die mostly in cascades, when a whole ed term is
+On b-typed, pairs die mostly in cascades, when a whole `deref`ed term is
 dropped. In-place reuse has almost nothing to work with: 0.06% today and a
 6.6% ceiling.
 
