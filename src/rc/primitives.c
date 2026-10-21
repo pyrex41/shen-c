@@ -18,7 +18,7 @@ enum Op {
  P_TYPE, P_VECTOR, P_VSET, P_VGET, P_VECTORP, P_WRITE, P_READ, P_OPEN,
  P_CLOSE, P_TIME, P_ADD, P_SUB, P_MUL, P_DIV, P_GT, P_LT, P_GE, P_LE,
  P_NUMBER, P_SYMBOL, P_BOOLEAN, P_INTEGER, P_VARIABLE, P_NOT, P_VALUEOR,
- P_VGETOR, P_CHAROUT, P_CHARIN, P_WRITESTR, P_PR, P_FUNCTION, P_EXIT,
+ P_VGETOR, P_WRITESTR, P_PR, P_FUNCTION, P_EXIT,
  P_GC, P_READCHARS, P_DO, P_CHARSTREAM, P_READUNIT
 };
 struct Primitive { const char *name; size_t arity; enum Op op; };
@@ -37,13 +37,12 @@ static const struct Primitive core[] = {
  {"number?",1,P_NUMBER},{"function",1,P_FUNCTION},{"exit",1,P_EXIT},
  {"shen.gc",0,P_GC},{"do",2,P_DO},
  {"char-stream?",1,P_CHARSTREAM},{"read-unit-string",1,P_READUNIT},
- {"write-string",2,P_WRITESTR},{"shen.read-unit-string",1,P_READUNIT}
+ {"write-string",2,P_WRITESTR}
 };
 static const struct Primitive overwrites[] = {
  {"symbol?",1,P_SYMBOL},{"boolean?",1,P_BOOLEAN},{"integer?",1,P_INTEGER},
  {"variable?",1,P_VARIABLE},{"not",1,P_NOT},{"value/or",2,P_VALUEOR},
- {"<-address/or",3,P_VGETOR},{"shen.char-stoutput?",1,P_CHAROUT},
- {"shen.char-stinput?",1,P_CHARIN},{"shen.write-string",2,P_WRITESTR},
+ {"<-address/or",3,P_VGETOR},
  {"pr",2,P_PR},{"read-file-as-charlist",1,P_READCHARS}
 };
 static bool symbol_is(RcValue *v,const char *s) {
@@ -146,6 +145,30 @@ static RcValue *open_file(RcContext *c,RcValue *path,RcValue *direction) {
  if(!f){RcValue *r=rc_error(c,"Cannot open %s: %s",s,strerror(errno));free(s);return r;}
  free(s);RcValue *v=rc_stream_with_direction(c,f,true,symbol_is(direction,"in"));if(!v)fclose(f);return v;
 }
+/* The kernel's symbol? and variable? classify a symbol by its printed name
+ * (shen.analyse-symbol?, shen.analyse-variable?): a first byte that is a
+ * letter or one of the kernel's misc characters (an uppercase letter for a
+ * variable), then letters, misc characters or digits. { } : ; and , are
+ * symbols too. Booleans, and values whose str fails, are neither. */
+static bool kernel_upper(unsigned char ch) { return ch>='A'&&ch<='Z'; }
+static bool kernel_alpha(unsigned char ch) {
+ return (ch>='a'&&ch<='z')||kernel_upper(ch)||(ch&&strchr("=-*/+_?$!@~.><&%'#`",ch));
+}
+static bool kernel_alphanums(const char *s,size_t n) {
+ for(size_t i=0;i<n;i++){unsigned char ch=(unsigned char)s[i];if(!kernel_alpha(ch)&&!(ch>='0'&&ch<='9'))return false;}
+ return true;
+}
+static bool kernel_symbol(RcValue *v) {
+ if(rc_type(v)!=RC_SYMBOL||rc_is_boolean(v))return false;
+ const char *s=rc_text(v);size_t n=rc_text_length(v);
+ if(n==1&&*s&&strchr("{}:;,",*s))return true;
+ return n&&kernel_alpha((unsigned char)s[0])&&kernel_alphanums(s+1,n-1);
+}
+static bool kernel_variable(RcValue *v) {
+ if(rc_type(v)!=RC_SYMBOL||rc_is_boolean(v))return false;
+ const char *s=rc_text(v);size_t n=rc_text_length(v);
+ return n&&kernel_upper((unsigned char)s[0])&&kernel_alphanums(s+1,n-1);
+}
 static RcValue *write_string(RcContext *c,RcValue *text,RcValue *stream) {
  if(rc_type(text)!=RC_STRING||rc_type(stream)!=RC_STREAM||!rc_stream_file(stream)||rc_stream_is_input(stream))
   return rc_error(c,"write-string requires string and open stream");
@@ -222,15 +245,13 @@ static RcValue *primitive_op(RcContext *c,RcValue *self,enum Op op,
   if(symbol_is(a,"run"))return rc_number(c,(double)clock()/CLOCKS_PER_SEC-rc_number_value(rc_capture(self,1)));
   return rc_error(c,"get-time requires unix or run");
  case P_NUMBER:return truth(c,rc_type(a)==RC_NUMBER);
- case P_SYMBOL:return truth(c,rc_type(a)==RC_SYMBOL&&!boolean(a));
+ case P_SYMBOL:return truth(c,kernel_symbol(a));
  case P_BOOLEAN:return truth(c,boolean(a));
  case P_INTEGER:return truth(c,rc_type(a)==RC_NUMBER&&(rc_number_is_exact_integer(a)||(isfinite(rc_number_value(a))&&trunc(rc_number_value(a))==rc_number_value(a))));
- case P_VARIABLE:return truth(c,rc_type(a)==RC_SYMBOL&&rc_text_length(a)&&rc_text(a)[0]>='A'&&rc_text(a)[0]<='Z');
- case P_NOT:if(!boolean(a))return rc_error(c,"not requires boolean");return truth(c,!rc_is_true(a));
+ case P_VARIABLE:return truth(c,kernel_variable(a));
+ case P_NOT:if(!boolean(a))return rc_error(c,"condition is not a boolean");return truth(c,!rc_is_true(a));
  case P_VALUEOR:{
   RcValue *r=rc_type(a)==RC_SYMBOL?rc_global_get(c,a):NULL;if(r)return r;rc_clear_error(c);return rc_apply(c,b,0,NULL);}
- case P_CHAROUT:return truth(c,rc_type(a)==RC_STREAM&&rc_stream_file(a)&&!rc_stream_is_input(a));
- case P_CHARIN:return rc_false(c);
  case P_WRITESTR:return write_string(c,a,b);
  case P_PR:{
   RcValue *hush=global(c,"*hush*");if(!hush){rc_clear_error(c);}bool quiet=hush&&rc_is_true(hush)&&rc_stream_file(b)==stdout;rc_release(hush);

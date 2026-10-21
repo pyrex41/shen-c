@@ -54,6 +54,8 @@ jobs:
         run: nix develop -c python3 scripts/test-compile-first.py bin/shen-c --timeout 1200
       - name: Reader capture and unsupported-state boundaries
         run: nix develop -c test/rc/test_reader_capture.sh ./bin/shen-rc
+      - name: Native overrides match the pinned kernel's definitions
+        run: nix develop -c python3 test/rc/test_kernel_overrides.py bin/shen-c
       - name: Shen source compilation
         run: nix develop -c env CC=${{ matrix.cc }} test/rc/test_source_compile.sh
       - name: Certify pinned release runme.shen
