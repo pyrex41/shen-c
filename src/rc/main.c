@@ -287,14 +287,14 @@ static RcValue *capture_reader_event(RcContext *ctx,RcValue *self,size_t argc,Rc
         } else if (contains_definition(argv[0],0)) unsupported_capture(ctx,self,"compile-kl: nested persistent definitions in reader eval-kl are unsupported");
     } else if (kind==HOOK_MACRO || kind==HOOK_DATATYPE) {
         /* Standard registrations receive exactly the dynamic wrapper that fn
-         * already owns. A custom closure cannot be replaced by its name. */
-        RcValue *table=get_global(ctx,"shen.*lambdatable*");
-        bool standard=false;
-        for (RcValue *p=table; rc_type(p)==RC_PAIR; p=rc_tail_borrowed(p)) {
-            RcValue *entry=rc_head_borrowed(p);
-            if (rc_type(entry)==RC_PAIR && rc_equal(rc_head_borrowed(entry),argv[0]) && rc_tail_borrowed(entry)==argv[1]) { standard=true; break; }
-        }
-        rc_release(table);
+         * already owns: the name's shen.lambda-form property. A custom closure
+         * cannot be replaced by its name. */
+        RcValue *properties=get_global(ctx,"*property-vector*"), *form=rc_symbol(ctx,"shen.lambda-form");
+        RcValue *lookup[]={argv[0],form,properties};
+        RcValue *entry=properties && form ? call(ctx,"get",3,lookup) : NULL;
+        if (!entry && properties && form) rc_clear_error(ctx); /* no lambda form: not standard */
+        bool standard=entry && entry==argv[1];
+        rc_release(entry); rc_release(form); rc_release(properties);
         if (!standard) unsupported_capture(ctx,self,"compile-kl: custom macro/datatype callback persistence is unsupported");
         else ok=append_event(ctx,events,kind==HOOK_MACRO ? "macro" : "datatype",1,argv);
     } else if (kind==HOOK_SET) {
