@@ -20,6 +20,9 @@ def main():
             if strict:assert all(x['interpreter_entries']=='0' for x in metrics),metrics
             return metrics[-1],p
         s,_=run();assert s['compiles']=='1',s
+        # The embedded default compiler, recorded by the first run's cache.
+        config=dict(x.split(' ',1) for x in next(cache.glob('compile-*.config')).read_text().splitlines()[1:])
+        default_cc=bytes.fromhex(config['cc']).decode()
         s,_=run();assert s['compiles']=='0' and s['disk_hits']=='1',s
         # The packed image must bind current literals, reject damaged images,
         # and preserve ordinary native compilation for an unseen code shape.
@@ -87,19 +90,25 @@ def main():
                  '(defun fallback-map (F L) (if (= L ()) () (cons (F (hd L)) (fallback-map F (tl L)))))',
                  '(fallback-sum (fallback-map (lambda X (fallback-square X)) (cons 1 (cons 2 (cons 3 ())))))','((freeze (trap-error (hd 4) (lambda E 42))))']
         program_output='fallback-square\nfallback-sum\nfallback-map\n14\n42\n'
-        reference,_=run(expression=program,expected=program_output)
-        for cc,expected,extra in ((str(root/'missing-cc'),'127',{}),('/usr/bin/false','1',{}),(str(slow),'124',{'SHEN_RC_COMPILE_TIMEOUT':'0.2'})):
-            retry=root/('retry-'+expected)
+        # One compiler path for every mode keeps the cache key fixed, so the
+        # working run after a failure proves the failure was not cached.
+        switch=root/'switch-cc';switch.write_text('#!/bin/sh\ncase "$FALLBACK_MODE" in fail) exit 1;; slow) exec sleep 30;; esac\nexec "$FALLBACK_REAL_CC" "$@"\n');switch.chmod(0o700)
+        switched={'SHEN_RC_NATIVE_CC':str(switch),'FALLBACK_REAL_CC':default_cc}
+        reference,_=run(dict(switched,SHEN_RC_NATIVE_CACHE=str(root/'switch-reference')),expression=program,expected=program_output)
+        for name,expected,extra in (('missing','127',{'SHEN_RC_NATIVE_CC':str(root/'missing-cc')}),('fail','1',dict(switched,FALLBACK_MODE='fail')),
+                                    ('slow','124',dict(switched,FALLBACK_MODE='slow',SHEN_RC_COMPILE_TIMEOUT='0.2'))):
+            retry=root/('retry-'+name);extra=dict(extra,SHEN_RC_NATIVE_CACHE=str(retry))
             start=time.monotonic()
-            s,p=run(dict(extra,SHEN_RC_NATIVE_CC=cc,SHEN_RC_NATIVE_CACHE=str(retry)),strict=False)
+            s,p=run(extra,strict=False)
             assert p.stderr.count('interpreting instead')==1 and 'status '+expected in p.stderr,p.stderr
             assert s['fallbacks']=='1' and s['failures']=='0' and int(s['interpreter_entries'])>0,s
-            s,p=run(dict(extra,SHEN_RC_NATIVE_CC=cc,SHEN_RC_NATIVE_CACHE=str(retry)),expression=program,expected=program_output,strict=False)
+            s,p=run(extra,expression=program,expected=program_output,strict=False)
             assert p.stderr.count('interpreting instead')==1 and int(s['fallbacks'])>=2 and s['failures']=='0',s
             assert time.monotonic()-start<30,'fallback compiles were not bounded'
             assert not list(retry.glob('*.so')) and not list(retry.glob('*.receipt')),sorted(retry.iterdir())
-            s,_=run({'SHEN_RC_NATIVE_CACHE':str(retry)},expression=program,expected=program_output)
-            assert s['compiles']==reference['compiles'] and s['disk_hits']=='0',(s,reference)
+            if name!='missing':
+                s,_=run(dict(switched,SHEN_RC_NATIVE_CACHE=str(retry)),expression=program,expected=program_output)
+                assert s['compiles']==reference['compiles'] and s['disk_hits']=='0',(s,reference)
         s,_=run({'SHEN_RC_NATIVE_CACHE':str(root/'bounded'),'SHEN_RC_NATIVE_CACHE_BYTES':'0'})
         assert not list((root/'bounded').glob('*.so'))
         private=root/'not-private';private.mkdir(mode=0o777);private.chmod(0o777)

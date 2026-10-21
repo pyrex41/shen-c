@@ -8,7 +8,7 @@ explicit interpreter. Each run must exit 0 with identical stdout. Under
 SHEN_RC_VERIFY_NATIVE=1 the same failing compiler must remain a hard error.
 Finally a run on the fallback cache with a working compiler must compile again.
 """
-import argparse, os, re, shutil, subprocess, sys, tempfile
+import argparse, os, re, subprocess, tempfile
 from pathlib import Path
 
 PROGRAM = r'''
@@ -48,16 +48,13 @@ def stats(stderr):
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument('binary', type=Path)
-    ap.add_argument('--cc', default=os.environ.get('SHEN_RC_NATIVE_CC') or shutil.which('cc') or 'cc')
     ap.add_argument('--timeout', type=float, default=600)
     args = ap.parse_args(); binary = args.binary.resolve()
-    real_cc = shutil.which(args.cc) or args.cc
     with tempfile.TemporaryDirectory(prefix='shen-compile-fallback-') as directory:
         root = Path(directory); program = root / 'program.shen'; program.write_text(PROGRAM)
         wrapper = root / 'cc'; wrapper.write_text(WRAPPER); wrapper.chmod(0o700)
         base = {k: v for k, v in os.environ.items() if not k.startswith(('SHEN_RC_', 'FALLBACK_'))}
-        base.update(SHEN_RC_NATIVE_STATS='1', SHEN_RC_NATIVE_CC=str(wrapper), FALLBACK_REAL_CC=real_cc,
-                    FALLBACK_COUNTER=str(root / 'counter'))
+        base.update(SHEN_RC_NATIVE_STATS='1')
         def run(name, success=True, **extra):
             env = dict(base, SHEN_RC_NATIVE_CACHE=str(root / ('cache-' + extra.pop('cache', name))), **extra)
             p = subprocess.run([str(binary), 'script', str(program)], cwd=root, env=env, capture_output=True,
@@ -65,6 +62,12 @@ def main():
             assert (p.returncode == 0) == success, (name, p.returncode, p.stdout, p.stderr)
             if success: assert p.stdout == EXPECTED, (name, p.stdout, p.stderr)
             return stats(p.stderr), p
+        s, p = run('default', SHEN_RC_VERIFY_NATIVE='1')
+        # The wrapper delegates to the embedded default compiler, as recorded
+        # in the cache configuration, so every mode shares one cache key.
+        config = dict(x.split(' ', 1) for x in next((root / 'cache-default').glob('compile-*.config')).read_text().splitlines()[1:])
+        base.update(SHEN_RC_NATIVE_CC=str(wrapper), FALLBACK_REAL_CC=bytes.fromhex(config['cc']).decode(),
+                    FALLBACK_COUNTER=str(root / 'counter'))
         s, p = run('native', SHEN_RC_VERIFY_NATIVE='1')
         assert s and s['compiles'] >= 2 and s['interpreter_entries'] == 0 and s['fallbacks'] == 0, s
         compiles = s['compiles']
