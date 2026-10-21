@@ -149,3 +149,105 @@ The builds are:
 | d-g5 | s5 | native (warm cache) | 575.3 | 24.7 | 94 | yes (2 runs) | 44.9/5.2 |
 | d-g5 | s3 | native (warm cache) | 555.2 | 25.7 | 99 | yes (2 runs) | 46.7/2.4 |
 | d-g5 | scheme | - | 179.7 | 13.1 | 461 | yes (2 runs) | 41.9/2.0 |
+
+## Timing: load-time compile off (SHEN_RC_EXECUTION=interpret)
+
+Loaded user code runs on the interpreter, with
+SHEN_RC_NATIVE_CACHE=/nonexistent so that no compile can succeed. The kernel
+(type checker, Prolog, `hash`, `deref`) is native in every row. Each row is the
+mean of 2 interleaved rounds, run on 2026-10-21. In this mode CPU and wall time
+agree.
+
+| workload | build | mode | instr (G) | CPU s | peak RSS MB | payload ok | load |
+|---|---|---|---|---|---|---|---|
+| b-typed | main | interpret | 3555.9 | 136.8 | 1592 | yes (2 runs) | 35.5/10.8 |
+| b-typed | pr12 | interpret | 2952.5 | 124.7 | 1400 | yes (2 runs) | 28.1/5.3 |
+| b-typed | s12 | interpret | 3094.4 | 109.7 | 450 | yes (2 runs) | 27.4/4.7 |
+| b-typed | s5 | interpret | 3047.4 | 110.2 | 455 | yes (2 runs) | 17.9/4.7 |
+| b-typed | s3 | interpret | 2939.7 | 113.1 | 457 | yes (2 runs) | 27.2/4.5 |
+| b-typed | scheme | - | 133.3 | 6.5 | 400 | yes (2 runs) | 25.9/4.4 |
+| c-untyped | main | interpret | 988.0 | 45.0 | 86 | yes (2 runs) | 35.5/25.7 |
+| c-untyped | pr12 | interpret | 911.1 | 37.7 | 75 | yes (2 runs) | 31.7/22.7 |
+| c-untyped | s12 | interpret | 918.5 | 35.1 | 32 | yes (2 runs) | 28.6/25.6 |
+| c-untyped | s5 | interpret | 900.4 | 34.0 | 32 | yes (2 runs) | 30.8/23.1 |
+| c-untyped | s3 | interpret | 872.7 | 33.9 | 32 | yes (2 runs) | 28.4/22.2 |
+| c-untyped | scheme | - | 24.0 | 1.5 | 123 | yes (2 runs) | 29.4/25.0 |
+| d-g5 | main | interpret | 557.1 | 21.4 | 78 | yes (2 runs) | 29.4/25.0 |
+| d-g5 | pr12 | interpret | 476.1 | 19.5 | 71 | yes (2 runs) | 27.0/19.6 |
+| d-g5 | s12 | interpret | 506.3 | 17.7 | 35 | yes (2 runs) | 29.5/15.9 |
+| d-g5 | s5 | interpret | 426.4 | 14.0 | 35 | yes (2 runs) | 29.7/13.2 |
+| d-g5 | s3 | interpret | 406.0 | 13.9 | 35 | yes (2 runs) | 38.0/11.2 |
+| d-g5 | scheme | - | 179.4 | 12.2 | 461 | yes (2 runs) | 37.1/11.9 |
+
+### Overall change, main to s3
+
+Interpret mode:
+
+| Workload | Instructions | CPU | Peak RSS |
+|---|---|---|---|
+| b-typed | −17% | −17% | −71% |
+| c-untyped | −12% | −25% | −63% |
+| d-g5 | −27% | −35% | −55% |
+
+The warm native cache shows the same pattern.
+
+shen-scheme on the same host and in the same rounds:
+- b-typed: 6.5 s CPU and 133G instructions, about 17× less CPU and 22× fewer
+  instructions than s3.
+- c-untyped: 1.5 s and 24G, about 22× less CPU and 36× fewer instructions.
+- d-g5: 12.2 s and 179G. On d-g5, s3 uses 1.14× scheme's CPU and 2.3× its
+  instructions, and 13× less RSS.
+
+### Change by stage (interpret mode, CPU)
+
+**#12** (immortal symbols, counters only in diagnostic builds, closure-free
+named calls)
+- −9% CPU on b-typed, −16% on c-untyped, −9% on d-g5.
+- −17% instructions on b-typed.
+
+**Source-rooted collector plus slab cells (s12)**
+- −12% CPU on b-typed, −7% on c-untyped, −9% on d-g5.
+- RSS falls about 3× on b-typed (1.4 GB to 450 MB).
+- Instructions rise 5–6%: the slab allocator and the visited-bit walks
+  execute more instructions per operation, but touch much less memory.
+
+**musttail (s5)**
+- CPU about 0% on b-typed, −3% on c-untyped, −21% on d-g5.
+- d-g5 and a2-libs-typed have the most non-self kernel tail calls.
+
+**Inline fast paths (s3)**
+- −3.5% instructions on b-typed, −3% on c-untyped, −5% on d-g5.
+- CPU is within noise: +3% on b-typed, about 0% elsewhere.
+
+## Verdict
+
+Precise RC with Perceus-style reuse cannot make shen-c competitive with
+shen-scheme on b-typed or c-untyped.
+
+**Reuse has no headroom.**
+- Reuse hits 0.06–0.08% of cons sites. The candidates are shared: `deref`
+  copies terms that are still live.
+- At most 6.6% (b-typed) to 52% (c-untyped) of pair allocations follow a pair
+  free. The free list already recycles that memory.
+
+**Removing the plain RC overhead was worth 12–35% CPU and 55–71% RSS.**
+That overhead was:
+- the full-heap collector, which scanned 148M objects and freed 0;
+- the global list;
+- 112-byte pairs;
+- heap tail requests;
+- out-of-line retain/release/hd/tl.
+
+**The remaining 17–22× gap is not memory management.**
+- c-untyped is the kernel's `hash` (37% of allocations are its strings).
+  shen-scheme overrides it natively.
+- b-typed is the kernel's `deref`, which copies whole terms: 1.45G pair
+  allocations, plus 7.2G retains and 9.0G releases.
+- shen-scheme runs the same `deref` KL, but with Chez's bump allocation, no
+  refcount traffic and cp0 inlining.
+- What is left for RC is the ownership traffic itself: about 4 retains and
+  5 releases per allocation. Only borrowed-parameter inference in the emitter
+  (Perceus proper) would remove it. That is a rewrite of emit.c's owned-slot
+  calling convention, and it was not attempted.
+- The native `deref`/`hash` overrides (excluded from this branch on purpose)
+  are the next lever.
