@@ -1046,6 +1046,13 @@ static int compile_event(Program *p,RcValue *event){
   int property_name=fresh(&f);symbol_slot(&f,property_name,"*property-vector*");check(&f,property_name);
   av[3]=fresh(&f);put(&f.code,"  t[%d]=rc_global_get(ctx,t[%d]);\n",av[3],property_name);drop(&f,property_name);check(&f,av[3]);
   result=event_call(&f,fn,av,4);
+ }else if(named(kind,"unproperty")){
+  if(count(p,args)!=2)bad(p,"invalid source property removal event");
+  int fn=event_function(&f,"unput"),av[3];RcValue *q=args;
+  for(int i=0;i<2;i++,q=rest(q))av[i]=literal_node(&f,first(q));
+  int property_name=fresh(&f);symbol_slot(&f,property_name,"*property-vector*");check(&f,property_name);
+  av[2]=fresh(&f);put(&f.code,"  t[%d]=rc_global_get(ctx,t[%d]);\n",av[2],property_name);drop(&f,property_name);check(&f,av[2]);
+  result=event_call(&f,fn,av,3);
  }else if(named(kind,"macro")||named(kind,"datatype")){
   if(count(p,args)!=1||!is_symbol(first(args)))bad(p,"invalid source callback metadata event");
   int fn=event_function(&f,named(kind,"macro")?"shen.record-macro":"shen.remember-datatype");

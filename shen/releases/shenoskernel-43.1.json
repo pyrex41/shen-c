@@ -222,7 +222,7 @@
     "shen/src/kl/types.kl": "abaaed4c1a60c1975812840e36f921e47a02ea83ebf8486cae2299b340a563fd",
     "shen/src/kl/writer.kl": "14d76910a9278f0583a127f9b4dfd6b4ca65d2ce624492710c3d79992c22c532",
     "shen/src/kl/yacc.kl": "bd178ad4cf028115fabd1e7f3b00f202f73be1380b71a6111de3a0ce0bf30ad8",
-    "shen/src/port/README.md": "1dfc3da9a3056f2e97fbc66b6e700afbf8458d1b1e2f863b5cc794b049099846",
+    "shen/src/port/README.md": "08de1952e6ab419b0f43556202dcf8b43f1724bf29bf0288ba2102d58b37118f",
     "shen/src/port/shen-c-boot.kl": "bd19d6afef5224ab8ba6bf6197ec310f76146b29117f374ec238f4f60e09dad4"
   },
   "suite_sha256": {

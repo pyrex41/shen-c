@@ -33,7 +33,7 @@ def defun(name):
 unary = ['symbol?', 'boolean?', 'integer?', 'variable?', 'not']
 inputs = ['abc', '(intern "Abc")', '(intern "123")', '(intern "A b")', '(intern "a b")', '(intern "")',
           '(intern "{")', '(intern "}")', '(intern ":")', '(intern ";")', '(intern ",")', '(intern "|")', '(intern "-")',
-          '(intern "_x")', '(intern "X1")', '(intern "Xy-z")', '(intern "1.5e3")', '(intern "é")', '(intern "aé")',
+          '(intern "_x")', '(intern "X1")', '(intern "A^")', '(intern "a^")', '(intern "Xy-z")', '(intern "1.5e3")', '(intern "é")', '(intern "aé")',
           '(intern "Éa")', '"str"', '""', '0', '1', '-7', '1.0', '1.5', '-2.0', '(* 1000000000.0 1000000000.0)',
           '(/ 1.0 1000000000000)', '(/ 1 3)', 'true', 'false', '[]', '[1 2]', '(@p 1 2)', '(vector 0)',
           '(absvector 0)', '(stinput)', '(/. X X)', 'shen.pvar']

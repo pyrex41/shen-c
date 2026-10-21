@@ -23,7 +23,8 @@ Shen/Scheme, Shen/CL, Shen/Go and the other pyrex41 ports.
    script does. The only local kernel-directory file is the port boot module.
 3. **Boot.** The community kernel has no top-level forms; `dict.kl` and
    `init.kl` provide `shen.initialise`. A port boot module runs
-   `shen.initialise`, the extension initialisers (as Shen/Scheme does) and
+   `shen.initialise`, the extension initialisers (Shen/Scheme's set plus
+   expand-dynamic's, which its documentation requires) and
    `stlib.initialise`. Drop Tarver's `backend.kl` and `stlib-init.kl`.
 4. **Overrides.** Re-audit each native override and emitter fast path against
    the new defun bodies; update or remove those whose kernel definition
@@ -129,6 +130,17 @@ those runs are superseded, and on main the fallback now interprets such a
 form instead.
 
 ### Known limitations and follow-ups
+
+- **Divergence from the Shen/Scheme fork (intentional).** shen-c's native
+  `variable?`, `symbol?` and `not` now give exactly the 43.1 kernel's
+  results. The Shen/Scheme fork's overrides do not: for example
+  `(variable? (intern "A b"))` and `(variable? (intern "A^"))` are `false`
+  here and `true` in Shen/Scheme, and `(not 5)` raises the kernel's
+  `condition is not a boolean` here but returns `false` there.
+- **compile-kl and `unput`.** A reader-time `unput` on `*property-vector*`
+  (for example from `update-lambda-table` lowering an arity to 0) is now
+  captured as an `unproperty` event and replayed; before, it reached the
+  dictionary's `address->` and was rejected as unsupported.
 
 - **b-typed native.** Cold native compilation of b-typed's generated modules
   (about 11 MB of C each) is not practical; byte-identity is established in
