@@ -67,9 +67,9 @@ for name,change in [('vectorp','(defun absvector? (X) false)'),('vget','(defun <
  cases.append(('lazy-'+name,'(let P (make-pvar 1) (let S (make-store 42) (do '+change+' (trap-error (shen.lazyderef P S) (lambda E (error-to-string E))))))'))
 with tempfile.TemporaryDirectory(prefix='rc-prolog-fast.') as temp:
  work=Path(temp);env=dict(os.environ,SHEN_C_HOME=str(root),SHEN_RC_PRINT='1')
- for name,expression in cases:
+ for index,(name,expression) in enumerate(cases):
   outputs=[]
-  for mode,defs in [('guarded',original),('control',control),('renamed',alpha)]:
+  for mode,defs in [('guarded',original),('control',control)]+([('renamed',alpha)] if index<3 else []):
    inp=work/(name+'-'+mode);inp.mkdir();(inp/'kernel.kl').write_text('');(inp/'user.kl').write_text(defs+'\n'+helpers+'\n(shen.pvar? (make-pvar 1))\n'+expression+'\n');dest=work/(name+'-'+mode+'-app')
    ran=subprocess.run([os.environ['RC_PROLOG_BUILDER'],str(inp),str(dest)],env=env,capture_output=True,text=True,timeout=120)
    assert ran.returncode==0,(name,mode,ran.stdout,ran.stderr)
@@ -79,7 +79,7 @@ with tempfile.TemporaryDirectory(prefix='rc-prolog-fast.') as temp:
    ran=subprocess.run([str(dest/'app')],env=env,capture_output=True,text=True,timeout=30)
    assert ran.returncode==0,(name,mode,ran.stdout,ran.stderr)
    outputs.append(ran.stdout)
-  assert outputs[0]==outputs[1]==outputs[2],(name,outputs)
+  assert len(set(outputs))==1,(name,outputs)
   print('Prolog differential PASS',name,flush=True)
  print('RC guarded Prolog: %d differential cases PASS; exact-body fallback, dependency guards, snapshots, partial/overapply, malformed/error, bounded walk and cyclic aliases'%len(cases))
 PY

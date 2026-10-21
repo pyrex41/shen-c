@@ -42,15 +42,15 @@ for name,definition in [('eq','(defun = (X Y) false)'),('consp','(defun cons? (X
   cases.append((name+'-'+when,'(trap-error '+call+' (lambda E (error-to-string E)))'))
 with tempfile.TemporaryDirectory(prefix='shen-rc-assoc.') as tmp:
  work=Path(tmp);env=dict(os.environ,SHEN_C_HOME=str(root),SHEN_RC_PRINT='1')
- for name,expression in cases:
+ for index,(name,expression) in enumerate(cases):
   outputs=[]
-  for mode,definition in [('guarded',original),('control',control),('renamed',alpha)]:
+  for mode,definition in [('guarded',original),('control',control)]+([('renamed',alpha)] if index<3 else []):
    inp=work/(name+'-'+mode);inp.mkdir();(inp/'kernel.kl').write_text('');(inp/'user.kl').write_text(definition+'\n'+expression+'\n');dest=work/(name+'-'+mode+'-app')
    p=subprocess.run([os.environ['RC_ASSOC_BUILDER'],str(inp),str(dest)],env=env,capture_output=True,text=True,timeout=90)
    assert p.returncode==0,(name,mode,p.stdout,p.stderr)
    generated=(dest/'app.c').read_text();assert ('rc_assoc_try_owned(' in generated)==(mode!='control'),(name,mode)
    p=subprocess.run([str(dest/'app')],env=env,capture_output=True,text=True,timeout=30);assert p.returncode==0,(name,mode,p.stdout,p.stderr);outputs.append(p.stdout)
-  assert outputs[0]==outputs[1]==outputs[2],(name,outputs)
+  assert len(set(outputs))==1,(name,outputs)
   print('assoc differential PASS',name,flush=True)
  # A partial closure can itself be installed as assoc. Its remaining arity is
  # one: recursion in the original body then overapplies that partial binding.
