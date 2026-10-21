@@ -57,7 +57,7 @@ RC_TESTS := test_cycles test_primitives test_eval test_env test_bool_tail test_a
 endif
 RC_TEST_BINS := $(addprefix $(RC_BIN)/,$(RC_TESTS))
 
-RC_RELEASE_MANIFEST ?= shen/releases/shenoskernel-43.1.json
+RC_RELEASE_MANIFEST ?= shen/releases/shenoskernel-43.1.2.json
 RC_KERNEL_INPUTS := $(shell python3 scripts/release_manifest.py --manifest $(RC_RELEASE_MANIFEST) --kernel-inputs)
 ifeq ($(strip $(RC_KERNEL_INPUTS)),)
 $(error Release manifest validation failed)

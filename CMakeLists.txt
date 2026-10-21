@@ -62,7 +62,7 @@ add_executable(test_rc_native_compile test/rc/test_native_compile.c)
 target_link_libraries(test_rc_native_compile PRIVATE shenrc)
 add_test(NAME rc_native_compile COMMAND test_rc_native_compile)
 find_package(Python3 REQUIRED COMPONENTS Interpreter)
-set(SHEN_RELEASE_MANIFEST "${CMAKE_CURRENT_SOURCE_DIR}/shen/releases/shenoskernel-43.1.json" CACHE FILEPATH "Pinned kernel/suite release")
+set(SHEN_RELEASE_MANIFEST "${CMAKE_CURRENT_SOURCE_DIR}/shen/releases/shenoskernel-43.1.2.json" CACHE FILEPATH "Pinned kernel/suite release")
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${SHEN_RELEASE_MANIFEST}" scripts/release_manifest.py)
 execute_process(COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/release_manifest.py"
   --manifest "${SHEN_RELEASE_MANIFEST}" --kernel-inputs
