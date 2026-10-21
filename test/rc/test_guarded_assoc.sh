@@ -12,6 +12,13 @@ root=Path(os.environ['RC_ASSOC_ROOT'])
 kernel=(Path(os.environ.get('RC_ASSOC_KERNEL',root/'shen/src/kl/sys.kl'))).read_text()
 start=kernel.index('(defun assoc ');end=kernel.index('\n\n',start)
 original=kernel[start:end]
+# Same meaning, different structure: the template must not certify it.
+close=original.index(')',original.index('(',len('(defun ')))
+control=original[:close+2]+'(let RcControl 0 '+original[close+2:-1]+'))'
+# Only bound variables change: the template must still certify it.
+alpha=original
+for i,old in enumerate(sorted(set(re.findall(r'\b[VWZ][0-9]+\b',original)))):alpha=re.sub(r'\b'+old+r'\b','Rc'+str(i)+'Var',alpha)
+assert alpha!=original
 cases=[
  ('nil','(assoc 2 ())'),
  ('nil-redefined-eq','(trap-error (do (defun = (X Y) false) (assoc 2 ())) (lambda E (error-to-string E)))'),
@@ -37,18 +44,18 @@ with tempfile.TemporaryDirectory(prefix='shen-rc-assoc.') as tmp:
  work=Path(tmp);env=dict(os.environ,SHEN_C_HOME=str(root),SHEN_RC_PRINT='1')
  for name,expression in cases:
   outputs=[]
-  for mode,definition in [('guarded',original),('control',original.replace('V3546','Key').replace('V3547','Pool').replace('V3543','Key').replace('V3544','Pool'))]:
+  for mode,definition in [('guarded',original),('control',control),('renamed',alpha)]:
    inp=work/(name+'-'+mode);inp.mkdir();(inp/'kernel.kl').write_text('');(inp/'user.kl').write_text(definition+'\n'+expression+'\n');dest=work/(name+'-'+mode+'-app')
    p=subprocess.run([os.environ['RC_ASSOC_BUILDER'],str(inp),str(dest)],env=env,capture_output=True,text=True,timeout=90)
    assert p.returncode==0,(name,mode,p.stdout,p.stderr)
-   generated=(dest/'app.c').read_text();assert ('rc_assoc_try_owned(' in generated)==(mode=='guarded'),(name,mode)
+   generated=(dest/'app.c').read_text();assert ('rc_assoc_try_owned(' in generated)==(mode!='control'),(name,mode)
    p=subprocess.run([str(dest/'app')],env=env,capture_output=True,text=True,timeout=30);assert p.returncode==0,(name,mode,p.stdout,p.stderr);outputs.append(p.stdout)
-  assert outputs[0]==outputs[1],(name,outputs)
+  assert outputs[0]==outputs[1]==outputs[2],(name,outputs)
   print('assoc differential PASS',name,flush=True)
  # A partial closure can itself be installed as assoc. Its remaining arity is
  # one: recursion in the original body then overapplies that partial binding.
  outputs=[]
- for mode,definition in [('guarded',original),('control',original.replace('V3546','Key').replace('V3547','Pool').replace('V3543','Key').replace('V3544','Pool'))]:
+ for mode,definition in [('guarded',original),('control',control),('renamed',alpha)]:
   inp=work/('partial-'+mode);inp.mkdir();(inp/'kernel.kl').write_text(definition);(inp/'user.kl').write_text('');dest=work/('partial-'+mode+'-app')
   subprocess.run([os.environ['RC_ASSOC_BUILDER'],str(inp),str(dest)],env=env,capture_output=True,text=True,check=True,timeout=90)
   (dest/'partial.c').write_text(r'''#define SHEN_RC_NO_MAIN

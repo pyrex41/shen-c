@@ -216,7 +216,10 @@ static const struct { const char *name; size_t arity; enum ReaderHookKind kind; 
     {"shen.record-external",2,HOOK_CALL}, {"shen.record-internal",3,HOOK_CALL},
     {"eval-kl",1,HOOK_DEFUN}, {"shen.record-macro",2,HOOK_MACRO},
     {"shen.remember-datatype",2,HOOK_DATATYPE}, {"set",2,HOOK_SET},
-    {"put",4,HOOK_PUT}, {"address->",3,HOOK_ADDRESS}
+    {"put",4,HOOK_PUT}, {"address->",3,HOOK_ADDRESS},
+    /* 43.1 keeps synonyms as a closure in shen.*demodulation-function*;
+     * replay the call that builds it from the (data) synonym list. */
+    {"shen.synonyms-h",1,HOOK_CALL}
 };
 #define READER_HOOK_COUNT (sizeof(reader_hooks)/sizeof(reader_hooks[0]))
 typedef struct { RcValue *symbol[READER_HOOK_COUNT],*original[READER_HOOK_COUNT],*wrapper[READER_HOOK_COUNT],*events,*failure; size_t installed; } ReaderCapture;
