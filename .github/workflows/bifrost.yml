@@ -47,7 +47,9 @@ jobs:
         env:
           BIFROST_SHEN_C: ${{ github.workspace }}/shen-c/bin/shen-c
         run: |
-          go run . --impls shen-c --json > corpus.json
+          # Bifrost exits non-zero when any case fails; the check below
+          # decides which failures are expected.
+          go run . --impls shen-c --json > corpus.json || echo "bifrost exit status $?"
           python3 - <<'PYTHON'
           import collections, json
           from pathlib import Path
