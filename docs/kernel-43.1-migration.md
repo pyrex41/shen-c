@@ -85,7 +85,7 @@ compile-timeout fallback). Final CLI binary sha256 `50d1311f…8efc`.
 
 | Gate | Where | Result |
 |---|---|---|
-| Community 43.1 suite (`runme.shen`), CLI | macOS, first boot (6f211dc) | 154 passed, 0 failed, 40/40 reports, validator PASS |
+| Community 43.1 suite (`runme.shen`), CLI | macOS, first boot (6f211dc); CI "Compile-first pinned suite (cold and cached)" at e620cba | 154 passed, 0 failed, 40/40 reports, validator PASS; PASS |
 | `scripts/certify-rc.sh` (AOT app, full kernel) | macOS e620cba | PASS, 154/0 (`RC_SUITE_TIMEOUT=2400`: the default 600 s timed out at 119/154 at load ~25) |
 | `scripts/certify-rc.sh` | CI ubuntu clang and gcc, e620cba | PASS |
 | `scripts/test-rc-toolchain.sh --canonical-receipt` | macOS e620cba; CI ubuntu | PASS; PASS |
@@ -99,6 +99,7 @@ compile-timeout fallback). Final CLI binary sha256 `50d1311f…8efc`.
 | `(version)` | e620cba | `43.1` |
 | `fetch-kernel.sh --check` against the tarball | macOS | all three vendored trees match |
 | CI macOS jobs | CI | not run: no macOS runner was assigned (0 steps, cancelled) on this branch and on `main` |
+| Historical S42 manifest (`RC_RELEASE_MANIFEST=shen/releases/s42.json`) | macOS e620cba | builds, `(version)` = 42, S42 suite 134/0 |
 
 Bifrost: the two former SKIPs are `source-form-before-macros` and
 `namespace-externals-expression`, which print a capability marker when the
