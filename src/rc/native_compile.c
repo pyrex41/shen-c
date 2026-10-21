@@ -3,6 +3,7 @@
 #define _DARWIN_C_SOURCE
 #include "native_compile.h"
 #include "emit.h"
+#include "eval.h"
 #include "rc_internal.h"
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Woverlength-strings"
@@ -31,9 +32,9 @@ typedef const RcPackedEntry *(*RcBundleLookup)(const char *,const char *,size_t)
 typedef struct Module { struct Module *next; char key[33]; char *source; size_t length; bool owns_source; void *handle; RcValue *(*entry)(RcContext *,RcValue *); } Module;
 typedef struct {
  RcContext *ctx; char *cc,*cflags,*cache,*include; char abi[33];
- bool cache_owned,stats; Module *modules;
+ bool cache_owned,stats,fallback_noticed; Module *modules;
  void *bundle_handle; RcBundleLookup bundle_lookup; size_t bundle_hits;
- size_t lazy_closures,templates,definitions,evaluations,compiles,hits,memory_hits,emitted_bytes,failures;
+ size_t lazy_closures,templates,definitions,evaluations,compiles,hits,memory_hits,emitted_bytes,failures,fallbacks;
  double emit_s,compile_s,compile_user_s,compile_system_s,load_s,timeout;
  size_t cache_limit;
 } Tier;
@@ -165,7 +166,7 @@ static char *env_or(const char *name,const char *fallback) {
 void rc_native_compile_free(void *state) {
  Tier *t=state;if(!t)return;
  RcStats runtime=rc_stats(t->ctx);
- if(t->stats)fprintf(stderr,"RC_NATIVE lazy_closures=%zu templates=%zu definitions=%zu evaluations=%zu compiles=%zu disk_hits=%zu bundle_hits=%zu memory_hits=%zu emitted_bytes=%zu failures=%zu interpreter_entries=%zu emit_s=%.6f compile_s=%.6f compile_user_s=%.6f compile_system_s=%.6f load_s=%.6f retain_calls=%zu release_calls=%zu system_allocations=%zu pair_reuses=%zu collections=%zu cycle_objects_freed=%zu peak_objects=%zu live_bytes=%zu\n",t->lazy_closures,t->templates,t->definitions,t->evaluations,t->compiles,t->hits,t->bundle_hits,t->memory_hits,t->emitted_bytes,t->failures,rc_interpreter_entries(t->ctx),t->emit_s,t->compile_s,t->compile_user_s,t->compile_system_s,t->load_s,runtime.retain_calls,runtime.release_calls,runtime.system_allocations,runtime.pair_reuses,runtime.collections,runtime.cycle_objects_freed,runtime.peak_objects,runtime.live_bytes);
+ if(t->stats)fprintf(stderr,"RC_NATIVE lazy_closures=%zu templates=%zu definitions=%zu evaluations=%zu compiles=%zu disk_hits=%zu bundle_hits=%zu memory_hits=%zu emitted_bytes=%zu failures=%zu fallbacks=%zu interpreter_entries=%zu emit_s=%.6f compile_s=%.6f compile_user_s=%.6f compile_system_s=%.6f load_s=%.6f retain_calls=%zu release_calls=%zu system_allocations=%zu pair_reuses=%zu collections=%zu cycle_objects_freed=%zu peak_objects=%zu live_bytes=%zu\n",t->lazy_closures,t->templates,t->definitions,t->evaluations,t->compiles,t->hits,t->bundle_hits,t->memory_hits,t->emitted_bytes,t->failures,t->fallbacks,rc_interpreter_entries(t->ctx),t->emit_s,t->compile_s,t->compile_user_s,t->compile_system_s,t->load_s,runtime.retain_calls,runtime.release_calls,runtime.system_allocations,runtime.pair_reuses,runtime.collections,runtime.cycle_objects_freed,runtime.peak_objects,runtime.live_bytes);
  while(t->modules){Module *m=t->modules;t->modules=m->next;if(m->owns_source)free(m->source);free(m);}
  if(t->cache_owned){
   if(t->include){for(size_t i=0;i<sizeof(rc_tier_headers)/sizeof(*rc_tier_headers);i++){char *f=path_of(t->include,rc_tier_headers[i].name,"");if(f)unlink(f);free(f);}rmdir(t->include);}
@@ -337,7 +338,17 @@ static RcValue *compile_execute(RcContext *ctx,RcValue *expression,RcValue *para
   char temp[4300];snprintf(temp,sizeof(temp),"%s.%ld.tmp",object,(long)getpid());
   if(!write_file(source,text,length)){rc_error(ctx,"native compiler: cannot write C source");free(m);goto done;}
   double compile_begin=now();int status=run_compiler(t,source,temp,log);t->compiles++;t->compile_s+=now()-compile_begin;
-  if(status){unlink(temp);rc_error(ctx,"native compilation failed (status %d); diagnostics: %s",status,log);free(m);goto done;}
+  if(status){
+   unlink(temp);free(m);
+   if(!rc_interpreter_allow_fallback(ctx)){rc_error(ctx,"native compilation failed (status %d); diagnostics: %s",status,log);goto done;}
+   /* Nothing was published or executed, so interpreting the form is
+    * equivalent. A later process retries the compile. The interpreted body
+    * may compile again, so release the cache lock first. */
+   t->fallbacks++;
+   if(!t->fallback_noticed){t->fallback_noticed=true;fprintf(stderr,"shen-rc: native compilation failed (status %d); interpreting instead; diagnostics: %s\n",status,log);}
+   account_cache(t,previous_bytes,entry_bytes(t,key));flock(lock,LOCK_UN);close(lock);lock=-1;
+   result=rc_interpret_fallback(ctx,root,parameters);goto done;
+  }
   if(rename(temp,object)||!object_receipt(object,receipt,true)){unlink(temp);rc_error(ctx,"native compiler: cannot publish object");free(m);goto done;}
   begin=now();m->handle=dlopen(object,RTLD_NOW|RTLD_LOCAL);
   if(!m->handle||!bind_entry(m)){rc_error(ctx,"native compiler: cannot load module: %s",dlerror());if(m->handle)dlclose(m->handle);free(m);goto done;}

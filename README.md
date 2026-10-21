@@ -90,9 +90,11 @@ Runtime compilation uses a system C compiler and a persistent cache. Symbol and
 live literal bindings are supplied to compiled modules separately, allowing code
 with the same shape to share machine code while preserving object identity and
 dynamic redefinition. Compiled closures use the same ownership moves, releases,
-and guarded reuse as ahead-of-time applications. Compilation errors are reported
-without an interpreter fallback; `SHEN_RC_EXECUTION=interpret` explicitly selects
-the diagnostic backend when creating a context.
+and guarded reuse as ahead-of-time applications. If the C compiler fails or
+exceeds `SHEN_RC_COMPILE_TIMEOUT`, that form is interpreted instead, with one
+stderr notice; `SHEN_RC_VERIFY_NATIVE=1` makes compiler failures errors.
+`SHEN_RC_EXECUTION=interpret` explicitly selects the diagnostic backend when
+creating a context.
 
 Cold compilation costs more than cached execution. `SHEN_RC_NATIVE_CC` selects
 the compiler, `SHEN_RC_NATIVE_CACHE` selects the cache directory (`off` disables
