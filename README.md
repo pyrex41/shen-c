@@ -1,11 +1,18 @@
 # Shen-C
 
 A [Shen](https://shenlanguage.org/) implementation in C17, based on
-[otabat/shen-c](https://github.com/otabat/shen-c) and Mark Tarver's Shen 43.1
-kernel. Shen provides pattern matching, macros, optional types, Prolog, and
-Shen-YACC.
+[otabat/shen-c](https://github.com/otabat/shen-c). Shen provides pattern
+matching, macros, optional types, Prolog, and Shen-YACC.
 
-**Shen-C 0.4.0 brings a native C17 compiler, the complete Shen 43.1 portable
+**Kernel lineage.** The main branch embeds the community **ShenOSKernel 43.1**
+([Shen-Language/shen-sources](https://github.com/Shen-Language/shen-sources),
+tag `shen-43.1`), byte for byte: the same kernel as Shen/Scheme, Shen/CL and
+the other community ports, including `dict`, `init` and the bundled
+extensions. Releases up to and including 0.4.0 embedded Mark Tarver's S43
+kernel (the S-series lineage from shenlanguage.org) and ran its 136-test
+suite. See the [migration record](docs/kernel-43.1-migration.md).
+
+**Shen-C 0.4.0 brings a native C17 compiler, the complete Shen portable
 kernel, and reference counting with exact cycle reclamation.** The default
 compiler, standalone CLI and generated C applications have no Boehm dependency.
 The default backend also compiles loaded source, REPL forms, and explicit
@@ -29,7 +36,7 @@ Dynamic source, REPL and `eval-kl` compilation require a C17 compiler (`cc` on
 Make and Python 3.9+. On macOS, install the Xcode Command Line Tools with
 `xcode-select --install`. Closed AOT applications need no runtime compiler.
 
-The complete 136-test suite passed in the latest packed-cache native qualification
+For 0.4.0 (Tarver S43 kernel), the complete 136-test suite passed in the latest packed-cache native qualification
 in **8.17 seconds wall / 7.27 seconds user CPU**, including startup, loading
 and typechecking, with zero compiler calls or interpreter entries. This is one
 shared-host Darwin run, excluding initial compilation; repeated current-backend
@@ -41,7 +48,7 @@ performance acceptance remains open. See the
 On the measured Darwin arm64 host, RC used **16.4% and 16.6% less user CPU than
 rebuilt Boehm** in two batches of five alternating pairs, winning all ten CPU
 comparisons and using roughly half the peak memory. All twenty executions
-passed the complete **136-test Shen 43.1 suite**.
+passed the complete **136-test Tarver S43 suite**.
 
 | Complete suite, median of ten runs per implementation | RC | Boehm |
 |---|---:|---:|
@@ -131,8 +138,9 @@ make CC=clang
 `bin/shen-c` and `bin/shen-rc` run the same standalone implementation. The
 compiled kernel is embedded; the executable can run outside the source tree.
 Like the other ports' images, it includes the Shen Standard Library (`sort`,
-`for`, string, maths, tuple and file functions), taken unchanged from the
-shen-sources 43.1 `klambda/stlib.kl` and pinned in the release manifest.
+`for`, string, maths, tuple and file functions), the release's own
+`klambda/stlib.kl`. `scripts/fetch-kernel.sh --check` verifies the vendored
+kernel, sources and suite against the pinned release tarball.
 `bin/rc-build` compiles KL input into native C applications.
 
 CMake also defaults to the Boehm-free toolchain:
@@ -181,9 +189,11 @@ scripts/certify-rc.sh
 ```
 
 The certification command rebuilds a fresh Boehm-free compiler, compiles all
-14 bundled kernel modules and the standard library, runs the pinned release suite in a fresh writable directory, and audits both the
-compiler and generated executable. Passing requires **136 passed, 0 failed**, all 36 intermediate reports, and the expected redirect output,
-successful process exit, matching source hashes, and no Boehm dependencies.
+23 release KLambda files (kernel, standard library and extensions) and the
+port boot module, runs the pinned community suite in a fresh writable
+directory, and audits both the compiler and generated executable. Passing
+requires **154 passed, 0 failed**, all 40 intermediate reports, successful
+process exit, matching source hashes, and no Boehm dependencies.
 Each run has bounded execution and a separate evidence directory.
 
 The [validation record](docs/rc-validation.md) distinguishes the earlier
@@ -199,7 +209,7 @@ Historical Boehm results are described in
 
 ## License
 
-Shen: Copyright 2010–2022 Mark Tarver, [BSD license](shen/LICENSE.txt).
+Shen: Copyright 2010–2022 Mark Tarver, [BSD license](shen/src/kl/LICENSE.txt).
 Shen-C: Copyright 2022 Tatsuya Tsuda and contributors,
 [MIT license](LICENSE).
 

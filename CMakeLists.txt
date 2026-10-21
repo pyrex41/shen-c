@@ -62,15 +62,13 @@ add_executable(test_rc_native_compile test/rc/test_native_compile.c)
 target_link_libraries(test_rc_native_compile PRIVATE shenrc)
 add_test(NAME rc_native_compile COMMAND test_rc_native_compile)
 find_package(Python3 REQUIRED COMPONENTS Interpreter)
-set(SHEN_RELEASE_MANIFEST "${CMAKE_CURRENT_SOURCE_DIR}/shen/releases/s43.1.json" CACHE FILEPATH "Pinned kernel/suite release")
+set(SHEN_RELEASE_MANIFEST "${CMAKE_CURRENT_SOURCE_DIR}/shen/releases/shenoskernel-43.1.json" CACHE FILEPATH "Pinned kernel/suite release")
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${SHEN_RELEASE_MANIFEST}" scripts/release_manifest.py)
 execute_process(COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/release_manifest.py"
   --manifest "${SHEN_RELEASE_MANIFEST}" --kernel-inputs
   OUTPUT_VARIABLE RC_KERNEL_INPUTS_TEXT OUTPUT_STRIP_TRAILING_WHITESPACE COMMAND_ERROR_IS_FATAL ANY)
 separate_arguments(RC_KERNEL_INPUTS UNIX_COMMAND "${RC_KERNEL_INPUTS_TEXT}")
 list(TRANSFORM RC_KERNEL_INPUTS PREPEND "${CMAKE_CURRENT_SOURCE_DIR}/")
-list(GET RC_KERNEL_INPUTS 0 RC_KERNEL_FIRST)
-get_filename_component(RC_KERNEL_DIRECTORY "${RC_KERNEL_FIRST}" DIRECTORY)
 execute_process(COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/release_manifest.py"
   --manifest "${SHEN_RELEASE_MANIFEST}" --header "${CMAKE_CURRENT_BINARY_DIR}/release.h"
   COMMAND_ERROR_IS_FATAL ANY)
@@ -80,7 +78,7 @@ target_link_libraries(rc-build PRIVATE shenrc)
 set(RC_KERNEL_C "${CMAKE_CURRENT_BINARY_DIR}/rc-kernel.c")
 add_custom_command(OUTPUT "${RC_KERNEL_C}"
   COMMAND $<TARGET_FILE:rc-build> --emit-kernel
-          "${RC_KERNEL_DIRECTORY}" "${RC_KERNEL_C}"
+          "${CMAKE_CURRENT_SOURCE_DIR}" "${RC_KERNEL_C}"
   DEPENDS rc-build ${RC_KERNEL_INPUTS}
   COMMENT "Compiling the complete Shen kernel with the Boehm-free compiler"
   VERBATIM)

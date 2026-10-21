@@ -1,0 +1,11 @@
+(shen.initialise)
+
+(shen.x.features.initialise (cons shen/c ()))
+
+(shen.x.expand-dynamic.initialise)
+
+(shen.x.programmable-pattern-matching.initialise)
+
+(shen.x.namespaces.initialise)
+
+(stlib.initialise)

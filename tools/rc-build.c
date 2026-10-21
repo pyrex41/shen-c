@@ -69,11 +69,12 @@ static bool emit_path(RcContext *ctx,const char *filename,RcValue **kernel,size_
   fprintf(stderr,"rc-build: native defuns=%ld lambdas=%ld tops=%ld\n",report.defuns,report.lambdas,report.toplevels);
   return true;
 }
-static bool kernel_only(RcContext *ctx,const char *directory,const char *output,RcEmitOptions *options) {
-  static const char *modules[]=SHEN_KERNEL_MODULES;
-  RcValue **forms=NULL; size_t n=0; bool ok=false; char filename[4096],name[64];
-  for(size_t i=0;i<sizeof(modules)/sizeof(*modules);i++) {
-    snprintf(name,sizeof(name),"%s.kl",modules[i]); path(filename,sizeof(filename),directory,name);
+/* Release kernel files and port modules, relative to the source root. */
+static bool kernel_only(RcContext *ctx,const char *root,const char *output,RcEmitOptions *options) {
+  static const char *files[]=SHEN_KERNEL_FILES;
+  RcValue **forms=NULL; size_t n=0; bool ok=false; char filename[4096];
+  for(size_t i=0;i<sizeof(files)/sizeof(*files);i++) {
+    path(filename,sizeof(filename),root,files[i]);
     if(!append_path(ctx,&forms,&n,filename,false)) goto done;
   }
   options->emit_main=false;
@@ -153,7 +154,7 @@ done:
 }
 static void usage(FILE *out) {
   fputs("usage: rc-build [--conservative-ownership] [--acyclic] [--source-metadata] <input-dir> <output-dir>\n"
-        "       rc-build [--conservative-ownership] [--acyclic] --emit-kernel <kl-dir> <output.c>\n"
+        "       rc-build [--conservative-ownership] [--acyclic] --emit-kernel <source-root> <output.c>\n"
         "  --source-events FILE: ordered reader metadata sidecar (application builds only).\n"
         "  --source-metadata: preserve Shen definition arity and source reflection metadata.\n"
         "  --acyclic: build applications without cycle collection; reject new reference cycles.\n",out);

@@ -57,12 +57,11 @@ RC_TESTS := test_cycles test_primitives test_eval test_env test_bool_tail test_a
 endif
 RC_TEST_BINS := $(addprefix $(RC_BIN)/,$(RC_TESTS))
 
-RC_RELEASE_MANIFEST ?= shen/releases/s43.1.json
+RC_RELEASE_MANIFEST ?= shen/releases/shenoskernel-43.1.json
 RC_KERNEL_INPUTS := $(shell python3 scripts/release_manifest.py --manifest $(RC_RELEASE_MANIFEST) --kernel-inputs)
 ifeq ($(strip $(RC_KERNEL_INPUTS)),)
 $(error Release manifest validation failed)
 endif
-RC_KERNEL_DIR := $(patsubst %/,%,$(dir $(firstword $(RC_KERNEL_INPUTS))))
 
 $(RC_BUILD)/release.h: FORCE_RELEASE $(RC_RELEASE_MANIFEST) scripts/release_manifest.py $(RC_KERNEL_INPUTS) | $(RC_BUILD)
 	python3 scripts/release_manifest.py --manifest $(RC_RELEASE_MANIFEST) --header $@
@@ -88,7 +87,7 @@ $(RC_TOOL_BIN)/rc-build: tools/rc-build.c $(RC_BUILD)/release.h $(RC_BIN)/libshe
 	$(CC) $(RC_CPPFLAGS) $(RC_CFLAGS) -I$(RC_BUILD) tools/rc-build.c $(RC_BIN)/libshenrc.a $(RC_LDFLAGS) $(RC_TIER_LDFLAGS) $(RC_LDLIBS) $(RC_TIER_LDLIBS) -o $@
 
 $(RC_BUILD)/kernel.c: $(RC_TOOL_BIN)/rc-build $(RC_KERNEL_INPUTS) | $(RC_BUILD)
-	$(RC_TOOL_BIN)/rc-build --emit-kernel $(RC_KERNEL_DIR) $@
+	$(RC_TOOL_BIN)/rc-build --emit-kernel . $@
 
 $(RC_BUILD)/kernel.o: $(RC_BUILD)/kernel.c $(wildcard src/rc/*.h)
 	$(CC) $(RC_CPPFLAGS) $(RC_CFLAGS) -c $< -o $@

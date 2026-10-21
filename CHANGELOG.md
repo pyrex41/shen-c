@@ -2,6 +2,23 @@
 
 ## Unreleased
 
+- **Kernel lineage change.** Embed the community ShenOSKernel 43.1
+  (Shen-Language/shen-sources tag `shen-43.1`, commit 715824a; release
+  tarball sha256 `900eedef…920`) byte for byte, replacing Mark Tarver's S43
+  kernel (S-series). `(version)` is still `43.1`, now set by the release's
+  `init.kl`. The image adds `dict`, `init` and the seven bundled extensions;
+  a port boot module runs `shen.initialise`, the extension initialisers and
+  `stlib.initialise`. `scripts/fetch-kernel.sh --check` verifies the
+  vendored files against the tarball.
+- Qualify on the community suite: 154 assertions in 40 reports, replacing
+  Tarver's 136-test suite.
+- Native `symbol?`, `variable?` and `not`, and the guarded `shen.pvar?` fast
+  path, now give exactly the kernel's results, checked by
+  `test/rc/test_kernel_overrides.py`. The 42.x stream hooks
+  (`shen.char-stinput?` and friends) are gone; use the public
+  `char-stream?`, `read-unit-string` and `write-string`.
+- Source-form handlers and the namespaces extension are booted, so the two
+  Bifrost cases that S43 skipped now run.
 - A load-time C compile that fails or exceeds `SHEN_RC_COMPILE_TIMEOUT` no
   longer aborts the program. That form is interpreted instead, with one stderr
   notice per process and a `fallbacks=` count in `SHEN_RC_NATIVE_STATS`; the

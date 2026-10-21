@@ -210,13 +210,16 @@ static bool write_kl(RcContext *ctx,FILE *out,RcValue *form,unsigned depth) {
     default: rc_error(ctx,"compile-kl: unsupported literal in compiler output"); return false;
     }
 }
-enum ReaderHookKind { HOOK_CALL, HOOK_DEFUN, HOOK_MACRO, HOOK_DATATYPE, HOOK_SET, HOOK_PUT, HOOK_ADDRESS };
+enum ReaderHookKind { HOOK_CALL, HOOK_DEFUN, HOOK_MACRO, HOOK_DATATYPE, HOOK_SET, HOOK_PUT, HOOK_UNPUT, HOOK_ADDRESS };
 static const struct { const char *name; size_t arity; enum ReaderHookKind kind; } reader_hooks[]={
     {"shen.store-arity",2,HOOK_CALL}, {"shen.record-kl",2,HOOK_CALL},
     {"shen.record-external",2,HOOK_CALL}, {"shen.record-internal",3,HOOK_CALL},
     {"eval-kl",1,HOOK_DEFUN}, {"shen.record-macro",2,HOOK_MACRO},
     {"shen.remember-datatype",2,HOOK_DATATYPE}, {"set",2,HOOK_SET},
-    {"put",4,HOOK_PUT}, {"address->",3,HOOK_ADDRESS}
+    {"put",4,HOOK_PUT}, {"unput",3,HOOK_UNPUT}, {"address->",3,HOOK_ADDRESS},
+    /* 43.1 keeps synonyms as a closure in shen.*demodulation-function*;
+     * replay the call that builds it from the (data) synonym list. */
+    {"shen.synonyms-h",1,HOOK_CALL}
 };
 #define READER_HOOK_COUNT (sizeof(reader_hooks)/sizeof(reader_hooks[0]))
 typedef struct { RcValue *symbol[READER_HOOK_COUNT],*original[READER_HOOK_COUNT],*wrapper[READER_HOOK_COUNT],*events,*failure; size_t installed; } ReaderCapture;
@@ -262,7 +265,7 @@ static RcValue *capture_reader_event(RcContext *ctx,RcValue *self,size_t argc,Rc
         RcValue *head=rc_head_borrowed(argv[0]);
         root_definition=rc_type(head)==RC_SYMBOL && !strcmp(rc_text(head),"defun");
     }
-    bool suppress=kind==HOOK_CALL || kind==HOOK_MACRO || kind==HOOK_DATATYPE || kind==HOOK_PUT || root_definition;
+    bool suppress=kind==HOOK_CALL || kind==HOOK_MACRO || kind==HOOK_DATATYPE || kind==HOOK_PUT || kind==HOOK_UNPUT || root_definition;
     if (suppress) {
         RcValue *next=rc_integer(ctx,depth+1);
         bool ok=next && rc_vector_set(ctx,events,1,next); rc_release(next);
@@ -287,14 +290,14 @@ static RcValue *capture_reader_event(RcContext *ctx,RcValue *self,size_t argc,Rc
         } else if (contains_definition(argv[0],0)) unsupported_capture(ctx,self,"compile-kl: nested persistent definitions in reader eval-kl are unsupported");
     } else if (kind==HOOK_MACRO || kind==HOOK_DATATYPE) {
         /* Standard registrations receive exactly the dynamic wrapper that fn
-         * already owns. A custom closure cannot be replaced by its name. */
-        RcValue *table=get_global(ctx,"shen.*lambdatable*");
-        bool standard=false;
-        for (RcValue *p=table; rc_type(p)==RC_PAIR; p=rc_tail_borrowed(p)) {
-            RcValue *entry=rc_head_borrowed(p);
-            if (rc_type(entry)==RC_PAIR && rc_equal(rc_head_borrowed(entry),argv[0]) && rc_tail_borrowed(entry)==argv[1]) { standard=true; break; }
-        }
-        rc_release(table);
+         * already owns: the name's shen.lambda-form property. A custom closure
+         * cannot be replaced by its name. */
+        RcValue *properties=get_global(ctx,"*property-vector*"), *form=rc_symbol(ctx,"shen.lambda-form");
+        RcValue *lookup[]={argv[0],form,properties};
+        RcValue *entry=properties && form ? call(ctx,"get",3,lookup) : NULL;
+        if (!entry) rc_clear_error(ctx); /* no lambda form (or no lookup): not standard */
+        bool standard=entry && entry==argv[1];
+        rc_release(entry); rc_release(form); rc_release(properties);
         if (!standard) unsupported_capture(ctx,self,"compile-kl: custom macro/datatype callback persistence is unsupported");
         else ok=append_event(ctx,events,kind==HOOK_MACRO ? "macro" : "datatype",1,argv);
     } else if (kind==HOOK_SET) {
@@ -304,14 +307,16 @@ static RcValue *capture_reader_event(RcContext *ctx,RcValue *self,size_t argc,Rc
              * frontend phase, avoiding repeated snapshots of parser input. */
             ok=rc_vector_set(ctx,events,3,rc_capture(self,4));
         } else if (strcmp(rc_text(argv[0]),"shen.*gensym*")) ok=append_event(ctx,events,"global",2,argv);
-    } else if (kind==HOOK_PUT || kind==HOOK_ADDRESS) {
+    } else if (kind==HOOK_PUT || kind==HOOK_UNPUT || kind==HOOK_ADDRESS) {
         RcValue *properties=get_global(ctx,"*property-vector*");
-        RcValue *target=kind==HOOK_PUT ? argv[3] : argv[0];
-        if (!properties) ok=false;
+        RcValue *target=kind==HOOK_PUT ? argv[3] : kind==HOOK_UNPUT ? argv[2] : argv[0];
+        if (!properties) { rc_clear_error(ctx); ok=false; }
         else if (properties==target) {
             if (kind==HOOK_PUT) ok=append_event(ctx,events,"property",3,argv);
+            /* 43.1's update-lambda-table unputs a stale lambda form. */
+            else if (kind==HOOK_UNPUT) ok=append_event(ctx,events,"unproperty",2,argv);
             else unsupported_capture(ctx,self,"compile-kl: direct reader mutation of the persistent property vector is unsupported; use put");
-        } else if (kind==HOOK_PUT) unsupported_capture(ctx,self,"compile-kl: custom persistent property vectors are unsupported");
+        } else if (kind!=HOOK_ADDRESS) unsupported_capture(ctx,self,"compile-kl: custom persistent property vectors are unsupported");
         rc_release(properties);
     }
     if (!ok) unsupported_capture(ctx,self,"compile-kl: cannot capture reader state");

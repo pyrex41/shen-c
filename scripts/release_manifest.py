@@ -8,7 +8,7 @@ import re
 import shutil
 
 ROOT = Path(__file__).resolve().parents[1]
-DEFAULT = ROOT / 'shen/releases/s43.1.json'
+DEFAULT = ROOT / 'shen/releases/shenoskernel-43.1.json'
 
 def digest(path):
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
@@ -48,6 +48,12 @@ def reports(path):
     if not result:
         raise ValueError('missing suite reports')
     return result
+
+def kernel_files(release):
+    """Repository-relative kernel inputs in installation order: the release
+    modules from kernel_directory, then any local port modules."""
+    return ([release['kernel_directory'] + '/' + m + '.kl' for m in release['modules']]
+            + list(release.get('port_modules', [])))
 
 def load_release(path=DEFAULT, root=ROOT):
     path = Path(path).resolve()
@@ -100,7 +106,7 @@ def validate_suite(release, text, directory):
 def header(release):
     return ('/* Generated from the checked release manifest. */\n'
             '#define SHEN_KERNEL_VERSION '+json.dumps(release['kernel_version'])+'\n'
-            '#define SHEN_KERNEL_MODULES {'+','.join(json.dumps(m) for m in release['modules'])+'}\n')
+            '#define SHEN_KERNEL_FILES {'+','.join(json.dumps(m) for m in kernel_files(release))+'}\n')
 
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
@@ -114,7 +120,7 @@ def main():
         if not args.header.exists() or args.header.read_text()!=content:
             args.header.write_text(content)
     elif args.kernel_inputs:
-        print(' '.join(release['kernel_directory']+'/'+m+'.kl' for m in release['modules']))
+        print(' '.join(kernel_files(release)))
     else:
         print(json.dumps({'version':release['kernel_version'],'tests':release['expected_tests'],'reports':release['reports']},indent=2))
 

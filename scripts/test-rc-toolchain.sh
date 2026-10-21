@@ -22,7 +22,7 @@ sys.dont_write_bytecode = True
 sys.path.insert(0, str(root / 'scripts'))
 from rc_native_evidence import native_definition_evidence
 from release_manifest import load_release, digest as release_digest
-release = load_release(Path(os.environ.get('SHEN_RELEASE_MANIFEST', root / 'shen/releases/s43.1.json')))
+release = load_release(Path(os.environ.get('SHEN_RELEASE_MANIFEST', root / 'shen/releases/shenoskernel-43.1.json')))
 parser = argparse.ArgumentParser(prog='scripts/test-rc-toolchain.sh', description='Fresh standalone RC toolchain acceptance; never runs canonical suite itself.')
 parser.add_argument('--out', type=Path, help='New evidence directory; must not already exist.')
 parser.add_argument('--gc-negative-control', type=Path, default=Path(os.environ['RC_GC_NEGATIVE']) if os.environ.get('RC_GC_NEGATIVE') else None,
@@ -63,7 +63,7 @@ def digest(path):
 def snapshot():
     paths = sorted((root / 'src/rc').glob('*.[ch]'))
     paths += [root / name for name in ('tools/rc-build.c', 'Makefile', 'Makefile.rc', 'scripts/compile-shen-rc.sh', 'scripts/test-rc.sh', 'scripts/test-rc-toolchain.sh', 'scripts/rc_native_evidence.py', 'test/rc/test_native_evidence.py')]
-    paths += sorted((root / 'shen/src/kl').glob('*.kl'))
+    paths += sorted((root / 'shen/src/kl').glob('*.kl')) + sorted((root / 'shen/src/port').glob('*.kl'))
     return {str(p.relative_to(root)): digest(p) for p in paths}
 
 

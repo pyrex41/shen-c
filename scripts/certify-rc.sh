@@ -19,16 +19,15 @@ import time
 
 root = Path(os.environ['RC_CERTIFY_ROOT'])
 sys.path.insert(0, str(root / 'scripts'))
-from release_manifest import load_release, digest, prepare_suite, validate_suite
-release = load_release(Path(os.environ.get('SHEN_RELEASE_MANIFEST', root / 'shen/releases/s43.1.json')))
+from release_manifest import load_release, kernel_files, digest, prepare_suite, validate_suite
+release = load_release(Path(os.environ.get('SHEN_RELEASE_MANIFEST', root / 'shen/releases/shenoskernel-43.1.json')))
 stamp = datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%dT%H%M%S.%fZ')
 evidence = root / 'evidence' / 'rc' / ('certify-' + stamp)
 evidence.mkdir(parents=True)
 source = root / 'obj' / ('rc-certify-' + stamp)
 source.mkdir(parents=True)
 output = root / 'bin' / ('rc-certify-' + stamp)
-modules = release['modules']
-kernel = [root / release['kernel_directory'] / (name + '.kl') for name in modules]
+kernel = [root / name for name in kernel_files(release)]
 (source / 'kernel.kl').write_bytes(b'\n'.join(path.read_bytes() for path in kernel))
 (source / 'user.kl').write_text('(load ' + json.dumps(release['suite_entrypoint']) + ')\n')
 (source / 'rc.manifest.txt').write_text('kernel=kernel.kl\nuser=user.kl\n')

@@ -5,14 +5,24 @@ builder=${1:-"$root/bin/rc-build"}
 case "$builder" in /*) ;; *) builder="$PWD/$builder" ;; esac
 export RC_PROLOG_ROOT="$root" RC_PROLOG_BUILDER="$builder"
 exec python3 - <<'PY'
-import os,subprocess,tempfile
+import os,re,subprocess,tempfile
 from pathlib import Path
 root=Path(os.environ['RC_PROLOG_ROOT']);kernel=(root/'shen/src/kl/prolog.kl').read_text()
 def definition(name):
  start=kernel.index('(defun '+name+' ');return kernel[start:kernel.index('\n\n',start)]
+def wrapped(text):
+ # Same meaning, different structure: the templates must not certify it.
+ close=text.index(')',text.index('(',len('(defun ')))
+ return text[:close+2]+'(let RcControl 0 '+text[close+2:-1]+'))'
+def renamed(text):
+ # Only bound variables change: the templates must still certify it.
+ names=sorted(set(re.findall(r'\b[VWZ][0-9]+\b',text)))
+ for i,old in enumerate(names):text=re.sub(r'\b'+old+r'\b','Rc'+str(i)+'Var',text)
+ return text
 original=definition('shen.pvar?')+'\n'+definition('shen.lazyderef')
-control=original
-for old,new in [('V1755','Arg'),('Z1756','Error'),('V1757','Term'),('V1758','Store'),('W1759','Next')]:control=control.replace(old,new)
+control='\n'.join(wrapped(definition(n)) for n in ('shen.pvar?','shen.lazyderef'))
+alpha=renamed(original)
+assert alpha!=original
 helpers='''
 (defun make-pvar (N) (let V (absvector 2) (do (address-> V 0 shen.pvar) (address-> V 1 N))))
 (defun make-store (X) (let V (absvector 3) (do (address-> V 1 X) V)))
@@ -50,22 +60,26 @@ for name,change in [('vectorp','(defun absvector? (X) false)'),('vget','(defun <
  for when in ('before','argument'):
   expr='(do '+change+' (shen.pvar? (make-pvar 1)))' if when=='before' else '(shen.pvar? (do '+change+' (make-pvar 1)))'
   cases.append((name+'-'+when,'(trap-error '+expr+' (lambda E (error-to-string E)))'))
+ if name=='eq':
+  # 43.1 calls = even for an empty vector (on the trapped shen.not-pvar).
+  for when,expr in (('before','(do (defun = (X Y) true) (shen.pvar? (absvector 0)))'),('argument','(shen.pvar? (do (defun = (X Y) true) (absvector 0)))')):
+   cases.append(('eq-true-empty-'+when,'(trap-error '+expr+' (lambda E (error-to-string E)))'))
  cases.append(('lazy-'+name,'(let P (make-pvar 1) (let S (make-store 42) (do '+change+' (trap-error (shen.lazyderef P S) (lambda E (error-to-string E))))))'))
 with tempfile.TemporaryDirectory(prefix='rc-prolog-fast.') as temp:
  work=Path(temp);env=dict(os.environ,SHEN_C_HOME=str(root),SHEN_RC_PRINT='1')
- for name,expression in cases:
+ for index,(name,expression) in enumerate(cases):
   outputs=[]
-  for mode,defs in [('guarded',original),('control',control)]:
+  for mode,defs in [('guarded',original),('control',control)]+([('renamed',alpha)] if index<3 else []):
    inp=work/(name+'-'+mode);inp.mkdir();(inp/'kernel.kl').write_text('');(inp/'user.kl').write_text(defs+'\n'+helpers+'\n(shen.pvar? (make-pvar 1))\n'+expression+'\n');dest=work/(name+'-'+mode+'-app')
    ran=subprocess.run([os.environ['RC_PROLOG_BUILDER'],str(inp),str(dest)],env=env,capture_output=True,text=True,timeout=120)
    assert ran.returncode==0,(name,mode,ran.stdout,ran.stderr)
    code=(dest/'app.c').read_text()
-   assert ('rc_pvar_try_owned(' in code)==(mode=='guarded'),(name,mode,'pvar guard')
-   assert ('rc_lazyderef_try_owned(' in code)==(mode=='guarded'),(name,mode,'lazy guard')
+   assert ('rc_pvar_try_owned(' in code)==(mode!='control'),(name,mode,'pvar guard')
+   assert ('rc_lazyderef_try_owned(' in code)==(mode!='control'),(name,mode,'lazy guard')
    ran=subprocess.run([str(dest/'app')],env=env,capture_output=True,text=True,timeout=30)
    assert ran.returncode==0,(name,mode,ran.stdout,ran.stderr)
    outputs.append(ran.stdout)
-  assert outputs[0]==outputs[1],(name,outputs)
+  assert len(set(outputs))==1,(name,outputs)
   print('Prolog differential PASS',name,flush=True)
  print('RC guarded Prolog: %d differential cases PASS; exact-body fallback, dependency guards, snapshots, partial/overapply, malformed/error, bounded walk and cyclic aliases'%len(cases))
 PY
