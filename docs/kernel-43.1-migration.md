@@ -84,3 +84,14 @@ replaces the kernel defun. Bodies compared after normalising variable names.
 
 - 2026-10-21: branch `feat/shenoskernel-43.1` from `origin/main` 8c94154;
   plan written.
+- 2026-10-21: vendored 43.1 (f9c6d47); alpha-equivalent templates and
+  lambda-form lookup (6f211dc). Suite 154/0 on first boot. Draft PR #21.
+- 2026-10-21: synonyms replay for compile-kl and fast-path test controls
+  (b4005cd); `shen.pvar?` empty-vector fix (37bc164); kernel-exact
+  `symbol?`/`variable?`/`not`, removal of 42.x stream hooks, override
+  differential test (72db8d4); sanitizer timeouts (2a5903f); README and
+  CHANGELOG (29b6b32).
+- Capcov runs under the shared `~/.cache/shen-c` stalled on its global lock
+  (other agents' compiles) and hit the 120 s compile timeout in d-g5. Final
+  runs use private `SHEN_RC_NATIVE_CACHE` directories and
+  `SHEN_RC_COMPILE_TIMEOUT=1800`.
