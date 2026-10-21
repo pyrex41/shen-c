@@ -4,13 +4,19 @@ A [Shen](https://shenlanguage.org/) implementation in C17, based on
 [otabat/shen-c](https://github.com/otabat/shen-c). Shen provides pattern
 matching, macros, optional types, Prolog, and Shen-YACC.
 
-**Kernel lineage.** The main branch embeds the community **ShenOSKernel 43.1**
+**Kernel lineage.** The main branch embeds **ShenOSKernel 43.1.2**
+([pyrex41/shen-sources](https://github.com/pyrex41/shen-sources), tag
+`shen-43.1.2`), byte for byte: the community ShenOSKernel 43.1
 ([Shen-Language/shen-sources](https://github.com/Shen-Language/shen-sources),
-tag `shen-43.1`), byte for byte: the same kernel as Shen/Scheme, Shen/CL and
-the other community ports, including `dict`, `init` and the bundled
-extensions. Releases up to and including 0.4.0 embedded Mark Tarver's S43
-kernel (the S-series lineage from shenlanguage.org) and ran its 136-test
-suite. See the [migration record](docs/kernel-43.1-migration.md).
+tag `shen-43.1`) plus its type-checker fix
+([shen-sources#117](https://github.com/Shen-Language/shen-sources/pull/117)).
+That is the kernel of Shen/Scheme, Shen/CL and the other community ports,
+including `dict`, `init` and the bundled extensions. Pristine 43.1 remains
+selectable with `RC_RELEASE_MANIFEST=shen/releases/shenoskernel-43.1.json`.
+Releases up to and including 0.4.0 embedded Mark Tarver's S43 kernel (the
+S-series lineage from shenlanguage.org) and ran its 136-test suite. See the
+[43.1 migration record](docs/kernel-43.1-migration.md) and the
+[43.1.2 record](docs/kernel-43.1.2.md).
 
 **Shen-C 0.4.0 brings a native C17 compiler, the complete Shen portable
 kernel, and reference counting with exact cycle reclamation.** The default
