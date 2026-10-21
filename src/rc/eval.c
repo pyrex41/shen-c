@@ -317,6 +317,10 @@ RcValue *rc_eval(RcContext *ctx, RcValue *expression) {
     rc_release(root);
     return result;
 }
+RcValue *rc_interpret_fallback(RcContext *ctx, RcValue *expression, RcValue *parameters) {
+    if (parameters) return make_function(ctx,parameters,expression,rc_nil());
+    return evaluate(ctx,expression,rc_nil(),false);
+}
 static RcValue *eval_native(RcContext *ctx, RcValue *self, size_t argc, RcValue *const *argv) {
     (void)self; (void)argc;
     void *state; const RcTierHooks *hooks=rc_tier_hooks(ctx,&state);

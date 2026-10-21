@@ -4,7 +4,9 @@ The default build is independent of Boehm. `rc-build` reads KL with the RC
 reader and emits native C functions; `shen-rc`/`shen-c` embeds the complete
 compiled Shen 43.1 kernel. Loaded source, REPL expressions and explicit
 `eval-kl` use native compile-before-execute by default. A system C compiler is
-needed for uncached dynamic code; failures are reported as errors. Native
+needed for uncached dynamic code. If the compiler fails or times out, that form
+is interpreted instead, with one stderr notice per process;
+`SHEN_RC_VERIFY_NATIVE=1` reports such failures as errors. Native
 compilation thunks may defer a function body until its first call, without
 interpreting it. `SHEN_RC_EXECUTION=interpret`, selected at context creation,
 provides the explicit diagnostic interpreter.
@@ -145,8 +147,9 @@ lookup, redefinition, partial application and escaping closures remain available
 `-O1`. `SHEN_RC_NATIVE_CACHE` selects a private cache directory (`off` uses a
 private temporary directory); `SHEN_RC_NATIVE_CACHE_BYTES` bounds code artifacts
 (default 1 GiB, with header/accounting overhead). `SHEN_RC_COMPILE_TIMEOUT` bounds
-each compiler invocation (default 120 seconds). Compiler diagnostics are capped
-at 8 MiB. Cache publication is serialized and atomic, and object receipts reject
+each compiler invocation (default 120 seconds). A timed-out or failed compile is
+never published to the cache, so a later process compiles it again. Compiler
+diagnostics are capped at 8 MiB. Cache publication is serialized and atomic, and object receipts reject
 corrupt artifacts. `SHEN_RC_NATIVE_STATS=1` reports compilation, allocation,
 collection and ownership counters. Loaded native modules stay mapped until
 process exit; the disk budget does not bound resident code growth.

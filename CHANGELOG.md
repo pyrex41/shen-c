@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+- A load-time C compile that fails or exceeds `SHEN_RC_COMPILE_TIMEOUT` no
+  longer aborts the program. That form is interpreted instead, with one stderr
+  notice per process and a `fallbacks=` count in `SHEN_RC_NATIVE_STATS`; the
+  result is unchanged. Nothing is cached for it, so the next run compiles it
+  again. `SHEN_RC_VERIFY_NATIVE=1` keeps the 0.4.0 behaviour: any compiler
+  failure is an error. This replaces the 0.4.0 rule that native mode never
+  falls back to interpretation.
+
 ## 0.4.0
 
 - Compile loaded Shen source, REPL forms and explicit `eval-kl` to native C

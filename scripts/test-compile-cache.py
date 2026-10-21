@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Failure and concurrent cache controls for the strict native backend."""
+"""Failure and concurrent cache controls for the strict native backend and its compiler-failure fallback."""
 import argparse, json, os, re, subprocess, sys, tempfile, time
 from pathlib import Path
 
@@ -8,13 +8,16 @@ def main():
     with tempfile.TemporaryDirectory(prefix='shen-compile-cache-') as directory:
         root=Path(directory);cache=root/'cache'
         base=dict(os.environ,SHEN_RC_EXECUTION='native',SHEN_RC_VERIFY_NATIVE='1',SHEN_RC_NATIVE_STATS='1',SHEN_RC_NATIVE_CACHE=str(cache))
-        def run(extra=None,success=True,expression='(+ 1 2)',expected='3\n'):
-            p=subprocess.run([str(probe),expression],env=dict(base,**(extra or {})),capture_output=True,text=True,timeout=30)
+        def run(extra=None,success=True,expression='(+ 1 2)',expected='3\n',strict=True):
+            forms=expression if isinstance(expression,list) else [expression]
+            env=dict(base,**(extra or {}))
+            if not strict:env['SHEN_RC_VERIFY_NATIVE']='0'
+            p=subprocess.run([str(probe)]+forms,env=env,capture_output=True,text=True,timeout=30)
             assert (p.returncode==0)==success,(p.returncode,p.stdout,p.stderr)
             if success:assert p.stdout==expected,p.stdout
             metrics=[dict(re.findall(r'(\w+)=([0-9.]+)',x)) for x in p.stderr.splitlines() if x.startswith('RC_NATIVE ')]
             assert metrics,p.stderr
-            assert all(x['interpreter_entries']=='0' for x in metrics),metrics
+            if strict:assert all(x['interpreter_entries']=='0' for x in metrics),metrics
             return metrics[-1],p
         s,_=run();assert s['compiles']=='1',s
         s,_=run();assert s['compiles']=='0' and s['disk_hits']=='1',s
@@ -76,10 +79,31 @@ def main():
         slow=root/'slow-cc';slow.write_text('#!/bin/sh\nsleep 30\n');slow.chmod(0o700)
         start=time.monotonic();s,p=run({'SHEN_RC_NATIVE_CC':str(slow),'SHEN_RC_COMPILE_TIMEOUT':'0.2'},False)
         assert 'status 124' in p.stderr and time.monotonic()-start<10,p.stderr
+        # Outside SHEN_RC_VERIFY_NATIVE a failed or timed-out compile interprets
+        # that form: same output, exit 0, one notice, and nothing published, so
+        # the next process compiles it again. Definitions and closures cover the
+        # lazy-body fallback as well as top-level forms.
+        program=['(defun fallback-square (X) (* X X))','(defun fallback-sum (L) (if (= L ()) 0 (+ (hd L) (fallback-sum (tl L)))))',
+                 '(defun fallback-map (F L) (if (= L ()) () (cons (F (hd L)) (fallback-map F (tl L)))))',
+                 '(fallback-sum (fallback-map (lambda X (fallback-square X)) (cons 1 (cons 2 (cons 3 ())))))','((freeze (trap-error (hd 4) (lambda E 42))))']
+        program_output='fallback-square\nfallback-sum\nfallback-map\n14\n42\n'
+        reference,_=run(expression=program,expected=program_output)
+        for cc,expected,extra in ((str(root/'missing-cc'),'127',{}),('/usr/bin/false','1',{}),(str(slow),'124',{'SHEN_RC_COMPILE_TIMEOUT':'0.2'})):
+            retry=root/('retry-'+expected)
+            start=time.monotonic()
+            s,p=run(dict(extra,SHEN_RC_NATIVE_CC=cc,SHEN_RC_NATIVE_CACHE=str(retry)),strict=False)
+            assert p.stderr.count('interpreting instead')==1 and 'status '+expected in p.stderr,p.stderr
+            assert s['fallbacks']=='1' and s['failures']=='0' and int(s['interpreter_entries'])>0,s
+            s,p=run(dict(extra,SHEN_RC_NATIVE_CC=cc,SHEN_RC_NATIVE_CACHE=str(retry)),expression=program,expected=program_output,strict=False)
+            assert p.stderr.count('interpreting instead')==1 and int(s['fallbacks'])>=2 and s['failures']=='0',s
+            assert time.monotonic()-start<30,'fallback compiles were not bounded'
+            assert not list(retry.glob('*.so')) and not list(retry.glob('*.receipt')),sorted(retry.iterdir())
+            s,_=run({'SHEN_RC_NATIVE_CACHE':str(retry)},expression=program,expected=program_output)
+            assert s['compiles']==reference['compiles'] and s['disk_hits']=='0',(s,reference)
         s,_=run({'SHEN_RC_NATIVE_CACHE':str(root/'bounded'),'SHEN_RC_NATIVE_CACHE_BYTES':'0'})
         assert not list((root/'bounded').glob('*.so'))
         private=root/'not-private';private.mkdir(mode=0o777);private.chmod(0o777)
         p=subprocess.run([str(probe),'(+ 1 2)'],env=dict(base,SHEN_RC_NATIVE_CACHE=str(private)),capture_output=True,text=True,timeout=30)
         assert p.returncode!=0 and 'private cache' in p.stderr,p.stderr
-        print('RC strict cache: cold/warm, packed literals/misses/corruption, concurrency, flags, compiler failures, pruning and private directory PASS')
+        print('RC strict cache: cold/warm, packed literals/misses/corruption, concurrency, flags, compiler failures and interpreter fallback, pruning and private directory PASS')
 if __name__=='__main__':main()

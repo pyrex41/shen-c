@@ -37,12 +37,19 @@ static void literals(RcContext *c,int value){
  rc_release(g);rc_release(zero);rc_release(v);rc_collect(c);
 }
 int main(int argc,char **argv){
- setenv("SHEN_RC_EXECUTION","native",1);setenv("SHEN_RC_VERIFY_NATIVE","1",1);
+ /* Strict unless the caller sets SHEN_RC_VERIFY_NATIVE=0 to permit the
+  * interpreter fallback after a failed C compile. */
+ setenv("SHEN_RC_EXECUTION","native",1);setenv("SHEN_RC_VERIFY_NATIVE","1",0);
+ bool strict=strcmp(getenv("SHEN_RC_VERIFY_NATIVE"),"0");
  RcContext *c=rc_context_new();assert(c&&rc_install_primitives(c)&&rc_install_eval(c));
- if(argc==2){
-  const char *source=argv[1];RcValue *form=rc_read(c,&source),*value=form?rc_eval(c,form):NULL;rc_release(form);
-  if(value){rc_print(stdout,value);putchar('\n');rc_release(value);}else fprintf(stderr,"%s\n",rc_error_message(c));
-  int status=value?0:1;assert(rc_interpreter_entries(c)==0);rc_context_free(c);return status;
+ if(argc>=2){
+  /* Evaluate each argument in order and print each value on its own line. */
+  int status=0;
+  for(int i=1;i<argc&&!status;i++){
+   const char *source=argv[i];RcValue *form=rc_read(c,&source),*value=form?rc_eval(c,form):NULL;rc_release(form);
+   if(value){rc_print(stdout,value);putchar('\n');rc_release(value);}else{fprintf(stderr,"%s\n",rc_error_message(c));status=1;}
+  }
+  assert(!strict||rc_interpreter_entries(c)==0);rc_context_free(c);return status;
  }
  /* Root lambda compilation is deferred until call; final name lookup must
   * observe a redefinition made after partial application. */

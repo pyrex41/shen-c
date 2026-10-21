@@ -48,6 +48,8 @@ jobs:
           nix develop -c scripts/test-rc.sh --audit-only bin/rc-build
       - name: Strict native cache and compiler failures
         run: nix develop -c python3 scripts/test-compile-cache.py bin/rc/test_native_compile
+      - name: Compiler failure and timeout fall back to identical interpreted results
+        run: nix develop -c python3 scripts/test-compile-fallback.py bin/shen-c
       - name: Compile-first pinned suite (cold and cached; zero interpreter entries)
         run: nix develop -c python3 scripts/test-compile-first.py bin/shen-c --timeout 1200
       - name: Reader capture and unsupported-state boundaries
