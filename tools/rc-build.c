@@ -134,12 +134,12 @@ static bool build_app(RcContext *ctx,const char *input,const char *output,RcEmit
         "rc_escape = $(subst $(rc_space),\\$(rc_space),$(1))\n"
         "rc_quote = '$(subst ','\"'\"',$(1))'\n"
         "RC_FILES = rc.c primitives.c eval.c read.c emit.c native_compile.c\n"
-        "RC_HEADERS = rc.h rc_internal.h primitives.h eval.h eval_plan.h read.h emit.h native_compile.h\n"
+        "RC_HEADERS = rc.h rc_internal.h rc_layout.h primitives.h eval.h eval_plan.h read.h emit.h native_compile.h\n"
         "RC_DEPS = $(foreach file,$(RC_FILES) $(RC_HEADERS),$(call rc_escape,$(SHEN_C_HOME)/src/rc/$(file)))\n"
         "RC_EXPORT = $(if $(filter Darwin,$(shell uname -s)),-Wl$(rc_comma)-export_dynamic,-rdynamic -ldl)\n"
         "rc_comma := ,\n"
         "app: app.c $(RC_DEPS)\n"
-        "\tpython3 $(call rc_quote,$(SHEN_C_HOME)/scripts/embed-tier-config.py) tier_config.h $(call rc_quote,$(CC)) $(call rc_quote,$(CPPFLAGS) $(CFLAGS)) $(foreach file,rc.h primitives.h eval.h,$(call rc_quote,$(SHEN_C_HOME)/src/rc/$(file))) -- $(foreach file,$(RC_FILES) emit.h,$(call rc_quote,$(SHEN_C_HOME)/src/rc/$(file)))\n"
+        "\tpython3 $(call rc_quote,$(SHEN_C_HOME)/scripts/embed-tier-config.py) tier_config.h $(call rc_quote,$(CC)) $(call rc_quote,$(CPPFLAGS) $(CFLAGS)) $(foreach file,rc.h primitives.h eval.h rc_layout.h,$(call rc_quote,$(SHEN_C_HOME)/src/rc/$(file))) -- $(foreach file,$(RC_FILES) emit.h,$(call rc_quote,$(SHEN_C_HOME)/src/rc/$(file)))\n"
         "\t$(CC) $(CPPFLAGS) $(CFLAGS) -std=c17 -I. -I$(call rc_quote,$(SHEN_C_HOME)/src/rc) app.c $(foreach file,$(RC_FILES),$(call rc_quote,$(SHEN_C_HOME)/src/rc/$(file))) -lm $(RC_EXPORT) -o app\n",out);
   if(acyclic) fputs("override CPPFLAGS += -DSHEN_RC_ACYCLIC_ONLY\n",out);
   if(fclose(out)) { rc_error(ctx,"cannot finish generated Makefile"); goto done; }

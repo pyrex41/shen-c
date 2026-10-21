@@ -90,7 +90,7 @@ add_custom_command(OUTPUT "${RC_KERNEL_C}"
   VERBATIM)
 # Optional native tier (SHEN_RC_NATIVE): embedded runtime headers and build
 # flags, the emitter, and runtime symbols exported to dlopen'd modules.
-set(RC_TIER_HEADERS src/rc/rc.h src/rc/primitives.h src/rc/eval.h)
+set(RC_TIER_HEADERS src/rc/rc.h src/rc/primitives.h src/rc/eval.h src/rc/rc_layout.h)
 set(RC_TIER_HOST_FLAGS "")
 if(SHEN_RC_SANITIZE)
   set(RC_TIER_HOST_FLAGS "-fsanitize=address,undefined -fno-sanitize-recover=all -fno-omit-frame-pointer")

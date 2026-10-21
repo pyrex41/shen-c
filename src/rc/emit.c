@@ -1100,7 +1100,7 @@ bool rc_emit_program(RcContext *ctx,FILE *out,RcValue *const *kernel,size_t nker
   fputs("/* Native KLambda -> independent reference-counted runtime.\n"
         " * Owned slots, explicit drops, and cleanup on every return path. */\n"
         "#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n"
-        "#include <stdint.h>\n#include <math.h>\n#include \"rc.h\"\n#include \"primitives.h\"\n#include \"eval.h\"\n",out);
+        "#include <stdint.h>\n#include <math.h>\n#include \"rc.h\"\n#include \"primitives.h\"\n#include \"eval.h\"\n#define RC_LAYOUT_FAST 1\n#include \"rc_layout.h\"\n",out);
   if(options->module_entry)fputs("static bool (*rc_module_define)(RcContext*,RcValue*,RcValue*);\n",out);
   if(options->expression_entry)fprintf(out,"#define RC_LITERAL_SYMBOL_OFFSET %zu\n",p->nruntime_literals);
   if(p->nsymbols&&!options->expression_entry) {

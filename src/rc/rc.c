@@ -1,6 +1,7 @@
 #include "rc.h"
 #include "rc_internal.h"
 #include "native_compile.h"
+#include "rc_layout.h"
 
 #include <limits.h>
 #include <math.h>
@@ -39,62 +40,6 @@ enum { GUARD_BOOLEAN=1, GUARD_CONTEXT=2 };
 static unsigned compose_guards(unsigned first,unsigned after) {
     return !first ? after : first==GUARD_CONTEXT ? first|after : first;
 }
-/* Every value lives in a slab page (see RcPage) that records its context,
- * so values carry no context pointer, list links or size. A pair cell is the
- * header word, the scratch word and its two edges: 32 bytes. Other values use
- * one larger cell class. Only fields of a value's own payload may be touched:
- * a pair cell ends after as.pair. */
-struct RcValue {
-    /* One word: a 32-bit count (RC_IMMORTAL saturates), the type and flags.
-     * Hot flags keep whole bytes; rarer certificates share the last byte. */
-    uint32_t refs;
-    uint8_t type; /* RcType, or RC_FREE_CELL on a free list */
-    bool marked, reaches_vector;
-    unsigned builtin_slot : 5; /* Canonical slot + 1, zero for ordinary values. */
-    bool returns_second : 1; /* Immutable trusted exact identity-body certificate. */
-    bool visited : 1; /* Graph-walk membership; clear outside a walk. */
-    bool has_plan : 1; /* Pair with an evaluator side entry (eval_plan). */
-    /* Trial counts are consumed before work links become live. Root discovery
-     * only pushes its current object; transitive marking starts afterward.
-     * Free cells link through work. */
-    union { size_t trial; RcValue *work; };
-    union {
-        struct { double real; int64_t integer; bool exact; } number;
-        struct {
-            char *data; size_t length; uint64_t hash;
-            RcValue *intern_next, *global, *function;
-        } text;
-        struct { RcValue *head, *tail; } pair;
-        /* A source stays marked until freed; see rc_vector_set. */
-        struct { RcValue **items; size_t length; bool cycle_source; RcValue *source_prev, *source_next; } vector;
-        struct {
-            RcValue *parent, **keys, **values; size_t count;
-            RcValue *inline_binding[2];
-            uint8_t key_classes;
-        } env;
-        struct {
-            RcNative native;
-            RcNativeOwned owned_native;
-            size_t arity, capture_count, bound_count;
-            RcValue **captures, **bound;
-        } closure;
-        struct { FILE *file; bool close, input; } stream;
-        struct {
-            RcValue *function; size_t argc; RcValue **argv; uint8_t guards;
-            RcValue *inline_args[3];
-        } tail;
-    } as;
-};
-#define RC_FREE_CELL 0xff
-#define RC_PAIR_CELL (offsetof(RcValue, as) + sizeof(((RcValue *)0)->as.pair))
-_Static_assert(UINTPTR_MAX!=UINT64_MAX || RC_PAIR_CELL==32, "64-bit pair cells are 32 bytes");
-_Static_assert(UINTPTR_MAX!=UINT64_MAX || sizeof(RcValue)==72,
-               "64-bit RcValue storage must remain 72 bytes");
-/* Three inline tail arguments fit in the pre-existing closure-sized union. */
-_Static_assert(sizeof(((RcValue *)0)->as.tail) <= sizeof(((RcValue *)0)->as.closure),
-               "inline tail arguments must not enlarge RcValue");
-_Static_assert(sizeof(((RcValue *)0)->as.env) <= sizeof(((RcValue *)0)->as.closure),
-               "inline environment binding must not enlarge RcValue");
 typedef struct RcResolvedSymbols {
     const RcSymbolTable *table;
     struct RcResolvedSymbols *next;
@@ -105,6 +50,7 @@ _Static_assert(RC_BUILTIN_COUNT < 31, "builtin tags must fit in five bits");
 _Static_assert(offsetof(RcValue, trial) == 8,
                "count, type and flags must fit one 8-byte header word");
 struct RcContext {
+    RcContextHot hot; /* First: generated fast paths read it. */
     void *native_compile_state;
     size_t interpreter_entries;
     bool verify_native;
@@ -149,38 +95,23 @@ struct RcContext {
         bool pair_freed_since_alloc;
     } perceus;
 #endif
-    size_t collection_interval, since_collection, graph_slots, cycle_sources;
+    size_t graph_slots, cycle_sources;
     /* Live cycle-source vectors, linked through their payloads; the cycle
      * collector starts only from these. gc_nodes is its reusable scratch. */
     RcValue *sources;
     RcValue **gc_nodes; size_t gc_capacity;
     char *error;
     uintptr_t stack_limit;
-    bool collecting, error_active, adaptive_collection, acyclic;
+    bool collecting, adaptive_collection;
     /* Optional evaluator observer; NULL unless a host attaches a tier. */
     const RcTierHooks *tier_hooks; void *tier_state;
 };
-/* Immortal values carry this sentinel count. Retain/release skip them with
- * one test; they are freed only at context teardown. Interned symbols are
- * immortal because the intern table already keeps them alive until then. A
- * counted object that reaches 2^32-1 owners saturates into an immortal: it is
- * then freed at teardown, never early. */
-#define RC_IMMORTAL UINT32_MAX
 static RcValue nil_value = {.type = RC_NIL, .refs = RC_IMMORTAL};
-/* Slab pages are aligned to their size, so a value's page, and from it the
- * context, is its address with the low bits cleared. Cells start after the
- * page header and are never returned to the system before teardown. */
-#define RC_PAGE_BYTES ((size_t)64 * 1024)
-typedef struct RcPage {
-    RcContext *ctx;
-    struct RcPage *next;
-    size_t cell_bytes, used, limit; /* used: bump offset; limit: end offset */
-    max_align_t align;
-} RcPage;
+_Static_assert(offsetof(struct RcContext, hot) == 0, "hot context fields come first");
+_Static_assert(RC_FAST_HD == RC_BUILTIN_HD && RC_FAST_TL == RC_BUILTIN_TL && RC_FAST_CONSP == RC_BUILTIN_CONSP &&
+               RC_FAST_EQ == RC_BUILTIN_EQ && RC_FAST_CONS == RC_BUILTIN_CONS, "fast builtin slots match RcBuiltinSlot");
 struct RcPlanEntry { RcValue *key, *plan; size_t calls; };
-static RcContext *ctx_of(const RcValue *v) {
-    return ((const RcPage *)((uintptr_t)v & ~(uintptr_t)(RC_PAGE_BYTES - 1)))->ctx;
-}
+static RcContext *ctx_of(const RcValue *v) { return rc_value_context(v); }
 
 #if SHEN_RC_IMMEDIATE_INTEGERS
 _Static_assert(_Alignof(RcValue) >= 2, "heap values must have a clear low bit");
@@ -214,7 +145,7 @@ static bool may_reach_vector(const RcValue *v) {
 
 RcValue *rc_error(RcContext *ctx, const char *format, ...) {
     if (!ctx) return NULL;
-    ctx->error_active = true;
+    ctx->hot.error_active = true;
     va_list ap, copy;
     va_start(ap, format);
     va_copy(copy, ap);
@@ -232,7 +163,7 @@ RcValue *rc_error(RcContext *ctx, const char *format, ...) {
     }
     return NULL;
 }
-bool rc_has_error(const RcContext *ctx) { return ctx && ctx->error_active; }
+bool rc_has_error(const RcContext *ctx) { return ctx && ctx->hot.error_active; }
 void rc_set_stack_limit(RcContext *ctx, const void *limit) { if (ctx) ctx->stack_limit = (uintptr_t)limit; }
 bool rc_stack_check(RcContext *ctx) {
     if(!ctx->stack_limit)return true;
@@ -247,9 +178,9 @@ bool rc_stack_check(RcContext *ctx) {
     return false;
 }
 const char *rc_error_message(const RcContext *ctx) {
-    return ctx && ctx->error ? ctx->error : ctx && ctx->error_active ? "out of memory" : "";
+    return ctx && ctx->error ? ctx->error : ctx && ctx->hot.error_active ? "out of memory" : "";
 }
-void rc_clear_error(RcContext *ctx) { if (ctx) { free(ctx->error); ctx->error = NULL; ctx->error_active = false; } }
+void rc_clear_error(RcContext *ctx) { if (ctx) { free(ctx->error); ctx->error = NULL; ctx->hot.error_active = false; } }
 
 static size_t cell_bytes(RcType type) { return type == RC_PAIR ? RC_PAIR_CELL : sizeof(RcValue); }
 static RcValue *new_cell(RcContext *ctx, int cls, size_t bytes) {
@@ -306,7 +237,7 @@ static RcValue *allocate(RcContext *ctx, RcType type, size_t extra) {
         if (ctx->stats.live_capture_edges > ctx->stats.peak_capture_edges)
             ctx->stats.peak_capture_edges = ctx->stats.live_capture_edges;
     }
-    ctx->since_collection++;
+    ctx->hot.since_collection++;
     switch (type) {
     case RC_PAIR: ctx->graph_slots += 2; break;
     case RC_VECTOR: case RC_CLOSURE: ctx->graph_slots += extra / sizeof(RcValue *); break;
@@ -323,19 +254,19 @@ RcContext *rc_context_new_with_policy(RcCyclePolicy policy) {
     if (policy != RC_CYCLES_ALLOWED && policy != RC_ACYCLIC_ONLY) return NULL;
     RcContext *ctx = calloc(1, sizeof(*ctx));
     if (ctx) {
-        ctx->collection_interval = 4096; ctx->adaptive_collection = true;
+        ctx->hot.collection_interval = 4096; ctx->adaptive_collection = true;
         const char *strict=getenv("SHEN_RC_VERIFY_NATIVE");ctx->verify_native=strict&&strcmp(strict,"0");
         const char *backend=getenv("SHEN_RC_EXECUTION");
         ctx->execution_mode=!backend||!strcmp(backend,"native")?0:!strcmp(backend,"interpret")?1:-1;
 #if defined(SHEN_RC_ACYCLIC_ONLY) && SHEN_RC_ACYCLIC_ONLY
-        ctx->acyclic = true;
+        ctx->hot.acyclic = true;
 #else
-        ctx->acyclic = policy == RC_ACYCLIC_ONLY;
+        ctx->hot.acyclic = policy == RC_ACYCLIC_ONLY;
 #endif
     }
     return ctx;
 }
-bool rc_context_is_acyclic(const RcContext *ctx) { return ctx && ctx->acyclic; }
+bool rc_context_is_acyclic(const RcContext *ctx) { return ctx && ctx->hot.acyclic; }
 RcValue *rc_retain(RcValue *v) {
     if (is_counted(v)) {
 #if SHEN_RC_STATS_COUNTERS
@@ -664,10 +595,10 @@ void rc_collect(RcContext *ctx) {
 #if defined(SHEN_RC_ACYCLIC_ONLY) && SHEN_RC_ACYCLIC_ONLY
     (void)ctx;
 #else
-    if (!ctx || ctx->acyclic || ctx->collecting) return;
+    if (!ctx || ctx->hot.acyclic || ctx->collecting) return;
     ctx->collecting = true;
     ctx->stats.collections++;
-    ctx->since_collection = 0;
+    ctx->hot.since_collection = 0;
     /* Only vector writes can introduce cycles. Such writes mark their source
      * until it is freed. A cycle's closing source must still exist while that
      * cycle exists, so zero sources proves the entire heap acyclic. Surviving
@@ -687,16 +618,16 @@ void rc_collect(RcContext *ctx) {
         size_t objects = ctx->stats.live_objects;
         size_t work = objects > SIZE_MAX - ctx->graph_slots ? SIZE_MAX : objects + ctx->graph_slots;
         size_t budget = work > SIZE_MAX / 4 ? SIZE_MAX : work * 4;
-        ctx->collection_interval = budget < 4096 ? 4096 : budget;
+        ctx->hot.collection_interval = budget < 4096 ? 4096 : budget;
     }
     ctx->collecting = false;
 #endif
 }
 void rc_safepoint(RcContext *ctx) {
-    if (ctx && !ctx->acyclic && ctx->collection_interval && ctx->since_collection >= ctx->collection_interval) rc_collect(ctx);
+    if (ctx && !ctx->hot.acyclic && ctx->hot.collection_interval && ctx->hot.since_collection >= ctx->hot.collection_interval) rc_collect(ctx);
 }
 void rc_set_collection_interval(RcContext *ctx, size_t n) {
-    if (ctx) { ctx->collection_interval = n; ctx->adaptive_collection = false; }
+    if (ctx) { ctx->hot.collection_interval = n; ctx->adaptive_collection = false; }
 }
 bool rc_stats_counts_ownership(void) { return SHEN_RC_STATS_COUNTERS != 0; }
 RcStats rc_stats(const RcContext *ctx) {
@@ -1215,9 +1146,9 @@ bool rc_vector_set(RcContext *ctx, RcValue *v, size_t i, RcValue *item) {
      * plus slots, then conservatively mark a source. A marked source stays
      * marked until freed;
      * removing edges may leave a harmless false positive. */
-    if (may_reach_vector(item) && (ctx->acyclic || !v->as.vector.cycle_source) &&
-        would_create_cycle(ctx, v, item, ctx->acyclic ? SIZE_MAX : 256)) {
-        if (ctx->acyclic) {
+    if (may_reach_vector(item) && (ctx->hot.acyclic || !v->as.vector.cycle_source) &&
+        would_create_cycle(ctx, v, item, ctx->hot.acyclic ? SIZE_MAX : 256)) {
+        if (ctx->hot.acyclic) {
             rc_error(ctx, "acyclic mode rejects vector assignment that would create a cycle");
             return false;
         }

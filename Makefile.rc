@@ -100,7 +100,7 @@ $(RC_BUILD)/kernel.o: $(RC_BUILD)/kernel.c $(wildcard src/rc/*.h)
 
 # Optional native tier (SHEN_RC_NATIVE): the CLI embeds the emitter and the
 # runtime headers, and exports its runtime symbols to dlopen'd modules.
-RC_TIER_HEADERS := src/rc/rc.h src/rc/primitives.h src/rc/eval.h
+RC_TIER_HEADERS := src/rc/rc.h src/rc/primitives.h src/rc/eval.h src/rc/rc_layout.h
 RC_TIER_HOST_FLAGS := $(RC_CPPFLAGS) $(filter -D% -fsanitize% -fno-sanitize% -fno-omit-frame-pointer,$(RC_CFLAGS))
 rc_tier_quote = '$(subst ','"'"',$(1))'
 RC_UNAME := $(shell uname -s 2>/dev/null)
