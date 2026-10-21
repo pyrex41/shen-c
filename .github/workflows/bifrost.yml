@@ -58,7 +58,12 @@ jobs:
           assert len(data['cases']) == 74, len(data['cases'])
           # ShenOSKernel 43.1 boots source-form handlers and the namespaces
           # extension, so the two capability SKIPs of Tarver's S43 now run.
-          assert counts == {'PASS': 72, 'KERNEL_SKIP': 2}, counts
+          # The pinned corpus's version-expr-43.1 golden is "43.1"; kernel
+          # 43.1.2 reports "43.1.2". That is the only allowed failure, until
+          # the corpus learns the 43.1.2 kernel.
+          version = data['cases']['version-expr-43.1']['impls']['shen-c']
+          assert version.get('status') == 'FAIL' and version.get('norm') == '43.1.2', version
+          assert counts == {'PASS': 71, 'FAIL': 1, 'KERNEL_SKIP': 2}, counts
           print('Pinned CLI corpus:', dict(counts))
           PYTHON
       - uses: actions/upload-artifact@v4
