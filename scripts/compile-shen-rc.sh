@@ -30,9 +30,9 @@ builder = Path(os.environ.get('RC_BUILDER', prefix / 'bin/rc-build')).resolve()
 source = args.source.resolve()
 output = args.output.resolve()
 sys.path.insert(0, str(home / 'scripts'))
-from release_manifest import load_release
-release = load_release(Path(os.environ.get('SHEN_RELEASE_MANIFEST', home / 'shen/releases/s43.1.json')), home)
-kernel = [home / release['kernel_directory'] / (name + '.kl') for name in release['modules']]
+from release_manifest import load_release, kernel_files
+release = load_release(Path(os.environ.get('SHEN_RELEASE_MANIFEST', home / 'shen/releases/shenoskernel-43.1.json')), home)
+kernel = [home / name for name in kernel_files(release)]
 
 def digest(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()

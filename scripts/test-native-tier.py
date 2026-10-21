@@ -96,7 +96,7 @@ def main():
     ap.add_argument('--no-programs', action='store_true')
     ap.add_argument('--cflags', help='SHEN_RC_NATIVE_CFLAGS for every configuration that sets none')
     args = ap.parse_args()
-    release = load_release(ROOT / 'shen/releases/s43.1.json')
+    release = load_release(ROOT / 'shen/releases/shenoskernel-43.1.json')
     binary = Path(args.binary).resolve()
     base = Path(tempfile.mkdtemp(prefix='native-tier-'))
     force = {'SHEN_RC_NATIVE': '1', 'SHEN_RC_NATIVE_THRESHOLD': '1'}
