@@ -485,11 +485,10 @@ RcValue *rc_pvar_try_owned(RcContext *c,RcValue *self,RcValue **args,
  unsigned mask=prolog_dependencies(c,deps);if(!(mask&1))return NULL;
  bool result=false;
  if(rc_type(args[0])==RC_VECTOR) {
-  if(!(mask&2))return NULL;
-  if(rc_vector_length(args[0])) {
-   if(!(mask&4))return NULL;
-   result=pvar_value(args[0],deps[3]);
-  }
+  /* 43.1 compares even an empty vector's trapped read (shen.not-pvar) with
+   * =, so both dependencies must be canonical for every vector. */
+  if(!(mask&2)||!(mask&4))return NULL;
+  result=rc_vector_length(args[0])&&pvar_value(args[0],deps[3]);
  }
  *handled=true;RcValue *value=truth(c,result),*arg=args[0];args[0]=NULL;rc_release(arg);
  return leaf_finish(c,value);

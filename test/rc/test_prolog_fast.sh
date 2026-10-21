@@ -60,6 +60,10 @@ for name,change in [('vectorp','(defun absvector? (X) false)'),('vget','(defun <
  for when in ('before','argument'):
   expr='(do '+change+' (shen.pvar? (make-pvar 1)))' if when=='before' else '(shen.pvar? (do '+change+' (make-pvar 1)))'
   cases.append((name+'-'+when,'(trap-error '+expr+' (lambda E (error-to-string E)))'))
+ if name=='eq':
+  # 43.1 calls = even for an empty vector (on the trapped shen.not-pvar).
+  for when,expr in (('before','(do (defun = (X Y) true) (shen.pvar? (absvector 0)))'),('argument','(shen.pvar? (do (defun = (X Y) true) (absvector 0)))')):
+   cases.append(('eq-true-empty-'+when,'(trap-error '+expr+' (lambda E (error-to-string E)))'))
  cases.append(('lazy-'+name,'(let P (make-pvar 1) (let S (make-store 42) (do '+change+' (trap-error (shen.lazyderef P S) (lambda E (error-to-string E))))))'))
 with tempfile.TemporaryDirectory(prefix='rc-prolog-fast.') as temp:
  work=Path(temp);env=dict(os.environ,SHEN_C_HOME=str(root),SHEN_RC_PRINT='1')
