@@ -38,9 +38,10 @@
 /* (d) runtime replacements and (e) compile-kl reader hooks never become
  * Known targets. Primitives among them stay primitives (guarded). */
 static const char *const never_sealed[] = {
-    /* (d) primitives.c overwrites and the numeric hashkey wrapper */
+    /* (d) primitives.c overwrites, the numeric hashkey wrapper and the
+     * native hash (rc_install_native_hash replaces the kernel's hash) */
     "pr", "symbol?", "variable?", "integer?", "boolean?", "not", "value/or",
-    "<-address/or", "read-file-as-charlist", "shen.hashkey",
+    "<-address/or", "read-file-as-charlist", "shen.hashkey", "hash",
     /* (e) src/rc/main.c reader_hooks */
     "shen.store-arity", "shen.record-kl", "shen.record-external",
     "shen.record-internal", "eval-kl", "shen.record-macro",

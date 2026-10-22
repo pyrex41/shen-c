@@ -31,7 +31,10 @@ assert added == prelude + install, ('unexpected lean additions', [l for l in add
 assert lean.count(install[0]) == 1
 boot = lean.index('bool rc_bootstrap_kernel(RcContext *ctx) {')
 at = lean.index(install[0])
-assert boot < at and 'rc_install_overwrites' in '\n'.join(lean[boot:at]), 'install precedes the bootstrap installs'
+installs = '\n'.join(lean[boot:at])
+assert boot < at and 'rc_install_overwrites' in installs, 'install precedes the bootstrap installs'
+for later in ('rc_install_numeric_hash_owned', 'rc_install_native_hash'):
+    if later in '\n'.join(lean): assert later in installs, later + ' after rc_lean_install'
 after = '\n'.join(lean[at:])
 assert 'run_top' in after, 'install after the top-level forms'
 names = re.findall(r'^  "([^"]+)"', '\n'.join(prelude), re.M)

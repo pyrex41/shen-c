@@ -5,7 +5,7 @@
  * the kernel phase (--emit-kernel, or an application's kernel forms).
  * prelude writes declarations after the runtime includes; bootstrap writes
  * statements that run once every bootstrap install (primitives, kernel
- * defuns, overwrites, numeric hash) is done and before the kernel's
+ * defuns, overwrites, numeric hash, native hash) is done and before the kernel's
  * top-level forms. Either may be NULL. */
 typedef struct RcLeanEmitHook {
     void *state;

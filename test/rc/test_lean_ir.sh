@@ -33,7 +33,7 @@ tail -n 1 "$tmp/check.txt"
 grep -q ' 0 rejected, 0 failed;' "$tmp/check.txt" || { cat "$tmp/check.txt" >&2; exit 1; }
 
 # Seal list: a never-sealed name cannot join the lean set ...
-for name in shen.hashkey 'symbol?' not eval-kl put shen.record-kl 'shen.store-arity'; do
+for name in shen.hashkey hash 'symbol?' not eval-kl put shen.record-kl 'shen.store-arity'; do
     printf '%s\n' "$name" > "$tmp/set.txt"
     if "$builder" --lean-set "$tmp/set.txt" --check-lir . > /dev/null 2> "$tmp/err.txt"; then
         echo "seal list: $name accepted as a lean target" >&2; exit 1
@@ -44,8 +44,10 @@ done
 # primitive, never a direct call ...
 "$builder" --dump-lir shen.f-error . > "$tmp/f-error.txt"
 "$builder" --dump-lir hash . > "$tmp/hash.txt"
+"$builder" --dump-lir 'shen.<-dict' . > "$tmp/dict.txt"
+grep -q 'gcall hash(' "$tmp/dict.txt" || { cat "$tmp/dict.txt" >&2; echo "hash not called through its binding" >&2; exit 1; }
 grep -q 'gcall shen.hashkey(' "$tmp/hash.txt" || { cat "$tmp/hash.txt" >&2; echo "hashkey not called through its binding" >&2; exit 1; }
-if grep -E '(^| )call (shen.hashkey|not|symbol\?|eval-kl|put)\(' "$tmp/hash.txt" "$tmp/f-error.txt"; then echo "never-sealed name called directly" >&2; exit 1; fi
+if grep -E '(^| )call (shen.hashkey|hash|not|symbol\?|eval-kl|put)\(' "$tmp/hash.txt" "$tmp/f-error.txt" "$tmp/dict.txt"; then echo "never-sealed name called directly" >&2; exit 1; fi
 # ... shen.pvar? is called only under a guard, and outside the lean set a
 # kernel defun is called through its binding.
 printf 'shen.lazyderef\n' > "$tmp/set.txt"
