@@ -8,7 +8,7 @@ import re
 import shutil
 
 ROOT = Path(__file__).resolve().parents[1]
-DEFAULT = ROOT / 'shen/releases/shenoskernel-43.1.json'
+DEFAULT = ROOT / 'shen/releases/shenoskernel-43.1-ec16a9f.json'
 
 def digest(path):
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()

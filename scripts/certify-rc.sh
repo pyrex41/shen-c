@@ -20,7 +20,7 @@ import time
 root = Path(os.environ['RC_CERTIFY_ROOT'])
 sys.path.insert(0, str(root / 'scripts'))
 from release_manifest import load_release, kernel_files, digest, prepare_suite, validate_suite
-release = load_release(Path(os.environ.get('SHEN_RELEASE_MANIFEST', root / 'shen/releases/shenoskernel-43.1.json')))
+release = load_release(Path(os.environ.get('SHEN_RELEASE_MANIFEST', root / 'shen/releases/shenoskernel-43.1-ec16a9f.json')))
 stamp = datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%dT%H%M%S.%fZ')
 evidence = root / 'evidence' / 'rc' / ('certify-' + stamp)
 evidence.mkdir(parents=True)

@@ -49,3 +49,9 @@ for r in runs:
     if r['label']=='rc' and r['repetition']>5:r['user_seconds']=3.8
 assert acceptance(runs,config)['status']=='OPEN' # one batch above .90
 print('Two-batch performance gate controls PASS')
+
+# Every selectable manifest must still match its pinned bytes.
+from release_manifest import ROOT
+for manifest in sorted((ROOT / 'shen/releases').glob('*.json')):
+    load_release(manifest)
+print('All release manifests validate: ' + ', '.join(p.stem for p in sorted((ROOT / 'shen/releases').glob('*.json'))))
