@@ -73,29 +73,25 @@ So the recursion over long hypothesis lists still runs in constant C stack.
 
 ## Gates
 
-Code at 9b0129f; later commits change only CI and docs. The binary's sha256
-is `d0fb92bd…e501`.
+Final head `7e69ac6`; binary sha256 `2e325b9b…afcec`.
 
 | Gate | Where | Result |
 |---|---|---|
-| `fetch-kernel.sh --check` (43.1.2, and `--version 43.1`) | macOS | every vendored tree matches its tarball |
-| `test_release_manifest.py` (validates every manifest: s42, 43.1, 43.1.2) | macOS, CI | PASS |
+| `fetch-kernel.sh --check`, default and `--version 43.1` | macOS | every vendored tree matches its tarball |
+| `test_release_manifest.py` (validates s42, 43.1 and 43.1-ec16a9f) | macOS; CI | PASS |
 | Community suite, CLI | macOS | 154 passed, 0 failed, 40/40 reports, validator PASS |
-| `certify-rc.sh` (AOT app) | macOS (`RC_SUITE_TIMEOUT=2400`); CI ubuntu clang/gcc and macOS | 154/0 |
-| `test-rc-toolchain.sh --canonical-receipt` | macOS; CI | PASS |
-| `make test`, `scripts/test-rc.sh` (including the guarded assoc and Prolog fast-path tests) | macOS; CI | PASS |
+| `certify-rc.sh` (AOT app) | macOS; CI | 154/0 |
+| `test-rc-toolchain.sh --canonical-receipt`, which checks `(version)` = `43.1` | macOS; CI | PASS |
+| `make test` and `scripts/test-rc.sh`, including the guarded assoc and Prolog fast-path tests | macOS; CI | PASS |
 | Reader capture, source compile, compile cache, compile fallback | macOS; CI | PASS |
-| `test/rc/test_kernel_overrides.py` | macOS; CI | 5 defuns x 43 inputs identical to the 43.1.2 kernel |
-| ASan/UBSan lane | ubuntu:24.04 clang-18 container at 9b0129f; CI `rc-asan-ubsan` | PASS; certify 154/0 under ASan+UBSan |
+| `test/rc/test_kernel_overrides.py` | macOS; CI | 5 defuns x 43 inputs identical to the kernel |
 | Extension tests (`tests/extensions/runme.shen`) | macOS | 123/0 |
-| Bifrost (pinned def3047) | macOS; CI ubuntu and macOS | 71 PASS, 1 FAIL, 2 KERNEL_SKIP. The one FAIL is `version-expr-43.1`, whose golden is "43.1" while 43.1.2 reports "43.1.2". `bifrost.yml` asserts that this is the only failure and that it has exactly this cause. Updating the corpus is a follow-up for the bifrost repo |
-| `(version)` | macOS | `43.1.2` |
-
-CI at db9703c is green on every job, including rc-macos.
+| Bifrost (pinned def3047) | macOS; CI | 72 PASS, 2 KERNEL_SKIP; `version-expr-43.1` passes again; strict exit code |
+| ASan/UBSan | CI `rc-asan-ubsan`; container run at the code-identical 43.1.2 commit 9b0129f | PASS; certify 154/0 under ASan+UBSan |
 
 ### Capcov workloads (byte-identical payloads against go-1f587de)
 
-Run on private cold caches with `SHEN_RC_COMPILE_TIMEOUT=1800`:
+All run on the final binary:
 
 | Workload | Native | Interpret |
 |---|---|---|
@@ -104,11 +100,14 @@ Run on private cold caches with `SHEN_RC_COMPILE_TIMEOUT=1800`:
 | d-g5 (25 drivers) | identical | identical |
 | b-typed | not run: cold native compilation is impractical (known limitation from #21) | identical |
 
-Every perf run below also produced the reference payload.
+The native runs used a copy of the module cache compiled by the
+code-identical 43.1.2 build. Every cache key matched, so nothing was
+recompiled; a cold native run of the same workloads on that build was also
+identical.
 
 ## Performance
 
-43.1 is main `03bc00b` (binary `91479c44…6c1a`); 43.1.2 is this branch.
+These counts were taken on the 43.1.2 build (9b0129f, binary `d0fb92bd…e501`). Its code is identical to ec16a9f's except for the version string, so they carry over. 43.1 is main `03bc00b` (binary `91479c44…6c1a`).
 Both builds are identical except for the kernel. The measurements are:
 
 - `/usr/bin/time -l` run directly on the binary, recording instructions
@@ -123,7 +122,7 @@ Both builds are identical except for the kernel. The measurements are:
 
 User CPU is shown for reference; it varies with load.
 
-| Workload | Mode | 43.1 instructions (r2 / r3) | 43.1.2 instructions (r2 / r3) | Change | 43.1 user s | 43.1.2 user s |
+| Workload | Mode | 43.1 instructions (r2 / r3) | ec16a9f code, 43.1.2 build (r2 / r3) | Change | 43.1 user s | ec16a9f code user s |
 |---|---|---|---|---|---|---|
 | b-typed | interpret | 3577.2G / 3577.4G | 1110.8G / 1110.6G | -69.0% | 150.1 / 145.8 | 47.0 / 46.8 |
 | c-untyped | interpret | 1000.8G / 1001.1G | 1000.9G / 1000.7G | -0.0% | 38.7 / 40.5 | 37.7 / 36.8 |
