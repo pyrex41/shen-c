@@ -1,6 +1,7 @@
 #include "rc.h"
 #include "rc_internal.h"
 #include "native_compile.h"
+#include "rc_layout.h"
 
 #include <limits.h>
 #include <math.h>
@@ -18,14 +19,19 @@
 #endif
 #ifdef RC_ASAN
 # include <sanitizer/asan_interface.h>
-# define RC_POISON(p) __asan_poison_memory_region((p), sizeof(RcValue))
-# define RC_UNPOISON(p) __asan_unpoison_memory_region((p), sizeof(RcValue))
+# define RC_POISON(p, n) __asan_poison_memory_region((p), (n))
+# define RC_UNPOISON(p, n) __asan_unpoison_memory_region((p), (n))
 #else
-# define RC_POISON(p) ((void)(p))
-# define RC_UNPOISON(p) ((void)(p))
+# define RC_POISON(p, n) ((void)(p), (void)(n))
+# define RC_UNPOISON(p, n) ((void)(p), (void)(n))
 #endif
 
-#define RC_OBJECT_CACHE_LIMIT 1024
+/* Per-operation retain/release counters cost a context load and a write on
+ * every count change. Release builds omit them; diagnostic builds define
+ * SHEN_RC_STATS_COUNTERS=1. All other statistics are always maintained. */
+#ifndef SHEN_RC_STATS_COUNTERS
+#define SHEN_RC_STATS_COUNTERS 0
+#endif
 
 /* Normalized completion guards: boolean already validates context. Context
  * followed by boolean keeps context's earlier diagnostic; a later context
@@ -34,72 +40,30 @@ enum { GUARD_BOOLEAN=1, GUARD_CONTEXT=2 };
 static unsigned compose_guards(unsigned first,unsigned after) {
     return !first ? after : first==GUARD_CONTEXT ? first|after : first;
 }
-struct RcValue {
-    RcType type;
-    size_t refs, bytes;
-    /* Trial counts are consumed before work links become live. Root discovery
-     * only pushes its current object; transitive marking starts afterward. */
-    union { size_t trial; RcValue *work; };
-    size_t visit_epoch;
-    bool marked, reaches_vector, cycle_source;
-    uint8_t builtin_slot; /* Canonical slot + 1, zero for ordinary values. */
-    bool returns_second; /* Immutable trusted exact identity-body certificate. */
-    RcContext *ctx;
-    RcValue *prev, *next;
-    union {
-        struct { double real; int64_t integer; bool exact; } number;
-        struct {
-            char *data; size_t length; uint64_t hash;
-            RcValue *intern_next, *global, *function;
-        } text;
-        struct { RcValue *head, *tail; size_t proper_length; RcValue *eval_plan; size_t eval_calls; } pair;
-        struct { RcValue **items; size_t length; } vector;
-        struct {
-            RcValue *parent, **keys, **values; size_t count;
-            RcValue *inline_binding[2];
-            uint8_t key_classes;
-        } env;
-        struct {
-            RcNative native;
-            RcNativeOwned owned_native;
-            size_t arity, capture_count, bound_count;
-            RcValue **captures, **bound;
-        } closure;
-        struct { FILE *file; bool close, input; } stream;
-        struct {
-            RcValue *function; size_t argc; RcValue **argv; uint8_t guards;
-            RcValue *inline_args[3];
-        } tail;
-    } as;
-};
-_Static_assert(sizeof(((RcValue *)0)->as.pair)<=sizeof(((RcValue *)0)->as.closure),
-               "pair length cache must fit the existing payload union");
-_Static_assert(UINTPTR_MAX!=UINT64_MAX || sizeof(RcValue)==128,
-               "64-bit RcValue storage must remain 128 bytes");
-/* Three inline tail arguments fit in the pre-existing closure-sized union. */
-_Static_assert(sizeof(((RcValue *)0)->as.tail) <= sizeof(((RcValue *)0)->as.closure),
-               "inline tail arguments must not enlarge RcValue");
-_Static_assert(sizeof(((RcValue *)0)->as.env) <= sizeof(((RcValue *)0)->as.closure),
-               "inline environment binding must not enlarge RcValue");
 typedef struct RcResolvedSymbols {
     const RcSymbolTable *table;
     struct RcResolvedSymbols *next;
     RcValue *values[];
 } RcResolvedSymbols;
-_Static_assert(RC_BUILTIN_COUNT <= UINT8_MAX, "builtin tags must fit in one byte");
-/* The builtin and semantic certificate bytes occupy pre-existing padding
- * before ctx, including on boxed builds. */
-_Static_assert(offsetof(RcValue, ctx) ==
-               ((offsetof(RcValue, cycle_source) + sizeof(bool) +
-                 _Alignof(RcContext *) - 1) / _Alignof(RcContext *)) * _Alignof(RcContext *),
-               "builtin tag must not shift the value header");
+_Static_assert(RC_BUILTIN_COUNT < 31, "builtin tags must fit in five bits");
+/* The count, type, builtin tag and flags share the first header word. */
+_Static_assert(offsetof(RcValue, trial) == 8,
+               "count, type and flags must fit one 8-byte header word");
 struct RcContext {
+    RcContextHot hot; /* First: generated fast paths read it. */
     void *native_compile_state;
     size_t interpreter_entries;
     bool verify_native, interpreter_fallback;
     int execution_mode;
-    RcValue *objects;
-    RcValue *object_cache[RC_OBJECT_CACHE_LIMIT];
+    /* Slab pages, newest first, and one free list and bump page per class. */
+    struct RcPage *pages;
+    struct RcPage *bump[2];
+    RcValue *free_cells[2];
+    size_t free_bytes;
+    /* Evaluator side table: pair -> (eval plan, call count), linear probing. */
+    struct RcPlanEntry *plans; size_t plan_capacity, plan_count;
+    /* Scratch list of visited values for bounded graph walks. */
+    RcValue **walk_nodes; size_t walk_capacity;
     bool destroying;
     RcValue **symbols;
     size_t symbol_capacity, symbol_count;
@@ -108,6 +72,10 @@ struct RcContext {
      * runtime-loaded modules the list grows, and every native call reads it. */
     RcResolvedSymbols *compiled_symbol_cache[64];
     RcValue *true_symbol, *false_symbol; /* Borrowed intern-table roots. */
+    /* Open-addressed set of shared immortal closures (rc_closure_static).
+     * Teardown frees them with every other cell in the slab pages. */
+    RcValue **static_closures;
+    size_t static_capacity, static_count;
     /* Owned context roots, bounded by the specialized builtin set. */
     RcValue *builtin_roots[RC_BUILTIN_COUNT];
     /* One bounded dependency certificate. Keys borrow permanent intern roots;
@@ -116,14 +84,34 @@ struct RcContext {
     RcValue *prolog_guard_keys[3];
     unsigned prolog_guard_mask;
     RcStats stats;
-    size_t collection_interval, since_collection, graph_slots, visit_epoch, cycle_sources;
+#if SHEN_RC_STATS_COUNTERS
+    /* Reuse-headroom diagnostics (SHEN_RC_PERCEUS_STATS); see
+     * docs/performance/tight-perceus-log.md. Counter builds only. */
+    struct {
+        size_t alloc_by_type[RC_ENV + 1], death_root[RC_ENV + 1], death_cascade[RC_ENV + 1];
+        size_t release_to_zero, pair_alloc_after_pair_free, cycle_source_marks;
+        size_t full_collections, collect_scanned, collect_sources, collect_source_reach;
+        size_t collect_live_vector_reachers;
+        bool pair_freed_since_alloc;
+    } perceus;
+#endif
+    size_t graph_slots, cycle_sources;
+    /* Live cycle-source vectors, linked through their payloads; the cycle
+     * collector starts only from these. gc_nodes is its reusable scratch. */
+    RcValue *sources;
+    RcValue **gc_nodes; size_t gc_capacity;
     char *error;
     uintptr_t stack_limit;
-    bool collecting, error_active, adaptive_collection, acyclic;
+    bool collecting, adaptive_collection;
     /* Optional evaluator observer; NULL unless a host attaches a tier. */
     const RcTierHooks *tier_hooks; void *tier_state;
 };
-static RcValue nil_value = {.type = RC_NIL, .refs = SIZE_MAX};
+static RcValue nil_value = {.type = RC_NIL, .refs = RC_IMMORTAL};
+_Static_assert(offsetof(struct RcContext, hot) == 0, "hot context fields come first");
+_Static_assert(RC_FAST_HD == RC_BUILTIN_HD && RC_FAST_TL == RC_BUILTIN_TL && RC_FAST_CONSP == RC_BUILTIN_CONSP &&
+               RC_FAST_EQ == RC_BUILTIN_EQ && RC_FAST_CONS == RC_BUILTIN_CONS, "fast builtin slots match RcBuiltinSlot");
+struct RcPlanEntry { RcValue *key, *plan; size_t calls; };
+static RcContext *ctx_of(const RcValue *v) { return rc_value_context(v); }
 
 #if SHEN_RC_IMMEDIATE_INTEGERS
 _Static_assert(_Alignof(RcValue) >= 2, "heap values must have a clear low bit");
@@ -146,6 +134,10 @@ static int64_t immediate_integer(const RcValue *v) {
 static bool is_heap(const RcValue *v) {
     return v && v != &nil_value && !is_immediate(v);
 }
+/* Nil carries the immortal sentinel, so one test also covers it. */
+static bool is_counted(const RcValue *v) {
+    return v && !is_immediate(v) && v->refs != RC_IMMORTAL;
+}
 static bool may_reach_vector(const RcValue *v) {
     return is_heap(v) && v->reaches_vector;
 }
@@ -153,7 +145,7 @@ static bool may_reach_vector(const RcValue *v) {
 
 RcValue *rc_error(RcContext *ctx, const char *format, ...) {
     if (!ctx) return NULL;
-    ctx->error_active = true;
+    ctx->hot.error_active = true;
     va_list ap, copy;
     va_start(ap, format);
     va_copy(copy, ap);
@@ -171,7 +163,7 @@ RcValue *rc_error(RcContext *ctx, const char *format, ...) {
     }
     return NULL;
 }
-bool rc_has_error(const RcContext *ctx) { return ctx && ctx->error_active; }
+bool rc_has_error(const RcContext *ctx) { return ctx && ctx->hot.error_active; }
 void rc_set_stack_limit(RcContext *ctx, const void *limit) { if (ctx) ctx->stack_limit = (uintptr_t)limit; }
 bool rc_stack_check(RcContext *ctx) {
     if(!ctx->stack_limit)return true;
@@ -186,34 +178,58 @@ bool rc_stack_check(RcContext *ctx) {
     return false;
 }
 const char *rc_error_message(const RcContext *ctx) {
-    return ctx && ctx->error ? ctx->error : ctx && ctx->error_active ? "out of memory" : "";
+    return ctx && ctx->error ? ctx->error : ctx && ctx->hot.error_active ? "out of memory" : "";
 }
-void rc_clear_error(RcContext *ctx) { if (ctx) { free(ctx->error); ctx->error = NULL; ctx->error_active = false; } }
+void rc_clear_error(RcContext *ctx) { if (ctx) { free(ctx->error); ctx->error = NULL; ctx->hot.error_active = false; } }
 
+static size_t cell_bytes(RcType type) { return type == RC_PAIR ? RC_PAIR_CELL : sizeof(RcValue); }
+static RcValue *new_cell(RcContext *ctx, int cls, size_t bytes) {
+    RcPage *page = ctx->bump[cls];
+    if (!page || page->used + bytes > page->limit) {
+        page = aligned_alloc(RC_PAGE_BYTES, RC_PAGE_BYTES);
+        if (!page) return NULL;
+        page->ctx = ctx; page->cell_bytes = bytes;
+        page->used = (sizeof(RcPage) + 63) & ~(size_t)63;
+        page->limit = RC_PAGE_BYTES - (RC_PAGE_BYTES - page->used) % bytes;
+        page->next = ctx->pages; ctx->pages = page; ctx->bump[cls] = page;
+        ctx->stats.system_allocations++;
+        RC_POISON((char *)page + page->used, RC_PAGE_BYTES - page->used);
+    }
+    RcValue *v = (RcValue *)((char *)page + page->used);
+    page->used += bytes;
+    RC_UNPOISON(v, bytes);
+    return v;
+}
 static RcValue *allocate(RcContext *ctx, RcType type, size_t extra) {
     if (!ctx || extra > SIZE_MAX - sizeof(RcValue)) return rc_error(ctx, "allocation size overflow");
-    RcValue *v;
-    if (ctx->stats.cached_objects) {
-        v = ctx->object_cache[--ctx->stats.cached_objects];
-        RC_UNPOISON(v);
+    int cls = type == RC_PAIR ? 0 : 1;
+    size_t bytes = cell_bytes(type);
+    RcValue *v = ctx->free_cells[cls];
+    if (v) {
+        RC_UNPOISON(v, bytes);
+        ctx->free_cells[cls] = v->work;
+        ctx->stats.cached_objects--; ctx->free_bytes -= bytes;
     } else {
-        v = calloc(1, sizeof(*v));
+        v = new_cell(ctx, cls, bytes);
         if (!v) return rc_error(ctx, "out of memory");
-        ctx->stats.system_allocations++;
     }
     /* Constructors initialize every field they read. Collector trial values
      * are reset before a collection, and work links are set before insertion.
-     * Reset the lifetime-wide defaults that must not survive pooled reuse. */
-    v->prev = NULL; v->visit_epoch = 0;
-    v->marked = false; v->reaches_vector = false; v->cycle_source = false; v->builtin_slot = 0; v->returns_second = false;
-    v->type = type; v->refs = 1; v->ctx = ctx; v->bytes = sizeof(*v) + extra;
-    v->next = ctx->objects;
-    if (v->next) v->next->prev = v;
-    ctx->objects = v;
+     * Reset the lifetime-wide defaults that must not survive cell reuse. */
+    v->marked = false; v->reaches_vector = false; v->builtin_slot = 0; v->returns_second = false;
+    v->visited = false; v->has_plan = false;
+    v->type = type; v->refs = 1;
     ctx->stats.live_objects++;
-    ctx->stats.live_bytes += v->bytes;
+    ctx->stats.live_bytes += bytes + extra;
     ctx->stats.total_allocations++;
     if (type == RC_PAIR) ctx->stats.pair_allocations++;
+#if SHEN_RC_STATS_COUNTERS
+    ctx->perceus.alloc_by_type[type]++;
+    if (type == RC_PAIR) {
+        ctx->perceus.pair_alloc_after_pair_free += ctx->perceus.pair_freed_since_alloc;
+        ctx->perceus.pair_freed_since_alloc = false;
+    }
+#endif
     if (type == RC_CLOSURE) {
         size_t captures = extra / sizeof(RcValue *);
         ctx->stats.capture_edges_created += captures;
@@ -221,9 +237,9 @@ static RcValue *allocate(RcContext *ctx, RcType type, size_t extra) {
         if (ctx->stats.live_capture_edges > ctx->stats.peak_capture_edges)
             ctx->stats.peak_capture_edges = ctx->stats.live_capture_edges;
     }
-    ctx->since_collection++;
+    ctx->hot.since_collection++;
     switch (type) {
-    case RC_PAIR: v->as.pair.eval_plan=NULL; v->as.pair.eval_calls=0; ctx->graph_slots += 2; break;
+    case RC_PAIR: ctx->graph_slots += 2; break;
     case RC_VECTOR: case RC_CLOSURE: ctx->graph_slots += extra / sizeof(RcValue *); break;
     case RC_TAIL: ctx->graph_slots++; break;
     default: break;
@@ -238,31 +254,105 @@ RcContext *rc_context_new_with_policy(RcCyclePolicy policy) {
     if (policy != RC_CYCLES_ALLOWED && policy != RC_ACYCLIC_ONLY) return NULL;
     RcContext *ctx = calloc(1, sizeof(*ctx));
     if (ctx) {
-        ctx->collection_interval = 4096; ctx->adaptive_collection = true;
+        ctx->hot.collection_interval = 4096; ctx->adaptive_collection = true;
         const char *strict=getenv("SHEN_RC_VERIFY_NATIVE");ctx->verify_native=strict&&strcmp(strict,"0");
         const char *backend=getenv("SHEN_RC_EXECUTION");
         ctx->execution_mode=!backend||!strcmp(backend,"native")?0:!strcmp(backend,"interpret")?1:-1;
 #if defined(SHEN_RC_ACYCLIC_ONLY) && SHEN_RC_ACYCLIC_ONLY
-        ctx->acyclic = true;
+        ctx->hot.acyclic = true;
 #else
-        ctx->acyclic = policy == RC_ACYCLIC_ONLY;
+        ctx->hot.acyclic = policy == RC_ACYCLIC_ONLY;
 #endif
     }
     return ctx;
 }
-bool rc_context_is_acyclic(const RcContext *ctx) { return ctx && ctx->acyclic; }
+bool rc_context_is_acyclic(const RcContext *ctx) { return ctx && ctx->hot.acyclic; }
 RcValue *rc_retain(RcValue *v) {
-    if (is_heap(v)) {
-        if (v->refs == SIZE_MAX) abort();
-        v->ctx->stats.retain_calls++;
+    if (is_counted(v)) {
+#if SHEN_RC_STATS_COUNTERS
+        ctx_of(v)->stats.retain_calls++;
+#endif
         v->refs++;
     }
     return v;
 }
 typedef void (*EdgeFn)(RcValue *, void *);
+static bool walk_push(RcContext *ctx, size_t *n, RcValue *v) {
+    if (*n == ctx->walk_capacity) {
+        size_t capacity = ctx->walk_capacity ? ctx->walk_capacity * 2 : 256;
+        if (capacity > SIZE_MAX / sizeof(RcValue *)) return false;
+        RcValue **grown = realloc(ctx->walk_nodes, capacity * sizeof(*grown));
+        if (!grown) return false;
+        ctx->walk_nodes = grown; ctx->walk_capacity = capacity;
+    }
+    ctx->walk_nodes[(*n)++] = v;
+    return true;
+}
+/* Evaluator plans hang off pairs in a side table, so pair cells stay small.
+ * Only the diagnostic interpreter creates entries. */
+static size_t plan_hash(const RcValue *key, size_t capacity) {
+    uint64_t h = (uint64_t)(uintptr_t)key * UINT64_C(0x9e3779b97f4a7c15);
+    return (size_t)(h >> 17) & (capacity - 1);
+}
+static struct RcPlanEntry *plan_entry(const RcValue *pair) {
+    RcContext *ctx = ctx_of(pair);
+    if (!pair->has_plan || !ctx->plan_capacity) return NULL;
+    for (size_t i = plan_hash(pair, ctx->plan_capacity);; i = (i + 1) & (ctx->plan_capacity - 1)) {
+        if (ctx->plans[i].key == pair) return &ctx->plans[i];
+        if (!ctx->plans[i].key) return NULL;
+    }
+}
+static RcValue *plan_of(const RcValue *pair) {
+    struct RcPlanEntry *e = plan_entry(pair);
+    return e ? e->plan : NULL;
+}
+static bool plan_grow(RcContext *ctx) {
+    size_t capacity = ctx->plan_capacity ? ctx->plan_capacity * 2 : 64;
+    struct RcPlanEntry *table = calloc(capacity, sizeof(*table));
+    if (!table) return false;
+    for (size_t i = 0; i < ctx->plan_capacity; ++i) {
+        struct RcPlanEntry *e = &ctx->plans[i];
+        if (!e->key) continue;
+        size_t j = plan_hash(e->key, capacity);
+        while (table[j].key) j = (j + 1) & (capacity - 1);
+        table[j] = *e;
+    }
+    free(ctx->plans); ctx->plans = table; ctx->plan_capacity = capacity;
+    return true;
+}
+/* Returns the pair's entry, creating an empty one; NULL when out of memory. */
+static struct RcPlanEntry *plan_insert(RcValue *pair) {
+    struct RcPlanEntry *e = plan_entry(pair);
+    if (e) return e;
+    RcContext *ctx = ctx_of(pair);
+    if ((ctx->plan_count + 1) * 2 > ctx->plan_capacity && !plan_grow(ctx)) return NULL;
+    size_t i = plan_hash(pair, ctx->plan_capacity);
+    while (ctx->plans[i].key) i = (i + 1) & (ctx->plan_capacity - 1);
+    ctx->plans[i] = (struct RcPlanEntry){pair, NULL, 0};
+    ctx->plan_count++; pair->has_plan = true;
+    return &ctx->plans[i];
+}
+/* Removes the pair's entry and returns its owned plan, if any. */
+static RcValue *plan_remove(RcValue *pair) {
+    struct RcPlanEntry *e = plan_entry(pair);
+    pair->has_plan = false;
+    if (!e) return NULL;
+    RcContext *ctx = ctx_of(pair);
+    RcValue *plan = e->plan;
+    size_t mask = ctx->plan_capacity - 1, i = (size_t)(e - ctx->plans);
+    /* Backward-shift deletion keeps every probe chain unbroken. */
+    for (size_t j = (i + 1) & mask; ctx->plans[j].key; j = (j + 1) & mask) {
+        size_t home = plan_hash(ctx->plans[j].key, ctx->plan_capacity);
+        if (((j - home) & mask) >= ((j - i) & mask)) { ctx->plans[i] = ctx->plans[j]; i = j; }
+    }
+    ctx->plans[i] = (struct RcPlanEntry){0};
+    ctx->plan_count--;
+    if (plan) ctx->graph_slots--;
+    return plan;
+}
 static void edges(RcValue *v, EdgeFn fn, void *data) {
     switch (rc_type(v)) {
-    case RC_PAIR: fn(v->as.pair.head, data); fn(v->as.pair.tail, data); if(v->as.pair.eval_plan)fn(v->as.pair.eval_plan,data); break;
+    case RC_PAIR: fn(v->as.pair.head, data); fn(v->as.pair.tail, data); if (v->has_plan) { RcValue *plan = plan_of(v); if (plan) fn(plan, data); } break;
     case RC_VECTOR:
         for (size_t i = 0; i < v->as.vector.length; ++i) fn(v->as.vector.items[i], data);
         break;
@@ -281,18 +371,41 @@ static void edges(RcValue *v, EdgeFn fn, void *data) {
     default: break;
     }
 }
+static void source_link(RcContext *ctx, RcValue *v) {
+    v->as.vector.cycle_source = true;
+    v->as.vector.source_prev = NULL; v->as.vector.source_next = ctx->sources;
+    if (ctx->sources) ctx->sources->as.vector.source_prev = v;
+    ctx->sources = v; ctx->cycle_sources++;
+}
+static void source_unlink(RcContext *ctx, RcValue *v) {
+    RcValue *prev = v->as.vector.source_prev, *next = v->as.vector.source_next;
+    if (prev) prev->as.vector.source_next = next; else ctx->sources = next;
+    if (next) next->as.vector.source_prev = prev;
+    v->as.vector.cycle_source = false; ctx->cycle_sources--;
+}
+/* Payload bytes beyond the cell, as each constructor passed to allocate. */
+static size_t extra_bytes(const RcValue *v) {
+    switch (v->type) {
+    case RC_STRING: case RC_SYMBOL: return v->as.text.length + 1;
+    case RC_VECTOR: return v->as.vector.length * sizeof(RcValue *);
+    case RC_ENV: return v->as.env.count > 1 ? 2 * v->as.env.count * sizeof(RcValue *) : 0;
+    case RC_CLOSURE: return (v->as.closure.capture_count + v->as.closure.bound_count) * sizeof(RcValue *);
+    case RC_TAIL: return v->as.tail.argc > 3 ? v->as.tail.argc * sizeof(RcValue *) : 0;
+    default: return 0;
+    }
+}
+/* Unaccounts a dying value. Its plan side entry, if any, stays until
+ * raw_free, so the dead pair still reports that edge to edges(). */
 static void unlink_object(RcValue *v) {
-    RcContext *ctx = v->ctx;
-    if (v->prev) v->prev->next = v->next; else ctx->objects = v->next;
-    if (v->next) v->next->prev = v->prev;
+    RcContext *ctx = ctx_of(v);
     ctx->stats.live_objects--;
-    ctx->stats.live_bytes -= v->bytes;
+    ctx->stats.live_bytes -= cell_bytes(v->type) + extra_bytes(v);
     ctx->stats.total_frees++;
     switch (rc_type(v)) {
-    case RC_PAIR: ctx->graph_slots -= 2+(v->as.pair.eval_plan!=NULL); break;
+    case RC_PAIR: ctx->graph_slots -= 2; break;
     case RC_VECTOR:
         ctx->graph_slots -= v->as.vector.length;
-        if (v->cycle_source) ctx->cycle_sources--;
+        if (v->as.vector.cycle_source) source_unlink(ctx, v);
         break;
     case RC_ENV: ctx->graph_slots -= 1 + v->as.env.count; break;
     case RC_CLOSURE:
@@ -305,6 +418,10 @@ static void unlink_object(RcValue *v) {
 }
 static void raw_free(RcValue *v) {
     switch (rc_type(v)) {
+    case RC_PAIR:
+        /* The plan edge was released with the other edges; drop the entry. */
+        if (v->has_plan) (void)plan_remove(v);
+        break;
     case RC_STRING: case RC_SYMBOL: free(v->as.text.data); break;
     case RC_VECTOR: free(v->as.vector.items); break;
     case RC_ENV: if (v->as.env.count > 1) free(v->as.env.keys); break;
@@ -313,59 +430,175 @@ static void raw_free(RcValue *v) {
     case RC_STREAM: if (v->as.stream.file && v->as.stream.close) fclose(v->as.stream.file); break;
     default: break;
     }
-    RcContext *ctx = v->ctx;
-    if (!ctx->destroying && ctx->stats.cached_objects < RC_OBJECT_CACHE_LIMIT) {
-        ctx->object_cache[ctx->stats.cached_objects++] = v;
-        size_t cached_bytes = ctx->stats.cached_objects * sizeof(*v);
-        if (cached_bytes > ctx->stats.peak_cached_bytes)
-            ctx->stats.peak_cached_bytes = cached_bytes;
-        RC_POISON(v);
-    } else {
-        ctx->stats.system_frees++;
-        free(v);
-    }
+    RcContext *ctx = ctx_of(v);
+    if (ctx->destroying) return;
+    int cls = v->type == RC_PAIR ? 0 : 1;
+    size_t bytes = cell_bytes(v->type);
+    v->type = RC_FREE_CELL;
+    v->work = ctx->free_cells[cls]; ctx->free_cells[cls] = v;
+    ctx->stats.cached_objects++; ctx->free_bytes += bytes;
+    if (ctx->free_bytes > ctx->stats.peak_cached_bytes) ctx->stats.peak_cached_bytes = ctx->free_bytes;
+    RC_POISON(v, bytes);
 }
 static void release_edge(RcValue *v, void *data) {
-    if (!is_heap(v)) return;
+    if (!is_counted(v)) return;
     RcValue **work = data;
     if (!v->refs) abort();
-    v->ctx->stats.release_calls++;
-    if (--v->refs == 0) { v->work = *work; *work = v; }
+#if SHEN_RC_STATS_COUNTERS
+    ctx_of(v)->stats.release_calls++;
+#endif
+    if (--v->refs == 0) {
+#if SHEN_RC_STATS_COUNTERS
+        ctx_of(v)->perceus.release_to_zero++;
+#endif
+        v->work = *work; *work = v;
+    }
 }
 void rc_release(RcValue *v) {
     RcValue *work = NULL;
     release_edge(v, &work);
+#if SHEN_RC_STATS_COUNTERS
+    bool root = true;
+#endif
     while (work) {
         RcValue *dead = work;
         work = dead->work;
+#if SHEN_RC_STATS_COUNTERS
+        /* The first death is the owner's own drop: the point where Perceus
+         * could reuse the cell. Later ones are its release cascade. */
+        if (root) ctx_of(dead)->perceus.death_root[dead->type]++;
+        else ctx_of(dead)->perceus.death_cascade[dead->type]++;
+        root = false;
+        if (dead->type == RC_PAIR) ctx_of(dead)->perceus.pair_freed_since_alloc = true;
+#endif
         unlink_object(dead);
         edges(dead, release_edge, &work);
         raw_free(dead);
     }
 }
+#if SHEN_RC_STATS_COUNTERS && (!defined(SHEN_RC_ACYCLIC_ONLY) || !SHEN_RC_ACYCLIC_ONLY)
+/* Diagnostic only: how much of the heap a collector that started from the
+ * live cycle sources, and followed only vector-reaching edges, would visit. */
+typedef struct { RcContext *ctx; size_t n; bool failed; } SourceReach;
+static void source_reach_edge(RcValue *v, void *data) {
+    SourceReach *r = data;
+    if (!may_reach_vector(v) || v->visited) return;
+    v->visited = true;
+    if (!walk_push(r->ctx, &r->n, v)) r->failed = true;
+}
+static void perceus_source_reach(RcContext *ctx) {
+    SourceReach r = {ctx, 0, false};
+    ctx->perceus.collect_scanned += ctx->stats.live_objects;
+    for (RcValue *v = ctx->sources; v; v = v->as.vector.source_next) {
+        ctx->perceus.collect_sources++;
+        source_reach_edge(v, &r);
+    }
+    for (size_t i = 0; i < r.n; ++i) edges(ctx->walk_nodes[i], source_reach_edge, &r);
+    for (size_t i = 0; i < r.n; ++i) ctx->walk_nodes[i]->visited = false;
+    ctx->perceus.collect_source_reach += r.n;
+    ctx->perceus.full_collections++;
+}
+#endif
 #if !defined(SHEN_RC_ACYCLIC_ONLY) || !SHEN_RC_ACYCLIC_ONLY
-static void subtract_edge(RcValue *v, void *unused) {
-    (void)unused;
-    if (is_heap(v)) { if (!v->trial) abort(); v->trial--; }
+static bool on_cycle(RcContext *ctx, RcValue *source);
+static bool gc_push(RcContext *ctx, size_t *n, RcValue *v) {
+    if (*n == ctx->gc_capacity) {
+        size_t capacity = ctx->gc_capacity ? ctx->gc_capacity * 2 : 1024;
+        if (capacity > SIZE_MAX / sizeof(RcValue *)) return false;
+        RcValue **grown = realloc(ctx->gc_nodes, capacity * sizeof(*grown));
+        if (!grown) return false;
+        ctx->gc_nodes = grown; ctx->gc_capacity = capacity;
+    }
+    ctx->gc_nodes[(*n)++] = v;
+    return true;
 }
-static void mark_edge(RcValue *v, void *data) {
-    if (!is_heap(v) || v->marked) return;
-    RcValue **work = data;
-    v->marked = true; v->work = *work; *work = v;
+typedef struct { RcContext *ctx; size_t n; bool failed; } GcScan;
+/* Only vector-reaching objects can lie on a cycle, and every cycle contains a
+ * live source. So a garbage cycle lies inside G: the vector-reaching objects
+ * reachable from the sources. Any edge into G from outside it comes from a
+ * vector-reaching object that no source reaches, which is live or acyclically
+ * rooted; it stays in the trial count as an external reference. */
+static void gc_discover_edge(RcValue *v, void *data) {
+    GcScan *scan = data;
+    if (!may_reach_vector(v) || v->visited) return;
+    v->visited = true;
+    v->trial = v->refs == RC_IMMORTAL ? SIZE_MAX : v->refs; v->marked = false;
+    if (!gc_push(scan->ctx, &scan->n, v)) scan->failed = true;
 }
-static void release_live_edge(RcValue *v, void *unused) {
-    (void)unused;
-    if (is_heap(v) && v->marked) rc_release(v);
+static void gc_subtract_edge(RcValue *v, void *data) {
+    (void)data;
+    if (!may_reach_vector(v) || !v->visited) return;
+    if (!v->trial) abort();
+    v->trial--;
+}
+static void gc_mark_edge(RcValue *v, void *data) {
+    RcContext *ctx = ((GcScan *)data)->ctx;
+    if (!may_reach_vector(v) || !v->visited || v->marked) return;
+    v->marked = true;
+    if (!gc_push(ctx, &((GcScan *)data)->n, v)) ((GcScan *)data)->failed = true;
+}
+/* Dead objects are exactly the unmarked members of G. Every other heap child
+ * keeps its edge count, so a dead object releases its edge to it. */
+static void gc_release_edge(RcValue *v, void *data) {
+    (void)data;
+    if (!is_heap(v)) return;
+    if (v->visited && !v->marked) return;
+    rc_release(v);
+}
+static void collect_from_sources(RcContext *ctx) {
+    GcScan scan = {ctx, 0, false};
+    for (RcValue *v = ctx->sources; v && !scan.failed; v = v->as.vector.source_next) gc_discover_edge(v, &scan);
+    for (size_t i = 0; i < scan.n && !scan.failed; ++i) edges(ctx->gc_nodes[i], gc_discover_edge, &scan);
+    /* Out of scratch memory: collect nothing. Only walk state has changed. */
+    if (scan.failed) { for (size_t i = 0; i < scan.n; ++i) ctx->gc_nodes[i]->visited = false; return; }
+    size_t n = scan.n;
+    for (size_t i = 0; i < n; ++i) edges(ctx->gc_nodes[i], gc_subtract_edge, ctx);
+    /* Residual trial counts are the references from outside G: C handles,
+     * context roots and live outside objects. Mark from them, using the
+     * scratch array past the first n entries as the work stack. */
+    GcScan mark = {ctx, n, false};
+    for (size_t i = 0; i < n; ++i) {
+        RcValue *v = ctx->gc_nodes[i];
+        if (v->trial && !v->marked) { v->marked = true; if (!gc_push(ctx, &mark.n, v)) { mark.failed = true; break; } }
+        while (mark.n > n && !mark.failed) { RcValue *w = ctx->gc_nodes[--mark.n]; edges(w, gc_mark_edge, &mark); }
+    }
+    if (mark.failed) {
+        /* Treat everything as live; only walk state was written. */
+        for (size_t i = 0; i < n; ++i) ctx->gc_nodes[i]->visited = false;
+        return;
+    }
+    /* Count the garbage only a cycle kept alive, including acyclic objects
+     * outside G that die when the cycle releases them, as a full-heap trial
+     * deletion would. */
+    size_t frees = ctx->stats.total_frees;
+    RcValue *dead = NULL;
+    for (size_t i = 0; i < n; ++i) {
+        RcValue *v = ctx->gc_nodes[i];
+        if (!v->marked) { unlink_object(v); v->work = dead; dead = v; }
+        else v->visited = false; /* Dead cells keep the bit until freed. */
+    }
+    /* Keep every dead object allocated until all edge classifications are done. */
+    for (RcValue *v = dead; v; v = v->work) edges(v, gc_release_edge, ctx);
+    while (dead) { RcValue *next = dead->work; raw_free(dead); dead = next; }
+    ctx->stats.cycle_objects_freed += ctx->stats.total_frees - frees;
+    /* A source that no longer lies on a cycle can drop its mark: the cycle
+     * invariant concerns only cycles through it. Writes re-mark it. The
+     * check is bounded so a heap with many sources stays linear. */
+    size_t checked = 0;
+    for (RcValue *v = ctx->sources, *next; v && checked < 64; v = next, ++checked) {
+        next = v->as.vector.source_next;
+        if (!on_cycle(ctx, v)) source_unlink(ctx, v);
+    }
 }
 #endif
 void rc_collect(RcContext *ctx) {
 #if defined(SHEN_RC_ACYCLIC_ONLY) && SHEN_RC_ACYCLIC_ONLY
     (void)ctx;
 #else
-    if (!ctx || ctx->acyclic || ctx->collecting) return;
+    if (!ctx || ctx->hot.acyclic || ctx->collecting) return;
     ctx->collecting = true;
     ctx->stats.collections++;
-    ctx->since_collection = 0;
+    ctx->hot.since_collection = 0;
     /* Only vector writes can introduce cycles. Such writes mark their source
      * until it is freed. A cycle's closing source must still exist while that
      * cycle exists, so zero sources proves the entire heap acyclic. Surviving
@@ -373,25 +606,10 @@ void rc_collect(RcContext *ctx) {
     if (!ctx->cycle_sources) {
         ctx->stats.acyclic_collections++;
     } else {
-        /* Residual refs after subtracting every heap edge are exactly the owned C
-         * handles and context roots. Reachability from them is the live graph.
-         * No stack addresses or payload bytes are interpreted as pointers. */
-        for (RcValue *v = ctx->objects; v; v = v->next) { v->trial = v->refs; v->marked = false; }
-        for (RcValue *v = ctx->objects; v; v = v->next) edges(v, subtract_edge, NULL);
-        RcValue *work = NULL;
-        /* Each trial is read once here. mark_edge only overwrites that same
-         * object's trial with its work link; it cannot touch a later trial.
-         * Child traversal starts after this entire root-discovery loop. */
-        for (RcValue *v = ctx->objects; v; v = v->next) if (v->trial) mark_edge(v, &work);
-        while (work) { RcValue *v = work; work = v->work; edges(v, mark_edge, &work); }
-        RcValue *dead = NULL;
-        for (RcValue *v = ctx->objects, *next; v; v = next) {
-            next = v->next;
-            if (!v->marked) { unlink_object(v); v->work = dead; dead = v; ctx->stats.cycle_objects_freed++; }
-        }
-        /* Keep every dead object allocated until all edge classifications are done. */
-        for (RcValue *v = dead; v; v = v->work) edges(v, release_live_edge, NULL);
-        while (dead) { RcValue *next = dead->work; raw_free(dead); dead = next; }
+#if SHEN_RC_STATS_COUNTERS
+        perceus_source_reach(ctx);
+#endif
+        collect_from_sources(ctx);
     }
     if (ctx->adaptive_collection) {
         /* Freeze the next budget from survivors, including pointer slots in
@@ -400,22 +618,23 @@ void rc_collect(RcContext *ctx) {
         size_t objects = ctx->stats.live_objects;
         size_t work = objects > SIZE_MAX - ctx->graph_slots ? SIZE_MAX : objects + ctx->graph_slots;
         size_t budget = work > SIZE_MAX / 4 ? SIZE_MAX : work * 4;
-        ctx->collection_interval = budget < 4096 ? 4096 : budget;
+        ctx->hot.collection_interval = budget < 4096 ? 4096 : budget;
     }
     ctx->collecting = false;
 #endif
 }
 void rc_safepoint(RcContext *ctx) {
-    if (ctx && !ctx->acyclic && ctx->collection_interval && ctx->since_collection >= ctx->collection_interval) rc_collect(ctx);
+    if (ctx && !ctx->hot.acyclic && ctx->hot.collection_interval && ctx->hot.since_collection >= ctx->hot.collection_interval) rc_collect(ctx);
 }
 void rc_set_collection_interval(RcContext *ctx, size_t n) {
-    if (ctx) { ctx->collection_interval = n; ctx->adaptive_collection = false; }
+    if (ctx) { ctx->hot.collection_interval = n; ctx->adaptive_collection = false; }
 }
+bool rc_stats_counts_ownership(void) { return SHEN_RC_STATS_COUNTERS != 0; }
 RcStats rc_stats(const RcContext *ctx) {
     RcStats result = {0};
     if (ctx) {
         result = ctx->stats;
-        result.cached_bytes = result.cached_objects * sizeof(RcValue);
+        result.cached_bytes = ctx->free_bytes;
     }
     return result;
 }
@@ -429,8 +648,29 @@ bool rc_interpreter_enter(RcContext *ctx){
 bool rc_interpreter_allow_fallback(RcContext *ctx){
  if(ctx->verify_native)return false;ctx->interpreter_fallback=true;return true;
 }
+#if SHEN_RC_STATS_COUNTERS
+static void perceus_report(const RcContext *ctx) {
+    if (!getenv("SHEN_RC_PERCEUS_STATS")) return;
+    static const char *const names[] = {"nil","number","string","symbol","pair","vector","closure","stream","tail","env"};
+    const RcStats *s = &ctx->stats;
+    fprintf(stderr, "RC_PERCEUS {\"total_allocations\":%zu,\"pair_allocations\":%zu,\"pair_reuse_attempts\":%zu,\"pair_reuses\":%zu,\"pair_tail_transfers\":%zu,"
+            "\"retain_calls\":%zu,\"release_calls\":%zu,\"release_to_zero\":%zu,\"pair_alloc_after_pair_free\":%zu,"
+            "\"collections\":%zu,\"acyclic_collections\":%zu,\"full_collections\":%zu,\"collect_scanned\":%zu,\"collect_live_vector_reachers\":%zu,"
+            "\"collect_sources\":%zu,\"collect_source_reach\":%zu,\"cycle_source_marks\":%zu,\"cycle_objects_freed\":%zu,\"peak_objects\":%zu",
+            s->total_allocations, s->pair_allocations, s->pair_reuse_attempts, s->pair_reuses, s->pair_tail_transfers,
+            s->retain_calls, s->release_calls, ctx->perceus.release_to_zero, ctx->perceus.pair_alloc_after_pair_free,
+            s->collections, s->acyclic_collections, ctx->perceus.full_collections, ctx->perceus.collect_scanned, ctx->perceus.collect_live_vector_reachers,
+            ctx->perceus.collect_sources, ctx->perceus.collect_source_reach, ctx->perceus.cycle_source_marks, s->cycle_objects_freed, s->peak_objects);
+    for (int t = 0; t <= RC_ENV; t++)
+        fprintf(stderr, ",\"%s\":[%zu,%zu,%zu]", names[t], ctx->perceus.alloc_by_type[t], ctx->perceus.death_root[t], ctx->perceus.death_cascade[t]);
+    fputs("}\n", stderr);
+}
+#endif
 void rc_context_free(RcContext *ctx) {
     if (!ctx) return;
+#if SHEN_RC_STATS_COUNTERS
+    perceus_report(ctx);
+#endif
     rc_native_compile_free(ctx->native_compile_state);
     while (ctx->compiled_symbols) {
         RcResolvedSymbols *next = ctx->compiled_symbols->next;
@@ -438,21 +678,26 @@ void rc_context_free(RcContext *ctx) {
         ctx->compiled_symbols = next;
     }
     ctx->destroying = true;
-    free(ctx->symbols);
-    RcValue *v = ctx->objects;
-    while (v) { RcValue *next = v->next; raw_free(v); v = next; }
-    while (ctx->stats.cached_objects) {
-        v = ctx->object_cache[--ctx->stats.cached_objects];
-        RC_UNPOISON(v);
-        free(v);
+    free(ctx->symbols); free(ctx->static_closures); free(ctx->gc_nodes); free(ctx->walk_nodes);
+    for (RcPage *page = ctx->pages, *next; page; page = next) {
+        next = page->next;
+        RC_UNPOISON(page, RC_PAGE_BYTES);
+        size_t first = (sizeof(RcPage) + 63) & ~(size_t)63;
+        for (size_t at = first; at < page->used; at += page->cell_bytes) {
+            RcValue *v = (RcValue *)((char *)page + at);
+            if (v->type != RC_FREE_CELL) raw_free(v);
+        }
+        free(page);
     }
-    free(ctx->error); free(ctx);
+    free(ctx->plans); free(ctx->error); free(ctx);
 }
 RcType rc_type(const RcValue *v) { return is_immediate(v) ? RC_NUMBER : v ? v->type : RC_NIL; }
-size_t rc_refcount(const RcValue *v) { return is_immediate(v) ? SIZE_MAX : v ? v->refs : 0; }
+size_t rc_refcount(const RcValue *v) {
+    return is_immediate(v) ? SIZE_MAX : !v ? 0 : v->refs == RC_IMMORTAL ? SIZE_MAX : v->refs;
+}
 RcValue *rc_nil(void) { return &nil_value; }
 bool rc_is_nil(const RcValue *v) { return v == &nil_value; }
-static bool belongs(RcContext *ctx, const RcValue *v) { return v && (v == &nil_value || is_immediate(v) || v->ctx == ctx); }
+static bool belongs(RcContext *ctx, const RcValue *v) { return v && (v == &nil_value || is_immediate(v) || ctx_of(v) == ctx); }
 void rc_builtin_cache_set(RcContext *ctx, RcBuiltinSlot slot, RcValue *fn) {
     /* The private installer contract guarantees the original exact builtin. */
     if (!ctx || (unsigned)slot >= RC_BUILTIN_COUNT || !belongs(ctx,fn) ||
@@ -478,7 +723,7 @@ int rc_builtin_call_slot(RcContext *ctx, RcValue *fn, size_t argc,
     /* Most user closures and unselected primitives have no tag. Check this
      * initialized common-header byte before touching closure-specific fields. */
     if (!ctx || !is_heap(fn) || !fn->builtin_slot) return -1;
-    if (fn->type != RC_CLOSURE || fn->ctx != ctx) return -1;
+    if (fn->type != RC_CLOSURE || ctx_of(fn) != ctx) return -1;
     unsigned slot = (unsigned)fn->builtin_slot - 1;
     if (slot >= RC_BUILTIN_COUNT || ctx->builtin_roots[slot] != fn ||
         argc != (slot >= RC_BUILTIN_EQ ? 2u : 1u) || !argv) return -1;
@@ -568,10 +813,12 @@ bool rc_eval_plan_environment(const RcValue *environment) {
     return rc_is_nil(environment) || (rc_type(environment)==RC_ENV && !(environment->as.env.key_classes&2));
 }
 RcValue *rc_eval_plan_get(RcValue *expression) {
-    return rc_type(expression)==RC_PAIR ? expression->as.pair.eval_plan : NULL;
+    return rc_type(expression)==RC_PAIR ? plan_of(expression) : NULL;
 }
 bool rc_eval_plan_heat(RcValue *expression) {
-    size_t *calls=&expression->as.pair.eval_calls;
+    struct RcPlanEntry *entry=plan_insert(expression);
+    if(!entry)return false;
+    size_t *calls=&entry->calls;
     if(*calls==SIZE_MAX)return false;
     ++*calls;
     /* Unsupported/mismatched shapes retry only at exponentially spaced
@@ -589,10 +836,12 @@ void rc_eval_plan_promote(RcValue *self,RcNative prepared,RcValue *plan) {
     rc_release(old);
 }
 void rc_eval_plan_set(RcValue *expression,RcValue *plan) {
-    RcValue *old=expression->as.pair.eval_plan;
-    expression->as.pair.eval_plan=rc_retain(plan);
-    expression->ctx->graph_slots+=(plan!=NULL);
-    expression->ctx->graph_slots-=(old!=NULL);
+    struct RcPlanEntry *entry=plan_insert(expression);
+    if(!entry)return; /* Plans are optional; the expression stays unprepared. */
+    RcValue *old=entry->plan;
+    entry->plan=rc_retain(plan);
+    ctx_of(expression)->graph_slots+=(plan!=NULL);
+    ctx_of(expression)->graph_slots-=(old!=NULL);
     rc_release(old);
 }
 RcValue *rc_number(RcContext *ctx, double n) {
@@ -670,7 +919,7 @@ RcValue *rc_symbol(RcContext *ctx, const char *name) {
     if (ctx->symbol_capacity) {
         size_t bucket = (size_t)hash & (ctx->symbol_capacity - 1);
         for (RcValue *v = ctx->symbols[bucket]; v; v = v->as.text.intern_next)
-            if (v->as.text.hash == hash && !strcmp(v->as.text.data, name)) return rc_retain(v);
+            if (v->as.text.hash == hash && !strcmp(v->as.text.data, name)) return v;
     }
     if (!ctx->symbol_capacity || ctx->symbol_count >= ctx->symbol_capacity - ctx->symbol_capacity / 4) {
         size_t capacity = ctx->symbol_capacity ? ctx->symbol_capacity * 2 : 64;
@@ -682,8 +931,11 @@ RcValue *rc_symbol(RcContext *ctx, const char *name) {
     size_t bucket = (size_t)hash & (ctx->symbol_capacity - 1);
     v->as.text.global = NULL; v->as.text.function = NULL;
     v->as.text.hash = hash;
+    /* The intern table roots every symbol until teardown, so its count can
+     * never decide a lifetime. The returned owner is the immortal itself. */
+    v->refs = RC_IMMORTAL;
     v->as.text.intern_next = ctx->symbols[bucket];
-    ctx->symbols[bucket] = rc_retain(v); ctx->symbol_count++;
+    ctx->symbols[bucket] = v; ctx->symbol_count++;
     /* Only a new interned identity needs name comparisons. These borrowed
      * pointers live exactly as long as the context's intern-table roots. */
     if (!strcmp(name, "true")) ctx->true_symbol = v;
@@ -719,22 +971,21 @@ RcValue *const *rc_symbol_table(RcContext *ctx, const RcSymbolTable *table) {
 const char *rc_text(const RcValue *v) { return v && (rc_type(v) == RC_STRING || rc_type(v) == RC_SYMBOL) ? v->as.text.data : NULL; }
 size_t rc_text_length(const RcValue *v) { return v && (rc_type(v) == RC_STRING || rc_type(v) == RC_SYMBOL) ? v->as.text.length : 0; }
 RcValue *rc_true(RcContext *ctx) {
-    return ctx && ctx->true_symbol ? rc_retain(ctx->true_symbol) : rc_symbol(ctx, "true");
+    return ctx && ctx->true_symbol ? ctx->true_symbol : rc_symbol(ctx, "true");
 }
 RcValue *rc_false(RcContext *ctx) {
-    return ctx && ctx->false_symbol ? rc_retain(ctx->false_symbol) : rc_symbol(ctx, "false");
+    return ctx && ctx->false_symbol ? ctx->false_symbol : rc_symbol(ctx, "false");
 }
-bool rc_is_true(const RcValue *v) { return rc_type(v) == RC_SYMBOL && v == v->ctx->true_symbol; }
-bool rc_is_false(const RcValue *v) { return rc_type(v) == RC_SYMBOL && v == v->ctx->false_symbol; }
+bool rc_is_true(const RcValue *v) { return rc_type(v) == RC_SYMBOL && v == ctx_of(v)->true_symbol; }
+bool rc_is_false(const RcValue *v) { return rc_type(v) == RC_SYMBOL && v == ctx_of(v)->false_symbol; }
 bool rc_is_boolean(const RcValue *v) {
-    return rc_type(v) == RC_SYMBOL && (v == v->ctx->true_symbol || v == v->ctx->false_symbol);
+    return rc_type(v) == RC_SYMBOL && (v == ctx_of(v)->true_symbol || v == ctx_of(v)->false_symbol);
 }
 RcValue *rc_cons(RcContext *ctx, RcValue *head, RcValue *tail) {
     if (!belongs(ctx, head) || !belongs(ctx, tail)) return rc_error(ctx, "invalid cons value/context");
     RcValue *v = allocate(ctx, RC_PAIR, 0);
     if (v) {
         v->as.pair.head = rc_retain(head); v->as.pair.tail = rc_retain(tail);
-        v->as.pair.proper_length = 0;
         v->reaches_vector = may_reach_vector(head) || may_reach_vector(tail);
     }
     return v;
@@ -749,7 +1000,6 @@ RcValue *rc_cons_owned(RcContext *ctx, RcValue *head, RcValue *tail) {
     /* Move the two owned handles into graph slots without count traffic.
      * Neither allocation nor release invokes a collection or user callback. */
     v->as.pair.head = head; v->as.pair.tail = tail;
-    v->as.pair.proper_length = 0;
     v->reaches_vector = may_reach_vector(head) || may_reach_vector(tail);
     return v;
 }
@@ -768,11 +1018,8 @@ RcValue *rc_cons_reuse(RcContext *ctx, RcValue *candidate, RcValue *head, RcValu
          * invokes collection or user code. Even borrowed old children are safe. */
         rc_retain(head); rc_retain(tail);
         RcValue *old_head = candidate->as.pair.head, *old_tail = candidate->as.pair.tail;
-        RcValue *old_plan=candidate->as.pair.eval_plan;
-        candidate->as.pair.eval_plan=NULL;candidate->as.pair.eval_calls=0;
-        if(old_plan)ctx->graph_slots--;
+        RcValue *old_plan=candidate->has_plan?plan_remove(candidate):NULL;
         candidate->as.pair.head = head; candidate->as.pair.tail = tail;
-        candidate->as.pair.proper_length = 0;
         candidate->reaches_vector = may_reach_vector(head) || may_reach_vector(tail);
         rc_release(old_head); rc_release(old_tail);
         rc_release(old_plan);
@@ -793,14 +1040,11 @@ RcValue *rc_pair_take_tail_reuse(RcContext *ctx, RcValue *candidate, RcValue **o
     RcValue *tail = candidate->as.pair.tail;
     if (candidate->refs == 1) {
         RcValue *head = candidate->as.pair.head;
-        RcValue *old_plan=candidate->as.pair.eval_plan;
-        candidate->as.pair.eval_plan=NULL;candidate->as.pair.eval_calls=0;
-        if(old_plan)ctx->graph_slots--;
+        RcValue *old_plan=candidate->has_plan?plan_remove(candidate):NULL;
         /* Ownership of the old edge moves to the C result, with no decrement.
          * Before releasing any other edge, publish a valid pair containing nil
          * in both slots. The collector can visit it at every later safepoint. */
         candidate->as.pair.head = rc_nil(); candidate->as.pair.tail = rc_nil();
-        candidate->as.pair.proper_length = 0;
         candidate->reaches_vector = false;
         rc_release(head);
         rc_release(old_plan);
@@ -812,25 +1056,18 @@ RcValue *rc_pair_take_tail_reuse(RcContext *ctx, RcValue *candidate, RcValue **o
     *out = candidate;
     return tail;
 }
-/* Pair spines are immutable while shared. Unique reuse resets this word;
- * an owning ancestor prevents a descendant from being independently unique.
- * Zero is unknown, SIZE_MAX improper, SIZE_MAX-1 overflow, otherwise length.
- * Only the requested head is cached: no allocation or tail metadata writes. */
 RcListLengthStatus rc_list_length_cached(RcValue *list,size_t *out) {
+    /* Pair cells have no room for a cached length; the evaluator that calls
+     * this is diagnostic. The walk is bounded by the list. */
     if(rc_is_nil(list)){*out=0;return RC_LIST_LENGTH_OK;}
     if(rc_type(list)!=RC_PAIR)return RC_LIST_LENGTH_IMPROPER;
-    size_t n=list->as.pair.proper_length;
-    if(!n) {
-        RcValue *cursor=list;
-        while(rc_type(cursor)==RC_PAIR) {
-            if(n==SIZE_MAX-2){n=SIZE_MAX-1;break;}
-            n++;cursor=cursor->as.pair.tail;
-        }
-        if(n!=SIZE_MAX-1&&!rc_is_nil(cursor))n=SIZE_MAX;
-        list->as.pair.proper_length=n;
+    size_t n=0;
+    RcValue *cursor=list;
+    while(rc_type(cursor)==RC_PAIR) {
+        if(n==SIZE_MAX-2)return RC_LIST_LENGTH_OVERFLOW;
+        n++;cursor=cursor->as.pair.tail;
     }
-    if(n==SIZE_MAX)return RC_LIST_LENGTH_IMPROPER;
-    if(n==SIZE_MAX-1)return RC_LIST_LENGTH_OVERFLOW;
+    if(!rc_is_nil(cursor))return RC_LIST_LENGTH_IMPROPER;
     *out=n;return RC_LIST_LENGTH_OK;
 }
 RcValue *rc_head(RcContext *ctx, RcValue *v) { return v && rc_type(v) == RC_PAIR ? rc_retain(v->as.pair.head) : rc_error(ctx, "hd expects a nonempty list"); }
@@ -844,7 +1081,7 @@ RcValue *rc_vector(RcContext *ctx, size_t length) {
     for (size_t i = 0; i < length; ++i) items[i] = rc_nil();
     RcValue *v = allocate(ctx, RC_VECTOR, length * sizeof(*items));
     if (!v) { free(items); return NULL; }
-    v->as.vector.items = items; v->as.vector.length = length;
+    v->as.vector.items = items; v->as.vector.length = length; v->as.vector.cycle_source = false;
     v->reaches_vector = true;
     return v;
 }
@@ -854,31 +1091,38 @@ RcValue *rc_vector_get(RcContext *ctx, RcValue *v, size_t i) {
 }
 typedef struct {
     RcContext *ctx;
-    RcValue *target, *work;
-    bool found;
+    RcValue *target;
+    size_t n;
+    bool found, failed;
 } CycleSearch;
 static void cycle_search_edge(RcValue *v, void *data) {
     CycleSearch *search = data;
     if (!may_reach_vector(v)) return;
     if (v == search->target) { search->found = true; return; }
-    if (v->visit_epoch == search->ctx->visit_epoch) return;
-    v->visit_epoch = search->ctx->visit_epoch;
-    v->work = search->work; search->work = v;
+    if (v->visited) return;
+    v->visited = true;
+    if (!walk_push(search->ctx, &search->n, v)) search->failed = true;
 }
+static bool reaches(RcContext *ctx, RcValue *target, RcValue *item, size_t budget, bool from_children);
 static bool would_create_cycle(RcContext *ctx, RcValue *target, RcValue *item, size_t budget) {
-    /* An allocation-free graph walk. The next epoch invalidates leftover work
-     * marks even on an early hit, and objects remain unchanged throughout. */
-    if (++ctx->visit_epoch == 0) {
-        for (RcValue *v = ctx->objects; v; v = v->next) v->visit_epoch = 0;
-        ctx->visit_epoch = 1;
-    }
-    CycleSearch search = {ctx, target, NULL, false};
-    cycle_search_edge(item, &search);
-    while (search.work && !search.found) {
-        RcValue *v = search.work; search.work = v->work;
+    return reaches(ctx, target, item, budget, false);
+}
+/* Whether a path of one or more edges leads from source back to itself. */
+static bool on_cycle(RcContext *ctx, RcValue *source) {
+    return reaches(ctx, source, source, SIZE_MAX, true);
+}
+static bool reaches(RcContext *ctx, RcValue *target, RcValue *item, size_t budget, bool from_children) {
+    /* A graph walk that changes only visited bits, all cleared before return.
+     * Running out of scratch memory answers yes, the conservative answer. */
+    CycleSearch search = {ctx, target, 0, false, false};
+    if (from_children) edges(item, cycle_search_edge, &search);
+    else cycle_search_edge(item, &search);
+    bool result = false;
+    for (size_t i = 0; i < search.n && !search.found && !search.failed; ++i) {
+        RcValue *v = ctx->walk_nodes[i];
         size_t width = 0;
         switch (v->type) {
-        case RC_PAIR: width = 2+(v->as.pair.eval_plan!=NULL); break;
+        case RC_PAIR: width = 2 + v->has_plan; break;
         case RC_VECTOR: width = v->as.vector.length; break;
         case RC_CLOSURE: width = v->as.closure.capture_count + v->as.closure.bound_count; break;
         case RC_ENV: width = 1 + v->as.env.count; break;
@@ -888,11 +1132,12 @@ static bool would_create_cycle(RcContext *ctx, RcValue *target, RcValue *item, s
         /* The unrestricted policy may conservatively mark a source rather
          * than spending unbounded mutation time proving an edge harmless.
          * Count nodes as well as slots, so scalar-heavy graphs stay bounded. */
-        if (!budget || width > budget - 1) return true;
+        if (!budget || width > budget - 1) { result = true; break; }
         budget -= width + 1;
         edges(v, cycle_search_edge, &search);
     }
-    return search.found;
+    for (size_t i = 0; i < search.n; ++i) ctx->walk_nodes[i]->visited = false;
+    return result || search.found || search.failed;
 }
 bool rc_vector_set(RcContext *ctx, RcValue *v, size_t i, RcValue *item) {
     if (!belongs(ctx, v) || rc_type(v) != RC_VECTOR || i >= v->as.vector.length || !belongs(ctx, item)) { rc_error(ctx, "invalid absvector assignment"); return false; }
@@ -904,14 +1149,16 @@ bool rc_vector_set(RcContext *ctx, RcValue *v, size_t i, RcValue *item) {
      * plus slots, then conservatively mark a source. A marked source stays
      * marked until freed;
      * removing edges may leave a harmless false positive. */
-    if (may_reach_vector(item) && (ctx->acyclic || !v->cycle_source) &&
-        would_create_cycle(ctx, v, item, ctx->acyclic ? SIZE_MAX : 256)) {
-        if (ctx->acyclic) {
+    if (may_reach_vector(item) && (ctx->hot.acyclic || !v->as.vector.cycle_source) &&
+        would_create_cycle(ctx, v, item, ctx->hot.acyclic ? SIZE_MAX : 256)) {
+        if (ctx->hot.acyclic) {
             rc_error(ctx, "acyclic mode rejects vector assignment that would create a cycle");
             return false;
         }
-        v->cycle_source = true;
-        ctx->cycle_sources++;
+        source_link(ctx, v);
+#if SHEN_RC_STATS_COUNTERS
+        ctx->perceus.cycle_source_marks++;
+#endif
     }
     RcValue *old = v->as.vector.items[i];
     v->as.vector.items[i] = rc_retain(item);
@@ -954,6 +1201,58 @@ RcValue *rc_closure_return_second_owned(RcContext *ctx, RcNativeOwned native,
                                         size_t capture_count, RcValue *const *captures) {
     RcValue *v=closure_create(ctx,2,NULL,native,capture_count,captures);
     if(v)v->returns_second=true;
+    return v;
+}
+static size_t static_closure_hash(const RcValue *v) {
+    uint64_t h = (uint64_t)(uintptr_t)v->as.closure.native * UINT64_C(0x9e3779b97f4a7c15);
+    h ^= (uint64_t)(uintptr_t)v->as.closure.owned_native * UINT64_C(0xbf58476d1ce4e5b9);
+    h ^= ((uint64_t)v->as.closure.arity << 1 | v->returns_second) * UINT64_C(0x94d049bb133111eb);
+    for (size_t i = 0; i < v->as.closure.capture_count; ++i)
+        h = (h ^ (uint64_t)(uintptr_t)v->as.closure.captures[i]) * UINT64_C(0x100000001b3);
+    return (size_t)(h ^ h >> 29);
+}
+static bool static_closure_same(const RcValue *a, const RcValue *b) {
+    if (a->as.closure.native != b->as.closure.native ||
+        a->as.closure.owned_native != b->as.closure.owned_native ||
+        a->as.closure.arity != b->as.closure.arity || a->returns_second != b->returns_second ||
+        a->as.closure.capture_count != b->as.closure.capture_count) return false;
+    /* Immortal captures are immediates, nil, symbols or shared closures, so
+     * handle identity is value identity. */
+    for (size_t i = 0; i < a->as.closure.capture_count; ++i)
+        if (a->as.closure.captures[i] != b->as.closure.captures[i]) return false;
+    return true;
+}
+static bool grow_static_closures(RcContext *ctx) {
+    size_t capacity = ctx->static_capacity ? ctx->static_capacity * 2 : 256;
+    if (capacity < ctx->static_capacity || capacity > SIZE_MAX / sizeof(RcValue *)) return false;
+    RcValue **slots = calloc(capacity, sizeof(*slots));
+    if (!slots) return false;
+    for (size_t i = 0; i < ctx->static_capacity; ++i) {
+        RcValue *v = ctx->static_closures[i];
+        if (!v) continue;
+        size_t j = static_closure_hash(v) & (capacity - 1);
+        while (slots[j]) j = (j + 1) & (capacity - 1);
+        slots[j] = v;
+    }
+    free(ctx->static_closures);
+    ctx->static_closures = slots; ctx->static_capacity = capacity;
+    return true;
+}
+RcValue *rc_closure_static(RcValue *v) {
+    if (!is_counted(v) || v->type != RC_CLOSURE || v->as.closure.bound_count) return v;
+    /* Immortal captures add no counted edges, so the closure cannot keep any
+     * mortal value alive and cannot lie on a cycle. Its code and captures are
+     * immutable: only interpreted closures promote their first capture. */
+    for (size_t i = 0; i < v->as.closure.capture_count; ++i)
+        if (is_counted(v->as.closure.captures[i])) return v;
+    RcContext *ctx = ctx_of(v);
+    /* Without set storage the closure stays ordinary: correct, just counted. */
+    if (ctx->static_count >= ctx->static_capacity / 2 && !grow_static_closures(ctx)) return v;
+    size_t j = static_closure_hash(v) & (ctx->static_capacity - 1);
+    for (RcValue *found; (found = ctx->static_closures[j]); j = (j + 1) & (ctx->static_capacity - 1))
+        if (static_closure_same(found, v)) { rc_release(v); return found; }
+    ctx->static_closures[j] = v; ctx->static_count++;
+    v->refs = RC_IMMORTAL;
     return v;
 }
 bool rc_closure_returns_second(RcContext *ctx, const RcValue *v) {
@@ -1033,7 +1332,7 @@ static RcValue *partial(RcContext *ctx, RcValue *fn, size_t argc, RcValue *const
     for (size_t i = 0; i < argc; ++i) bound[fn->as.closure.bound_count + i] = rc_retain(argv[i]);
     for (size_t i = 0; i < n; ++i) v->reaches_vector |= may_reach_vector(bound[i]);
     v->as.closure.bound = bound; v->as.closure.bound_count = n;
-    v->bytes += n * sizeof(*bound); ctx->stats.live_bytes += n * sizeof(*bound);
+    ctx->stats.live_bytes += n * sizeof(*bound);
     ctx->graph_slots += n;
     return v;
 }
@@ -1349,7 +1648,7 @@ static bool scalar_equal(const RcValue *a, const RcValue *b) {
     if (type == RC_SYMBOL) {
         /* Within one intern table different identities imply different names.
          * Preserve the public API's textual equality across contexts. */
-        if (a->ctx == b->ctx || a->as.text.hash != b->as.text.hash) return false;
+        if (ctx_of(a) == ctx_of(b) || a->as.text.hash != b->as.text.hash) return false;
     } else if (type != RC_STRING) return false;
     return a->as.text.length == b->as.text.length &&
            !memcmp(a->as.text.data, b->as.text.data, a->as.text.length);
@@ -1365,7 +1664,7 @@ static size_t equal_hash(EqualPair pair) {
 /* Only structural comparisons enter the worklist/hash set. Scalar children
  * compare immediately; repeated graph edges never cause repeated expansion. */
 static bool graph_equal(const RcValue *left, const RcValue *right) {
-    RcContext *ctx = left->ctx;
+    RcContext *ctx = ctx_of(left);
     EqualPair local_pairs[32], *pairs = local_pairs;
     size_t local_seen[64] = {0}, *seen = local_seen;
     size_t count = 1, capacity = 32, cursor = 0;

@@ -4,6 +4,7 @@
 #endif
 #include <assert.h>
 #include <stdio.h>
+#include <string.h>
 
 static const char *const names[] = {"cached", "same", "cached", "true"};
 static const RcSymbolTable table = {names, 4};
@@ -36,6 +37,27 @@ static void booleans(RcContext *ctx) {
     rc_release(yes); rc_release(no);
 }
 
+/* Interned symbols are immortal: counts never move, releases are no-ops and
+ * graph edges to them neither keep nor free them. Teardown frees them. */
+static void immortal_symbols(RcContext *ctx) {
+    RcValue *s = rc_symbol(ctx, "immortal-probe"), *yes = rc_true(ctx);
+    assert(s && rc_refcount(s) == SIZE_MAX && rc_refcount(yes) == SIZE_MAX);
+    RcStats before = rc_stats(ctx);
+    for (int i = 0; i < 1000; ++i) { assert(rc_retain(s) == s); rc_release(s); rc_release(s); }
+    rc_release(yes); rc_release(yes);
+    RcStats after = rc_stats(ctx);
+    assert(after.retain_calls == before.retain_calls && after.release_calls == before.release_calls);
+    assert(rc_refcount(s) == SIZE_MAX && rc_symbol(ctx, "immortal-probe") == s);
+    /* An unreachable vector cycle through a symbol edge is still reclaimed;
+     * the symbol survives it. */
+    size_t live = rc_stats(ctx).live_objects;
+    RcValue *v = rc_vector(ctx, 2), *pair = rc_cons(ctx, s, v);
+    assert(v && pair && rc_vector_set(ctx, v, 0, pair) && rc_vector_set(ctx, v, 1, s));
+    rc_release(pair); rc_release(v); rc_collect(ctx);
+    assert(rc_stats(ctx).live_objects == live && rc_refcount(s) == SIZE_MAX);
+    assert(!strcmp(rc_text(s), "immortal-probe") && rc_is_true(rc_true(ctx)));
+}
+
 static RcValue *answer(RcContext *ctx, RcValue *self, size_t n, RcValue *const *args) {
     (void)self; (void)n; (void)args;
     return rc_integer(ctx, 42);
@@ -46,6 +68,7 @@ int main(void) {
     RcContext *anchor = rc_context_new(); assert(anchor);
     RcValue *const *root = rc_symbol_table(anchor, &table); assert(root);
     booleans(anchor);
+    immortal_symbols(anchor);
     assert(!rc_true(NULL) && !rc_false(NULL));
     for (int round = 0; round < 128; ++round) {
         RcContext *ctx = rc_context_new(); assert(ctx);

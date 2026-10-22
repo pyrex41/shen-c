@@ -11,6 +11,7 @@ endif()
 
 option(SHEN_RC_ACYCLIC_ONLY "Omit cycle collection and reject cycle-creating writes" OFF)
 option(SHEN_RC_SANITIZE "Enable ASan/UBSan for the RC runtime and tests" OFF)
+option(SHEN_RC_STATS_COUNTERS "Count every retain/release in RcStats (diagnostic)" OFF)
 option(SHEN_RC_LTO "Enable supported Release interprocedural optimization" ON)
 if(SHEN_RC_LTO AND NOT SHEN_RC_SANITIZE)
   # Forward toolchain/platform settings into the IPO project's link probe.
@@ -44,6 +45,9 @@ endif()
 if(SHEN_RC_SANITIZE)
   target_compile_options(shenrc PUBLIC -fsanitize=address,undefined -fno-sanitize-recover=all -fno-omit-frame-pointer -g)
   target_link_options(shenrc PUBLIC -fsanitize=address,undefined)
+endif()
+if(SHEN_RC_STATS_COUNTERS)
+  target_compile_definitions(shenrc PRIVATE SHEN_RC_STATS_COUNTERS=1)
 endif()
 if(SHEN_RC_ACYCLIC_ONLY)
   target_compile_definitions(shenrc PUBLIC SHEN_RC_ACYCLIC_ONLY)
@@ -84,7 +88,7 @@ add_custom_command(OUTPUT "${RC_KERNEL_C}"
   VERBATIM)
 # Optional native tier (SHEN_RC_NATIVE): embedded runtime headers and build
 # flags, the emitter, and runtime symbols exported to dlopen'd modules.
-set(RC_TIER_HEADERS src/rc/rc.h src/rc/primitives.h src/rc/eval.h)
+set(RC_TIER_HEADERS src/rc/rc.h src/rc/primitives.h src/rc/eval.h src/rc/rc_layout.h)
 set(RC_TIER_HOST_FLAGS "")
 if(SHEN_RC_SANITIZE)
   set(RC_TIER_HOST_FLAGS "-fsanitize=address,undefined -fno-sanitize-recover=all -fno-omit-frame-pointer")

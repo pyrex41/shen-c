@@ -328,7 +328,7 @@ static RcValue *eval_native(RcContext *ctx, RcValue *self, size_t argc, RcValue 
     return rc_eval(ctx,argv[0]);
 }
 bool rc_install_eval(RcContext *ctx) {
-    RcValue *name=rc_symbol(ctx,"eval-kl"), *fn=rc_closure(ctx,1,eval_native,0,NULL);
+    RcValue *name=rc_symbol(ctx,"eval-kl"), *fn=rc_closure_static(rc_closure(ctx,1,eval_native,0,NULL));
     bool ok=name && fn && rc_function_set(ctx,name,fn);
     rc_release(name); rc_release(fn); return ok;
 }

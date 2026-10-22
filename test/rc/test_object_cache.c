@@ -1,4 +1,4 @@
-/* Physical object-cache bounds, logical accounting, payloads, and poisoning. */
+/* Slab cell recycling, logical accounting, payloads, and poisoning. */
 #include "rc.h"
 #ifdef NDEBUG
 #undef NDEBUG
@@ -44,18 +44,23 @@ int main(int argc,char **argv) {
         rc_context_free(ctx);return 0;
     }
     recycled_defaults();
+    /* Freed cells go on per-class free lists inside 64 KiB slab pages; pages
+     * return to the system only at teardown. */
     enum { LIMIT=1024, TOTAL=LIMIT*2+9 };
     RcValue *values[TOTAL];
     for(size_t i=0;i<TOTAL;i++)values[i]=rc_number(ctx,(double)i);
     for(size_t i=0;i<TOTAL;i++)rc_release(values[i]);
     RcStats s=rc_stats(ctx);
     assert(!s.live_objects&&!s.live_bytes&&s.total_allocations==s.total_frees);
-    assert(s.cached_objects==LIMIT&&s.system_allocations==TOTAL&&s.system_frees==TOTAL-LIMIT);
-    size_t block=s.cached_bytes/LIMIT;
-    assert(block&&s.cached_bytes==LIMIT*block&&s.peak_cached_bytes==s.cached_bytes);
+    size_t block=s.cached_bytes/TOTAL;
+    assert(s.cached_objects==TOTAL&&!s.system_frees);
+    assert(block&&s.cached_bytes==TOTAL*block&&s.peak_cached_bytes==s.cached_bytes);
+    /* Whole cells per page after the page header, rounded up. */
+    size_t per_page=(65536-64)/block;
+    assert(s.system_allocations==(TOTAL+per_page-1)/per_page);
     for(size_t i=0;i<LIMIT;i++)values[i]=rc_number(ctx,(double)i);
     assert(rc_stats(ctx).system_allocations==s.system_allocations);
-    assert(!rc_stats(ctx).cached_objects&&!rc_stats(ctx).cached_bytes);
+    assert(rc_stats(ctx).cached_objects==TOTAL-LIMIT&&rc_stats(ctx).cached_bytes==(TOTAL-LIMIT)*block);
     for(size_t i=0;i<LIMIT;i++){assert(rc_number_value(values[i])==(double)i);rc_release(values[i]);}
     RcContext *other=rc_context_new();RcValue *independent=rc_number(other,7.0);
     assert(rc_stats(other).system_allocations==1&&!rc_stats(other).cached_objects);
@@ -77,11 +82,10 @@ int main(int argc,char **argv) {
     }
     rc_collect(ctx);s=rc_stats(ctx);
     assert(!s.live_objects&&!s.live_bytes&&s.total_allocations==s.total_frees);
-    assert(s.cached_objects<=LIMIT&&s.cached_bytes==s.cached_objects*block);
-    assert(s.system_allocations-s.system_frees==s.cached_objects);
+    assert(s.cached_bytes==s.cached_objects*block&&!s.system_frees);
     assert(s.cycle_objects_freed==20);
-    printf("bounded object cache: PASS; block=%zu cached=%zu reserved=%zu index=%zu bytes\n",
-           block,s.cached_objects,s.cached_bytes,LIMIT*sizeof(RcValue *));
+    printf("slab cell recycling: PASS; block=%zu cached=%zu reserved=%zu pages=%zu\n",
+           block,s.cached_objects,s.cached_bytes,s.system_allocations);
     /* Teardown drains a full dead cache plus live values with payloads. */
     RcValue *live=rc_vector(ctx,1),*text=rc_string(ctx,"teardown");
     assert(rc_vector_set(ctx,live,0,text));rc_release(text);

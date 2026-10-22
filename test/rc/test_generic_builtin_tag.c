@@ -48,8 +48,18 @@ static void tags_roots_and_reuse(void) {
   rc_release(f);
  }
  RcValue *old=function(c,"hd");assert(rc_install_primitives(c));
- RcValue *args[]={rc_retain(pair)};assert(rc_builtin_call_slot(c,old,1,args)==-1);
- RcValue *out=rc_primitive_call_owned(c,old,1,args,false);assert(out==text&&!args[0]);rc_release(out);
+ RcValue *args[]={rc_retain(pair)},*out;
+ if(rc_refcount(old)==SIZE_MAX) {
+  /* Immortal builtins (immediate opcode captures) are shared, so reinstalling
+   * keeps the same canonical closure and no tagged header is ever freed.
+   * Boxed builds keep mortal builtins and run the displacement path below. */
+  RcValue *current=function(c,"hd");assert(current==old);rc_release(current);
+  assert(rc_builtin_call_slot(c,old,1,args)==RC_BUILTIN_HD);
+  out=rc_primitive_call_owned(c,old,1,args,false);assert(out==text&&!args[0]);rc_release(out);
+  rc_release(old);
+ } else {
+ assert(rc_builtin_call_slot(c,old,1,args)==-1);
+ out=rc_primitive_call_owned(c,old,1,args,false);assert(out==text&&!args[0]);rc_release(out);
  /* Releasing the displaced snapshot puts this header at the top of the LIFO
   * object cache. A different closure must not inherit its builtin identity. */
  RcValue *address=old;rc_release(old);
@@ -65,10 +75,13 @@ static void tags_roots_and_reuse(void) {
  args[0]=rc_retain(text);assert(rc_builtin_call_slot(c,user,1,args)==-1);
  out=rc_primitive_call_owned(c,user,1,args,false);assert(out==text&&!args[0]);rc_release(out);
  while(used)rc_release(spares[--used]);rc_release(user);
- RcValue *nonfunction=rc_cons(c,rc_nil(),rc_nil());assert(nonfunction==address);
+ /* Slab cells segregate pairs from other values, so the freed header is
+  * reused by a non-closure value of the closure's size class. */
+ RcValue *nonfunction=rc_number(c,0.5);assert(nonfunction==address&&rc_type(nonfunction)!=RC_CLOSURE);
  args[0]=rc_retain(text);assert(rc_builtin_call_slot(c,nonfunction,1,args)==-1);
  assert(!rc_primitive_call_owned(c,nonfunction,1,args,false)&&rc_has_error(c)&&!args[0]);rc_clear_error(c);
  rc_release(nonfunction);
+ }
  RcValue *plus=function(c,"+"),*number=rc_integer(c,20),*part=rc_apply(c,plus,1,&number);
  assert(part&&rc_arity(part)==1);args[0]=rc_integer(c,22);
  assert(rc_builtin_call_slot(c,part,1,args)==-1);

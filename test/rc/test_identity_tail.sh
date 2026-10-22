@@ -79,6 +79,8 @@ with tempfile.TemporaryDirectory(prefix='shen-rc-identity-tail.') as tmp:
   assert built.returncode==0,(conservative,built.returncode,built.stdout,built.stderr)
   emitted=(dest/'app.c').read_text()
   constructor='rc_closure_return_second' if conservative else 'rc_closure_return_second_owned'
+  # Optimized top-level definitions are wrapped to become immortal.
+  constructor=constructor if conservative else 'rc_closure_static('+constructor
   assert emitted.count('='+constructor+'(')==2,(constructor,emitted.count('='+constructor+'('))
   for execution in ('native','interpret'):
    actual=subprocess.run([str(dest/'app')],env={**os.environ,'SHEN_RC_PRINT':'1','SHEN_RC_EXECUTION':execution,'SHEN_RC_NATIVE_STATS':'1'},capture_output=True,text=True,timeout=120)

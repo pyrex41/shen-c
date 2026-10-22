@@ -600,8 +600,9 @@ static bool install(RcContext *c,const struct Primitive *p,size_t n) {
   RcValue *started=p[i].op==P_TIME?rc_number(c,(double)clock()/CLOCKS_PER_SEC):NULL;
   if(p[i].op==P_TIME&&!started){rc_release(code);return false;}
   RcValue *captures[]={code,started};
-  RcValue *f=p[i].op==P_DO ? rc_closure_return_second(c,primitive,1,captures)
-      : rc_closure(c,p[i].arity,primitive,started?2:1,captures);
+  /* Installed once per context; immediate opcodes keep these immortal. */
+  RcValue *f=rc_closure_static(p[i].op==P_DO ? rc_closure_return_second(c,primitive,1,captures)
+      : rc_closure(c,p[i].arity,primitive,started?2:1,captures));
   rc_release(code);rc_release(started);if(!f)return false;
   RcValue *s=rc_symbol(c,p[i].name);bool ok=s&&rc_function_set(c,s,f);
   if(ok) {
@@ -635,7 +636,7 @@ bool rc_install_numeric_hash_owned(RcContext *c, RcNativeOwned expected) {
  static const char *const deps[]={"number?","explode","shen.app","str","map","string->n","shen.prodbutzero"};
  RcValue *captures[8]={original};
  for(size_t i=0;i<sizeof(deps)/sizeof(*deps);i++) { RcValue *s=rc_symbol(c,deps[i]); captures[i+1]=s ? rc_function_lookup(c,s) : NULL; rc_release(s); if(!captures[i+1]) match=false; }
- RcValue *wrapper=match ? rc_closure(c,1,numeric_hashkey_wrapper,8,captures) : NULL;
+ RcValue *wrapper=match ? rc_closure_static(rc_closure(c,1,numeric_hashkey_wrapper,8,captures)) : NULL;
  bool ok=wrapper && rc_function_set(c,name,wrapper);
  for(size_t i=1;i<8;i++) rc_release(captures[i]);
  rc_release(wrapper); rc_release(original); rc_release(name); return (!match || ok) && !rc_has_error(c);
@@ -647,7 +648,7 @@ bool rc_install_numeric_hash_borrowed(RcContext *c, RcNative expected) {
  static const char *const deps[]={"number?","explode","shen.app","str","map","string->n","shen.prodbutzero"};
  RcValue *captures[8]={original};
  for(size_t i=0;i<sizeof(deps)/sizeof(*deps);i++) { RcValue *s=rc_symbol(c,deps[i]); captures[i+1]=s ? rc_function_lookup(c,s) : NULL; rc_release(s); if(!captures[i+1]) match=false; }
- RcValue *wrapper=match ? rc_closure(c,1,numeric_hashkey_wrapper,8,captures) : NULL;
+ RcValue *wrapper=match ? rc_closure_static(rc_closure(c,1,numeric_hashkey_wrapper,8,captures)) : NULL;
  bool ok=wrapper && rc_function_set(c,name,wrapper);
  for(size_t i=1;i<8;i++) rc_release(captures[i]);
  rc_release(wrapper); rc_release(original); rc_release(name); return (!match || ok) && !rc_has_error(c);

@@ -49,7 +49,10 @@ typedef struct {
     size_t cached_objects, cached_bytes, peak_cached_bytes;
     size_t system_allocations, system_frees;
     /* Actual managed-value reference count increments/decrements, including
-     * internal edge operations; ownership transfers do not increment these. */
+     * internal edge operations; ownership transfers do not increment these.
+     * Immortal values (including interned symbols) are never counted. Only
+     * builds with SHEN_RC_STATS_COUNTERS=1 maintain these two fields; others
+     * leave them zero (see rc_stats_counts_ownership). */
     size_t retain_calls, release_calls;
     size_t pair_allocations, pair_reuse_attempts, pair_reuses, pair_reuse_misses;
     size_t pair_tail_transfers, pair_tail_shares;
@@ -74,10 +77,13 @@ void rc_set_collection_interval(RcContext *ctx, size_t allocations);
 void rc_collect(RcContext *ctx);
 void rc_safepoint(RcContext *ctx);
 RcStats rc_stats(const RcContext *ctx);
+/* Whether this runtime was built to count retain_calls/release_calls. */
+bool rc_stats_counts_ownership(void);
 RcValue *rc_retain(RcValue *value);
 void rc_release(RcValue *value);
 RcType rc_type(const RcValue *value);
-/* Immortal values (nil and immediate integers) report SIZE_MAX. */
+/* Immortal values (nil, immediate integers and interned symbols) report
+ * SIZE_MAX. Retaining or releasing them changes nothing and is not counted. */
 size_t rc_refcount(const RcValue *value);
 RcValue *rc_nil(void); /* Immortal singleton; release is harmless. */
 bool rc_is_nil(const RcValue *value);
@@ -101,6 +107,7 @@ bool rc_number_is_int64(const RcValue *value);
 int64_t rc_integer_value(const RcValue *value);
 RcValue *rc_string(RcContext *ctx, const char *text);
 RcValue *rc_string_n(RcContext *ctx, const char *text, size_t length);
+/* Interned and immortal: the result may be released, but need not be. */
 RcValue *rc_symbol(RcContext *ctx, const char *name);
 /* Immutable compiled-module descriptor; descriptor and names must have static
  * storage duration. The returned array and its symbol values are borrowed from
@@ -156,6 +163,18 @@ RcValue *rc_closure_return_second(RcContext *ctx, RcNative native,
 RcValue *rc_closure_return_second_owned(RcContext *ctx, RcNativeOwned native,
                                         size_t capture_count, RcValue *const *captures);
 bool rc_closure_returns_second(RcContext *ctx, const RcValue *function);
+/* Compiler/installer ABI: consumes and returns an owned closure; NULL passes
+ * through. An unbound closure whose captures are all immortal becomes
+ * immortal; any other value is returned unchanged. Immortal closures are
+ * shared: if the context already holds one with the same callbacks, arity,
+ * identity certificate and captures, the argument is released and that one
+ * is returned. Storage is therefore bounded by the distinct code/capture
+ * combinations, and is freed at context teardown rather than when a binding
+ * is replaced. Use it for installers and definitions that run at most once,
+ * where sharing cannot be observed. Named calls through such a binding then
+ * perform no reference-count operations, and a running body's self stays
+ * valid even after a callback redefines its name. */
+RcValue *rc_closure_static(RcValue *owned_closure);
 bool rc_closure_is_native(const RcValue *closure, RcNative native);
 bool rc_closure_is_owned_native(const RcValue *closure, RcNativeOwned native);
 /* Internal compiler ABI: function/arguments must already be valid values of
