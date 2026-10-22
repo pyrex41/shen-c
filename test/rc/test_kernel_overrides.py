@@ -40,11 +40,24 @@ inputs = ['abc', '(intern "Abc")', '(intern "123")', '(intern "A b")', '(intern 
 # The Shen reader treats { and } as tokens; spell those symbols with intern.
 definitions = [defun(n).replace('(defun ' + n + ' ', '(defun kernel.' + n + ' ', 1)
                .replace('(cons { (cons } ', '(cons (intern "{") (cons (intern "}") ') for n in unary]
+# hash is replaced by a native port (primitives.c). Its kernel copy calls the
+# installed shen.hashkey, so it includes the numeric hashkey wrapper too.
+definitions.append(defun('hash').replace('(defun hash ', '(defun kernel.hash ', 1))
+keys = inputs + ['(intern "shen.fail!")', '"shen.fail!"', '"..."', '(intern "...")', '"a"', '(n->string 0)',
+                 '(cn "x" (cn (n->string 0) "y"))', '(n->string 255)', '"héllo wörld"', '-1', '-9223372036854775807',
+                 '9223372036854775807', '1234567890123', '(intern "-")', '(fail)', '[]', '[a b]', '(@v 1 2 <>)',
+                 '(intern "a b c d e f g h i j k l m n o p q r s t u v w x y z 0 1 2 3 4 5 6 7 8 9")',
+                 '"The quick brown fox jumps over the lazy dog, repeatedly, until the product passes ten billion."']
+moduli = ['1', '2', '7', '97', '20000', '1000003', '10000000019', '9223372036854775807', '2.0', '20000.0']
 program = ['(define kernel-overrides.result F X -> (trap-error (F X) (/. E (cn "error: " (error-to-string E)))))']
 for n in unary:
     for x in inputs:
         program.append('(let A (kernel-overrides.result (/. Y (%s Y)) %s) B (kernel-overrides.result (/. Y (kernel.%s Y)) %s) '
                        '(output "~A ~A~%%" (if (= A B) same [A B]) %s))' % (n, x, n, x, '"' + n + ' ' + x.replace('"', 'c#34;') + '"'))
+for x in keys:
+    for m in moduli:
+        program.append('(let A (trap-error (hash %s %s) (/. E (cn "error: " (error-to-string E)))) B (trap-error (kernel.hash %s %s) (/. E (cn "error: " (error-to-string E)))) '
+                       '(output "~A ~A~%%" (if (= A B) same [A B]) %s))' % (x, m, x, m, '"hash ' + x.replace('"', 'c#34;') + ' ' + m + '"'))
 with tempfile.TemporaryDirectory(prefix='shen-rc-overrides.') as tmp:
     work = Path(tmp)
     (work / 'kernel.kl').write_text('\n'.join(definitions) + '\n')
@@ -53,10 +66,25 @@ with tempfile.TemporaryDirectory(prefix='shen-rc-overrides.') as tmp:
             ' (read-file "kernel.kl")) (load "checks.shen"))')
     env = dict(os.environ, SHEN_RC_NATIVE_CACHE=os.environ.get('SHEN_RC_NATIVE_CACHE', str(work / 'cache')))
     run = subprocess.run([str(binary), 'eval', '-e', load], cwd=work, env=env, capture_output=True, text=True, timeout=1200)
+    # Redefining a function the kernel hash path reaches must reach native
+    # hash too: it falls back to the kernel closure.
+    redefined = []
+    for dep, body in [('shen.prodbutzero', '(defun shen.prodbutzero (X Y) 3)'),
+                      ('string->n', '(defun string->n (S) 2)'),
+                      ('shen.mod', '(defun shen.mod (X Y) 5)')]:
+        check = ('(do %s (output "~A~%%" [(hash abc 97) (hash "xyz" 1000) (hash 42 97)]))' % body)
+        r = subprocess.run([str(binary), 'eval', '-e', check], cwd=work, env=env, capture_output=True, text=True, timeout=600)
+        redefined.append((dep, r.returncode, r.stdout.strip().splitlines()[-1:] , r.stderr[-300:]))
 lines = [l for l in run.stdout.splitlines() if re.match(r'^(same|\[)', l)]
 bad = [l for l in lines if not l.startswith('same ')]
 assert run.returncode == 0, (run.returncode, run.stderr[-2000:])
-assert len(lines) == len(unary) * len(inputs), (len(lines), run.stdout[-2000:])
+assert len(lines) == len(unary) * len(inputs) + len(keys) * len(moduli), (len(lines), run.stdout[-2000:])
 assert not bad, '\n'.join(bad)
-print('RC kernel overrides: %d defuns x %d inputs identical to the pinned %s kernel PASS'
-      % (len(unary), len(inputs), release['kernel_version']))
+expected = {'shen.prodbutzero': '[3 3 3]', 'string->n': None, 'shen.mod': '[5 5 5]'}
+for dep, code, out, err in redefined:
+    assert code == 0, (dep, err)
+    if expected[dep]: assert out == [expected[dep]], (dep, out)
+# string->n returning 2 for every byte gives 2^len, below the threshold here.
+assert redefined[1][2] == ['[%d %d %d]' % (2**3 % 97, 2**3 % 1000, 2**2 % 97)], redefined[1]
+print('RC kernel overrides: %d defuns x %d inputs, and hash x %d keys x %d moduli, identical to the pinned %s kernel PASS'
+      % (len(unary), len(inputs), len(keys), len(moduli), release['kernel_version']))
