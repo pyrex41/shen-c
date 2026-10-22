@@ -251,3 +251,99 @@ That overhead was:
   calling convention, and it was not attempted.
 - The native `deref`/`hash` overrides (excluded from this branch on purpose)
   are the next lever.
+
+## Landing on main 1decd23 (ShenOSKernel upstream ec16a9f)
+
+`origin/main` 1decd23 was merged into this branch (64d1c89). This is a
+merge, not a rebase: rebasing re-plays #12's commits, which conflict in
+`emit.c` with main changes that d3d0460 had already resolved. The only
+conflict was `CHANGELOG.md`. The kernel moves from Tarver's S43 (136-test
+suite) to the community kernel (154-assertion suite). Bifrost goes from 70
+PASS / 2 SKIP / 2 KERNEL_SKIP to 72 PASS / 2 KERNEL_SKIP.
+
+Two tests failed on this branch before the merge too. The `rc-asan-ubsan`
+job stopped at the first failure, so the second never ran there. Both are
+fixed in daedd02:
+
+- `test_generic_builtin_tag` (boxed builds) expected a pair to reuse a
+  freed closure header. Slab cells keep pairs (32 B) apart from other
+  values (72 B). The test now uses a boxed number at the same address.
+- `test_native_chunks` built its giant body ending in a tail call to a
+  module definition. That is a musttail body, which is deliberately never
+  split into chunks (stage 5). The chunked body now sits under a primitive,
+  and the musttail variant is checked separately: unchunked, with the same
+  results.
+
+CI: the gcc job's build-heavy steps took about 1.7x as long as on main
+(certify 359 to 603 s, toolchain 456 to 772 s), and the job reached its
+40-minute limit. Stage 3's inlined fast paths cost gcc compile time; the
+generated kernel is only 6.5% larger. The rc jobs now have 60 minutes
+(33fb8e7).
+
+### Gates at 33fb8e7 (code at daedd02; 33fb8e7 changes only CI)
+
+| Gate | Where | Result |
+|---|---|---|
+| Community suite, CLI | macOS | 154/0, 40/40 reports |
+| `certify-rc.sh` | macOS; CI | 154/0 |
+| `test-rc-toolchain.sh --canonical-receipt` | macOS; CI | PASS |
+| `make test`, `scripts/test-rc.sh`, reader capture, source compile, kernel overrides, compile cache and fallback, manifests | macOS; CI | PASS |
+| `make acyclic` (acyclic-only build and tests) | macOS | PASS |
+| Extension tests | macOS | 123/0 |
+| Bifrost def3047 | macOS; CI | 72 PASS, 2 KERNEL_SKIP |
+| Capcov against go-1f587de | macOS | all byte-identical: 7 native, plus b-typed, d-g5 and c-untyped interpreted |
+| CI | all four rc jobs and both Bifrost jobs | green |
+
+### Refcount soundness checks
+
+In an ubuntu:24.04 clang-18 container at daedd02:
+
+| Check | Result |
+|---|---|
+| `make sanitize` (ASan+UBSan unit tests, default immediate integers) | PASS |
+| Boxed-integer unit tests under ASan+UBSan | PASS |
+| `scripts/test-rc.sh` with a sanitized builder and `-DSHEN_RC_VERIFY_OWNERSHIP=1` (emitted ownership, reuse, cycles, guarded fast paths, chunks) | PASS |
+| `certify-rc.sh` with ASan+UBSan and `SHEN_RC_VERIFY_OWNERSHIP=1` (generated kernel and suite) | 154/0 |
+| Acyclic-only build's tests under ASan+UBSan | PASS |
+| Strict native cache controls under ASan+UBSan | PASS |
+| Sanitized CLI (`RC_SANITIZE=1`; LeakSanitizer on, `detect_leaks=1`), interpret mode: b-typed, c-untyped, d-g5, a2-libs-typed | exit 0, payloads byte-identical, no sanitizer or leak report |
+| Sanitized CLI, native load-time compile: c-untyped, a2-libs-typed, f-modelcheck, e-draft | exit 0, payloads byte-identical, no sanitizer or leak report |
+
+Not run:
+
+- the sanitized CLI on d-g5 and b-typed natively (b-typed's cold native
+  compile is impractical);
+- Valgrind or macOS `leaks` (ASan does not work on this Darwin host);
+- a counter build (`make counters`) re-measuring stage 0's retain/release
+  balance on the merged tree.
+
+### Instruction counts against main 1decd23
+
+Method as before: `/usr/bin/time -l` on the binary, three interleaved rounds
+with round 1 discarded, warm private native caches, d-g5 summed over its 25
+drivers. `mb-defs` and `mb-terms` are the empty-case type-checker
+microbenchmarks. Every run produced the reference payload or output.
+
+| Workload | Mode | main 1decd23 instructions (r2 / r3) | tight-perceus instructions (r2 / r3) | Change | main 1decd23 user s | tight-perceus user s |
+|---|---|---|---|---|---|---|
+| b-typed | interpret | 1113.9G / 1111.6G | 929.7G / 928.4G | -16.5% | 62.9 / 46.7 | 44.6 / 38.1 |
+| c-untyped | interpret | 1001.7G / 1000.5G | 883.9G / 883.9G | -11.7% | 41.9 / 38.0 | 31.7 / 32.0 |
+| c-untyped | native | 957.6G / 957.4G | 840.9G / 840.2G | -12.2% | 40.3 / 33.1 | 34.7 / 29.1 |
+| d-g5 | interpret | 598.2G / 598.0G | 434.4G / 434.3G | -27.4% | 23.1 / 19.3 | 16.4 / 14.4 |
+| d-g5 | native | 747.1G / 746.1G | 584.5G / 582.6G | -21.8% | 30.0 / 27.0 | 26.5 / 21.9 |
+| mb-defs | interpret | 373.6G / 373.2G | 273.4G / 273.0G | -26.8% | 17.8 / 13.4 | 11.8 / 9.5 |
+| mb-defs | native | 409.4G / 408.5G | 308.8G / 308.1G | -24.6% | 20.6 / 15.2 | 16.2 / 11.3 |
+| mb-terms | interpret | 1276.3G / 1275.3G | 1039.4G / 1040.4G | -18.5% | 57.9 / 43.3 | 48.2 / 41.0 |
+| mb-terms | native | 1275.8G / 1276.1G | 1039.0G / 1039.6G | -18.5% | 45.6 / 45.6 | 39.7 / 40.3 |
+
+Peak RSS (max of rounds 2 and 3):
+
+| Workload | Mode | main | tight-perceus | Change |
+|---|---|---|---|---|
+| b-typed | interpret | 1378 MB | 453 MB | -67% |
+| c-untyped | interpret | 84 MB | 31 MB | -63% |
+| c-untyped | native | 86 MB | 56 MB | -35% |
+| d-g5 | interpret | 77 MB | 34 MB | -56% |
+| d-g5 | native | 124 MB | 90 MB | -27% |
+| mb-defs | interpret | 35 MB | 23 MB | -35% |
+| mb-terms | interpret | 15 MB | 11 MB | -27% |
