@@ -75,7 +75,9 @@ static void tags_roots_and_reuse(void) {
  args[0]=rc_retain(text);assert(rc_builtin_call_slot(c,user,1,args)==-1);
  out=rc_primitive_call_owned(c,user,1,args,false);assert(out==text&&!args[0]);rc_release(out);
  while(used)rc_release(spares[--used]);rc_release(user);
- RcValue *nonfunction=rc_cons(c,rc_nil(),rc_nil());assert(nonfunction==address);
+ /* Slab cells segregate pairs from other values, so the freed header is
+  * reused by a non-closure value of the closure's size class. */
+ RcValue *nonfunction=rc_number(c,0.5);assert(nonfunction==address&&rc_type(nonfunction)!=RC_CLOSURE);
  args[0]=rc_retain(text);assert(rc_builtin_call_slot(c,nonfunction,1,args)==-1);
  assert(!rc_primitive_call_owned(c,nonfunction,1,args,false)&&rc_has_error(c)&&!args[0]);rc_clear_error(c);
  rc_release(nonfunction);
