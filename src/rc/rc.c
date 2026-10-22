@@ -78,6 +78,7 @@ struct RcContext {
     size_t static_capacity, static_count;
     /* Owned context roots, bounded by the specialized builtin set. */
     RcValue *builtin_roots[RC_BUILTIN_COUNT];
+    size_t lean_canon_count; /* entries of hot.lean_canon (owned closures) */
     /* One bounded dependency certificate. Keys borrow permanent intern roots;
      * no managed values or extra collector edges are retained here. */
     size_t function_generation,prolog_guard_generation;
@@ -984,14 +985,21 @@ bool rc_lean_install(RcContext *ctx, const RcSymbolTable *table) {
     if (!symbols) return false;
     RcValue **canon = calloc(table->count ? table->count : 1, sizeof(*canon));
     if (!canon) { rc_error(ctx, "out of memory"); return false; }
-    /* Borrowed: only an immortal binding can never be freed and its address
-     * reused by another closure, so only it may stand for "unchanged". */
+    /* Owned: the table keeps each canonical closure alive, so its address can
+     * never be reused by another closure and falsely match a guard. Builtins
+     * are immortal only with immediate integers (boxed op-code captures are
+     * not), so ownership, not immortality, is what makes the guard exact.
+     * Context teardown frees these with every other cell. */
     for (size_t i = 0; i < table->count; ++i) {
         RcValue *fn = symbols[i]->as.text.function;
-        canon[i] = fn && fn->refs == RC_IMMORTAL ? fn : NULL;
+        canon[i] = fn ? rc_retain(fn) : NULL;
     }
-    free((void *)ctx->hot.lean_canon);
-    ctx->hot.lean_syms = symbols; ctx->hot.lean_canon = canon;
+    RcValue **old = (RcValue **)ctx->hot.lean_canon;
+    if (old) {
+        for (size_t i = 0; i < ctx->lean_canon_count; ++i) rc_release(old[i]);
+        free(old);
+    }
+    ctx->hot.lean_syms = symbols; ctx->hot.lean_canon = canon; ctx->lean_canon_count = table->count;
     return true;
 }
 const char *rc_text(const RcValue *v) { return v && (rc_type(v) == RC_STRING || rc_type(v) == RC_SYMBOL) ? v->as.text.data : NULL; }

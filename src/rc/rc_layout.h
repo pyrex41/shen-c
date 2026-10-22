@@ -83,8 +83,8 @@ typedef struct {
     bool error_active, acyclic;
     size_t since_collection, collection_interval;
     /* Lean C (lean_rt.h): the kernel's resolved symbols, and each symbol's
-     * canonical function binding as recorded by rc_lean_install after the
-     * bootstrap installs (NULL when absent or not immortal). Both are NULL
+     * canonical function binding as recorded (and owned) by rc_lean_install
+     * after the bootstrap installs (NULL when unbound). Both are NULL
      * until installed. lean_unsealed is SHEN_RC_UNSEALED, read once at
      * context creation: lean kernel calls then go through their symbols. */
     RcValue *const *lean_syms;

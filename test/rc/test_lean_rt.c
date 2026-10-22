@@ -28,10 +28,19 @@ static void guards(RcContext *ctx) {
     assert(rc_lean_install(ctx, &table));
     RcValue *hd = lean_sym(ctx, 0);
     assert(hd == rc_symbol(ctx, "hd") && !strcmp(rc_text(lean_sym(ctx, 1)), "cons?"));
-    /* Primitives are immortal: canonical. Undefined and mortal: never. */
+    /* Bound symbols are canonical; an unbound one never matches. The table
+     * owns a mortal canonical closure (boxed builtins are mortal too). */
     assert(lean_canonical(ctx, 0) && lean_canonical(ctx, 1));
     assert(!lean_canonical(ctx, 2) && lean_hot(ctx)->lean_canon[2] == NULL);
-    assert(!lean_canonical(ctx, 3) && lean_hot(ctx)->lean_canon[3] == NULL);
+    assert(lean_canonical(ctx, 3) && lean_hot(ctx)->lean_canon[3] == mortal);
+    size_t owners = rc_refcount(mortal);
+    RcValue *replacement = rc_closure(ctx, 1, identity, 0, NULL);
+    assert(rc_function_set(ctx, mortal_sym, replacement) && !lean_canonical(ctx, 3));
+    rc_collect(ctx);
+    assert(rc_refcount(mortal) == owners - 1 && rc_type(mortal) == RC_CLOSURE);
+    assert(lean_is_canonical(ctx, 3, mortal) && !lean_is_canonical(ctx, 3, replacement));
+    assert(rc_function_set(ctx, mortal_sym, mortal) && lean_canonical(ctx, 3));
+    rc_release(replacement);
     /* Rebinding and restoring (as compile-kl's reader capture does). */
     RcValue *original = rc_function_get(ctx, hd);
     assert(lean_is_canonical(ctx, 0, original));
@@ -40,8 +49,10 @@ static void guards(RcContext *ctx) {
     assert(!lean_canonical(ctx, 0) && lean_is_canonical(ctx, 0, original) && !lean_is_canonical(ctx, 0, other));
     assert(rc_function_set(ctx, hd, original));
     assert(lean_canonical(ctx, 0));
-    /* Reinstalling replaces the tables. */
-    assert(rc_lean_install(ctx, &table) && lean_canonical(ctx, 1));
+    /* Reinstalling replaces the tables and releases the old owners. */
+    owners = rc_refcount(mortal);
+    assert(rc_lean_install(ctx, &table) && lean_canonical(ctx, 1) && lean_canonical(ctx, 3));
+    assert(rc_refcount(mortal) == owners);
     rc_release(other); rc_release(original); rc_release(mortal); rc_release(mortal_sym);
 }
 
