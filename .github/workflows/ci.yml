@@ -16,7 +16,11 @@ jobs:
   nix:
     name: rc-${{ matrix.os }}-${{ matrix.cc }}
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 40
+    # Tight Perceus inlines refcount and primitive fast paths into generated
+    # code. Under gcc that made the build-heavy steps about 1.7x slower
+    # (certify 359 -> 603 s, toolchain 456 -> 772 s on ubuntu-latest), which
+    # passed the old 40-minute limit.
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
