@@ -13,6 +13,7 @@ option(SHEN_RC_ACYCLIC_ONLY "Omit cycle collection and reject cycle-creating wri
 option(SHEN_RC_SANITIZE "Enable ASan/UBSan for the RC runtime and tests" OFF)
 option(SHEN_RC_STATS_COUNTERS "Count every retain/release in RcStats (diagnostic)" OFF)
 option(SHEN_RC_LTO "Enable supported Release interprocedural optimization" ON)
+option(SHEN_RC_LEAN "Emit the kernel with the lean C backend (rc-build --lean)" OFF)
 if(SHEN_RC_LTO AND NOT SHEN_RC_SANITIZE)
   # Forward toolchain/platform settings into the IPO project's link probe.
   if(POLICY CMP0137)
@@ -53,7 +54,7 @@ if(SHEN_RC_ACYCLIC_ONLY)
   target_compile_definitions(shenrc PUBLIC SHEN_RC_ACYCLIC_ONLY)
   set(RC_TEST_NAMES acyclic)
 else()
-  set(RC_TEST_NAMES cycles primitives eval env bool_tail apply_fast object_cache immediates collection reuse acyclic symbols primitive_fast equal canonical_primitives canonical_numeric canonical_hash canonical_cons generic_builtin_tag trial_work_union callee identity_tail list_length eval_plan rooted_call condition_borrow)
+  set(RC_TEST_NAMES cycles primitives eval env bool_tail apply_fast object_cache immediates collection reuse acyclic symbols primitive_fast equal canonical_primitives canonical_numeric canonical_hash canonical_cons generic_builtin_tag trial_work_union callee identity_tail list_length eval_plan rooted_call condition_borrow lean_rt)
 endif()
 enable_testing()
 foreach(_test IN LISTS RC_TEST_NAMES)
@@ -76,12 +77,16 @@ list(TRANSFORM RC_KERNEL_INPUTS PREPEND "${CMAKE_CURRENT_SOURCE_DIR}/")
 execute_process(COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/release_manifest.py"
   --manifest "${SHEN_RELEASE_MANIFEST}" --header "${CMAKE_CURRENT_BINARY_DIR}/release.h"
   COMMAND_ERROR_IS_FATAL ANY)
-add_executable(rc-build tools/rc-build.c)
+add_executable(rc-build tools/rc-build.c src/rc/lean.c)
 target_include_directories(rc-build PRIVATE "${CMAKE_CURRENT_BINARY_DIR}")
 target_link_libraries(rc-build PRIVATE shenrc)
 set(RC_KERNEL_C "${CMAKE_CURRENT_BINARY_DIR}/rc-kernel.c")
+set(RC_LEAN_FLAG "")
+if(SHEN_RC_LEAN)
+  set(RC_LEAN_FLAG --lean)
+endif()
 add_custom_command(OUTPUT "${RC_KERNEL_C}"
-  COMMAND $<TARGET_FILE:rc-build> --emit-kernel
+  COMMAND $<TARGET_FILE:rc-build> ${RC_LEAN_FLAG} --emit-kernel
           "${CMAKE_CURRENT_SOURCE_DIR}" "${RC_KERNEL_C}"
   DEPENDS rc-build ${RC_KERNEL_INPUTS}
   COMMENT "Compiling the complete Shen kernel with the Boehm-free compiler"

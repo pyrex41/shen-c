@@ -1173,6 +1173,8 @@ bool rc_emit_program(RcContext *ctx,FILE *out,RcValue *const *kernel,size_t nker
       bad(p,"invalid expression module options");
     *options->literal_bindings=NULL;*options->literal_count=0;
   }
+  if(options->lean&&(options->module_entry||options->expression_entry||options->conservative_ownership))
+    bad(p,"lean code is only emitted for a kernel bootstrap");
   if(options->module_entry){
     if(!identifier(options->module_entry)||nuser||options->source_events||options->source_metadata||options->emit_main||options->init_name)
       bad(p,"invalid native module options");
@@ -1202,6 +1204,7 @@ bool rc_emit_program(RcContext *ctx,FILE *out,RcValue *const *kernel,size_t nker
         " * Owned slots, explicit drops, and cleanup on every return path. */\n"
         "#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n"
         "#include <stdint.h>\n#include <math.h>\n#include \"rc.h\"\n#include \"primitives.h\"\n#include \"eval.h\"\n#define RC_LAYOUT_FAST 1\n#include \"rc_layout.h\"\n",out);
+  if(options->lean&&options->lean->prelude&&!options->lean->prelude(options->lean->state,ctx,out))bad(p,"lean prelude failed");
   if(options->module_entry)fputs("static bool (*rc_module_define)(RcContext*,RcValue*,RcValue*);\n",out);
   if(options->expression_entry)fprintf(out,"#define RC_LITERAL_SYMBOL_OFFSET %zu\n",p->nruntime_literals);
   if(p->nsymbols&&!options->expression_entry) {
@@ -1320,6 +1323,7 @@ bool rc_emit_program(RcContext *ctx,FILE *out,RcValue *const *kernel,size_t nker
       if(d->kernel_phase&&d->exact_hashkey&&!strcmp(p->symbols[d->symbol],"shen.hashkey")){hashkey=true;break;}
     if(certified&&hashkey) fputs("  if(!rc_install_native_hash(ctx)) return false;\n",out);
   }
+  if(options->lean&&options->lean->bootstrap&&!options->lean->bootstrap(options->lean->state,ctx,out))bad(p,"lean bootstrap failed");
   if(kt.p) fputs(kt.p,out);
   if(options->init_name&&*options->init_name) {
     Buf init={.owner=p}; quoted(&init,options->init_name);

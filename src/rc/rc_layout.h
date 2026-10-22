@@ -82,6 +82,14 @@ typedef struct RcPage {
 typedef struct {
     bool error_active, acyclic;
     size_t since_collection, collection_interval;
+    /* Lean C (lean_rt.h): the kernel's resolved symbols, and each symbol's
+     * canonical function binding as recorded by rc_lean_install after the
+     * bootstrap installs (NULL when absent or not immortal). Both are NULL
+     * until installed. lean_unsealed is SHEN_RC_UNSEALED, read once at
+     * context creation: lean kernel calls then go through their symbols. */
+    RcValue *const *lean_syms;
+    RcValue *const *lean_canon;
+    bool lean_unsealed;
 } RcContextHot;
 static inline RcContext *rc_value_context(const RcValue *v) {
     return ((const RcPage *)((uintptr_t)v & ~(uintptr_t)(RC_PAGE_BYTES - 1)))->ctx;

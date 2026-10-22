@@ -70,6 +70,13 @@ jobs:
         run: |
           receipt=$(python3 -c 'from pathlib import Path; print(sorted(Path("evidence/rc").glob("certify-*/result.json"))[-1])')
           nix develop -c env CC=${{ matrix.cc }} scripts/test-rc-toolchain.sh --canonical-receipt "$receipt"
+      - name: Lean C kernel (RC_LEAN=1) IR checks, kernel differential and certified suite
+        if: matrix.cc == 'clang'
+        run: |
+          nix develop -c make CC=${{ matrix.cc }} -j2 RC_LEAN=1 RC_BUILD=obj/lean RC_BIN=bin/lean/rt RC_TOOL_BIN=bin/lean
+          nix develop -c test/rc/test_lean_ir.sh bin/lean/rc-build
+          nix develop -c test/rc/test_lean_kernel.sh bin/lean/rc-build
+          nix develop -c env RC_LEAN=1 make CC=${{ matrix.cc }} certify
       - name: CMake/Ninja RC build and tests
         run: |
           nix develop -c cmake -G Ninja -B build-ci \

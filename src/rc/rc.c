@@ -259,6 +259,7 @@ RcContext *rc_context_new_with_policy(RcCyclePolicy policy) {
     if (ctx) {
         ctx->hot.collection_interval = 4096; ctx->adaptive_collection = true;
         const char *strict=getenv("SHEN_RC_VERIFY_NATIVE");ctx->verify_native=strict&&strcmp(strict,"0");
+        const char *unsealed=getenv("SHEN_RC_UNSEALED");ctx->hot.lean_unsealed=unsealed&&*unsealed&&strcmp(unsealed,"0");
         const char *backend=getenv("SHEN_RC_EXECUTION");
         ctx->execution_mode=!backend||!strcmp(backend,"native")?0:!strcmp(backend,"interpret")?1:-1;
 #if defined(SHEN_RC_ACYCLIC_ONLY) && SHEN_RC_ACYCLIC_ONLY
@@ -675,6 +676,7 @@ void rc_context_free(RcContext *ctx) {
     perceus_report(ctx);
 #endif
     rc_native_compile_free(ctx->native_compile_state);
+    free((void *)ctx->hot.lean_canon);
     while (ctx->compiled_symbols) {
         RcResolvedSymbols *next = ctx->compiled_symbols->next;
         free(ctx->compiled_symbols);
@@ -976,6 +978,21 @@ RcValue *const *rc_symbol_table(RcContext *ctx, const RcSymbolTable *table) {
     ctx->compiled_symbols = entry;
     *cached = entry;
     return entry->values;
+}
+bool rc_lean_install(RcContext *ctx, const RcSymbolTable *table) {
+    RcValue *const *symbols = rc_symbol_table(ctx, table);
+    if (!symbols) return false;
+    RcValue **canon = calloc(table->count ? table->count : 1, sizeof(*canon));
+    if (!canon) { rc_error(ctx, "out of memory"); return false; }
+    /* Borrowed: only an immortal binding can never be freed and its address
+     * reused by another closure, so only it may stand for "unchanged". */
+    for (size_t i = 0; i < table->count; ++i) {
+        RcValue *fn = symbols[i]->as.text.function;
+        canon[i] = fn && fn->refs == RC_IMMORTAL ? fn : NULL;
+    }
+    free((void *)ctx->hot.lean_canon);
+    ctx->hot.lean_syms = symbols; ctx->hot.lean_canon = canon;
+    return true;
 }
 const char *rc_text(const RcValue *v) { return v && (rc_type(v) == RC_STRING || rc_type(v) == RC_SYMBOL) ? v->as.text.data : NULL; }
 size_t rc_text_length(const RcValue *v) { return v && (rc_type(v) == RC_STRING || rc_type(v) == RC_SYMBOL) ? v->as.text.length : 0; }

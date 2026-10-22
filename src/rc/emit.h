@@ -1,6 +1,17 @@
 #ifndef SHEN_RC_EMIT_H
 #define SHEN_RC_EMIT_H
 #include "rc.h"
+/* Optional lean C backend (src/rc/lean.c), set only by rc-build --lean for
+ * the kernel phase (--emit-kernel, or an application's kernel forms).
+ * prelude writes declarations after the runtime includes; bootstrap writes
+ * statements that run once every bootstrap install (primitives, kernel
+ * defuns, overwrites, numeric hash) is done and before the kernel's
+ * top-level forms. Either may be NULL. */
+typedef struct RcLeanEmitHook {
+    void *state;
+    bool (*prelude)(void *state, RcContext *ctx, FILE *out);
+    bool (*bootstrap)(void *state, RcContext *ctx, FILE *out);
+} RcLeanEmitHook;
 /* All AST values are borrowed for the duration of emission. No evaluator is
  * invoked to compile a form. On failure the context contains the diagnostic. */
 typedef struct {
@@ -30,6 +41,7 @@ typedef struct {
     RcValue *function_parameters; /* Non-NULL: entry returns a closure, not its result. */
     RcValue ***literal_bindings;
     size_t *literal_count;
+    const RcLeanEmitHook *lean; /* NULL: no lean code (every other mode) */
 } RcEmitOptions;
 typedef bool (*RcModuleDefine)(RcContext *, RcValue *name, RcValue *function);
 typedef struct {
