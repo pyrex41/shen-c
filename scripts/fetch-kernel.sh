@@ -2,7 +2,7 @@
 # Vendor a pinned ShenOSKernel release byte for byte.
 #
 # USAGE
-#   scripts/fetch-kernel.sh [--check] [--version 43.1.2|43.1] [ShenOSKernel-VERSION.tar.gz]
+#   scripts/fetch-kernel.sh [--check] [--version 43.1-ec16a9f|43.1] [ShenOSKernel-VERSION.tar.gz]
 #
 # With no archive the release asset is downloaded. Its SHA-256 is verified
 # before extraction. Without --check the vendored trees are replaced by the
@@ -10,7 +10,9 @@
 # difference. The port boot module (shen/src/port) is not part of a release
 # and is never touched.
 #
-# 43.1.2 (default; pyrex41/shen-sources, 43.1 plus shen-sources#117):
+# 43.1-ec16a9f (default): an unmodified build of Shen-Language/shen-sources
+# commit ec16a9f, tizoc's merge of #117 (published as pyrex41/shen-sources
+# release upstream-ec16a9f; (version) is "43.1"):
 #   klambda/*.kl and LICENSE.txt -> shen/src/kl/
 #   sources/                     -> shen/src/shen/
 #   tests/                       -> shen/test/43.1/
@@ -21,7 +23,7 @@
 set -eu
 
 check=0
-KERNEL_VERSION=43.1.2
+KERNEL_VERSION=43.1-ec16a9f
 while [ $# -gt 0 ]; do
   case $1 in
     --check) check=1; shift ;;
@@ -31,20 +33,19 @@ while [ $# -gt 0 ]; do
 done
 
 case $KERNEL_VERSION in
-  43.1.2)
-    KERNEL_REPO=pyrex41/shen-sources
-    KERNEL_COMMIT=7978392f4911f050f5b76af27bcafae51a6c774d
-    KERNEL_SHA256=c7ec855c701d1c7c47b4c6e2e2d9c7a0df5b7fa11c10e361167de604742c2fd7
+  43.1-ec16a9f)
+    KERNEL_REPO=pyrex41/shen-sources KERNEL_TAG=upstream-ec16a9f
+    KERNEL_COMMIT=ec16a9fa4fc2e87e2aa336fb1ae30e8ac2266394
+    KERNEL_SHA256=060066a8f84d9a2f7d41cb3b37b986a8d4653279752b739b5063cd648d9baacd
     KL_DIR=shen/src/kl SOURCES_DIR=shen/src/shen ;;
   43.1)
-    KERNEL_REPO=Shen-Language/shen-sources
+    KERNEL_REPO=Shen-Language/shen-sources KERNEL_TAG=shen-43.1
     KERNEL_COMMIT=715824a52b55e9c81a9501df8548ff3edd8411f5
     KERNEL_SHA256=900eedef44f440af78f9395ed06e689ce1604546fc309f5bc7c8bc84cc651920
     KL_DIR=shen/releases/43.1/kl SOURCES_DIR= ;;
   *) echo "error: unknown kernel version $KERNEL_VERSION" >&2; exit 2 ;;
 esac
 TESTS_DIR=shen/test/43.1
-KERNEL_TAG=shen-$KERNEL_VERSION
 KERNEL_FOLDER=ShenOSKernel-$KERNEL_VERSION
 KERNEL_URL=https://github.com/$KERNEL_REPO/releases/download/$KERNEL_TAG/$KERNEL_FOLDER.tar.gz
 

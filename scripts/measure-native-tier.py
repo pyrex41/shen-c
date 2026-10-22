@@ -45,7 +45,7 @@ def main():
     ap.add_argument('--out', type=Path)
     args = ap.parse_args()
     args.base, args.candidate = str(Path(args.base).resolve()), str(Path(args.candidate).resolve())
-    release = load_release(ROOT / 'shen/releases/shenoskernel-43.1.2.json')
+    release = load_release(ROOT / 'shen/releases/shenoskernel-43.1-ec16a9f.json')
     tmp = Path(tempfile.mkdtemp(prefix='native-tier-measure-'))
     on = {'SHEN_RC_NATIVE': '1', 'SHEN_RC_NATIVE_CACHE': str(tmp / 'cache-on')}
     forced = {'SHEN_RC_NATIVE': '1', 'SHEN_RC_NATIVE_THRESHOLD': '1',

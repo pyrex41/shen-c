@@ -1,45 +1,57 @@
-# Kernel 43.1.2
+# Kernel: upstream ec16a9f
 
-The default kernel moves from pristine community ShenOSKernel 43.1 (#21) to
-**ShenOSKernel 43.1.2**: 43.1 plus the type-checker fix from
-Shen-Language/shen-sources#117. The fix is released on pyrex41/shen-sources.
+The default kernel moves from the official ShenOSKernel 43.1 release (#21)
+to an **unmodified build of Shen-Language/shen-sources commit ec16a9f**.
+That commit is tizoc's merge of
+[#117](https://github.com/Shen-Language/shen-sources/pull/117), the
+type-checker fix, merged unchanged. Upstream has not cut a release
+containing it and does not commit `klambda/`, so the rendered build is
+published as pyrex41/shen-sources release `upstream-ec16a9f`. The release
+tag points at upstream commit `ec16a9fa4fc2e87e2aa336fb1ae30e8ac2266394`
+itself, and no tracked file is edited. `(version)` is `"43.1"`, as on
+upstream master.
 
-- Tag `shen-43.1.2`, commit `7978392f4911f050f5b76af27bcafae51a6c774d`.
-- `ShenOSKernel-43.1.2.tar.gz` has sha256
-  `c7ec855c701d1c7c47b4c6e2e2d9c7a0df5b7fa11c10e361167de604742c2fd7`.
+- `ShenOSKernel-43.1-ec16a9f.tar.gz` has sha256
+  `060066a8f84d9a2f7d41cb3b37b986a8d4653279752b739b5063cd648d9baacd`; its
+  `VERSION` file says `43.1-ec16a9f`.
 - `scripts/fetch-kernel.sh --check` verifies the vendored copy;
-  `--version 43.1` checks the 43.1 copy.
+  `--version 43.1` checks the official 43.1 copy.
+- This replaces the earlier fork label 43.1.2. The kernel code is identical:
+  every `.kl` file matches 43.1.2 byte for byte except `init.kl`, which
+  differs only in the version string.
 
 ## Layout
 
-| Release | Manifest | KLambda | Sources | Suite |
+| Kernel | Manifest | KLambda | Sources | Suite |
 |---|---|---|---|---|
-| 43.1.2 (default) | `shen/releases/shenoskernel-43.1.2.json` | `shen/src/kl` | `shen/src/shen` | `shen/test/43.1` |
-| 43.1 | `shen/releases/shenoskernel-43.1.json` | `shen/releases/43.1/kl` | not vendored | `shen/test/43.1` |
+| upstream ec16a9f (default) | `shen/releases/shenoskernel-43.1-ec16a9f.json` | `shen/src/kl` | `shen/src/shen` | `shen/test/43.1` |
+| official 43.1 | `shen/releases/shenoskernel-43.1.json` | `shen/releases/43.1/kl` | not vendored | `shen/test/43.1` |
 
-The two releases ship byte-identical `tests/`, so they share one suite
-directory: 154 assertions in 40 reports. Both use the same port boot module,
-`shen/src/port/shen-c-boot.kl`. To build 43.1, use
+Both kernels ship byte-identical `tests/`, so they share one suite
+directory: 154 assertions in 40 reports. Both use the same port boot
+module, `shen/src/port/shen-c-boot.kl`. Both manifests have
+`kernel_version` `43.1`, because that is what `(version)` reports; the
+default manifest also records `kernel_build: upstream-ec16a9f`. To build
+official 43.1, use
 `make RC_RELEASE_MANIFEST=shen/releases/shenoskernel-43.1.json`.
 
 ## What changes in the kernel
 
-The tarballs differ in 13 KLambda files. After normalising variable numbers,
-only three defuns change and two are added. All of them are in `t-star.kl`,
-apart from the version string in `init.kl`.
+Compared with official 43.1, 13 KLambda files differ in bytes. After
+normalising generated variable numbers, only two defuns in `t-star.kl`
+change, and two are added:
 
 - `shen.by-hypothesis` and `shen.search-user-datatypes` now return `false`
-  at once for an empty hypothesis or datatype list. Otherwise they deref the
-  subject once and delegate to the new `shen.by-hypothesis-h` and
-  `shen.search-user-datatypes-h`. In 43.1 the subject was dereferenced again
-  for every hypothesis.
-- `shen.initialise-environment` sets `*version*` to `"43.1.2"`.
+  at once for an empty hypothesis or datatype list.
+- Otherwise they deref the subject once and delegate to the new
+  `shen.by-hypothesis-h` and `shen.search-user-datatypes-h`. In 43.1 the
+  subject was dereferenced again for every hypothesis.
 
 ## Templates and fast paths
 
 shen-c's kernel-shaped optimisations are the `assoc`, `shen.pvar?` and
 `shen.lazyderef` templates and the numeric `shen.hashkey` wrapper. None of
-those definitions changes in 43.1.2. The generated kernel still installs
+those definitions changes in ec16a9f. The generated kernel still installs
 each fast path once, and `test/rc/test_kernel_overrides.py`,
 `test_prolog_fast.sh` and `test_guarded_assoc.sh` pass.
 
@@ -52,10 +64,10 @@ new predicate was emitted on its own:
 | Definition | Self tail call compiled to a loop | Tail calls |
 |---|---|---|
 | 43.1 `shen.by-hypothesis` | yes | 3 |
-| 43.1.2 `shen.by-hypothesis-h` | yes | 3 |
+| ec16a9f `shen.by-hypothesis-h` | yes | 3 |
 | 43.1 `shen.search-user-datatypes` | yes | 1 |
-| 43.1.2 `shen.search-user-datatypes-h` | yes | 1 |
-| 43.1.2 `shen.by-hypothesis` (wrapper) | n/a; tail-calls the `-h` predicate | 1 |
+| ec16a9f `shen.search-user-datatypes-h` | yes | 1 |
+| ec16a9f `shen.by-hypothesis` (wrapper) | n/a; tail-calls the `-h` predicate | 1 |
 
 So the recursion over long hypothesis lists still runs in constant C stack.
 

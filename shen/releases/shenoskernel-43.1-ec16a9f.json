@@ -1,7 +1,8 @@
 {
   "schema": 1,
-  "kernel_version": "43.1.2",
-  "lineage": "community ShenOSKernel 43.1 plus the type-checker fix (Shen-Language/shen-sources#117), released on pyrex41/shen-sources",
+  "kernel_version": "43.1",
+  "kernel_build": "upstream-ec16a9f",
+  "lineage": "community ShenOSKernel: an unmodified build of Shen-Language/shen-sources commit ec16a9f, the merge of #117 (type-checker fix) into 43.1; (version) is \"43.1\" as upstream has it",
   "kernel_directory": "shen/src/kl",
   "modules": [
     "sys",
@@ -208,7 +209,7 @@
     "shen/src/kl/extension-namespaces.kl": "609c28b6b07216c09effa3b734a3f94d0497c898d55222f0f1b0e04ce8ff334f",
     "shen/src/kl/extension-programmable-pattern-matching.kl": "1a483e0aafdd4b40f3f587df7bf283400c994066374af05c165c76045a9183fe",
     "shen/src/kl/extension-type-annotations.kl": "79e428e9dbbdc34fd80cae2f18c2232d97c9d9c09b61c212547aed9f95bbdfea",
-    "shen/src/kl/init.kl": "bc2b52eac077d06401723fcab30ed39692848d64ec4875f8b14a0558801d66ed",
+    "shen/src/kl/init.kl": "e5334613255cd8278ee0113e67d01fdaa3f9c8d8861fd888a06e8098b814c5e0",
     "shen/src/kl/load.kl": "6bd0ea6edfa23ce90bc797db75de74318fe170b90b82e20a3caac0f48445a0ef",
     "shen/src/kl/macros.kl": "997163774e46c0f0d02fbd19efa61dd41219aed7b6c100056c8d474c24253919",
     "shen/src/kl/prolog.kl": "3bff799fcf08f3200d99be2add455baf3515daf3cbe625a3ad02a6328385151d",
@@ -304,7 +305,7 @@
     "shen/src/shen/README.txt": "2f971c0ae8ae45a5b0ac894e06d2199a07e208fa3de1c92dc16a3b73fe805e7d",
     "shen/src/shen/backend.shen": "0375b0debf4af2f96ee801c5b61a7a5f4da710aaf320975c3dbc7d5380ee4b16",
     "shen/src/shen/core.shen": "30856d41cd8ca7f68a7b6ad7040320157e699eb478afe38c128f93ff0c04df20",
-    "shen/src/shen/declarations.shen": "11a324031fe45b707cdfb0c7c5280228da7c52e1b0bd83466b49c72302e3155b",
+    "shen/src/shen/declarations.shen": "dfcfdd72554519b84561b70dafd0a42d91b28fe4d40da8895f8eed6d3fbaba06",
     "shen/src/shen/dict.shen": "352dd1ca86cf1c84b50c274e9742819550b96fb573ba7934d57a3e49508ecd93",
     "shen/src/shen/load.shen": "81c5167bb15667a2b09944b4322dee2cd29479996378aa4387b3abc5eba172ba",
     "shen/src/shen/macros.shen": "7ef1b115e44a6735eb0e2e0d5f953b63e21f9e799d45ffaf64fbc919180ebf1a",
@@ -323,10 +324,11 @@
   "expected_outputs": {},
   "archive": {
     "repository": "https://github.com/pyrex41/shen-sources",
-    "tag": "shen-43.1.2",
-    "commit": "7978392f4911f050f5b76af27bcafae51a6c774d",
-    "url": "https://github.com/pyrex41/shen-sources/releases/download/shen-43.1.2/ShenOSKernel-43.1.2.tar.gz",
-    "sha256": "c7ec855c701d1c7c47b4c6e2e2d9c7a0df5b7fa11c10e361167de604742c2fd7",
-    "note": "shen/src/kl, shen/src/shen and shen/test/43.1 are byte-identical copies of the archive's klambda/ (plus LICENSE.txt), sources/ and tests/; scripts/fetch-kernel.sh --check verifies them. The tests/ tree is byte-identical to 43.1's, so both manifests share shen/test/43.1. shen/src/port is the only local kernel input."
+    "tag": "upstream-ec16a9f",
+    "upstream_repository": "https://github.com/Shen-Language/shen-sources",
+    "commit": "ec16a9fa4fc2e87e2aa336fb1ae30e8ac2266394",
+    "url": "https://github.com/pyrex41/shen-sources/releases/download/upstream-ec16a9f/ShenOSKernel-43.1-ec16a9f.tar.gz",
+    "sha256": "060066a8f84d9a2f7d41cb3b37b986a8d4653279752b739b5063cd648d9baacd",
+    "note": "An unmodified build of upstream ec16a9f (tizoc merged #117 unchanged); the tag points at that upstream commit. shen/src/kl, shen/src/shen and shen/test/43.1 are byte-identical copies of the archive's klambda/ (plus LICENSE.txt), sources/ and tests/; scripts/fetch-kernel.sh --check verifies them. tests/ is byte-identical to 43.1's, so both manifests share shen/test/43.1. shen/src/port is the only local kernel input."
   }
 }

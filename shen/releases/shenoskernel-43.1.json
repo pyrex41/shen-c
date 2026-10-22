@@ -308,6 +308,6 @@
     "commit": "715824a52b55e9c81a9501df8548ff3edd8411f5",
     "url": "https://github.com/Shen-Language/shen-sources/releases/download/shen-43.1/ShenOSKernel-43.1.tar.gz",
     "sha256": "900eedef44f440af78f9395ed06e689ce1604546fc309f5bc7c8bc84cc651920",
-    "note": "shen/releases/43.1/kl and shen/test/43.1 are byte-identical copies of the archive's klambda/ (plus LICENSE.txt) and tests/; scripts/fetch-kernel.sh --check --version 43.1 verifies them. The release's sources/ are not vendored for 43.1; shen/src/shen holds 43.1.2's. shen/src/port is the only local kernel input."
+    "note": "shen/releases/43.1/kl and shen/test/43.1 are byte-identical copies of the archive's klambda/ (plus LICENSE.txt) and tests/; scripts/fetch-kernel.sh --check --version 43.1 verifies them. The release's sources/ are not vendored for 43.1; shen/src/shen holds upstream ec16a9f's. shen/src/port is the only local kernel input."
   }
 }

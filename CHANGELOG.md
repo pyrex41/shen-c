@@ -2,14 +2,16 @@
 
 ## Unreleased
 
-- **Kernel 43.1.2.** Default to ShenOSKernel 43.1.2 (pyrex41/shen-sources tag
-  `shen-43.1.2`, commit 7978392; tarball sha256 `c7ec855c…2fd7`): community
-  43.1 plus the type-checker fix from Shen-Language/shen-sources#117, which
-  derefs the subject once in `shen.by-hypothesis` and
-  `shen.search-user-datatypes` and returns `false` at once for an empty
-  hypothesis or datatype list. `(version)` is `43.1.2`. Pristine 43.1 stays
-  selectable through `shen/releases/shenoskernel-43.1.json`;
-  `scripts/fetch-kernel.sh --version 43.1|43.1.2 --check` verifies either.
+- **Kernel: upstream ec16a9f.** Default to an unmodified build of
+  Shen-Language/shen-sources commit ec16a9f, tizoc's merge of the
+  type-checker fix #117 into 43.1 (pinned from pyrex41/shen-sources release
+  `upstream-ec16a9f`, tarball sha256 `060066a8…acd`). `shen.by-hypothesis`
+  and `shen.search-user-datatypes` deref the subject once and return `false`
+  at once for an empty hypothesis or datatype list. `(version)` stays
+  `43.1`. The official 43.1 release stays selectable through
+  `shen/releases/shenoskernel-43.1.json`;
+  `scripts/fetch-kernel.sh --version 43.1-ec16a9f|43.1 --check` verifies
+  either.
 - **Kernel lineage change.** Embed the community ShenOSKernel 43.1
   (Shen-Language/shen-sources tag `shen-43.1`, commit 715824a; release
   tarball sha256 `900eedef…920`) byte for byte, replacing Mark Tarver's S43

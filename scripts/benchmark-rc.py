@@ -73,7 +73,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--config', type=Path, required=True)
     parser.add_argument('--out', type=Path, required=True)
-    parser.add_argument('--manifest', type=Path, default=Path(__file__).resolve().parents[1] / 'shen/releases/shenoskernel-43.1.2.json')
+    parser.add_argument('--manifest', type=Path, default=Path(__file__).resolve().parents[1] / 'shen/releases/shenoskernel-43.1-ec16a9f.json')
     parser.add_argument('--suite', type=Path, help='Must match the selected manifest suite')
     parser.add_argument('--timeout', type=float, default=400)
     parser.add_argument('--output-mib', type=int, default=64)
