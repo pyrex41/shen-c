@@ -186,12 +186,20 @@ static inline int rc_fast_consp_owned(RcContext *ctx, RcValue *fn, RcValue **arg
 static inline bool rc_fast_identity_class(const RcValue *v) {
     return v && (rc_fast_immediate(v) || v->type == RC_NIL || v->type == RC_SYMBOL);
 }
+/* Within one context a symbol or [] is equal only to itself: other symbols
+ * have other names, and no other type compares equal to them. The other
+ * operand must not be a pending tail request, which the checked path keeps. */
+static inline bool rc_fast_unique_against(const RcValue *v, const RcValue *other) {
+    return !rc_fast_immediate(v) && (v->type == RC_SYMBOL || v->type == RC_NIL) &&
+           (rc_fast_immediate(other) || other->type != RC_TAIL);
+}
 static inline int rc_fast_eq_owned(RcContext *ctx, RcValue *fn, RcValue **args) {
     RcValue *a = args[0], *b = args[1];
     if (rc_fast_builtin(ctx, fn, RC_FAST_EQ) && rc_fast_ok(ctx) && a && b &&
         (rc_fast_immediate(a) || rc_value_context_or_nil(ctx, a)) &&
         (rc_fast_immediate(b) || rc_value_context_or_nil(ctx, b)) &&
-        (a == b || (rc_fast_identity_class(a) && rc_fast_identity_class(b)))) {
+        (a == b || (rc_fast_identity_class(a) && rc_fast_identity_class(b)) ||
+         rc_fast_unique_against(a, b) || rc_fast_unique_against(b, a))) {
         args[0] = NULL; args[1] = NULL;
         rc_fast_release(a); rc_fast_release(b);
         return a == b;
