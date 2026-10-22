@@ -32,9 +32,9 @@ typedef const RcPackedEntry *(*RcBundleLookup)(const char *,const char *,size_t)
 typedef struct Module { struct Module *next; char key[33]; char *source; size_t length; bool owns_source; void *handle; RcValue *(*entry)(RcContext *,RcValue *); } Module;
 typedef struct {
  RcContext *ctx; char *cc,*cflags,*cache,*include; char abi[33];
- bool cache_owned,stats,fallback_noticed; Module *modules;
+ bool cache_owned,stats,fallback_noticed,retry_failed; Module *modules;
  void *bundle_handle; RcBundleLookup bundle_lookup; size_t bundle_hits;
- size_t lazy_closures,templates,definitions,evaluations,compiles,hits,memory_hits,emitted_bytes,failures,fallbacks;
+ size_t lazy_closures,templates,definitions,evaluations,compiles,hits,memory_hits,emitted_bytes,failures,fallbacks,failed_hits;
  double emit_s,compile_s,compile_user_s,compile_system_s,load_s,timeout;
  size_t cache_limit;
 } Tier;
@@ -95,9 +95,12 @@ static void compiler_usage(Tier *t,const struct rusage *before){
  t->compile_user_s+=(after.ru_utime.tv_sec-before->ru_utime.tv_sec)+(after.ru_utime.tv_usec-before->ru_utime.tv_usec)*1e-6;
  t->compile_system_s+=(after.ru_stime.tv_sec-before->ru_stime.tv_sec)+(after.ru_stime.tv_usec-before->ru_stime.tv_usec)*1e-6;
 }
-/* Returns 0 on success, 127 when the compiler could not be executed. */
+/* Returns 0 on success, the compiler's exit status, 124 on timeout, 125 when
+ * its diagnostics exceed 8 MiB, 126 when it could not be run to completion
+ * (out of memory, wait failure, killed by a signal) and 127 when it could
+ * not be executed. */
 static int run_compiler(Tier *t,const char *source,const char *object,const char *log) {
-    char *flags=join(t->cflags," " RC_TIER_HOST_FLAGS); if(!flags)return 1;
+    char *flags=join(t->cflags," " RC_TIER_HOST_FLAGS); if(!flags)return 126;
     char *argv[96]; size_t n=0; char incflag[4200];
     argv[n++]=t->cc;
     n=words(flags,argv,n,80);
@@ -130,7 +133,7 @@ static int run_compiler(Tier *t,const char *source,const char *object,const char
     for(;;){
       pid_t got=waitpid(pid,&status,WNOHANG);
       if(got==pid)break;
-      if(got<0&&errno!=EINTR)return 1;
+      if(got<0&&errno!=EINTR)return 126;
       struct stat info;bool too_large=!stat(log,&info)&&info.st_size>8*1024*1024;
       if(now()>=deadline||too_large){
        kill(-pid,SIGKILL);kill(pid,SIGKILL);while(waitpid(pid,&status,0)<0&&errno==EINTR){}
@@ -139,7 +142,7 @@ static int run_compiler(Tier *t,const char *source,const char *object,const char
       struct timespec pause={0,10000000};nanosleep(&pause,NULL);
     }
     compiler_usage(t,&usage);
-    if(!WIFEXITED(status))return 1;
+    if(!WIFEXITED(status))return 126;
     return WEXITSTATUS(status);
 }
 static bool private_directory(const char *path) {
@@ -166,7 +169,7 @@ static char *env_or(const char *name,const char *fallback) {
 void rc_native_compile_free(void *state) {
  Tier *t=state;if(!t)return;
  RcStats runtime=rc_stats(t->ctx);
- if(t->stats)fprintf(stderr,"RC_NATIVE lazy_closures=%zu templates=%zu definitions=%zu evaluations=%zu compiles=%zu disk_hits=%zu bundle_hits=%zu memory_hits=%zu emitted_bytes=%zu failures=%zu fallbacks=%zu interpreter_entries=%zu emit_s=%.6f compile_s=%.6f compile_user_s=%.6f compile_system_s=%.6f load_s=%.6f retain_calls=%zu release_calls=%zu system_allocations=%zu pair_reuses=%zu collections=%zu cycle_objects_freed=%zu peak_objects=%zu live_bytes=%zu\n",t->lazy_closures,t->templates,t->definitions,t->evaluations,t->compiles,t->hits,t->bundle_hits,t->memory_hits,t->emitted_bytes,t->failures,t->fallbacks,rc_interpreter_entries(t->ctx),t->emit_s,t->compile_s,t->compile_user_s,t->compile_system_s,t->load_s,runtime.retain_calls,runtime.release_calls,runtime.system_allocations,runtime.pair_reuses,runtime.collections,runtime.cycle_objects_freed,runtime.peak_objects,runtime.live_bytes);
+ if(t->stats)fprintf(stderr,"RC_NATIVE lazy_closures=%zu templates=%zu definitions=%zu evaluations=%zu compiles=%zu disk_hits=%zu bundle_hits=%zu memory_hits=%zu emitted_bytes=%zu failures=%zu fallbacks=%zu failed_hits=%zu interpreter_entries=%zu emit_s=%.6f compile_s=%.6f compile_user_s=%.6f compile_system_s=%.6f load_s=%.6f retain_calls=%zu release_calls=%zu system_allocations=%zu pair_reuses=%zu collections=%zu cycle_objects_freed=%zu peak_objects=%zu live_bytes=%zu\n",t->lazy_closures,t->templates,t->definitions,t->evaluations,t->compiles,t->hits,t->bundle_hits,t->memory_hits,t->emitted_bytes,t->failures,t->fallbacks,t->failed_hits,rc_interpreter_entries(t->ctx),t->emit_s,t->compile_s,t->compile_user_s,t->compile_system_s,t->load_s,runtime.retain_calls,runtime.release_calls,runtime.system_allocations,runtime.pair_reuses,runtime.collections,runtime.cycle_objects_freed,runtime.peak_objects,runtime.live_bytes);
  while(t->modules){Module *m=t->modules;t->modules=m->next;if(m->owns_source)free(m->source);free(m);}
  if(t->cache_owned){
   if(t->include){for(size_t i=0;i<sizeof(rc_tier_headers)/sizeof(*rc_tier_headers);i++){char *f=path_of(t->include,rc_tier_headers[i].name,"");if(f)unlink(f);free(f);}rmdir(t->include);}
@@ -229,6 +232,7 @@ static Tier *initialize(RcContext *ctx){
  const char *timeout=getenv("SHEN_RC_COMPILE_TIMEOUT");t->timeout=timeout?strtod(timeout,NULL):120;
  if(!isfinite(t->timeout)||t->timeout<=0)t->timeout=120;
  const char *stats=getenv("SHEN_RC_NATIVE_STATS");t->stats=stats&&strcmp(stats,"0");
+ const char *retry=getenv("SHEN_RC_COMPILE_RETRY");t->retry_failed=retry&&*retry&&strcmp(retry,"0");
  const char *cache=getenv("SHEN_RC_NATIVE_CACHE");
  if(cache&&(!strcmp(cache,"off")||!strcmp(cache,"0"))){
   const char *tmp=getenv("TMPDIR");t->cache=path_of(tmp&&*tmp?tmp:"/tmp","shen-rc-compile-XXXXXX","");
@@ -267,19 +271,19 @@ static void prune_cache(Tier *t){
  while((e=readdir(dir))){
   if(strlen(e->d_name)!=34||strcmp(e->d_name+32,".c"))continue;
   CacheEntry item={0};memcpy(item.key,e->d_name,32);
-  const char *suffix[]={".c",".so",".receipt",".log"};
-  for(size_t j=0;j<4;j++){char *p=path_of(t->cache,item.key,suffix[j]);struct stat st;if(p&&!lstat(p,&st)&&S_ISREG(st.st_mode)){item.bytes+=(size_t)st.st_size;if(!j)item.age=st.st_mtime;}free(p);}
+  const char *suffix[]={".c",".so",".receipt",".log",".failed"};
+  for(size_t j=0;j<5;j++){char *p=path_of(t->cache,item.key,suffix[j]);struct stat st;if(p&&!lstat(p,&st)&&S_ISREG(st.st_mode)){item.bytes+=(size_t)st.st_size;if(!j)item.age=st.st_mtime;}free(p);}
   CacheEntry *grown=realloc(items,(n+1)*sizeof(*items));if(!grown)break;items=grown;items[n++]=item;total+=item.bytes;
  }
  closedir(dir);if(n>1)qsort(items,n,sizeof(*items),oldest_first);
  for(size_t i=0;i<n&&total>t->cache_limit;i++){
-  const char *suffix[]={".c",".so",".receipt",".log"};for(size_t j=0;j<4;j++){char *p=path_of(t->cache,items[i].key,suffix[j]);if(p)unlink(p);free(p);}total-=items[i].bytes;
+  const char *suffix[]={".c",".so",".receipt",".log",".failed"};for(size_t j=0;j<5;j++){char *p=path_of(t->cache,items[i].key,suffix[j]);if(p)unlink(p);free(p);}total-=items[i].bytes;
  }
  free(items);
 }
 static size_t entry_bytes(Tier *t,const char *key){
- size_t bytes=0;const char *suffix[]={".c",".so",".receipt",".log"};
- for(size_t j=0;j<4;j++){char *p=path_of(t->cache,key,suffix[j]);struct stat st;if(p&&!lstat(p,&st)&&S_ISREG(st.st_mode))bytes+=(size_t)st.st_size;free(p);}return bytes;
+ size_t bytes=0;const char *suffix[]={".c",".so",".receipt",".log",".failed"};
+ for(size_t j=0;j<5;j++){char *p=path_of(t->cache,key,suffix[j]);struct stat st;if(p&&!lstat(p,&st)&&S_ISREG(st.st_mode))bytes+=(size_t)st.st_size;free(p);}return bytes;
 }
 /* A serialized accounting file avoids rescanning every cache artifact on
  * every module load. Missing/invalid accounting reconstructs it by scanning. */
@@ -300,11 +304,31 @@ static bool object_receipt(const char *object,const char *receipt,bool publish){
  return ok&&(publish?write_file(receipt,sum,32):same_file(receipt,sum,32));
 }
 static bool bind_entry(Module *m){*(void**)&m->entry=dlsym(m->handle,"rc_expression_module");return m->entry!=NULL;}
+/* A failed compile leaves a .failed note next to its .c source: the status
+ * and, for a timeout, the time limit in force. While the source is the same
+ * (the key already covers the compiler, flags and ABI), later runs interpret
+ * the form instead of compiling it again: deterministic compiler errors and
+ * oversized diagnostics always, timeouts unless the limit is now longer.
+ * SHEN_RC_COMPILE_RETRY=1 ignores the notes; SHEN_RC_VERIFY_NATIVE=1 never
+ * falls back, so it always compiles. Spawn failures and abnormal exits are
+ * not recorded. */
+static bool remembered_failure(Tier *t,const char *note,int *status){
+ FILE *f=fopen(note,"r");if(!f)return false;
+ int recorded=0;double limit=0;bool ok=fscanf(f,"status=%d timeout=%lf",&recorded,&limit)==2;fclose(f);
+ if(!ok||recorded<=0||recorded==126||recorded==127)return false;
+ if(recorded==124&&t->timeout>limit)return false;
+ *status=recorded;return true;
+}
+static void remember_failure(Tier *t,const char *note,int status){
+ if(status<=0||status==126||status==127)return;
+ char text[96];int n=snprintf(text,sizeof(text),"status=%d timeout=%.17g\n",status,t->timeout);
+ (void)write_file(note,text,(size_t)n);
+}
 static RcValue *compile_execute(RcContext *ctx,RcValue *expression,RcValue *parameters){
  Tier *t=*rc_native_compile_slot(ctx);if(!t||!t->include)t=initialize(ctx);if(!t)return NULL;
  t->evaluations++;
  RcValue *root=rc_retain(expression),**bindings=NULL,*literals=NULL,*result=NULL;size_t nb=0,length=0;
- char *text=NULL,*source=NULL,*object=NULL,*receipt=NULL,*lockfile=NULL,*log=NULL;int lock=-1;size_t previous_bytes=0;
+ char *text=NULL,*source=NULL,*object=NULL,*receipt=NULL,*lockfile=NULL,*log=NULL,*note=NULL;int lock=-1;size_t previous_bytes=0;
  double begin=now();FILE *out=open_memstream(&text,&length);
  RcEmitOptions opts={.expression_entry="rc_expression_module",.function_parameters=parameters,.literal_bindings=&bindings,.literal_count=&nb};
  bool emitted=out&&rc_emit_program(ctx,out,&root,1,NULL,0,&opts,NULL);if(out&&fclose(out))emitted=false;
@@ -324,8 +348,8 @@ static RcValue *compile_execute(RcContext *ctx,RcValue *expression,RcValue *para
    result=m->entry(ctx,literals);goto done;
   }
  }
- source=path_of(t->cache,key,".c");object=path_of(t->cache,key,".so");receipt=path_of(t->cache,key,".receipt");lockfile=path_of(t->cache,"cache",".lock");log=path_of(t->cache,key,".log");
- if(!source||!object||!receipt||!lockfile||!log){rc_error(ctx,"native compiler: out of memory");goto done;}
+ source=path_of(t->cache,key,".c");object=path_of(t->cache,key,".so");receipt=path_of(t->cache,key,".receipt");lockfile=path_of(t->cache,"cache",".lock");log=path_of(t->cache,key,".log");note=path_of(t->cache,key,".failed");
+ if(!source||!object||!receipt||!lockfile||!log||!note){rc_error(ctx,"native compiler: out of memory");goto done;}
  lock=open(lockfile,O_RDWR|O_CREAT,0600);if(lock<0||flock(lock,LOCK_EX)){rc_error(ctx,"native compiler: cannot lock cache entry");goto done;}
  previous_bytes=entry_bytes(t,key);
  m=calloc(1,sizeof(*m));if(!m){rc_error(ctx,"native compiler: out of memory");goto done;}
@@ -336,16 +360,24 @@ static RcValue *compile_execute(RcContext *ctx,RcValue *expression,RcValue *para
  }
  if(!m->handle){
   char temp[4300];snprintf(temp,sizeof(temp),"%s.%ld.tmp",object,(long)getpid());
-  if(!write_file(source,text,length)){rc_error(ctx,"native compiler: cannot write C source");free(m);goto done;}
-  double compile_begin=now();int status=run_compiler(t,source,temp,log);t->compiles++;t->compile_s+=now()-compile_begin;
+  int status=0;bool remembered=rc_interpreter_allow_fallback(ctx)&&!t->retry_failed&&
+   same_file(source,text,length)&&remembered_failure(t,note,&status);
+  if(remembered)t->failed_hits++;
+  else {
+   if(!write_file(source,text,length)){rc_error(ctx,"native compiler: cannot write C source");free(m);goto done;}
+   double compile_begin=now();status=run_compiler(t,source,temp,log);t->compiles++;t->compile_s+=now()-compile_begin;
+   if(status)remember_failure(t,note,status);else unlink(note);
+  }
   if(status){
    unlink(temp);free(m);
    if(!rc_interpreter_allow_fallback(ctx)){rc_error(ctx,"native compilation failed (status %d); diagnostics: %s",status,log);goto done;}
    /* Nothing was published or executed, so interpreting the form is
-    * equivalent. A later process retries the compile. The interpreted body
+    * equivalent. remember_failure noted when a later process may retry. The interpreted body
     * may compile again, so release the cache lock first. */
    t->fallbacks++;
-   if(!t->fallback_noticed){t->fallback_noticed=true;fprintf(stderr,"shen-rc: native compilation failed (status %d); interpreting instead; diagnostics: %s\n",status,log);}
+   if(!t->fallback_noticed){t->fallback_noticed=true;
+    if(remembered)fprintf(stderr,"shen-rc: native compilation failed earlier (status %d); interpreting instead; SHEN_RC_COMPILE_RETRY=1 compiles again; diagnostics: %s\n",status,log);
+    else fprintf(stderr,"shen-rc: native compilation failed (status %d); interpreting instead; diagnostics: %s\n",status,log);}
    account_cache(t,previous_bytes,entry_bytes(t,key));flock(lock,LOCK_UN);close(lock);lock=-1;
    result=rc_interpret_fallback(ctx,root,parameters);goto done;
   }
@@ -361,7 +393,7 @@ static RcValue *compile_execute(RcContext *ctx,RcValue *expression,RcValue *para
 done:
  if(lock>=0){account_cache(t,previous_bytes,entry_bytes(t,key));flock(lock,LOCK_UN);close(lock);}
  if(!result)t->failures++;
- free(bindings);free(text);free(source);free(object);free(receipt);free(lockfile);free(log);rc_release(literals);rc_release(root);return result;
+ free(bindings);free(text);free(source);free(object);free(receipt);free(lockfile);free(log);free(note);rc_release(literals);rc_release(root);return result;
 }
 
 static bool symbol_named(RcValue *x,const char *name){return rc_type(x)==RC_SYMBOL&&!strcmp(rc_text(x),name);}

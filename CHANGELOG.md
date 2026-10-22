@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- A load-time C compile that fails or times out is remembered in the native
+  cache (`KEY.failed`), so later runs interpret that form without paying for
+  the compile again. A timeout is retried once `SHEN_RC_COMPILE_TIMEOUT` is
+  longer than the recorded limit; `SHEN_RC_COMPILE_RETRY=1` retries every
+  remembered failure. `SHEN_RC_NATIVE_STATS` reports `failed_hits=`.
 - **Kernel: upstream ec16a9f.** Default to an unmodified build of
   Shen-Language/shen-sources commit ec16a9f, tizoc's merge of the
   type-checker fix #117 into 43.1 (pinned from pyrex41/shen-sources release
