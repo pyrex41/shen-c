@@ -83,6 +83,9 @@ struct RcContext {
     size_t function_generation,prolog_guard_generation;
     RcValue *prolog_guard_keys[3];
     unsigned prolog_guard_mask;
+    /* Native hash: function generation + 1 at which its kernel dependencies
+     * were last found unchanged (0: never). */
+    size_t native_hash_generation;
     RcStats stats;
 #if SHEN_RC_STATS_COUNTERS
     /* Reuse-headroom diagnostics (SHEN_RC_PERCEUS_STATS); see
@@ -795,6 +798,12 @@ bool rc_prolog_guard_get(RcContext *ctx,RcValue *const *keys,unsigned *mask) {
 void rc_prolog_guard_set(RcContext *ctx,RcValue *const *keys,unsigned mask) {
     ctx->prolog_guard_generation=ctx->function_generation;ctx->prolog_guard_mask=mask;
     for(size_t i=0;i<3;i++)ctx->prolog_guard_keys[i]=keys[i];
+}
+bool rc_native_hash_certified(RcContext *ctx) {
+    return ctx->function_generation<SIZE_MAX&&ctx->native_hash_generation==ctx->function_generation+1;
+}
+void rc_native_hash_certify(RcContext *ctx) {
+    ctx->native_hash_generation=ctx->function_generation<SIZE_MAX?ctx->function_generation+1:0;
 }
 RcValue *rc_function_slot_borrowed(RcContext *ctx,RcValue *symbol) {
     return belongs(ctx,symbol)&&rc_type(symbol)==RC_SYMBOL ? symbol->as.text.function : NULL;

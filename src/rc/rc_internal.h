@@ -43,6 +43,9 @@ RcValue *rc_function_slot_borrowed(RcContext *,RcValue *symbol);
 RcValue *rc_vector_slot_borrowed(RcValue *vector,size_t index);
 /* One-entry function-dependency cache, private to guarded Prolog bodies.
  * Keys are exact intern roots; every rc_function_set invalidates the cache. */
+/* Native hash certificate: valid until the next function publication. */
+bool rc_native_hash_certified(RcContext *);
+void rc_native_hash_certify(RcContext *);
 bool rc_prolog_guard_get(RcContext *,RcValue *const *keys,unsigned *mask);
 void rc_prolog_guard_set(RcContext *,RcValue *const *keys,unsigned mask);
 /* Prepared evaluation private contracts. Local coordinates are emitted only

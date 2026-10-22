@@ -653,6 +653,75 @@ bool rc_install_numeric_hash_borrowed(RcContext *c, RcNative expected) {
  for(size_t i=1;i<8;i++) rc_release(captures[i]);
  rc_release(wrapper); rc_release(original); rc_release(name); return (!match || ok) && !rc_has_error(c);
 }
+/* Native hash: a bit-identical port of the kernel's KL hash for symbols,
+ * strings and exact integers.
+ *   (hash V N) = (shen.mod (shen.hashkey V) N), with 0 mapped to 1;
+ *   shen.hashkey is shen.prodbutzero over the bytes of (shen.app V "" shen.a);
+ *   shen.prodbutzero skips zero bytes, multiplies while the product is at most
+ *   10000000000 and adds after that;
+ *   shen.mod is the remainder by repeated doubling and subtraction.
+ * Every function the kernel path reaches is snapshotted at install. After any
+ * function publication the snapshot is checked again; if anything changed,
+ * or the input is another kind of value (lists, vectors, floats, closures,
+ * streams, a non-positive or inexact modulus), the original kernel closure
+ * runs instead. */
+static const char *const native_hash_deps[]={
+ "shen.mod","shen.modh","shen.multiples","shen.hashkey","shen.prodbutzero",
+ "map","shen.map-h","reverse","shen.reverse-help","string->n","explode",
+ "shen.explode-h","shen.app","shen.arg->str","fail","shen.list?","empty?",
+ "shen.str->str","shen.atom->str","shen.+string?","hdstr","pos","tlstr","str","cn",
+ "cons?","string?","absvector?","number?","cons","hd","tl","=","+","-","*",">"
+};
+#define NATIVE_HASH_DEPS (sizeof native_hash_deps/sizeof *native_hash_deps)
+static bool native_hash_deps_unchanged(RcContext *c,RcValue *self) {
+ if(rc_native_hash_certified(c))return true;
+ for(size_t i=0;i<NATIVE_HASH_DEPS;i++)
+  if(rc_function_slot_borrowed(c,rc_capture(self,1+i))!=rc_capture(self,1+NATIVE_HASH_DEPS+i))return false;
+ rc_native_hash_certify(c);return true;
+}
+static RcValue *native_hash(RcContext *c,RcValue *self,size_t argc,RcValue *const *argv) {
+ RcValue *original=rc_capture(self,0);
+ if(argc!=2)return rc_apply(c,original,argc,argv);
+ RcValue *key=argv[0],*modulus=argv[1];int64_t m;
+ if(!integer_arg(modulus,&m)||m<=0||!native_hash_deps_unchanged(c,self))return rc_apply(c,original,argc,argv);
+ const unsigned char *bytes;size_t n;char digits[24];
+ switch(rc_type(key)){
+ case RC_SYMBOL:
+  /* (= V (fail)) prints as "..." */
+  if(symbol_is(key,"shen.fail!")){bytes=(const unsigned char *)"...";n=3;}
+  else{bytes=(const unsigned char *)rc_text(key);n=rc_text_length(key);}
+  break;
+ case RC_STRING:bytes=(const unsigned char *)rc_text(key);n=rc_text_length(key);break;
+ case RC_NUMBER:{
+  if(!rc_number_is_exact_integer(key))return rc_apply(c,original,argc,argv);
+  int len=snprintf(digits,sizeof digits,"%" PRId64,rc_integer_value(key));
+  bytes=(const unsigned char *)digits;n=(size_t)len;break;}
+ default:return rc_apply(c,original,argc,argv);
+ }
+ int64_t key_hash=1;
+ for(size_t i=0;i<n;i++){
+  if(!bytes[i])continue;
+  key_hash=key_hash>10000000000?key_hash+bytes[i]:key_hash*bytes[i];
+ }
+ int64_t r=key_hash%m;
+ return rc_integer(c,r?r:1);
+}
+bool rc_install_native_hash(RcContext *c) {
+ RcValue *name=rc_symbol(c,"hash"),*original=name?rc_function_lookup(c,name):NULL;
+ if(!original){rc_release(name);rc_clear_error(c);return true;}
+ RcValue *captures[1+2*NATIVE_HASH_DEPS]={original};bool ok=true;
+ for(size_t i=0;i<NATIVE_HASH_DEPS;i++){
+  RcValue *s=rc_symbol(c,native_hash_deps[i]),*f=s?rc_function_lookup(c,s):NULL;
+  captures[1+i]=s;captures[1+NATIVE_HASH_DEPS+i]=f;
+  if(!s||!f)ok=false;
+ }
+ RcValue *wrapper=ok?rc_closure_static(rc_closure(c,2,native_hash,1+2*NATIVE_HASH_DEPS,captures)):NULL;
+ ok=wrapper&&rc_function_set(c,name,wrapper);
+ for(size_t i=0;i<1+2*NATIVE_HASH_DEPS;i++)rc_release(captures[i]);
+ rc_release(wrapper);rc_release(name);
+ if(!ok&&rc_has_error(c))return false;
+ rc_clear_error(c);return true;
+}
 bool rc_install_primitives(RcContext *c){
  struct utsname host;
  if(uname(&host)!=0){rc_error(c,"Cannot determine host OS: %s",strerror(errno));return false;}

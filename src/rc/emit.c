@@ -16,7 +16,7 @@ typedef struct Program Program;
 typedef struct { Program *owner; char *p; size_t n, cap; } Buf;
 typedef struct { const char *name; int slot; } Binding;
 typedef struct Allocation { struct Allocation *prev,*next; max_align_t align; unsigned char data[]; } Allocation;
-typedef struct ModuleDef { size_t symbol; int id,arity; bool exact_hashkey,kernel_phase; struct ModuleDef *next; } ModuleDef;
+typedef struct ModuleDef { size_t symbol; int id,arity; bool exact_hashkey,kernel_phase; struct ModuleDef *next; bool exact_hash_dep; } ModuleDef;
 typedef struct ModuleCall { size_t symbol; struct ModuleCall *next; bool call, tail; } ModuleCall;
 struct Program { RcEmitOptions options; RcContext *ctx; jmp_buf failure; Allocation *allocations; Buf functions,literals,constants,transparent_do,pvar_identities; const char **symbols; size_t nsymbols,symbol_capacity; ModuleDef *module_defs; ModuleCall *module_calls; bool user_phase,top_body,drop_range_used,drop_range_emitted,transparent_do_used,lazyderef_used; RcValue **runtime_literals; size_t nruntime_literals; RcValue *metadata_root; int next,next_literal,next_constant; long defuns, lambdas, tops; };
 static _Noreturn void bad(Program *p,const char *message) { rc_error(p->ctx,"%s",message); longjmp(p->failure,1); }
@@ -339,6 +339,7 @@ static bool exact_second_identity(RcValue *params,RcValue *body,int arity) {
  return arity==2&&is_symbol(body)&&is_symbol(first(params))&&is_symbol(second(params))&&
         !strcmp(name(body),name(second(params)))&&strcmp(name(first(params)),name(second(params)));
 }
+static bool native_hash_dependency(Program *p,const char *name,RcValue *params,RcValue *body);
 static bool exact_hashkey(Program *p,RcValue *params,RcValue *body) {
  if(count(p,params)!=1||!is_symbol(first(params))||!is_pair(body)||!named(first(body),"let"))return false;
  RcValue *la=rest(body);if(count(p,la)!=3)return false;
@@ -644,7 +645,8 @@ static int expr_inner(RcEmitFn *f,RcValue *x,int tail,const Live *after){
   { ModuleDef *d=alloc(p,sizeof(*d));
     *d=(ModuleDef){symbol_index(f,name(first(args))),id,count(p,second(args)),
                    named(first(args),"shen.hashkey")&&exact_hashkey(p,second(args),at(p,args,2)),
-                   !p->user_phase,p->module_defs};
+                   !p->user_phase,p->module_defs,
+                   native_hash_dependency(p,name(first(args)),second(args),at(p,args,2))};
     p->module_defs=d;
   }
   symbol_slot(f,t,name(first(args)));check(f,t);
@@ -813,6 +815,59 @@ static bool exact_prolog(RcEmitFn *f,RcValue *params,RcValue *body,bool lazy) {
   ? "(defun shen.lazyderef (V2111 V2112) (if (shen.pvar? V2111) (let W2113 (<-address V2112 (<-address V2111 1)) (if (= W2113 shen.-null-) V2111 (shen.lazyderef W2113 V2112))) V2111))"
   : "(defun shen.pvar? (V2109) (and (absvector? V2109) (= (trap-error (<-address V2109 0) (lambda Z2110 shen.not-pvar)) shen.pvar)))";
  return kernel_template(f->p,params,body,text,"Prolog template comparison failed");
+}
+/* The kernel definitions that native hash (primitives.c) ports. The runtime
+ * replaces hash only when the kernel module defined every one of them with
+ * exactly this text, up to renaming of bound variables. */
+static const struct { const char *name, *text; } native_hash_templates[]={
+ {"hash",
+  "(defun hash (V4002 V4003) (let W4004 (shen.mod (shen.hashkey V4002) V4003) (if (= W4004 0) 1 W4004)))"},
+ {"shen.mod",
+  "(defun shen.mod (V4010 V4011) (shen.modh V4010 (shen.multiples V4010 (cons V4011 ()))))"},
+ {"shen.modh",
+  "(defun shen.modh (V4024 V4025) (cond ((= 0 V4024) 0) ((= () V4025) V4024) ((and (cons? V4025) (> (hd V4025) V4024)) (if (empty? (tl V4025)) V4024 (shen.modh V4024 (tl V4025)))) ((cons? V4025) (shen.modh (- V4024 (hd V4025)) V4025)) (true (simple-error \"implementation error in shen.modh\"))))"},
+ {"shen.multiples",
+  "(defun shen.multiples (V4016 V4017) (cond ((and (cons? V4017) (> (hd V4017) V4016)) (tl V4017)) ((cons? V4017) (shen.multiples V4016 (cons (* 2 (hd V4017)) V4017))) (true (simple-error \"implementation error in shen.multiples\"))))"},
+ {"shen.prodbutzero",
+  "(defun shen.prodbutzero (V4008 V4009) (cond ((= () V4008) V4009) ((and (cons? V4008) (= 0 (hd V4008))) (shen.prodbutzero (tl V4008) V4009)) ((cons? V4008) (if (> V4009 10000000000) (shen.prodbutzero (tl V4008) (+ V4009 (hd V4008))) (shen.prodbutzero (tl V4008) (* V4009 (hd V4008))))) (true (shen.f-error shen.prodbutzero))))"},
+ {"map",
+  "(defun map (V4082 V4083) (shen.map-h V4082 V4083 ()))"},
+ {"shen.map-h",
+  "(defun shen.map-h (V4084 V4085 V4086) (cond ((= () V4085) (reverse V4086)) ((cons? V4085) (shen.map-h V4084 (tl V4085) (cons (V4084 (hd V4085)) V4086))) (true (shen.f-error shen.map-h))))"},
+ {"reverse",
+  "(defun reverse (V4048) (shen.reverse-help V4048 ()))"},
+ {"shen.reverse-help",
+  "(defun shen.reverse-help (V4053 V4054) (cond ((= () V4053) V4054) ((cons? V4053) (shen.reverse-help (tl V4053) (cons (hd V4053) V4054))) (true (simple-error \"attempt to reverse a non-list\n\"))))"},
+ {"explode",
+  "(defun explode (V4074) (shen.explode-h (shen.app V4074 \"\" shen.a)))"},
+ {"shen.explode-h",
+  "(defun shen.explode-h (V4077) (cond ((= \"\" V4077) ()) ((shen.+string? V4077) (cons (hdstr V4077) (shen.explode-h (tlstr V4077)))) (true (simple-error \"implementation error in explode-h\"))))"},
+ {"shen.app",
+  "(defun shen.app (V7039 V7040 V7041) (cn (shen.arg->str V7039 V7041) V7040))"},
+ {"shen.arg->str",
+  "(defun shen.arg->str (V7045 V7046) (cond ((= V7045 (fail)) \"...\") ((shen.list? V7045) (shen.list->str V7045 V7046)) ((string? V7045) (shen.str->str V7045 V7046)) ((absvector? V7045) (shen.vector->str V7045 V7046)) (true (shen.atom->str V7045))))"},
+ {"fail",
+  "(defun fail () shen.fail!)"},
+ {"shen.list?",
+  "(defun shen.list? (V7090) (or (empty? V7090) (cons? V7090)))"},
+ {"empty?",
+  "(defun empty? (V3970) (cond ((= () V3970) true) (true false)))"},
+ {"shen.str->str",
+  "(defun shen.str->str (V7064 V7065) (cond ((= shen.a V7065) V7064) (true (@s (n->string 34) (@s V7064 (n->string 34))))))"},
+ {"shen.atom->str",
+  "(defun shen.atom->str (V7088) (trap-error (str V7088) (lambda Z7089 (shen.funexstring))))"},
+ {"shen.+string?",
+  "(defun shen.+string? (V868) (cond ((= \"\" V868) false) (true (string? V868))))"},
+ {"hdstr",
+  "(defun hdstr (V4039) (pos V4039 0))"},
+};
+#define NATIVE_HASH_TEMPLATES (sizeof native_hash_templates/sizeof *native_hash_templates)
+static bool native_hash_dependency(Program *p,const char *name,RcValue *params,RcValue *body) {
+ if(p->user_phase||p->options.conservative_ownership||p->options.expression_entry)return false;
+ for(size_t i=0;i<NATIVE_HASH_TEMPLATES;i++)
+  if(!strcmp(name,native_hash_templates[i].name))
+   return kernel_template(p,params,body,native_hash_templates[i].text,"hash template comparison failed");
+ return false;
 }
 static void finish_function(RcEmitFn *f,int id,int arity,int r){
  Program *p=f->p;
@@ -1249,6 +1304,21 @@ bool rc_emit_program(RcContext *ctx,FILE *out,RcValue *const *kernel,size_t nker
     for(ModuleDef *d=p->module_defs;d;d=d->next)
       if(d->kernel_phase&&!strcmp(p->symbols[d->symbol],"shen.hashkey")&&d->exact_hashkey) { hash_id=d->id; break; }
     if(hash_id>=0) fprintf(out,"  if(!rc_install_numeric_hash_borrowed(ctx,rc_native_%d)) return false;\n",hash_id);
+  }
+  {
+    /* Native hash needs shen.hashkey's certified shape and every ported
+     * definition's exact text. */
+    bool certified=!options->conservative_ownership;
+    for(size_t i=0;certified&&i<NATIVE_HASH_TEMPLATES;i++){
+      bool found=false;
+      for(ModuleDef *d=p->module_defs;d;d=d->next)
+        if(d->kernel_phase&&d->exact_hash_dep&&!strcmp(p->symbols[d->symbol],native_hash_templates[i].name)){found=true;break;}
+      certified=found;
+    }
+    bool hashkey=false;
+    for(ModuleDef *d=p->module_defs;d;d=d->next)
+      if(d->kernel_phase&&d->exact_hashkey&&!strcmp(p->symbols[d->symbol],"shen.hashkey")){hashkey=true;break;}
+    if(certified&&hashkey) fputs("  if(!rc_install_native_hash(ctx)) return false;\n",out);
   }
   if(kt.p) fputs(kt.p,out);
   if(options->init_name&&*options->init_name) {
