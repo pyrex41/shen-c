@@ -56,7 +56,9 @@ jobs:
                                        for row in data['cases'].values())
           assert data['available'] == ['shen-c'], data['available']
           assert len(data['cases']) == 74, len(data['cases'])
-          assert counts == {'PASS': 70, 'SKIP': 2, 'KERNEL_SKIP': 2}, counts
+          # ShenOSKernel 43.1 boots source-form handlers and the namespaces
+          # extension, so the two capability SKIPs of Tarver's S43 now run.
+          assert counts == {'PASS': 72, 'KERNEL_SKIP': 2}, counts
           print('Pinned CLI corpus:', dict(counts))
           PYTHON
       - uses: actions/upload-artifact@v4

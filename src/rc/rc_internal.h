@@ -75,4 +75,7 @@ int rc_execution_mode(const RcContext *);
 void **rc_native_compile_slot(RcContext *);
 size_t rc_interpreter_entries(const RcContext *);
 bool rc_interpreter_enter(RcContext *);
+/* Permanently permits interpreter entry after a failed native compile; false
+ * under SHEN_RC_VERIFY_NATIVE, which keeps compiler failures fatal. */
+bool rc_interpreter_allow_fallback(RcContext *);
 #endif

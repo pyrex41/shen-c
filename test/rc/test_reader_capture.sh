@@ -106,6 +106,25 @@ with tempfile.TemporaryDirectory(prefix='shen-rc-reader-capture-') as temporary:
 (value *capture-state*)
 ''', verify=persistent_state)
 
+    def property_removal(program, events):
+        put = '(property capture-gone capture-property 44)'
+        gone = '(unproperty capture-gone capture-property)'
+        assert put in events and gone in events and events.index(put) < events.index(gone), events
+        # update-lambda-table to arity 0 removes the stale lambda form.
+        assert '(property capture-zero arity 0)' in events, events
+        assert '(unproperty capture-zero shen.lambda-form)' in events, events
+
+    run('reader-time property removal and arity-0 lambda table update', '''
+(define capture-zero X -> X)
+(defmacro capture-remove [capture-remove!] ->
+  (do (put capture-gone capture-property 44)
+      (do (unput capture-gone capture-property) 42)))
+(defmacro capture-zero-arity [capture-zero!] ->
+  (do (update-lambda-table capture-zero 0) 42))
+(capture-remove!)
+(capture-zero!)
+''', verify=property_removal)
+
     def escaped_atoms(program, events):
         literal = '"\\\"\\x00\\\\\\xff"'
         assert '(defun capture-bytes () ' + literal + ')' in program, program

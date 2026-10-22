@@ -16,6 +16,17 @@ int main(void){
  RcContext *c=rc_context_new();assert(c&&rc_install_primitives(c));
  RcValue *osname=rc_symbol(c,"*os*");RcValue *os=rc_global_get(c,osname);assert(os&&rc_type(os)==RC_STRING&&rc_text_length(os));rc_release(osname);rc_release(os);
  RcValue *a=rc_integer(c,7),*b=rc_integer(c,2),*args[]={a,b},*v;
+ /* symbol? and variable? follow the kernel's analysis of the printed name. */
+ static const struct { const char *name; bool symbol, variable; } names[]={
+  {"abc",true,false},{"Abc",true,true},{"X1",true,true},{"Xy-z",true,true},{"_x",true,false},
+  {"-",true,false},{"{",true,false},{":",true,false},{",",true,false},{"123",false,false},
+  {"A b",false,false},{"a b",false,false},{"",false,false},{"1.5e3",false,false},
+  {"\xc3\xa9",false,false},{"A\xc3\xa9",false,false},{"true",false,false},{"|",false,false}};
+ for(size_t i=0;i<sizeof(names)/sizeof(*names);i++){
+  RcValue *sym=rc_symbol(c,names[i].name),*one[]={sym};assert(sym);
+  v=call(c,"symbol?",1,one);assert(v&&rc_is_true(v)==names[i].symbol);rc_release(v);
+  v=call(c,"variable?",1,one);assert(v&&rc_is_true(v)==names[i].variable);rc_release(v);rc_release(sym);
+ }
  v=call(c,"do",2,args);assert(v==b);rc_release(v);
  v=call(c,"/",2,args);assert(v&&rc_number_value(v)==3.5);rc_release(v);
  v=call(c,"+",2,args);assert(v&&rc_integer_value(v)==9);rc_release(v);
@@ -51,10 +62,10 @@ int main(void){
  RcValue *replacement=rc_closure(c,2,fallback,0,NULL);candidate=rc_cons(c,a,rc_nil());
  v=rc_cons_call_reuse(c,replacement,candidate,b,rc_nil(),false);assert(v&&rc_integer_value(v)==42);rc_release(v);rc_release(replacement);
  FILE *file=tmpfile();assert(file);RcValue *stream=rc_stream_with_direction(c,file,true,false),*outargs[]={text,stream};
- v=call(c,"shen.write-string",2,outargs);assert(v==text);rc_release(v);rewind(file);char bytes[3];assert(fread(bytes,1,3,file)==3&&!memcmp(bytes,"a\0b",3));
+ v=call(c,"write-string",2,outargs);assert(v==text);rc_release(v);rewind(file);char bytes[3];assert(fread(bytes,1,3,file)==3&&!memcmp(bytes,"a\0b",3));
  assert(!call(c,"read-byte",1,&stream)&&rc_has_error(c));rc_clear_error(c);
  v=call(c,"close",1,&stream);assert(v&&rc_is_nil(v));rc_release(v);
- assert(!call(c,"shen.write-string",2,outargs)&&rc_has_error(c));rc_clear_error(c);
+ assert(!call(c,"write-string",2,outargs)&&rc_has_error(c));rc_clear_error(c);
  FILE *input=tmpfile();assert(input);fputc(255,input);rewind(input);RcValue *in=rc_stream_with_direction(c,input,true,true);
  v=call(c,"read-byte",1,&in);assert(v&&rc_integer_value(v)==255);rc_release(v);v=call(c,"read-byte",1,&in);assert(v&&rc_integer_value(v)==-1);rc_release(v);
  v=call(c,"char-stream?",1,&in);assert(v&&rc_is_false(v));rc_release(v);

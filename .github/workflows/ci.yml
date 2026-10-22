@@ -50,10 +50,14 @@ jobs:
           nix develop -c scripts/test-rc.sh --audit-only bin/rc-build
       - name: Strict native cache and compiler failures
         run: nix develop -c python3 scripts/test-compile-cache.py bin/rc/test_native_compile
+      - name: Compiler failure and timeout fall back to identical interpreted results
+        run: nix develop -c python3 scripts/test-compile-fallback.py bin/shen-c
       - name: Compile-first pinned suite (cold and cached; zero interpreter entries)
         run: nix develop -c python3 scripts/test-compile-first.py bin/shen-c --timeout 1200
       - name: Reader capture and unsupported-state boundaries
         run: nix develop -c test/rc/test_reader_capture.sh ./bin/shen-rc
+      - name: Native overrides match the pinned kernel's definitions
+        run: nix develop -c python3 test/rc/test_kernel_overrides.py bin/shen-c
       - name: Shen source compilation
         run: nix develop -c env CC=${{ matrix.cc }} test/rc/test_source_compile.sh
       - name: Certify pinned release runme.shen
@@ -86,8 +90,10 @@ jobs:
   sanitize:
     name: rc-asan-ubsan
     runs-on: ubuntu-latest
-    # Measured 636-825 s after the constant-data emitter; keep 2x headroom.
-    timeout-minutes: 30
+    # Measured 636-825 s after the constant-data emitter. The 43.1 kernel
+    # (dict, init, extensions) emits ~25% more C, and its instrumented build
+    # exceeded certify's 300 s default; keep headroom for both.
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
       - uses: cachix/install-nix-action@v31
@@ -102,6 +108,6 @@ jobs:
           nix develop -c make -f Makefile.rc CC=clang RC_SANITIZE=1 RC_BUILD=obj/rc-sanitize RC_BIN=bin/rc-sanitize RC_TOOL_BIN=bin/sanitize bin/sanitize/rc-build
           nix develop -c env CC=clang CFLAGS='-O1 -g -DSHEN_RC_VERIFY_OWNERSHIP=1 -fsanitize=address,undefined -fno-sanitize-recover=all -fno-omit-frame-pointer' RC_BIN=bin/rc-sanitize ASAN_OPTIONS=abort_on_error=1 UBSAN_OPTIONS=halt_on_error=1 scripts/test-rc.sh --no-build bin/sanitize/rc-build
       - name: Fully instrumented generated kernel and complete suite
-        run: nix develop -c env CC=clang CFLAGS='-O1 -g -DSHEN_RC_VERIFY_OWNERSHIP=1 -fsanitize=address,undefined -fno-sanitize-recover=all -fno-omit-frame-pointer' ASAN_OPTIONS=abort_on_error=1 UBSAN_OPTIONS=halt_on_error=1 scripts/certify-rc.sh
+        run: nix develop -c env CC=clang CFLAGS='-O1 -g -DSHEN_RC_VERIFY_OWNERSHIP=1 -fsanitize=address,undefined -fno-sanitize-recover=all -fno-omit-frame-pointer' RC_BUILD_TIMEOUT=1200 ASAN_OPTIONS=abort_on_error=1 UBSAN_OPTIONS=halt_on_error=1 scripts/certify-rc.sh
       - name: Strict native cache controls under fatal sanitizers
         run: nix develop -c env ASAN_OPTIONS=abort_on_error=1 UBSAN_OPTIONS=halt_on_error=1 python3 scripts/test-compile-cache.py bin/rc-sanitize/test_native_compile

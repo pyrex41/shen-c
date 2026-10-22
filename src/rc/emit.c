@@ -752,28 +752,67 @@ static int expr_inner(RcEmitFn *f,RcValue *x,int tail,const Live *after){
 }
 /* Only this complete pinned kernel definition is eligible. No spelling-only
  * replacement: modified source, parameters, error text or clauses stay native. */
+/* Kernel templates are compared up to renaming of their bound variables, so
+ * a regenerated kernel with different V/W/Z numbering still certifies while
+ * any change of structure, constants or free names does not. Binders are the
+ * defun parameters and KL let/lambda variables. */
+#define ALPHA_BINDERS 64
+typedef struct { const char *a[ALPHA_BINDERS],*b[ALPHA_BINDERS]; int n; } AlphaScope;
+static int alpha_index(const char *const *names,int n,const char *s) {
+ for(int i=n-1;i>=0;i--) if(!strcmp(names[i],s)) return i;
+ return -1;
+}
+static bool alpha_equal(RcValue *a,RcValue *b,AlphaScope *scope) {
+ if(is_symbol(a)||is_symbol(b)) {
+  if(!is_symbol(a)||!is_symbol(b)) return false;
+  int i=alpha_index(scope->a,scope->n,name(a)),j=alpha_index(scope->b,scope->n,name(b));
+  return i==j&&(i>=0||!strcmp(name(a),name(b)));
+ }
+ if(!is_pair(a)||!is_pair(b)) return !is_pair(a)&&!is_pair(b)&&rc_equal(a,b);
+ bool let=named(first(a),"let")&&named(first(b),"let");
+ bool lambda=named(first(a),"lambda")&&named(first(b),"lambda");
+ if(let||lambda) {
+  /* (let X V B) binds X in B only; (lambda X B) binds X in B. */
+  RcValue *xa=rest(a),*xb=rest(b);
+  if(!is_pair(xa)||!is_pair(xb)||!is_symbol(first(xa))||!is_symbol(first(xb))) return false;
+  RcValue *va=rest(xa),*vb=rest(xb);
+  if(let) {
+   if(!is_pair(va)||!is_pair(vb)||!alpha_equal(first(va),first(vb),scope)) return false;
+   va=rest(va); vb=rest(vb);
+  }
+  if(!is_pair(va)||!is_pair(vb)||!rc_is_nil(rest(va))||!rc_is_nil(rest(vb))||scope->n==ALPHA_BINDERS) return false;
+  scope->a[scope->n]=name(first(xa)); scope->b[scope->n]=name(first(xb)); scope->n++;
+  bool equal=alpha_equal(first(va),first(vb),scope);
+  scope->n--; return equal;
+ }
+ for(;is_pair(a)&&is_pair(b);a=rest(a),b=rest(b)) if(!alpha_equal(first(a),first(b),scope)) return false;
+ return alpha_equal(a,b,scope);
+}
+/* Compare a candidate's parameters and body with (defun NAME PARAMS BODY). */
+static bool kernel_template(Program *p,RcValue *params,RcValue *body,const char *text,const char *label) {
+ RcValue *expected=rc_read(p->ctx,&text);
+ if(!expected) bad(p,label);
+ RcValue *tparams=second(rest(expected)),*tbody=at(p,rest(expected),2);
+ AlphaScope scope={.n=0}; bool equal=count(p,params)==count(p,tparams);
+ for(RcValue *x=params,*y=tparams;equal&&is_pair(x);x=rest(x),y=rest(y)) {
+  if(!is_symbol(first(x))||scope.n==ALPHA_BINDERS) { equal=false; break; }
+  scope.a[scope.n]=name(first(x)); scope.b[scope.n]=name(first(y)); scope.n++;
+ }
+ equal=equal&&alpha_equal(body,tbody,&scope);
+ rc_release(expected);
+ if(rc_has_error(p->ctx)) bad(p,label);
+ return equal;
+}
 static bool exact_assoc(RcEmitFn *f,RcValue *params,RcValue *body) {
  if(!optimize(f)||count(f->p,params)!=2)return false;
- bool s42=named(first(params),"V3546")&&named(second(params),"V3547");
- bool s43=named(first(params),"V3543")&&named(second(params),"V3544");
- if(!s42&&!s43)return false;
- const char *text="(defun assoc (V3546 V3547) (cond ((= () V3547) ()) ((and (cons? V3547) (and (cons? (hd V3547)) (= V3546 (hd (hd V3547))))) (hd V3547)) ((cons? V3547) (assoc V3546 (tl V3547))) (true (simple-error \"attempt to search a non-list with assoc\n\"))))";
- const char *text43="(defun assoc (V3543 V3544) (cond ((= () V3544) ()) ((and (cons? V3544) (and (cons? (hd V3544)) (= V3543 (hd (hd V3544))))) (hd V3544)) ((cons? V3544) (assoc V3543 (tl V3544))) (true (simple-error \"attempt to search a non-list with assoc\n\"))))";
- if(s43)text=text43;
- RcValue *expected=rc_read(f->p->ctx,&text);
- if(!expected)bad(f->p,"assoc template read failed");
- bool equal=rc_equal(body,at(f->p,rest(expected),2));rc_release(expected);
- if(rc_has_error(f->p->ctx))bad(f->p,"assoc template comparison failed");
- return equal;
+ return kernel_template(f->p,params,body,"(defun assoc (V3928 V3929) (cond ((= () V3929) ()) ((and (cons? V3929) (and (cons? (hd V3929)) (= V3928 (hd (hd V3929))))) (hd V3929)) ((cons? V3929) (assoc V3928 (tl V3929))) (true (simple-error \"attempt to search a non-list with assoc\n\"))))","assoc template comparison failed");
 }
 static bool exact_prolog(RcEmitFn *f,RcValue *params,RcValue *body,bool lazy) {
  if(!optimize(f))return false;
  const char *text=lazy
-  ? "(defun shen.lazyderef (V1757 V1758) (if (shen.pvar? V1757) (let W1759 (<-address V1758 (<-address V1757 1)) (if (= W1759 shen.-null-) V1757 (shen.lazyderef W1759 V1758))) V1757))"
-  : "(defun shen.pvar? (V1755) (trap-error (and (absvector? V1755) (= (<-address V1755 0) shen.pvar)) (lambda Z1756 false)))";
- RcValue *expected=rc_read(f->p->ctx,&text);if(!expected)bad(f->p,"Prolog template read failed");
- bool equal=rc_equal(params,second(rest(expected)))&&rc_equal(body,at(f->p,rest(expected),2));rc_release(expected);
- if(rc_has_error(f->p->ctx))bad(f->p,"Prolog template comparison failed");return equal;
+  ? "(defun shen.lazyderef (V2111 V2112) (if (shen.pvar? V2111) (let W2113 (<-address V2112 (<-address V2111 1)) (if (= W2113 shen.-null-) V2111 (shen.lazyderef W2113 V2112))) V2111))"
+  : "(defun shen.pvar? (V2109) (and (absvector? V2109) (= (trap-error (<-address V2109 0) (lambda Z2110 shen.not-pvar)) shen.pvar)))";
+ return kernel_template(f->p,params,body,text,"Prolog template comparison failed");
 }
 static void finish_function(RcEmitFn *f,int id,int arity,int r){
  Program *p=f->p;
@@ -1037,6 +1076,13 @@ static int compile_event(Program *p,RcValue *event){
   int property_name=fresh(&f);symbol_slot(&f,property_name,"*property-vector*");check(&f,property_name);
   av[3]=fresh(&f);put(&f.code,"  t[%d]=rc_global_get(ctx,t[%d]);\n",av[3],property_name);drop(&f,property_name);check(&f,av[3]);
   result=event_call(&f,fn,av,4);
+ }else if(named(kind,"unproperty")){
+  if(count(p,args)!=2)bad(p,"invalid source property removal event");
+  int fn=event_function(&f,"unput"),av[3];RcValue *q=args;
+  for(int i=0;i<2;i++,q=rest(q))av[i]=literal_node(&f,first(q));
+  int property_name=fresh(&f);symbol_slot(&f,property_name,"*property-vector*");check(&f,property_name);
+  av[2]=fresh(&f);put(&f.code,"  t[%d]=rc_global_get(ctx,t[%d]);\n",av[2],property_name);drop(&f,property_name);check(&f,av[2]);
+  result=event_call(&f,fn,av,3);
  }else if(named(kind,"macro")||named(kind,"datatype")){
   if(count(p,args)!=1||!is_symbol(first(args)))bad(p,"invalid source callback metadata event");
   int fn=event_function(&f,named(kind,"macro")?"shen.record-macro":"shen.remember-datatype");

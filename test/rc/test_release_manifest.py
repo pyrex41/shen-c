@@ -13,15 +13,24 @@ with tempfile.TemporaryDirectory() as tmp:
         count += group['assertions']
         lines += ['passed ... '+str(count), 'failed ... 0']
     text = '\n'.join(lines)
-    assert validate_suite(r,text,work)['status']=='FAIL' # missing redirect output
-    (work/'test.txt').write_bytes(b'hello')
+    total = 'passed ... ' + str(r['expected_tests'])
+    assert total in text
+    outputs = r['expected_outputs']
+    for name in outputs: # A shipped expected output must be written by this run.
+        assert validate_suite(r,text,work)['status']=='FAIL'
+        (work/name).write_bytes(b'hello')
     assert validate_suite(r,text,work)['status']=='PASS'
-    for bad in [text.replace('failed ... 0','failed ... 1',1), text.replace('passed ... 136','passed ... 134'), '\n'.join(lines[2:]), text+'\nfailed with error hidden', text+'\n'+text]:
+    for bad in [text.replace('failed ... 0','failed ... 1',1), text.replace(total,'passed ... '+str(r['expected_tests']-2)), '\n'.join(lines[2:]), text+'\nfailed with error hidden', text+'\n'+text]:
         assert validate_suite(r,bad,work)['status']=='FAIL'
-    (work/'test.txt').write_bytes(b'wrong')
-    assert validate_suite(r,text,work)['status']=='FAIL'
-    (work/'test.txt').write_bytes(b'hello')
+    for name in outputs:
+        (work/name).write_bytes(b'wrong')
+        assert validate_suite(r,text,work)['status']=='FAIL'
+        (work/name).write_bytes(b'hello')
     (work/'runme.shen').write_text('changed')
+    assert validate_suite(r,text,work)['status']=='FAIL'
+    (work/'runme.shen').unlink()
+    assert validate_suite(r,text,work)['status']=='FAIL'
+    (work/'stray.txt').write_text('unexpected')
     assert validate_suite(r,text,work)['status']=='FAIL'
 print('Pinned release and adversarial suite validator controls PASS')
 
@@ -40,3 +49,9 @@ for r in runs:
     if r['label']=='rc' and r['repetition']>5:r['user_seconds']=3.8
 assert acceptance(runs,config)['status']=='OPEN' # one batch above .90
 print('Two-batch performance gate controls PASS')
+
+# Every selectable manifest must still match its pinned bytes.
+from release_manifest import ROOT
+for manifest in sorted((ROOT / 'shen/releases').glob('*.json')):
+    load_release(manifest)
+print('All release manifests validate: ' + ', '.join(p.stem for p in sorted((ROOT / 'shen/releases').glob('*.json'))))

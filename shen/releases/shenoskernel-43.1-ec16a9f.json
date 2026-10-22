@@ -1,0 +1,334 @@
+{
+  "schema": 1,
+  "kernel_version": "43.1",
+  "kernel_build": "upstream-ec16a9f",
+  "lineage": "community ShenOSKernel: an unmodified build of Shen-Language/shen-sources commit ec16a9f, the merge of #117 (type-checker fix) into 43.1; (version) is \"43.1\" as upstream has it",
+  "kernel_directory": "shen/src/kl",
+  "modules": [
+    "sys",
+    "writer",
+    "core",
+    "reader",
+    "declarations",
+    "toplevel",
+    "macros",
+    "load",
+    "prolog",
+    "sequent",
+    "track",
+    "t-star",
+    "yacc",
+    "types",
+    "dict",
+    "init",
+    "stlib",
+    "extension-features",
+    "extension-expand-dynamic",
+    "extension-launcher",
+    "extension-programmable-pattern-matching",
+    "extension-namespaces",
+    "extension-type-annotations"
+  ],
+  "port_modules": [
+    "shen/src/port/shen-c-boot.kl"
+  ],
+  "suite_directory": "shen/test/43.1",
+  "suite_entrypoint": "runme.shen",
+  "suite_test_source": "kerneltests.shen",
+  "expected_tests": 154,
+  "reports": [
+    {
+      "label": "S43.1 public functions",
+      "assertions": 5
+    },
+    {
+      "label": "datatype side-condition keywords",
+      "assertions": 2
+    },
+    {
+      "label": "context macro list tails",
+      "assertions": 4
+    },
+    {
+      "label": "lambda table updates",
+      "assertions": 6
+    },
+    {
+      "label": "type declaration variancy",
+      "assertions": 3
+    },
+    {
+      "label": "cartesian product",
+      "assertions": 2
+    },
+    {
+      "label": "powerset",
+      "assertions": 2
+    },
+    {
+      "label": "bubble sort",
+      "assertions": 4
+    },
+    {
+      "label": "spreadsheet",
+      "assertions": 2
+    },
+    {
+      "label": "primes",
+      "assertions": 7
+    },
+    {
+      "label": "semantic nets",
+      "assertions": 6
+    },
+    {
+      "label": "einsteins riddle",
+      "assertions": 2
+    },
+    {
+      "label": "Prolog call",
+      "assertions": 4
+    },
+    {
+      "label": "Prolog cut",
+      "assertions": 2
+    },
+    {
+      "label": "Prolog naive reverse",
+      "assertions": 2
+    },
+    {
+      "label": "findall in Prolog",
+      "assertions": 2
+    },
+    {
+      "label": "Prolog tableau",
+      "assertions": 3
+    },
+    {
+      "label": "proplog",
+      "assertions": 6
+    },
+    {
+      "label": "metaprogramming",
+      "assertions": 2
+    },
+    {
+      "label": "binary number datatype",
+      "assertions": 4
+    },
+    {
+      "label": "calculator",
+      "assertions": 2
+    },
+    {
+      "label": "structures 1",
+      "assertions": 5
+    },
+    {
+      "label": "structures 2",
+      "assertions": 5
+    },
+    {
+      "label": "classes 1",
+      "assertions": 6
+    },
+    {
+      "label": "classes 2",
+      "assertions": 5
+    },
+    {
+      "label": "abstract datatypes",
+      "assertions": 2
+    },
+    {
+      "label": "yacc",
+      "assertions": 13
+    },
+    {
+      "label": "N Queens",
+      "assertions": 5
+    },
+    {
+      "label": "search",
+      "assertions": 3
+    },
+    {
+      "label": "montague",
+      "assertions": 3
+    },
+    {
+      "label": "c-",
+      "assertions": 2
+    },
+    {
+      "label": "L interpreter",
+      "assertions": 5
+    },
+    {
+      "label": "proof assistant",
+      "assertions": 3
+    },
+    {
+      "label": "quantifier machine",
+      "assertions": 4
+    },
+    {
+      "label": "depth first search",
+      "assertions": 5
+    },
+    {
+      "label": "secd",
+      "assertions": 5
+    },
+    {
+      "label": "unification",
+      "assertions": 4
+    },
+    {
+      "label": "total in Prolog",
+      "assertions": 2
+    },
+    {
+      "label": "Prolog fork",
+      "assertions": 2
+    },
+    {
+      "label": "Prolog interpreter",
+      "assertions": 3
+    }
+  ],
+  "kernel_sha256": {
+    "shen/src/kl/LICENSE.txt": "aec4473b0b8990ce8ab3344f75cdc0ec11da50020405a44b4b50453789dbf948",
+    "shen/src/kl/core.kl": "9c0ef84f269a23cbdde12918f12e3619d8a186893cfc029f5e30cc7807e200e1",
+    "shen/src/kl/declarations.kl": "d8126bd1bb4af11c7decd47270e859df59df79f6bbfd09d5d51fc3fd15b98dfb",
+    "shen/src/kl/dict.kl": "396036b34cd05e7a537efe06e63fff9ad22df59ad19c78f4ab4515ceeb3184e3",
+    "shen/src/kl/extension-expand-dynamic.kl": "ecf01ced5bdbe8824d138638fac8a86fefc845e7de9185b19b28d01de805fb0f",
+    "shen/src/kl/extension-features.kl": "884bbfa82cdffab8810d39ac1453b7fb67796033c6f88ae7f496cd2c5aad602a",
+    "shen/src/kl/extension-launcher.kl": "f04e8b00c4144c2c8da5b17d586cc5e0450e7752d42331a04e56adbffb4fc52c",
+    "shen/src/kl/extension-namespaces.kl": "609c28b6b07216c09effa3b734a3f94d0497c898d55222f0f1b0e04ce8ff334f",
+    "shen/src/kl/extension-programmable-pattern-matching.kl": "1a483e0aafdd4b40f3f587df7bf283400c994066374af05c165c76045a9183fe",
+    "shen/src/kl/extension-type-annotations.kl": "79e428e9dbbdc34fd80cae2f18c2232d97c9d9c09b61c212547aed9f95bbdfea",
+    "shen/src/kl/init.kl": "e5334613255cd8278ee0113e67d01fdaa3f9c8d8861fd888a06e8098b814c5e0",
+    "shen/src/kl/load.kl": "6bd0ea6edfa23ce90bc797db75de74318fe170b90b82e20a3caac0f48445a0ef",
+    "shen/src/kl/macros.kl": "997163774e46c0f0d02fbd19efa61dd41219aed7b6c100056c8d474c24253919",
+    "shen/src/kl/prolog.kl": "3bff799fcf08f3200d99be2add455baf3515daf3cbe625a3ad02a6328385151d",
+    "shen/src/kl/reader.kl": "77441ce0c39090e9bffee2099f738311c777c774331da03b74c81822e40bb440",
+    "shen/src/kl/sequent.kl": "724d6c88cd10e2c0aa201fea2903ae1fa86a1d4159553738f1cfa8d05b2973a5",
+    "shen/src/kl/stlib.kl": "d987926573c4403143a7316d04cc9eff176c341411fe35dba95587f9e83e187e",
+    "shen/src/kl/sys.kl": "fee3e40475746bf90a57066e079d218fa38a1fd7caa229d054cdc40cfa6c2350",
+    "shen/src/kl/t-star.kl": "a1d2fa6f0bed53b59ca191191822c1408b1d9d90fb11ecd3cd60d8e0269e62a6",
+    "shen/src/kl/toplevel.kl": "98623fdda5c33cba48670b5274df44bbf7d148d6f8d2a532d52cd30ee1575d68",
+    "shen/src/kl/track.kl": "01794663773233350da3941e51c6ad7cd8c2d8c29c73232f9614f487bcd3f2d1",
+    "shen/src/kl/types.kl": "0072382b0c0eaaac02dbd62a5dfba66847ce1fa9d9907a118731bfcd6ccdf408",
+    "shen/src/kl/writer.kl": "212076ef418584677619df9726c854c25f7efa2ed079305f419fcda7b33e336f",
+    "shen/src/kl/yacc.kl": "bd178ad4cf028115fabd1e7f3b00f202f73be1380b71a6111de3a0ce0bf30ad8",
+    "shen/src/port/README.md": "08de1952e6ab419b0f43556202dcf8b43f1724bf29bf0288ba2102d58b37118f",
+    "shen/src/port/shen-c-boot.kl": "bd19d6afef5224ab8ba6bf6197ec310f76146b29117f374ec238f4f60e09dad4"
+  },
+  "suite_sha256": {
+    "shen/test/43.1/README": "e8a1fec85c60815bef83f93ed55ac4b2fb7da96a4ba702cade9a7a64e2d3031b",
+    "shen/test/43.1/binary.shen": "a5f6ead2f593a286baefdc7a10db6750914e455f047f602b26b73e6cfd1d29e6",
+    "shen/test/43.1/bubble version 1.shen": "78d6c11cf2dd702669cbb4184f6d6d9b8c4ca8443d7855e15e02109213ffc74d",
+    "shen/test/43.1/bubble version 2.shen": "0de26f85854db341fe5198fc19280a29b4d5ef01230fca3142f2c7be7ed97dd2",
+    "shen/test/43.1/c-minus.shen": "eaa432cc7929387c3ba7acc4c757310605d5120c1153468efafca8c1a8baa304",
+    "shen/test/43.1/calculator.shen": "5075310707a69ab358cde1ab44070ee4e1065c2ebcdebf32b8170ac47aa3ff43",
+    "shen/test/43.1/call.shen": "0c161f6e9d2305c40aaff2c967b21444efa7835a0a80450c2464c4b67915e61a",
+    "shen/test/43.1/cartprod.shen": "c310ada9edc01a2526e5b7b3c719905266566664fe60562a17032f0063a91f05",
+    "shen/test/43.1/change.shen": "867c6b4fd8b7959e964462f5757eb09cc6a9aaff92411a30b77e7276c310f251",
+    "shen/test/43.1/classes-defaults.shen": "fe509bfcfb63af41dadf1fcfaa3bfe652f2a2009ac3dfefc5a3812294e95ed81",
+    "shen/test/43.1/classes-inheritance.shen": "9f6aaf4f323d7bf982f3997fdef26b2b7e37fb90356250c75f8b2fada295d799",
+    "shen/test/43.1/classes-typed.shen": "146ec2ee81190edea0b390d4c23bbfc46978426a40108fbf7684745604c71de5",
+    "shen/test/43.1/classes-untyped.shen": "ec390fd2da354d5562f2585ed5b7d63809e0acaf444d036a9f5b695c38d83517",
+    "shen/test/43.1/cut.shen": "8cf0bd81e2943c12367aedbb41ee1f3253b760cf1be6a349c6923e1b2ed22e8d",
+    "shen/test/43.1/depth.shen": "ae9d275fa5d328ea73cac99db36563bb2e38827a864cfb24d9fa062d2531a035",
+    "shen/test/43.1/einsteins-riddle.shen": "75b9e58b9f65d377904b67e67201c24a02d805d0b44d3c78005488fd47940384",
+    "shen/test/43.1/extensions/features/tests.shen": "278965f458c2604a59133ce3cbe563c88b1e8b2f972fcdfeb5ae97cf6b66c546",
+    "shen/test/43.1/extensions/harness.shen": "f9b97123491b961f78955c1f5808e247517a6eb9efe167d40aba4d0a295d5a95",
+    "shen/test/43.1/extensions/namespaces/code.shen": "f4add2bb04ee266f18403148fc14ae023d0de7b1140fd13e8139ec4d7257dc05",
+    "shen/test/43.1/extensions/namespaces/macros.shen": "25fbbe7e78436d2fbbfc7a1d0a7f3fe0a656e1a5e535e7fd3ac752b30bd31674",
+    "shen/test/43.1/extensions/namespaces/tests.shen": "1a2c0ebcaa13ab6fba4d7a60d06c8fcd007305e806cb8aa9d2b516c327ef9218",
+    "shen/test/43.1/extensions/programmable-pattern-matching/code.shen": "a21609b7c98e67e6b6d94febb1836d45ac4b2673d2523353ba56d5f7662d5c55",
+    "shen/test/43.1/extensions/programmable-pattern-matching/setup.shen": "1b477e6b1b580c125b5d0e30a780688983a22a4b3689fc8a7470a8ecdca7868e",
+    "shen/test/43.1/extensions/programmable-pattern-matching/tests.shen": "b548bae2c1df308623d198e81d60eafd7fe93e6f365953b60d40393214a5306f",
+    "shen/test/43.1/extensions/programmable-pattern-matching/typed-code.shen": "da9db507a030ad038807650e97603eab07b3147e34cbcde655cbc236837cb0b0",
+    "shen/test/43.1/extensions/programmable-pattern-matching/typed-invalid.shen": "e5262b547b0a0f40298508201b7d418dd9d0f5f209469ecccdd7f75cad345354",
+    "shen/test/43.1/extensions/runme.shen": "f5a00caa04d2db42efb9df139a967beaca8dcd45f1ff7747577265bf8f30411d",
+    "shen/test/43.1/extensions/source-forms/fixtures/empty.shen": "d5fd571d123ccbad58fccad64bc034f5b04eaf6805eb496d9ae03368e515f0d8",
+    "shen/test/43.1/extensions/source-forms/fixtures/error.shen": "f4386a2f021d8631ac30a3002315a6f72c6f42b84a1ab915e08b6cdc36bd0e85",
+    "shen/test/43.1/extensions/source-forms/fixtures/input.shen": "80bc2e9f19cc89b80408fc8bdc8cd81fc63a353a7b748eea1df3bc1610239002",
+    "shen/test/43.1/extensions/source-forms/tests.shen": "2468486d20ecafc3533fcb7355633025ba53f85233df2043b56b82a2208cd32a",
+    "shen/test/43.1/extensions/type-annotations/code.shen": "fd562f465c463900b5544bce0dbc1a77458fae07e68579c3498e795279135932",
+    "shen/test/43.1/extensions/type-annotations/tests.shen": "64a502bafe87d908d3d6d610710defb7f9343896ed6ca4b45dc702dc0b3cce6e",
+    "shen/test/43.1/findall.shen": "157d59525bee9433b71f31f457e8c9d29f8bc754ca5db4bd779c2b3c7c993fc6",
+    "shen/test/43.1/fork.shen": "f30d2975ca1c91dc8732e33e118688316264f6cfb34af9c7416d214f61799233",
+    "shen/test/43.1/harness.shen": "a5913fcf768ed15cd8c23ed6c1a1ba0fc5604e822ac7a8759670ddb07542fa4c",
+    "shen/test/43.1/interpreter.shen": "3af7790f534066ed1adfdb5b6138432cfc68b42a10639659a72addedbccfec64",
+    "shen/test/43.1/kerneltests.shen": "973c7a53270f1f2ef0125dc8e603d30f8ff9d4c6ed60981623abf3d3caed879c",
+    "shen/test/43.1/lisp.shen": "cbddb36f96e085a82d0b64c6b59309e1f61469e191e696c3ba58a94146187994",
+    "shen/test/43.1/metaprog.shen": "0e591ee38f1b80ff7ce4c435b164d2e93636296b5ca2a441f4b3af0400a0ac30",
+    "shen/test/43.1/minim.shen": "6d1270d96bd2c389c204833cac769313421f7d74a271f924218a67b198e41b72",
+    "shen/test/43.1/montague.shen": "6c0e5b3339e4f5e5bfa6ec1d00599aacddfbc0b67823c9eaa24cb55309c9dc01",
+    "shen/test/43.1/mutual.shen": "3fed754218fd651e581455cf7fbc0fbc3d9ee15e3d26b5f0e0361067b2aefbec",
+    "shen/test/43.1/n queens-axioms.shen": "80ba5610c9b8f2404a4dea1ac0a693f3e91bfb3fd0f5cec4a981fd59dcd8bb79",
+    "shen/test/43.1/n queens-r.shen": "886e4efe9cfb6bcbc7433084da28a3c000920a349f6fb13f620ca1620fbaab4d",
+    "shen/test/43.1/n queens.axioms": "4254b07e8b3e07530b7cb3aa95493199371adf8818b745efc8e2f718b1b6674b",
+    "shen/test/43.1/n queens.shen": "3b2b5e41dab8e8d259b7c65eb749456ff4bbd79acf3a0c1096482ca37f71462b",
+    "shen/test/43.1/nreverseprolog.shen": "23c42aeee50712377a9b53ffbd3159c9e88bff997d7d6b676cdc6c7c620bc731",
+    "shen/test/43.1/parseprolog.shen": "5f724668a0b94b1e5b9a94f568a05b4a708d43c31034f9ea28bfe894c9d47356",
+    "shen/test/43.1/parser.shen": "b2a5eeaca7603cd8a8557d50884d7447f0800e5b27becc4ca24bf36e1fe56775",
+    "shen/test/43.1/powerset.shen": "689eacf93b06ed8e428906a4b66c558f84c5658dad88003a30971c5410f1dd28",
+    "shen/test/43.1/prime.shen": "f49bcaf942ee2ebfde805a78cf9051c4d0e044ee8a3e1037c7d645de559dfbbc",
+    "shen/test/43.1/prolog.shen": "f6649743d00e5c11970a4c22dca9c26f3b99d4c8b590dcedf9725de6ca9bbc41",
+    "shen/test/43.1/prologinterp.shen": "aafefec60030a1cf13d4f79f559b3f6e5f429559687ea82f51ff272d36d5a67e",
+    "shen/test/43.1/proof assistant.shen": "a214f107470b51a874e9b9bd31b4f71c6b0e3046162fc93e608b36381398dde2",
+    "shen/test/43.1/propcalcprolog.shen": "10f1f55732f7a32d6fd8ed63c0f4f50b124b2c9bd1e8a4dfd8b42edd9706140c",
+    "shen/test/43.1/proplog version 1.shen": "958ac6d8a2799330c71ae80e3ff5ed209c3cffd9bcc0eb0c125b7891e4768a6f",
+    "shen/test/43.1/proplog version 2.shen": "4eba59d480d674f2a9bffc1b14219f1242ecb55fcd158bf162d812c6537fce00",
+    "shen/test/43.1/qmachine.shen": "b88cbe04751dab0783c6f45cd1017a0ea57e5d9dd3e0ebeb27978b35612ffe1f",
+    "shen/test/43.1/runme.shen": "a9620a8853f291b77c8e567d9291cc3aba1ac330aebf95cf0f3fa69915fd850b",
+    "shen/test/43.1/search.shen": "e6b894e547437040758150520586df4d1a7dcf65951d7dec7a96bd9392b8a37e",
+    "shen/test/43.1/secd1.shen": "78fcd9d43497c7db6b7f512c6b1dd27286274bf1f6fffa3b1d927a1297cff1eb",
+    "shen/test/43.1/semantic net.shen": "9211cce8163bb66681dc38eca77222569f4ecfba6add8fccdce26195c2bbee9b",
+    "shen/test/43.1/spreadsheet.shen": "b4d64418230d5735053fbf52561b2b402cbf2da4686631affc16972457a76293",
+    "shen/test/43.1/stack.shen": "0f7ad7deb3216390057cce8b6d4b3661ca0b3f37dcc0f4bcea282dfa4a4e185f",
+    "shen/test/43.1/streams.shen": "95ce76ffd1c1e6af759978ecbc2ce91f912c3c98765ab94228a76206f891bb40",
+    "shen/test/43.1/strings.shen": "a6f7e8c1669737a49dce8d72bdbce39d1d4d21d83e7467e9264f2014d370c0a7",
+    "shen/test/43.1/structures-typed.shen": "e87cf1cff5808e968c7b1cda556b8748b2a5e5362f110783b306ffdedd379e1f",
+    "shen/test/43.1/structures-untyped.shen": "62fe7ec80b396272bd0640342c18456ad524ef4cbc8f8007187bb24c1c2f7bf6",
+    "shen/test/43.1/tableauprolog.shen": "c4a14081d57a04f890447b6e6ac560909f23f85ad3b9d37ba2e65b0c98fec1cb",
+    "shen/test/43.1/totalprolog.shen": "948f72b450e6e552c61f3869f4fc28ed490126c32fa0d9175263149db7be62ea",
+    "shen/test/43.1/unification.shen": "b26e8dec050cbd40e99a202c56a86007276e9b90640b01f84978ddb7d0318064",
+    "shen/test/43.1/yacc.shen": "34dac587cba3712fd41ca2107eeae90b6dd79101fc3efdf935b9f475b1365e29"
+  },
+  "source_sha256": {
+    "shen/src/shen/README.txt": "2f971c0ae8ae45a5b0ac894e06d2199a07e208fa3de1c92dc16a3b73fe805e7d",
+    "shen/src/shen/backend.shen": "0375b0debf4af2f96ee801c5b61a7a5f4da710aaf320975c3dbc7d5380ee4b16",
+    "shen/src/shen/core.shen": "30856d41cd8ca7f68a7b6ad7040320157e699eb478afe38c128f93ff0c04df20",
+    "shen/src/shen/declarations.shen": "dfcfdd72554519b84561b70dafd0a42d91b28fe4d40da8895f8eed6d3fbaba06",
+    "shen/src/shen/dict.shen": "352dd1ca86cf1c84b50c274e9742819550b96fb573ba7934d57a3e49508ecd93",
+    "shen/src/shen/load.shen": "81c5167bb15667a2b09944b4322dee2cd29479996378aa4387b3abc5eba172ba",
+    "shen/src/shen/macros.shen": "7ef1b115e44a6735eb0e2e0d5f953b63e21f9e799d45ffaf64fbc919180ebf1a",
+    "shen/src/shen/make.shen": "fce0a0d5ab7766031f9334c0702fb1be73e4758a8be35621e9c5a12bacacc623",
+    "shen/src/shen/prolog.shen": "26765c3299a325857b537e7b1e1e5afa7bd760aff754115cb36ccc34b2161237",
+    "shen/src/shen/reader.shen": "d5984fec8e33e20b5a8d1bc0659626cdbf2ae8f81191ca98890f6542779155e3",
+    "shen/src/shen/sequent.shen": "962aaa34892c8b2e70e256301995ddd2f2de477286665376e78923e4ba0abbfe",
+    "shen/src/shen/sys.shen": "ecd1b66f11ffbfb15b4e9420f3178fbc8828693a065e28a6bdcbaf8648177584",
+    "shen/src/shen/t-star.shen": "480e26c610b593b66f87118ea2fbeacaf34201e42f2279a09decfb9481879168",
+    "shen/src/shen/toplevel.shen": "2c972996c4feab1adf7941643a42bdae22c56c60841b921bb4d23c2592e7de2a",
+    "shen/src/shen/track.shen": "914fb7b98db4364b97bdcfb60dca68a109f6b1e4037d585e0852337f8d3b6c6c",
+    "shen/src/shen/types.shen": "27e55d5614f2f2f554e4e6edf68ba70ca2f5c3a712fca5b0c2e62fe09ca7ded2",
+    "shen/src/shen/writer.shen": "67e7af9b4b038c062203a6af94db13ef1ce62c01c99158e9cdb73e77779cf102",
+    "shen/src/shen/yacc.shen": "071996ab926b5259dd371693966fbf105abfde882bffef087bba302f0d76c202"
+  },
+  "expected_outputs": {},
+  "archive": {
+    "repository": "https://github.com/pyrex41/shen-sources",
+    "tag": "upstream-ec16a9f",
+    "upstream_repository": "https://github.com/Shen-Language/shen-sources",
+    "commit": "ec16a9fa4fc2e87e2aa336fb1ae30e8ac2266394",
+    "url": "https://github.com/pyrex41/shen-sources/releases/download/upstream-ec16a9f/ShenOSKernel-43.1-ec16a9f.tar.gz",
+    "sha256": "060066a8f84d9a2f7d41cb3b37b986a8d4653279752b739b5063cd648d9baacd",
+    "note": "An unmodified build of upstream ec16a9f (tizoc merged #117 unchanged); the tag points at that upstream commit. shen/src/kl, shen/src/shen and shen/test/43.1 are byte-identical copies of the archive's klambda/ (plus LICENSE.txt), sources/ and tests/; scripts/fetch-kernel.sh --check verifies them. tests/ is byte-identical to 43.1's, so both manifests share shen/test/43.1. shen/src/port is the only local kernel input."
+  }
+}

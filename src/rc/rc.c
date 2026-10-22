@@ -53,7 +53,7 @@ struct RcContext {
     RcContextHot hot; /* First: generated fast paths read it. */
     void *native_compile_state;
     size_t interpreter_entries;
-    bool verify_native;
+    bool verify_native, interpreter_fallback;
     int execution_mode;
     /* Slab pages, newest first, and one free list and bump page per class. */
     struct RcPage *pages;
@@ -643,7 +643,10 @@ void **rc_native_compile_slot(RcContext *ctx){return &ctx->native_compile_state;
 size_t rc_interpreter_entries(const RcContext *ctx){return ctx->interpreter_entries;}
 bool rc_interpreter_enter(RcContext *ctx){
  ctx->interpreter_entries++;
- if(ctx->verify_native||ctx->execution_mode!=1){rc_error(ctx,"strict native execution entered interpreter");return false;}return true;
+ if(ctx->verify_native||(ctx->execution_mode!=1&&!ctx->interpreter_fallback)){rc_error(ctx,"strict native execution entered interpreter");return false;}return true;
+}
+bool rc_interpreter_allow_fallback(RcContext *ctx){
+ if(ctx->verify_native)return false;ctx->interpreter_fallback=true;return true;
 }
 #if SHEN_RC_STATS_COUNTERS
 static void perceus_report(const RcContext *ctx) {
