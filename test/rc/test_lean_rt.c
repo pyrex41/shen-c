@@ -1,6 +1,7 @@
 /* Lean C runtime scaffolding (src/rc/lean_rt.h): the per-context symbol and
  * canonical-binding tables with their guards, the unseal switch, and stack /
  * heap continuations with per-kfn trampolines. */
+#define _POSIX_C_SOURCE 200809L /* setenv/unsetenv under -std=c17 */
 #include "rc.h"
 #include "primitives.h"
 #include "lean_rt.h"
