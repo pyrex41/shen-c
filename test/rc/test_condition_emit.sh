@@ -50,6 +50,20 @@ source='''
 (cle 7 7)
 (cgt 9223372036854775807 9223372036854775806)
 (cle 9223372036854775807 9223372036854775807.0)
+(cequal abc abc)
+(cequal abc "abc")
+(cequal "abc" abc)
+(cequal abc abd)
+(cequal () ())
+(cequal () (cons 1 ()))
+(cequal (cons 1 ()) ())
+(cequal () "")
+(cequal true true)
+(cequal true false)
+(cequal abc 1)
+(cequal 1 abc)
+(cequal abc 1.0)
+(cequal (intern "abc") abc)
 (if (and (cons? (cons 1 ())) (or (number? "no") (string? "yes"))) 42 0)
 (if (and false (simple-error "unreached")) 0 42)
 (if (or true (simple-error "unreached")) 42 0)
@@ -84,7 +98,10 @@ source='''
 (defun cons? (X) (do (defun cons? (Y) false) (do (shen.gc) true)))
 (cpair (cons 1 ()))
 '''
-expected=['42']*8+['42','0','42','0','42','0','42','0','42','42','42','42','42','42','42','42','42','42','42',
+# The symbol/[] rows exercise the identity fast path for =.
+expected=['42']*8+['42','0','42','0','42','0','42','0','42','42','42','42','42','42',
+ '42','0','0','0','42','0','0','0','42','0','0','0','0','42',
+ '42','42','42','42','42',
  '"boolean expected"','"condition is not a boolean"','"boolean expected"','"condition is not a boolean"','"boolean expected"',
  '"Arithmetic requires numbers"','42','42','42','42','"condition is not a boolean"','"boolean expected"','"condition is not a boolean"','"condition is not a boolean"','42','"boolean expected"',
  '0','0','"condition is not a boolean"','"condition is not a boolean"','42','42']
@@ -104,5 +121,5 @@ with tempfile.TemporaryDirectory(prefix='rc-condition-emit.') as temp:
         ran=subprocess.run([str(dest/'app')],env=dict(env,SHEN_RC_PRINT='1'),capture_output=True,text=True,timeout=30)
         assert ran.returncode==0,(mode,ran.stdout,ran.stderr)
         assert ran.stdout.splitlines()==expected,(mode,ran.stdout.splitlines(),expected,ran.stderr)
-print('native conditions: 8 predicates, 49 differential results, live borrows, last-use consumption, snapshots and errors PASS')
+print('native conditions: 8 predicates, %d differential results (14 for = against symbols and []), live borrows, last-use consumption, snapshots and errors PASS'%len(expected))
 PY

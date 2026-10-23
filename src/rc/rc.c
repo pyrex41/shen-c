@@ -1671,14 +1671,15 @@ static size_t equal_hash(EqualPair pair) {
     return (size_t)((a * UINT64_C(0x9e3779b97f4a7c15)) ^ (b * UINT64_C(0xbf58476d1ce4e5b9)));
 }
 /* Only structural comparisons enter the worklist/hash set. Scalar children
- * compare immediately; repeated graph edges never cause repeated expansion. */
+ * compare immediately; repeated graph edges never cause repeated expansion.
+ * The first 32 pairs are deduplicated by a linear scan, so a small
+ * comparison neither zeroes nor allocates a hash table. */
 static bool graph_equal(const RcValue *left, const RcValue *right) {
     RcContext *ctx = ctx_of(left);
     EqualPair local_pairs[32], *pairs = local_pairs;
-    size_t local_seen[64] = {0}, *seen = local_seen;
+    size_t *seen = NULL;
     size_t count = 1, capacity = 32, cursor = 0;
     pairs[0] = (EqualPair){left, right};
-    seen[equal_hash(pairs[0]) & (capacity * 2 - 1)] = 1;
     bool equal = true;
     while (cursor < count && equal) {
         EqualPair p = pairs[cursor++];
@@ -1694,10 +1695,18 @@ static bool graph_equal(const RcValue *left, const RcValue *right) {
                 if (!scalar_equal(child.left, child.right)) { equal = false; break; }
                 continue;
             }
-            size_t slot = equal_hash(child) & (capacity * 2 - 1);
-            while (seen[slot] && (pairs[seen[slot]-1].left != child.left || pairs[seen[slot]-1].right != child.right))
-                slot = (slot + 1) & (capacity * 2 - 1);
-            if (seen[slot]) continue;
+            size_t slot = 0;
+            if (!seen) {
+                bool known = false;
+                for (size_t k = 0; k < count && !known; ++k)
+                    known = pairs[k].left == child.left && pairs[k].right == child.right;
+                if (known) continue;
+            } else {
+                slot = equal_hash(child) & (capacity * 2 - 1);
+                while (seen[slot] && (pairs[seen[slot]-1].left != child.left || pairs[seen[slot]-1].right != child.right))
+                    slot = (slot + 1) & (capacity * 2 - 1);
+                if (seen[slot]) continue;
+            }
             if (count == capacity) {
                 if (capacity > SIZE_MAX / 4 / sizeof(*seen) || capacity > SIZE_MAX / 2 / sizeof(*pairs)) {
                     rc_error(ctx, "comparison size overflow"); equal = false; break;
@@ -1710,7 +1719,7 @@ static bool graph_equal(const RcValue *left, const RcValue *right) {
                 }
                 memcpy(grown, pairs, count * sizeof(*pairs));
                 if (pairs != local_pairs) free(pairs);
-                if (seen != local_seen) free(seen);
+                free(seen);
                 pairs = grown; seen = buckets; capacity = next;
                 for (size_t k = 0; k < count; ++k) {
                     size_t bucket = equal_hash(pairs[k]) & (capacity * 2 - 1);
@@ -1720,11 +1729,12 @@ static bool graph_equal(const RcValue *left, const RcValue *right) {
                 slot = equal_hash(child) & (capacity * 2 - 1);
                 while (seen[slot]) slot = (slot + 1) & (capacity * 2 - 1);
             }
-            pairs[count] = child; seen[slot] = ++count;
+            pairs[count] = child; ++count;
+            if (seen) seen[slot] = count;
         }
     }
     if (pairs != local_pairs) free(pairs);
-    if (seen != local_seen) free(seen);
+    free(seen);
     return equal;
 }
 bool rc_equal(const RcValue *left, const RcValue *right) {
