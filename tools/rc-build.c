@@ -8,6 +8,7 @@
 #include <sys/wait.h>
 #include <unistd.h>
 #include "emit.h"
+#include "lean.h"
 #include "release.h"
 
 /* Standalone compiler host: RcValue reader and native emitter only. */
@@ -70,19 +71,63 @@ static bool emit_path(RcContext *ctx,const char *filename,RcValue **kernel,size_
   return true;
 }
 /* Release kernel files and port modules, relative to the source root. */
-static bool kernel_only(RcContext *ctx,const char *root,const char *output,RcEmitOptions *options) {
-  static const char *files[]=SHEN_KERNEL_FILES;
-  RcValue **forms=NULL; size_t n=0; bool ok=false; char filename[4096];
+static bool read_kernel(RcContext *ctx,const char *root,RcValue ***forms,size_t *n) {
+  static const char *files[]=SHEN_KERNEL_FILES; char filename[4096];
   for(size_t i=0;i<sizeof(files)/sizeof(*files);i++) {
     path(filename,sizeof(filename),root,files[i]);
-    if(!append_path(ctx,&forms,&n,filename,false)) goto done;
+    if(!append_path(ctx,forms,n,filename,false)) return false;
+  }
+  return true;
+}
+static bool lean_prelude(void *state,RcContext *ctx,FILE *out) { (void)ctx; return rc_lean_emit_prelude(state,out); }
+static bool lean_bootstrap(void *state,RcContext *ctx,FILE *out) { (void)ctx; return rc_lean_emit_bootstrap(state,out); }
+static bool kernel_only(RcContext *ctx,const char *root,const char *output,RcEmitOptions *options,bool lean_kernel) {
+  RcValue **forms=NULL; size_t n=0; bool ok=false; RcLean *lean=NULL; RcLeanEmitHook hook={0};
+  if(!read_kernel(ctx,root,&forms,&n)) goto done;
+  if(lean_kernel) {
+    if(!(lean=rc_lean_new(ctx,forms,n,NULL,0))) goto done;
+    hook=(RcLeanEmitHook){lean,lean_prelude,lean_bootstrap}; options->lean=&hook;
   }
   options->emit_main=false;
   ok=emit_path(ctx,output,forms,n,NULL,0,options);
 done:
+  options->lean=NULL; rc_lean_free(lean); release_forms(forms,n); return ok;
+}
+/* Lean set file: one kernel defun name per line; # comments. */
+static bool read_lean_set(RcContext *ctx,const char *file,char ***names,size_t *count) {
+  FILE *in=fopen(file,"r"); if(!in) { rc_error(ctx,"cannot open lean set %s",file); return false; }
+  char line[1024]; *names=NULL; *count=0;
+  while(fgets(line,sizeof(line),in)) {
+    char *s=line; while(*s==' '||*s=='\t') s++;
+    s[strcspn(s,"#\r\n")]=0; size_t len=strlen(s); while(len&&(s[len-1]==' '||s[len-1]=='\t')) s[--len]=0;
+    if(!len) continue;
+    char **grown=realloc(*names,(*count+1)*sizeof(**names)); char *copy=strdup(s);
+    if(!grown||!copy) { free(copy); if(grown) *names=grown; fclose(in); rc_error(ctx,"out of memory"); return false; }
+    *names=grown; (*names)[(*count)++]=copy;
+  }
+  bool failed=ferror(in); fclose(in);
+  if(failed) { rc_error(ctx,"failed reading lean set %s",file); return false; }
+  return true;
+}
+/* --dump-lir NAME / --check-lir over the kernel plus optional extra KL files
+ * (extras are compiled as additional kernel defuns, e.g. IR fixtures). */
+static bool lean_tool(RcContext *ctx,const char *root,char **extra,int nextra,const char *set_file,const char *dump) {
+  RcValue **forms=NULL; size_t n=0; char **set=NULL; size_t nset=0; bool ok=false; RcLean *lean=NULL;
+  if(!read_kernel(ctx,root,&forms,&n)) goto done;
+  for(int i=0;i<nextra;i++) if(!append_path(ctx,&forms,&n,extra[i],false)) goto done;
+  if(set_file&&!read_lean_set(ctx,set_file,&set,&nset)) goto done;
+  lean=rc_lean_new(ctx,forms,n,set_file?(const char *const *)set:NULL,nset);
+  if(!lean) goto done;
+  ok=dump?rc_lean_dump(lean,dump,stdout):rc_lean_check_all(lean,stdout);
+  if(!ok&&!rc_has_error(ctx)) rc_error(ctx,"lean check failed");
+done:
+  rc_lean_free(lean); for(size_t i=0;i<nset;i++) free(set[i]); free(set);
   release_forms(forms,n); return ok;
 }
-static bool build_app(RcContext *ctx,const char *input,const char *output,RcEmitOptions *options,bool acyclic,const char *events_override) {
+static bool lean_prelude(void *state,RcContext *ctx,FILE *out);
+static bool lean_bootstrap(void *state,RcContext *ctx,FILE *out);
+static bool build_app(RcContext *ctx,const char *input,const char *output,RcEmitOptions *options,bool acyclic,const char *events_override,bool lean_kernel) {
+  RcLean *lean=NULL; RcLeanEmitHook hook={0};
   char home[4096],src[4096],dest[4096],kernel[1024]="kernel.kl",init[1024]="",events_file[1024]="",source_format[1024]="",users[256][1024]; int nu=0;
   const char *env=getenv("SHEN_C_HOME"); if(!env||!*env) env=".";
   if(!realpath(env,home)) { rc_error(ctx,"cannot resolve compiler home %s",env); return false; }
@@ -122,6 +167,11 @@ static bool build_app(RcContext *ctx,const char *input,const char *output,RcEmit
     options->source_events=source_events;
   }
   options->emit_main=true; options->init_name=init;
+  /* Lean code is only ever emitted for the application's kernel phase. */
+  if(lean_kernel) {
+    if(!(lean=rc_lean_new(ctx,kf,nk,NULL,0))) goto done;
+    hook=(RcLeanEmitHook){lean,lean_prelude,lean_bootstrap}; options->lean=&hook;
+  }
   path(dest,sizeof(dest),output,"app.c");
   if(!emit_path(ctx,dest,kf,nk,uf,nt,options)) goto done;
   path(dest,sizeof(dest),output,"Makefile"); FILE *out=fopen(dest,"w");
@@ -150,18 +200,25 @@ static bool build_app(RcContext *ctx,const char *input,const char *output,RcEmit
   if(!WIFEXITED(result)||WEXITSTATUS(result)) { rc_error(ctx,"generated application build failed"); goto done; }
   ok=true;
 done:
+  options->lean=NULL; rc_lean_free(lean);
   release_forms(kf,nk); release_forms(uf,nt); rc_release(source_events); return ok;
 }
 static void usage(FILE *out) {
   fputs("usage: rc-build [--conservative-ownership] [--acyclic] [--source-metadata] <input-dir> <output-dir>\n"
         "       rc-build [--conservative-ownership] [--acyclic] --emit-kernel <source-root> <output.c>\n"
+        "  --lean: emit the kernel (phase) with the lean C backend.\n"
+        "       rc-build [--lean-set FILE] --dump-lir NAME <source-root> [extra.kl...]\n"
+        "       rc-build [--lean-set FILE] --check-lir <source-root> [extra.kl...]\n"
+        "  --dump-lir: print the lean Core and LIR of kernel defun NAME.\n"
+        "  --check-lir: lower every kernel defun to LIR and run lir_check.\n"
+        "  --lean-set FILE: lean (Known) defuns, one per line; default: all sealable.\n"
         "  --source-events FILE: ordered reader metadata sidecar (application builds only).\n"
         "  --source-metadata: preserve Shen definition arity and source reflection metadata.\n"
         "  --acyclic: build applications without cycle collection; reject new reference cycles.\n",out);
 }
 int main(int argc,char **argv) {
   RcEmitOptions options={.emit_main=true,.bootstrap_name="rc_bootstrap_kernel"};
-  int index=1; bool only_kernel=false,acyclic=false; const char *events_override=NULL;
+  int index=1; bool only_kernel=false,acyclic=false,check_lir=false,lean_kernel=false; const char *events_override=NULL,*dump_lir=NULL,*lean_set=NULL;
 #if defined(SHEN_RC_ACYCLIC_ONLY) && SHEN_RC_ACYCLIC_ONLY
   acyclic=true; /* A strict host always emits strict application builds. */
 #endif
@@ -174,13 +231,26 @@ int main(int argc,char **argv) {
       events_override=argv[++index]; options.source_metadata=true;
     }
     else if(!strcmp(argv[index],"--conservative-ownership")) options.conservative_ownership=true;
+    else if(!strcmp(argv[index],"--dump-lir")||!strcmp(argv[index],"--lean-set")) {
+      if(index+1>=argc) { usage(stderr); return 2; }
+      if(!strcmp(argv[index],"--dump-lir")) dump_lir=argv[++index]; else lean_set=argv[++index];
+    }
+    else if(!strcmp(argv[index],"--check-lir")) check_lir=true;
+    else if(!strcmp(argv[index],"--lean")) lean_kernel=true;
     else if(!strcmp(argv[index],"--help")||!strcmp(argv[index],"-h")) { usage(stdout); return 0; }
     else if(!strcmp(argv[index],"--version")) { puts("shen-rc-build standalone 1"); return 0; }
     else { fprintf(stderr,"rc-build: unknown option %s\n",argv[index]); return 2; }
   }
-  if(argc-index!=2||(only_kernel&&events_override)) { usage(stderr); return 2; }
+  if(dump_lir||check_lir) {
+    if(argc-index<1||(dump_lir&&check_lir)||only_kernel) { usage(stderr); return 2; }
+    RcContext *ctx=rc_context_new(); if(!ctx) return 1;
+    bool ok=lean_tool(ctx,argv[index],argv+index+1,argc-index-1,lean_set,dump_lir);
+    if(!ok) fprintf(stderr,"rc-build: %s\n",rc_error_message(ctx));
+    rc_context_free(ctx); return ok?0:1;
+  }
+  if(argc-index!=2||(only_kernel&&events_override)||lean_set||(lean_kernel&&options.conservative_ownership)) { usage(stderr); return 2; }
   RcContext *ctx=rc_context_new(); if(!ctx) return 1;
-  bool ok=only_kernel?kernel_only(ctx,argv[index],argv[index+1],&options):build_app(ctx,argv[index],argv[index+1],&options,acyclic,events_override);
+  bool ok=only_kernel?kernel_only(ctx,argv[index],argv[index+1],&options,lean_kernel):build_app(ctx,argv[index],argv[index+1],&options,acyclic,events_override,lean_kernel);
   if(!ok) fprintf(stderr,"rc-build: %s\n",rc_error_message(ctx));
   rc_context_free(ctx); return ok?0:1;
 }

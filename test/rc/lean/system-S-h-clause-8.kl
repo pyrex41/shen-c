@@ -1,0 +1,4 @@
+;; DESIGN B1 worked example B: clause 8 ([F X]) of shen.system-S-h, verbatim
+;; from shen/src/kl/t-star.kl, with the remaining clauses (NEXT) replaced by
+;; the final (shen.unlock V5021 W5024).
+(defun lean-golden.system-S-h-clause-8 (V5017 V5018 V5019 V5020 V5021 V5022 V5023) (let W5024 (+ V5022 1) (let W5051 (if (shen.unlocked? V5021) (let W5052 (shen.lazyderef V5017 V5020) (if (cons? W5052) (let W5053 (hd W5052) (let W5054 (shen.lazyderef (tl W5052) V5020) (if (cons? W5054) (let W5055 (hd W5054) (let W5056 (shen.lazyderef (tl W5054) V5020) (if (= W5056 ()) (let W5057 (shen.newpv V5020) (shen.gc V5020 (do (shen.incinfs) (shen.system-S-h W5053 (cons W5057 (cons --> (cons V5018 ()))) V5019 V5020 V5021 W5024 (freeze (shen.system-S-h W5055 W5057 V5019 V5020 V5021 W5024 V5023)))))) false))) false))) false)) false) (if (= W5051 false) (shen.unlock V5021 W5024) W5051))))

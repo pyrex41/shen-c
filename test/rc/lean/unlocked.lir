@@ -1,0 +1,6 @@
+core shen.unlocked? (V1901) =
+  (prim <-address V1901 1)
+fn shen.unlocked?(V1901:obj@own) : obj@own
+  let t1:obj = lit 1 !fail
+  let t2:obj = prim <-address(V1901, t1) !fail
+  ret t2

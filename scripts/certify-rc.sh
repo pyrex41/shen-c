@@ -49,6 +49,7 @@ record = {'source_sha256': hashes, 'scope': 'complete pinned kernel; pristine ' 
           'builder_source_correspondence': 'external binary; not established' if external_builder else 'fresh standalone build from recorded sources',
           'host_build': 'EXTERNAL' if external_builder else 'UNKNOWN', 'compiler_audit': 'UNKNOWN',
           'cc': os.environ.get('CC', 'cc'), 'cflags': os.environ.get('CFLAGS', '-O2'),
+          'rc_lean': os.environ.get('RC_LEAN', '0'),
           'asan_options': os.environ.get('ASAN_OPTIONS'), 'ubsan_options': os.environ.get('UBSAN_OPTIONS'),
           'build': 'UNKNOWN', 'suite': 'UNKNOWN', 'artifact_audit': 'UNKNOWN'}
 try:
@@ -94,7 +95,8 @@ if not external_builder:
     host = source / 'host'
     command = shlex.split(os.environ.get('MAKE', 'make')) + ['-f', 'Makefile.rc',
                'RC_BUILD=' + str(host / 'obj'), 'RC_BIN=' + str(host / 'lib'),
-               'RC_TOOL_BIN=' + str(host / 'bin'), 'RC_CFLAGS=' + record['cflags'], 'RC_RELEASE_MANIFEST=' + str(release['_path']), str(builder)]
+               'RC_TOOL_BIN=' + str(host / 'bin'), 'RC_CFLAGS=' + record['cflags'], 'RC_RELEASE_MANIFEST=' + str(release['_path']),
+               'RC_LEAN=' + record['rc_lean'], str(builder)]
     if not run('host_build', command, root, float(os.environ.get('RC_BUILD_TIMEOUT', '300'))):
         record['host_build'] = 'UNKNOWN' if 'host_build_termination' in record else 'FAIL'; save(); raise SystemExit(1)
     record['host_build'] = 'PASS'
@@ -103,7 +105,9 @@ record['compiler_audit'] = 'PASS' if run('compiler_audit', [str(root / 'scripts/
 save()
 if record['compiler_audit'] != 'PASS':
     raise SystemExit(1)
-if not run('build', [str(builder), str(source), str(output)], root,
+if record['rc_lean'] not in ('0', '1'):
+    raise SystemExit('RC_LEAN must be 0 or 1')
+if not run('build', [str(builder)] + (['--lean'] if record['rc_lean'] == '1' else []) + [str(source), str(output)], root,
            float(os.environ.get('RC_BUILD_TIMEOUT', '300'))):
     record['build'] = 'UNKNOWN' if 'build_termination' in record else 'FAIL'; save(); raise SystemExit(1)
 record['build'] = 'PASS'

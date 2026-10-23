@@ -11,6 +11,13 @@ override RC_CFLAGS += -std=c17 -Wall -Wextra -Wpedantic -Isrc/rc
 RC_LDFLAGS ?= $(LDFLAGS)
 RC_LDLIBS ?= -lm
 RC_SANITIZE ?= 0
+# Lean C kernel (docs: src/rc/lean.h, lean_rt.h). 1 emits the kernel with
+# rc-build --lean; 0 (the default) keeps the generic emitter's kernel.c
+# byte-for-byte. Variants should use separate RC_BUILD directories.
+RC_LEAN ?= 0
+ifeq ($(filter 0 1,$(RC_LEAN)),)
+$(error RC_LEAN must be 0 or 1)
+endif
 RC_ACYCLIC_ONLY ?= 0
 # Diagnostic per-operation retain/release counters; release builds omit them.
 RC_STATS_COUNTERS ?= 0
@@ -58,7 +65,7 @@ RC_OBJECTS := $(patsubst src/rc/%.c,$(RC_BUILD)/%.o,$(RC_SOURCES))
 ifeq ($(RC_ACYCLIC_ONLY),1)
 RC_TESTS := test_acyclic
 else
-RC_TESTS := test_cycles test_primitives test_eval test_env test_bool_tail test_apply_fast test_object_cache test_immediates test_collection test_reuse test_acyclic test_symbols test_primitive_fast test_equal test_canonical_primitives test_canonical_numeric test_canonical_hash test_canonical_cons test_generic_builtin_tag test_trial_work_union test_callee test_identity_tail test_list_length test_eval_plan test_rooted_call test_condition_borrow
+RC_TESTS := test_cycles test_primitives test_eval test_env test_bool_tail test_apply_fast test_object_cache test_immediates test_collection test_reuse test_acyclic test_symbols test_primitive_fast test_equal test_canonical_primitives test_canonical_numeric test_canonical_hash test_canonical_cons test_generic_builtin_tag test_trial_work_union test_callee test_identity_tail test_list_length test_eval_plan test_rooted_call test_condition_borrow test_lean_rt
 endif
 RC_TEST_BINS := $(addprefix $(RC_BIN)/,$(RC_TESTS))
 
@@ -88,11 +95,17 @@ $(RC_BUILD)/%.o: src/rc/%.c $(wildcard src/rc/*.h) | $(RC_BUILD)
 $(RC_BIN)/libshenrc.a: $(RC_OBJECTS) | $(RC_BIN)
 	$(AR) rcs $@ $^
 
-$(RC_TOOL_BIN)/rc-build: tools/rc-build.c $(RC_BUILD)/release.h $(RC_BIN)/libshenrc.a | $(RC_TOOL_BIN)
-	$(CC) $(RC_CPPFLAGS) $(RC_CFLAGS) -I$(RC_BUILD) tools/rc-build.c $(RC_BIN)/libshenrc.a $(RC_LDFLAGS) $(RC_TIER_LDFLAGS) $(RC_LDLIBS) $(RC_TIER_LDLIBS) -o $@
+# The lean compiler front end (src/rc/lean.c) is host-only: rc-build links
+# it, the runtime library and generated programs never do.
+$(RC_TOOL_BIN)/rc-build: tools/rc-build.c src/rc/lean.c src/rc/lean.h $(RC_BUILD)/release.h $(RC_BIN)/libshenrc.a | $(RC_TOOL_BIN)
+	$(CC) $(RC_CPPFLAGS) $(RC_CFLAGS) -I$(RC_BUILD) tools/rc-build.c src/rc/lean.c $(RC_BIN)/libshenrc.a $(RC_LDFLAGS) $(RC_TIER_LDFLAGS) $(RC_LDLIBS) $(RC_TIER_LDLIBS) -o $@
 
-$(RC_BUILD)/kernel.c: $(RC_TOOL_BIN)/rc-build $(RC_KERNEL_INPUTS) | $(RC_BUILD)
-	$(RC_TOOL_BIN)/rc-build --emit-kernel . $@
+# Rewritten only when RC_LEAN changes, so switching it regenerates kernel.c.
+$(RC_BUILD)/lean.mode: FORCE_RELEASE | $(RC_BUILD)
+	@printf '%s\n' '$(RC_LEAN)' | cmp -s - $@ || printf '%s\n' '$(RC_LEAN)' > $@
+
+$(RC_BUILD)/kernel.c: $(RC_TOOL_BIN)/rc-build $(RC_KERNEL_INPUTS) $(RC_BUILD)/lean.mode | $(RC_BUILD)
+	$(RC_TOOL_BIN)/rc-build $(if $(filter 1,$(RC_LEAN)),--lean )--emit-kernel . $@
 
 $(RC_BUILD)/kernel.o: $(RC_BUILD)/kernel.c $(wildcard src/rc/*.h)
 	$(CC) $(RC_CPPFLAGS) $(RC_CFLAGS) -c $< -o $@

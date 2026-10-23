@@ -186,6 +186,11 @@ bool rc_compiled_call_matches(const RcValue *function, RcNativeOwned native,
                                size_t arity);
 RcValue *rc_compiled_call_complete(RcContext *ctx, RcValue *owned_result,
                                     size_t argc, RcValue **owned_args);
+/* Lean C ABI (lean_rt.h): resolves table once for ctx and records, for each
+ * symbol, its current function binding as the canonical one (NULL when
+ * unbound, which no guard matches). The table owns those closures. Call it
+ * after every bootstrap install. Replaces any previous lean table of ctx. */
+bool rc_lean_install(RcContext *ctx, const RcSymbolTable *table);
 /* Check borrowed call inputs before specialized dispatch; does not set errors. */
 bool rc_call_values_belong(RcContext *ctx, RcValue *function, size_t argc,
                            RcValue *const *argv);
