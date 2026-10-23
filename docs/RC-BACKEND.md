@@ -152,7 +152,14 @@ lookup, redefinition, partial application and escaping closures remain available
 private temporary directory); `SHEN_RC_NATIVE_CACHE_BYTES` bounds code artifacts
 (default 1 GiB, with header/accounting overhead). `SHEN_RC_COMPILE_TIMEOUT` bounds
 each compiler invocation (default 120 seconds). A timed-out or failed compile is
-never published to the cache, so a later process compiles it again. Compiler
+never published to the cache. Its status is noted next to the cache entry
+(`KEY.failed`; the key covers the source, compiler identity, flags and ABI), and
+later processes interpret that form without invoking the compiler. A compiler
+error or oversized diagnostics are remembered until the entry is pruned; a
+timeout only while `SHEN_RC_COMPILE_TIMEOUT` is no longer than the recorded
+limit. Spawn failures and abnormal compiler exits are not remembered.
+`SHEN_RC_COMPILE_RETRY=1` ignores the notes, and a successful compile removes
+its note. `SHEN_RC_VERIFY_NATIVE=1` never falls back, so it always compiles. Compiler
 diagnostics are capped at 8 MiB. Cache publication is serialized and atomic, and object receipts reject
 corrupt artifacts. `SHEN_RC_NATIVE_STATS=1` reports compilation, allocation,
 collection and ownership counters. Loaded native modules stay mapped until

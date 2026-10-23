@@ -107,7 +107,10 @@ with the same shape to share machine code while preserving object identity and
 dynamic redefinition. Compiled closures use the same ownership moves, releases,
 and guarded reuse as ahead-of-time applications. If the C compiler fails or
 exceeds `SHEN_RC_COMPILE_TIMEOUT`, that form is interpreted instead, with one
-stderr notice; `SHEN_RC_VERIFY_NATIVE=1` makes compiler failures errors.
+stderr notice. The failure is remembered in the cache, so later runs interpret
+the same form without retrying (a timeout is retried once the limit is longer);
+`SHEN_RC_COMPILE_RETRY=1` compiles such forms again, and
+`SHEN_RC_VERIFY_NATIVE=1` makes compiler failures errors.
 `SHEN_RC_EXECUTION=interpret` explicitly selects the diagnostic backend when
 creating a context.
 

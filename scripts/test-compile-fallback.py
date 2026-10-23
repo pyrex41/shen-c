@@ -6,7 +6,10 @@ compiler that fails every second invocation (native and interpreted code
 mixed), with a compiler that always exceeds SHEN_RC_COMPILE_TIMEOUT, and in the
 explicit interpreter. Each run must exit 0 with identical stdout. Under
 SHEN_RC_VERIFY_NATIVE=1 the same failing compiler must remain a hard error.
-Finally a run on the fallback cache with a working compiler must compile again.
+Failed compiles are remembered next to the cache entry: a later run interprets
+those forms without calling the compiler, a timeout is retried once the limit is
+longer, and SHEN_RC_COMPILE_RETRY=1 ignores the notes. Finally a strict run on
+the fallback cache with a working compiler must compile again.
 """
 import argparse, os, re, subprocess, tempfile
 from pathlib import Path
@@ -75,14 +78,33 @@ def main():
         assert p.stderr.count('interpreting instead') == 1 and 0 < s['fallbacks'] < s['compiles'], (s, p.stderr)
         assert s['failures'] == 0 and s['interpreter_entries'] > 0, s
         s, p = run('slow', FALLBACK_MODE='slow', SHEN_RC_COMPILE_TIMEOUT='0.2')
-        assert 'status 124' in p.stderr and s['fallbacks'] == s['compiles'] > 0 and s['failures'] == 0, (s, p.stderr)
+        # A form that recurs in the same run reuses the first failure's note.
+        assert 'status 124' in p.stderr and s['fallbacks'] == s['compiles'] + s['failed_hits'] and s['compiles'] > 0 and s['failures'] == 0, (s, p.stderr)
         assert not list((root / 'cache-slow').glob('*.so')), 'a timed-out compile was published'
+        # Failed compiles are remembered: a later run with the same compiler
+        # and source interprets those forms without invoking the compiler.
+        calls = int((root / 'counter').read_text())
+        s, p = run('mixed-again', cache='mixed', FALLBACK_MODE='every-second')
+        assert s['compiles'] == 0 and s['failed_hits'] > 0 and s['fallbacks'] == s['failed_hits'], s
+        assert 'failed earlier' in p.stderr and int((root / 'counter').read_text()) == calls, p.stderr
+        import shutil
+        for name in ('slow-again', 'slow-longer', 'slow-retry'):
+            shutil.copytree(root / 'cache-slow', root / ('cache-' + name))
+        s, p = run('slow-again', FALLBACK_MODE='slow', SHEN_RC_COMPILE_TIMEOUT='0.2')
+        assert s['compiles'] == 0 and s['failed_hits'] == s['fallbacks'] > 0, s
+        # A timeout is retried once the limit is longer than the recorded one.
+        s, p = run('slow-longer', SHEN_RC_COMPILE_TIMEOUT='600')
+        assert s['compiles'] > 0 and s['failed_hits'] == 0 and s['fallbacks'] == 0, s
+        assert not list((root / 'cache-slow-longer').glob('*.failed')), 'a successful compile kept its failure note'
+        # SHEN_RC_COMPILE_RETRY=1 ignores the notes.
+        s, p = run('slow-retry', FALLBACK_MODE='slow', SHEN_RC_COMPILE_TIMEOUT='0.2', SHEN_RC_COMPILE_RETRY='1')
+        assert s['compiles'] > 0 and s['failed_hits'] == 0 and s['fallbacks'] == s['compiles'], s
         s, p = run('interpret', SHEN_RC_EXECUTION='interpret')
         s, p = run('strict', False, FALLBACK_MODE='every-second', SHEN_RC_VERIFY_NATIVE='1')
         assert 'native compilation failed (status 1)' in p.stderr and 'interpreting instead' not in p.stderr, p.stderr
         s, p = run('retry', cache='slow', SHEN_RC_VERIFY_NATIVE='1')
         assert s['compiles'] == compiles and s['disk_hits'] == 0 and s['interpreter_entries'] == 0, (s, compiles)
-    print('RC compile fallback: native, mixed failures, timeouts and interpreter agree; strict mode errors; timed-out compiles retry PASS')
+    print('RC compile fallback: native, mixed failures, timeouts and interpreter agree; failures remembered, retried on a longer limit or SHEN_RC_COMPILE_RETRY; strict mode errors and recompiles PASS')
 
 if __name__ == '__main__':
     main()
