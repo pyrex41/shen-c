@@ -132,6 +132,10 @@ static inline RcValue *rc_fast_function_get(RcContext *ctx, RcValue *symbol) {
     if (rc_fast_is(ctx, symbol, RC_SYMBOL) && symbol->as.text.function) return rc_fast_retain(symbol->as.text.function);
     return rc_function_get(ctx, symbol);
 }
+static inline RcValue *rc_fast_function_get_borrowed(RcContext *ctx, RcValue *symbol) {
+    if (rc_fast_is(ctx, symbol, RC_SYMBOL) && symbol->as.text.function) return symbol->as.text.function;
+    return rc_function_get_borrowed(ctx, symbol);
+}
 /* hd/tl: a head or tail that is itself a pending tail request takes the
  * checked path, which forces it outside tail position. */
 static inline RcValue *rc_fast_hd_owned(RcContext *ctx, RcValue *fn, RcValue **args, bool tail) {
@@ -246,6 +250,7 @@ static inline int rc_fast_eq_borrowed(RcContext *ctx, RcValue *fn, RcValue *cons
 #define rc_retain(v) rc_fast_retain(v)
 #define rc_release(v) rc_fast_release(v)
 #define rc_function_get(c, s) rc_fast_function_get(c, s)
+#define rc_function_get_borrowed(c, s) rc_fast_function_get_borrowed(c, s)
 #define rc_primitive_hd_owned(c, f, a, t) rc_fast_hd_owned(c, f, a, t)
 #define rc_primitive_tl_owned(c, f, a, t) rc_fast_tl_owned(c, f, a, t)
 #define rc_primitive_cons_owned(c, f, a, t) rc_fast_cons_owned(c, f, a, t)
