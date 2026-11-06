@@ -597,9 +597,9 @@ static void proj_names(RcEmitFn *f,RcValue *x,const Live *after,const char **nam
  }
  for(RcValue *q=x;is_pair(q);q=rest(q))proj_names(f,first(q),after,names,n,cap,budget);
 }
-/* Drop specialisation and fusion: when a dying pair's only remaining uses are one
- * hd and one tl, each may move its field out of a unique pair, instead of a dup
- * of the field now and a drop of it when the pair is freed. */
+/* Drop specialisation and fusion: when a dying pair's only remaining uses are at
+ * most one hd and one tl, each may move its field out of a unique pair, instead of
+ * a dup of the field now and a drop of it when the pair is freed. */
 static int mark_fusion(RcEmitFn *f,RcValue *x,const Live *after,int *marked){
  const char *names[8];int n=0,m=0,budget=RC_PROJECTION_BUDGET;
  proj_names(f,x,after,names,&n,8,&budget);
@@ -607,7 +607,7 @@ static int mark_fusion(RcEmitFn *f,RcValue *x,const Live *after,int *marked){
   int b=binding(f,names[i]);
   if(f->fuse[b])continue;
   ProjUse u=proj_uses(f,x,names[i]);
-  if(u.total==2&&u.hd==1&&u.tl==1){f->fuse[b]=1;marked[m++]=b;}
+  if(u.total>0&&u.total==u.hd+u.tl&&u.hd<=1&&u.tl<=1){f->fuse[b]=1;marked[m++]=b;}
  }
  return m;
 }
@@ -651,17 +651,29 @@ static bool borrowed_atom(RcEmitFn *f,RcValue *x,char *out,size_t cap){
  * moves, which keeps a unique value unique for an owning callee. Each borrowed
  * lexical stays in the live set while the other operands run. */
 static void borrow_args(RcEmitFn *f,RcValue *args,int n,const Live *after,bool every_lexical,ArgRef *refs,uint32_t *mask){
- Program *p=f->p;Live held=copy_live(p,after);
+ Program *p=f->p;Live held=copy_live(p,after),late={0};
  if(every_lexical)for(RcValue *q=args;!rc_is_nil(q);q=rest(q))if(is_symbol(first(q)))add(p,&held,binding(f,name(first(q))));
+ /* A lexical that dies at this call moves at the call, not in operand order, so
+  * the other operands can borrow it first. */
+ if(!every_lexical)for(RcValue *q=args;!rc_is_nil(q);q=rest(q))if(is_symbol(first(q))){
+  int b=binding(f,name(first(q)));
+  if(b>=0&&!f->blex[b]&&!has(&held,b)){add(p,&late,b);}
+ }
+ merge(p,&held,&late);
  RcValue *q=args;
  for(int i=0;i<n;i++,q=rest(q)){
   RcValue *x=first(q);ArgRef *r=&refs[i];r->slot=-1;r->borrowed=false;r->lit[0]=0;
   int b=is_symbol(x)?binding(f,name(x)):-1;
-  if(b>=0&&(f->blex[b]||has(&held,b))){r->slot=b;r->borrowed=true;if(mask)*mask|=UINT32_C(1)<<i;continue;}
+  if(b>=0&&has(&late,b)){
+   r->slot=b;
+   for(size_t k=0;k<late.n;k++)if(late.slot[k]==b){late.slot[k]=late.slot[--late.n];break;}
+   continue;
+  }
+  if(b>=0&&(f->blex[b]||(!every_lexical&&has(after,b))||(every_lexical&&has(&held,b)))){r->slot=b;r->borrowed=true;if(mask)*mask|=UINT32_C(1)<<i;continue;}
   if(b<0&&!is_pair(x)&&borrowed_atom(f,x,r->lit,sizeof r->lit)){if(mask)*mask|=UINT32_C(1)<<i;continue;}
   Live next=sequence_live(f,rest(q),&held);r->slot=expr(f,x,0,&next);clear_live(p,&next);
  }
- clear_live(p,&held);
+ clear_live(p,&held);clear_live(p,&late);
 }
 static void put_args(RcEmitFn *f,const ArgRef *refs,int n){
  for(int i=0;i<n;i++){
@@ -843,7 +855,18 @@ static int expr_inner(RcEmitFn *f,RcValue *x,int tail,const Live *after){
   forget(p,refs);drop(f,fn);check(f,out);drop_dead(f,after);return out;
  }
  int *av=alloc(p,(size_t)(n+1)*sizeof(*av));RcValue *q=args;
- for(int i=0;i<n;i++){Live next=sequence_live(f,rest(q),after);av[i]=expr(f,first(q),0,&next);clear_live(p,&next);q=rest(q);}
+ Live held=copy_live(p,after);
+ if(optimize(f))for(RcValue *r=args;!rc_is_nil(r);r=rest(r))if(is_symbol(first(r))){
+  int b=binding(f,name(first(r)));
+  if(b>=0&&!f->blex[b]&&!has(after,b))add(p,&held,b);
+ }
+ Live moved={0};
+ for(int i=0;i<n;i++){
+  int b=optimize(f)&&is_symbol(first(q))?binding(f,name(first(q))):-1;
+  if(b>=0&&!f->blex[b]&&!has(after,b)&&!has(&moved,b)){av[i]=b;add(p,&moved,b);q=rest(q);continue;}
+  Live next=sequence_live(f,rest(q),&held);av[i]=expr(f,first(q),0,&next);clear_live(p,&next);q=rest(q);
+ }
+ clear_live(p,&held);clear_live(p,&moved);
  int result=fresh(f);
  /* Resolve the callee before argument effects, and only bypass dispatch for
   * this exact, fully applied closure. A spelling/native-code comparison would

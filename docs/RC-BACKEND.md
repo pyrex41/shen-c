@@ -98,12 +98,30 @@ unused values are released. Closure captures contain lexical free variables.
 Error handler references remain live through protected expressions. Native
 functions adopt owned arguments, so unique inputs can stay unique across calls.
 
-Pair reuse is selective. Recognized cons/tail traversals retain exact primitive
-identity checks and detach unique pair storage only when the old value has no
-remaining use. Shared pairs follow an allocation path that preserves aliases.
-The runtime keeps detached storage rooted and valid through recursive calls,
-errors, and collection. This supports actual recursive list rebuilding; it is
-not generalized whole-program Perceus analysis or arbitrary allocation reuse.
+Compiled code follows Perceus (Reinking et al., PLDI 2021) with these parts:
+
+- Borrowing. Lexicals that stay live, immortal constants and closure literals
+  reach primitives and borrowed callbacks with no dup. A closure body reads its
+  captures from self, which every dispatcher roots through return. A non-tail call
+  passes a caller-borrowed mask to `rc_call_mixed`, which dups only for an owning
+  callee. A binding read needs no dup: a closure replaced during a call is kept
+  until the outermost runtime call returns. Parameters are always owned; parameter
+  borrow inference, which is not part of the paper, is not implemented.
+- Fusion and drop specialisation. When a dying pair's only remaining uses are at
+  most one `hd` and one `tl`, each moves its field out of a unique pair, leaving nil,
+  so the pair stays valid at every safepoint; a shared pair dups the field. Captures
+  that die at a lambda move in. A lexical that dies at a call moves at the call.
+- Reuse. The candidate for `(cons A B)` is an owned pair that dies there and whose
+  every remaining use is a direct projection in A or B. It stays in its frame slot,
+  which is the reuse token, until the new pair is built. A unique candidate is
+  rewritten in place; a shared or non-pair one allocates; a replaced `cons` sees an
+  ordinary call. Only pairs are reused, and field writes are not skipped.
+
+All of this applies to native code: the kernel and loaded modules. Interpreted
+code (`SHEN_RC_EXECUTION=interpret`) benefits only when it calls native code.
+Borrowing gives up the paper's garbage-free guarantee in a small way: a borrowed
+value lives until its owner's frame drops it, and a candidate pair's unprojected
+children live until the new pair replaces them.
 
 Large generated frames use heap slabs and share one borrowed argument buffer
 per function. Consecutive dead slots use compact cleanup loops, preserving

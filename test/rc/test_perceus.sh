@@ -7,6 +7,7 @@ builder=${1:-"$root/bin/rc-build"}
 case "$builder" in /*) ;; *) builder="$PWD/$builder" ;; esac
 export RC_PERCEUS_ROOT="$root" RC_PERCEUS_BUILDER="$builder"
 exec python3 - <<'PY'
+import json
 import os
 from pathlib import Path
 import subprocess
@@ -102,5 +103,23 @@ with tempfile.TemporaryDirectory(prefix='rc-perceus.') as temp:
         assert len(lines)==len(tops),(mode,len(lines),len(tops),ran.stderr)
         for c,got in zip(tops,lines):
             assert c[1] is None or got==c[1],(mode,c[0],'want',c[1],'got',got)
+    # The lowering the semantics above must survive, and proof that reuse fires.
+    (inputs/'user.kl').write_text('''(defun fresh (N A) (if (= N 0) A (fresh (- N 1) (cons N A))))
+(defun app (X Y) (if (cons? X) (cons (hd X) (app (tl X) Y)) Y))
+(defun walk (N L) (if (= N 0) (hd L) (walk (- N 1) (app L ()))))
+(walk 100 (fresh 100 ()))
+''')
+    dest=work/'reuse'
+    built=subprocess.run([os.environ['RC_PERCEUS_BUILDER'],str(inputs),str(dest)],env=env,capture_output=True,text=True,timeout=300)
+    assert built.returncode==0,(built.stdout,built.stderr)
+    code=(dest/'app.c').read_text()
+    for needed in ('rc_cons_call_reuse_owned(','rc_primitive_hd_take(','rc_primitive_tl_take(','rc_condition_eq_borrowed('):
+        assert needed in code,needed
+    ran=subprocess.run([str(dest/'app')],env=dict(env,SHEN_RC_PRINT='1',SHEN_RC_STATS='1'),capture_output=True,text=True,timeout=120)
+    assert ran.returncode==0 and ran.stdout=='1\n',(ran.stdout,ran.stderr)
+    stats=json.loads(ran.stderr[ran.stderr.index('{'):ran.stderr.index('}')+1])
+    # 100 walks over 100 unique cells: nearly every cons is an in-place rewrite.
+    assert stats['pair_reuses']>=9000,stats
+    assert stats['live_objects']<2000,stats
 print('RC perceus semantics: redefinition, raises through borrowed frames, deep recursion, aliases PASS')
 PY
