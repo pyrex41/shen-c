@@ -611,6 +611,18 @@ static int mark_fusion(RcEmitFn *f,RcValue *x,const Live *after,int *marked){
  }
  return m;
 }
+/* Reuse analysis: the candidate for (cons A B) is an owned pair that dies here and
+ * whose every remaining use is a direct projection inside A or B. It stays in its
+ * frame slot, which serves as the reuse token, until the new pair is built. */
+static int reuse_candidate(RcEmitFn *f,RcValue *x,const Live *after){
+ const char *names[8];int n=0,budget=RC_PROJECTION_BUDGET;
+ proj_names(f,x,after,names,&n,8,&budget);
+ for(int i=0;i<n;i++){
+  ProjUse u=proj_uses(f,x,names[i]);
+  if(u.total>0&&u.total==u.hd+u.tl)return binding(f,names[i]);
+ }
+ return -1;
+}
 /* Borrow classification of one call operand. A lexical keeps its own frame
  * owner; lit is a value rooted elsewhere (immortal, immediate, or held by this
  * closure's literal vector), so it needs no frame slot at all; anything else is
@@ -800,6 +812,17 @@ static int expr_inner(RcEmitFn *f,RcValue *x,int tail,const Live *after){
  }
  int n=count(p,args);
  Live head_after=sequence_live(f,args,after);int fn=function_head(f,head,&head_after,optimize(f),after);clear_live(p,&head_after);
+ if(optimize(f)&&special&&named(head,"cons")&&n==2&&tail!=2){
+  int v=reuse_candidate(f,x,after);
+  if(v>=0){
+   Live held=copy_live(p,after);add(p,&held,v);int cv[2];RcValue *q=args;
+   for(int i=0;i<2;i++,q=rest(q)){Live next=sequence_live(f,rest(q),&held);cv[i]=expr(f,first(q),0,&next);clear_live(p,&next);}
+   clear_live(p,&held);int out=fresh(f);
+   call_argument(f,0,cv[0]);call_argument(f,1,cv[1]);call_argument(f,2,v);
+   put(&f->code,"  t[%d]=rc_cons_call_reuse_owned(ctx,t[%d],a,%s);\n",out,fn,tail?"true":"false");
+   drop(f,fn);check(f,out);drop_dead(f,after);return out;
+  }
+ }
  bool leaf=optimize(f)&&special&&leaf_primitive(head)&&!named(head,"cons");
  if(optimize(f)&&!(special&&named(head,"cons"))&&n<=32&&((leaf&&tail!=2)||!tail)){
   ArgRef *refs=alloc(p,(size_t)(n+1)*sizeof(*refs));uint32_t mask=0;
