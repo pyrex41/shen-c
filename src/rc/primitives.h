@@ -58,6 +58,24 @@ RcValue *rc_primitive_gt_owned(RcContext *,RcValue *,RcValue **,bool);
 RcValue *rc_primitive_lt_owned(RcContext *,RcValue *,RcValue **,bool);
 RcValue *rc_primitive_ge_owned(RcContext *,RcValue *,RcValue **,bool);
 RcValue *rc_primitive_le_owned(RcContext *,RcValue *,RcValue **,bool);
+/* Fixed-arity builtins with borrowed inputs: the caller roots args through the
+ * call and the array is untouched. Replacements use the checked borrowed apply
+ * or a stack-safe tail request, which take their own references. */
+RcValue *rc_primitive_hd_borrowed(RcContext *,RcValue *,RcValue *const *,bool);
+RcValue *rc_primitive_tl_borrowed(RcContext *,RcValue *,RcValue *const *,bool);
+RcValue *rc_primitive_consp_borrowed(RcContext *,RcValue *,RcValue *const *,bool);
+RcValue *rc_primitive_numberp_borrowed(RcContext *,RcValue *,RcValue *const *,bool);
+RcValue *rc_primitive_stringp_borrowed(RcContext *,RcValue *,RcValue *const *,bool);
+RcValue *rc_primitive_eq_borrowed(RcContext *,RcValue *,RcValue *const *,bool);
+RcValue *rc_primitive_add_borrowed(RcContext *,RcValue *,RcValue *const *,bool);
+RcValue *rc_primitive_sub_borrowed(RcContext *,RcValue *,RcValue *const *,bool);
+RcValue *rc_primitive_mul_borrowed(RcContext *,RcValue *,RcValue *const *,bool);
+RcValue *rc_primitive_div_borrowed(RcContext *,RcValue *,RcValue *const *,bool);
+RcValue *rc_primitive_gt_borrowed(RcContext *,RcValue *,RcValue *const *,bool);
+RcValue *rc_primitive_lt_borrowed(RcContext *,RcValue *,RcValue *const *,bool);
+RcValue *rc_primitive_ge_borrowed(RcContext *,RcValue *,RcValue *const *,bool);
+RcValue *rc_primitive_le_borrowed(RcContext *,RcValue *,RcValue *const *,bool);
+RcValue *rc_primitive_call_borrowed(RcContext *,RcValue *,size_t,RcValue *const *,bool);
 /* Private compiler condition boundaries: consume owned arguments and return
  * 0/1, -1 with an error, or -2 for a non-boolean completion. Replacements
  * use ordinary non-tail checked apply; the emitter selects the original

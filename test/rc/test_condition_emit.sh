@@ -115,9 +115,9 @@ with tempfile.TemporaryDirectory(prefix='rc-condition-emit.') as temp:
         code=(dest/'app.c').read_text()
         for api in ('consp','numberp','stringp','eq','gt','lt','ge','le'):
             assert ('rc_condition_'+api+'_borrowed(' in code)==(mode=='optimized'),(mode,api)
-            # Last-use operands retain the consuming boundary, preserving the
-            # roots visible to cycle collection at the condition safepoint.
-            assert ('rc_condition_'+api+'_owned(' in code)==(mode=='optimized'),(mode,api)
+            # Operands stay borrowed through the test, last uses included; the
+            # consuming boundary is gone from optimized code.
+            assert 'rc_condition_'+api+'_owned(' not in code,(mode,api)
         ran=subprocess.run([str(dest/'app')],env=dict(env,SHEN_RC_PRINT='1'),capture_output=True,text=True,timeout=30)
         assert ran.returncode==0,(mode,ran.stdout,ran.stderr)
         assert ran.stdout.splitlines()==expected,(mode,ran.stdout.splitlines(),expected,ran.stderr)

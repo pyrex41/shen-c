@@ -154,6 +154,22 @@ static inline RcValue *rc_fast_tl_owned(RcContext *ctx, RcValue *fn, RcValue **a
     }
     return rc_primitive_tl_owned(ctx, fn, args, tail);
 }
+static inline RcValue *rc_fast_hd_borrowed(RcContext *ctx, RcValue *fn, RcValue *const *args, bool tail) {
+    RcValue *x = args[0];
+    if (rc_fast_builtin(ctx, fn, RC_FAST_HD) && rc_fast_is(ctx, x, RC_PAIR) && rc_fast_ok(ctx)) {
+        RcValue *h = x->as.pair.head;
+        if (rc_fast_immediate(h) || !h || h->type != RC_TAIL) return rc_fast_retain(h);
+    }
+    return rc_primitive_hd_borrowed(ctx, fn, args, tail);
+}
+static inline RcValue *rc_fast_tl_borrowed(RcContext *ctx, RcValue *fn, RcValue *const *args, bool tail) {
+    RcValue *x = args[0];
+    if (rc_fast_builtin(ctx, fn, RC_FAST_TL) && rc_fast_is(ctx, x, RC_PAIR) && rc_fast_ok(ctx)) {
+        RcValue *t = x->as.pair.tail;
+        if (rc_fast_immediate(t) || !t || t->type != RC_TAIL) return rc_fast_retain(t);
+    }
+    return rc_primitive_tl_borrowed(ctx, fn, args, tail);
+}
 static inline RcValue *rc_fast_cons_owned(RcContext *ctx, RcValue *fn, RcValue **args, bool tail) {
     if (rc_fast_builtin(ctx, fn, RC_FAST_CONS) && rc_fast_ok(ctx)) {
         RcValue *head = args[0], *rest = args[1]; args[0] = NULL; args[1] = NULL;
@@ -206,6 +222,16 @@ static inline int rc_fast_eq_owned(RcContext *ctx, RcValue *fn, RcValue **args) 
     }
     return rc_condition_eq_owned(ctx, fn, args);
 }
+static inline int rc_fast_eq_borrowed(RcContext *ctx, RcValue *fn, RcValue *const *args) {
+    RcValue *a = args[0], *b = args[1];
+    if (rc_fast_builtin(ctx, fn, RC_FAST_EQ) && rc_fast_ok(ctx) && a && b &&
+        (rc_fast_immediate(a) || rc_value_context_or_nil(ctx, a)) &&
+        (rc_fast_immediate(b) || rc_value_context_or_nil(ctx, b)) &&
+        (a == b || (rc_fast_identity_class(a) && rc_fast_identity_class(b)) ||
+         rc_fast_unique_against(a, b) || rc_fast_unique_against(b, a)))
+        return a == b;
+    return rc_condition_eq_borrowed(ctx, fn, args);
+}
 #define rc_retain(v) rc_fast_retain(v)
 #define rc_release(v) rc_fast_release(v)
 #define rc_function_get(c, s) rc_fast_function_get(c, s)
@@ -215,5 +241,8 @@ static inline int rc_fast_eq_owned(RcContext *ctx, RcValue *fn, RcValue **args) 
 #define rc_condition_consp_borrowed(c, f, a) rc_fast_consp_borrowed(c, f, a)
 #define rc_condition_consp_owned(c, f, a) rc_fast_consp_owned(c, f, a)
 #define rc_condition_eq_owned(c, f, a) rc_fast_eq_owned(c, f, a)
+#define rc_primitive_hd_borrowed(c, f, a, t) rc_fast_hd_borrowed(c, f, a, t)
+#define rc_primitive_tl_borrowed(c, f, a, t) rc_fast_tl_borrowed(c, f, a, t)
+#define rc_condition_eq_borrowed(c, f, a) rc_fast_eq_borrowed(c, f, a)
 #endif
 #endif

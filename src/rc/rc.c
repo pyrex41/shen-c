@@ -1578,6 +1578,31 @@ RcValue *rc_apply_rooted_owned_args(RcContext *ctx,RcValue *fn,size_t argc,RcVal
         : fn->as.closure.native(ctx,fn,argc,argv);
     return rc_compiled_call_complete(ctx,result,argc,argv);
 }
+void rc_args_retain(size_t argc, RcValue **argv, uint32_t mask) {
+    for (size_t i = 0; mask && i < argc; ++i, mask >>= 1)
+        if (mask & 1u) rc_retain(argv[i]);
+}
+static inline void args_forget(size_t argc, RcValue **argv, uint32_t mask) {
+    for (size_t i = 0; mask && i < argc; ++i, mask >>= 1)
+        if (mask & 1u) argv[i] = NULL;
+}
+RcValue *rc_call_mixed(RcContext *ctx, RcValue *fn, size_t argc, RcValue **argv, uint32_t borrowed) {
+    if (!rc_call_values_belong(ctx, fn, argc, argv) || rc_type(fn) != RC_CLOSURE ||
+        fn->as.closure.bound_count || fn->as.closure.arity != argc) {
+        rc_args_retain(argc, argv, borrowed);
+        return rc_apply_owned_args(ctx, fn, argc, argv);
+    }
+    RcValue *result;
+    if (fn->as.closure.owned_native) {
+        rc_args_retain(argc, argv, borrowed);
+        result = fn->as.closure.owned_native(ctx, fn, argc, argv);
+    } else {
+        /* A borrowed callback never touches the slots and the caller roots them. */
+        result = fn->as.closure.native(ctx, fn, argc, argv);
+        args_forget(argc, argv, borrowed);
+    }
+    return rc_compiled_call_complete(ctx, result, argc, argv);
+}
 RcValue *rc_apply(RcContext *ctx, RcValue *fn, size_t argc, RcValue *const *argv) {
     bool handled;
     RcValue *result = apply_small(ctx, fn, argc, argv, NULL, &handled);

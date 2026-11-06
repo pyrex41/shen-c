@@ -186,6 +186,13 @@ bool rc_compiled_call_matches(const RcValue *function, RcNativeOwned native,
                                size_t arity);
 RcValue *rc_compiled_call_complete(RcContext *ctx, RcValue *owned_result,
                                     size_t argc, RcValue **owned_args);
+/* Compiler ABI. function is rooted by the caller through completion. A set bit i
+ * says argv[i] is borrowed from a caller that keeps it alive through the call;
+ * every other slot is owned. Every slot is NULL on return, on success or
+ * failure. Only the first 32 arguments can be borrowed. */
+RcValue *rc_call_mixed(RcContext *ctx, RcValue *function, size_t argc,
+                       RcValue **argv, uint32_t borrowed);
+void rc_args_retain(size_t argc, RcValue **argv, uint32_t mask);
 /* Check borrowed call inputs before specialized dispatch; does not set errors. */
 bool rc_call_values_belong(RcContext *ctx, RcValue *function, size_t argc,
                            RcValue *const *argv);
