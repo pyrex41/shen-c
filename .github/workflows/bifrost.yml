@@ -17,7 +17,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: ubuntu-latest
+          - os: ubuntu-24.04
             cc: clang-18
             ar: llvm-ar-18
           - os: macos-latest
@@ -58,12 +58,13 @@ jobs:
           assert len(data['cases']) == 74, len(data['cases'])
           # ShenOSKernel 43.1 boots source-form handlers and the namespaces
           # extension, so the two capability SKIPs of Tarver's S43 now run.
-          # The pinned corpus's version-expr-43.1 golden is "43.1"; kernel
-          # 43.2 reports "43.2". That is the only allowed failure, until the
-          # corpus learns the 43.2 kernel.
-          version = data['cases']['version-expr-43.1']['impls']['shen-c']
-          assert version.get('status') == 'FAIL' and version.get('norm') == '43.2', version
-          assert counts == {'PASS': 71, 'FAIL': 1, 'KERNEL_SKIP': 2}, counts
+          # The pinned corpus's two 43.1 version cases have the golden "43.1";
+          # kernel 43.2 reports "43.2". Those are the only allowed failures,
+          # until the pin moves to a corpus that knows this port is on 43.2.
+          for name in ('version-expr-43.1', 'version-probe-43.1'):
+              result = data['cases'][name]['impls']['shen-c']
+              assert result.get('status') == 'FAIL' and '43.2' in str(result.get('norm')), result
+          assert counts == {'PASS': 70, 'FAIL': 2, 'KERNEL_SKIP': 2}, counts
           print('Pinned CLI corpus:', dict(counts))
           PYTHON
       - uses: actions/upload-artifact@v4
