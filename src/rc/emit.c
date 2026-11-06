@@ -44,14 +44,13 @@ static int is_pair(const RcValue *x) { return rc_type(x)==RC_PAIR; }
 static RcValue *first(RcValue *x) { return rc_head_borrowed(x); }
 static RcValue *rest(RcValue *x) { return rc_tail_borrowed(x); }
 static RcValue *second(RcValue *x) { return first(rest(x)); }
-struct Recycle;
 typedef struct DoGuard { int slot; struct DoGuard *outer; } DoGuard;
 typedef struct {
   Program *p; Buf code; Binding *bind; int nb, cap, slots, label, max_args; bool symbol_used;
   int arity, boolean_tail, literal_capture; bool once,self_loop,musttail_used,borrowed_fn_used,assoc_fast,pvar_fast,lazyderef_fast; size_t assoc_symbols[5],prolog_symbols[7];
   DoGuard *do_guard;
-  int *physical,*free_slots,slot_cap,frame_slots,nfree; unsigned char *active,*borrowed_fn; int *blex;
-  char fail[64]; struct Recycle *recycle; long constant_min;
+  int *physical,*free_slots,slot_cap,frame_slots,nfree; unsigned char *active,*borrowed_fn,*fuse; int *blex;
+  char fail[64]; long constant_min;
 } RcEmitFn;
 static void put(Buf *b, const char *fmt, ...) {
   Program *p=b->owner;
@@ -91,9 +90,10 @@ static int fresh(RcEmitFn *f) {
     f->active=resize(f->p,f->active,(size_t)f->slot_cap*sizeof(*f->active));
     f->borrowed_fn=resize(f->p,f->borrowed_fn,(size_t)f->slot_cap*sizeof(*f->borrowed_fn));
     f->blex=resize(f->p,f->blex,(size_t)f->slot_cap*sizeof(*f->blex));
+    f->fuse=resize(f->p,f->fuse,(size_t)f->slot_cap*sizeof(*f->fuse));
   }
   f->physical[slot]=f->nfree?f->free_slots[--f->nfree]:f->frame_slots++;
-  f->active[slot]=1;f->borrowed_fn[slot]=0;f->blex[slot]=0;return slot;
+  f->active[slot]=1;f->borrowed_fn[slot]=0;f->blex[slot]=0;f->fuse[slot]=0;return slot;
 }
 /* Logical slots remain unique for bindings, liveness, and trap boundaries.
  * Only private expression temporaries become available for frame reuse. In
@@ -260,7 +260,6 @@ static void argument(RcEmitFn *f,int index,int slot) {
 }
 typedef struct { int *slot; size_t n,cap; } Live;
 typedef struct Shadow { const char *name; const struct Shadow *next; } Shadow;
-typedef struct Recycle { int binding,token; struct Recycle *outer; } Recycle;
 static bool optimize(const RcEmitFn *f) { return !f->p->options.conservative_ownership; }
 static bool has(const Live *s,int slot) { if(s)for(size_t i=0;i<s->n;i++)if(s->slot[i]==slot)return true;return false; }
 static void add(Program *p,Live *s,int slot) {
@@ -510,10 +509,18 @@ static int closure(RcEmitFn *f,RcValue *params,RcValue *body,int isfreeze,const 
  if(optimize(f)){Shadow param={isfreeze?"":name(params),NULL};scan(f,body,isfreeze?NULL:&param,&freevars);}
  for(int i=0;i<f->nb;i++)if(binding(f,f->bind[i].name)==f->bind[i].slot&&(!optimize(f)||has(&freevars,f->bind[i].slot)))caps[n++]=f->bind[i];
  clear_live(p,&freevars);int id=compile(p,params,body,caps,n,isfreeze?1:2);
- for(int i=0;i<n;i++)argument(f,i,caps[i].slot);
+ /* A capture that dies here moves into the closure: its dup and drop fuse. */
+ uint32_t moved=0;
+ for(int i=0;i<n;i++){
+  argument(f,i,caps[i].slot);
+  if(optimize(f)&&i<32&&!f->blex[caps[i].slot]&&!f->borrowed_fn[caps[i].slot]&&!has(after,caps[i].slot)){
+   moved|=UINT32_C(1)<<i;put(&f->code,"  t[%d]=NULL;\n",caps[i].slot);
+  }
+ }
  if(p->options.expression_entry){if(f->max_args<n+1)f->max_args=n+1;put(&f->code,"  a[%d]=rc_capture(self,%d);\n",n,f->literal_capture);}
  int captures=n+(p->options.expression_entry?1:0);
- put(&f->code,"  t[%d]=%s(ctx,%d,rc_native_%d,%d,%s);\n",t,closure_api(p),isfreeze?0:1,id,captures,captures?"a":"NULL");
+ if(moved)put(&f->code,"  t[%d]=rc_closure_moved(ctx,%d,rc_native_%d,%d,a,UINT32_C(%" PRIu32 "));\n",t,isfreeze?0:1,id,captures,moved);
+ else put(&f->code,"  t[%d]=%s(ctx,%d,rc_native_%d,%d,%s);\n",t,closure_api(p),isfreeze?0:1,id,captures,captures?"a":"NULL");
  check(f,t);drop_dead(f,after);discard(caps);p->lambdas++;return t;
 }
 static int trap(RcEmitFn *f,RcValue *args,int tail,const Live *after){
@@ -549,6 +556,60 @@ static int function_head(RcEmitFn *f,RcValue *head,const Live *after,bool borrow
   }
  }
  int fn=expr(f,head,0,after);put(&f->code,"  if(rc_type(t[%d])==RC_SYMBOL) { RcValue *resolved=rc_function_get(ctx,t[%d]); rc_release(t[%d]); t[%d]=resolved; }\n",fn,fn,fn,fn);check(f,fn);return fn;
+}
+/* Occurrences of lexical name v in x. A use inside a closure, or any binder that
+ * could change what v, hd or tl mean, disqualifies v outright. The walk is bounded
+ * so that deep constructor chains stay linear. */
+typedef struct { int total,hd,tl,budget; } ProjUse;
+#define RC_PROJECTION_BUDGET 512
+static void proj_scan(RcEmitFn *f,RcValue *x,const char *v,ProjUse *u,bool closed){
+ if(--u->budget<0){u->total+=1000;return;}
+ if(is_symbol(x)){if(!strcmp(name(x),v))u->total+=closed?1000:1;return;}
+ if(!is_pair(x))return;
+ RcValue *h=first(x),*args=rest(x);
+ if(is_symbol(h)&&binding(f,name(h))<0){
+  if(named(h,"defun"))return;
+  if((named(h,"let")||named(h,"lambda"))&&is_pair(args)&&is_symbol(first(args))){
+   const char *b=name(first(args));
+   if(!strcmp(b,v)||!strcmp(b,"hd")||!strcmp(b,"tl"))u->total+=1000;
+  }
+  bool nested=closed||named(h,"lambda")||named(h,"freeze");
+  if((named(h,"hd")||named(h,"tl"))&&is_pair(args)&&rc_is_nil(rest(args))&&is_symbol(first(args))&&!strcmp(name(first(args)),v)){
+   u->total+=nested?1000:1;if(named(h,"hd"))u->hd++;else u->tl++;return;
+  }
+  for(RcValue *q=args;is_pair(q);q=rest(q))proj_scan(f,first(q),v,u,nested);
+  return;
+ }
+ for(RcValue *q=x;is_pair(q);q=rest(q))proj_scan(f,first(q),v,u,closed);
+}
+static ProjUse proj_uses(RcEmitFn *f,RcValue *x,const char *v){ProjUse u={0,0,0,RC_PROJECTION_BUDGET};proj_scan(f,x,v,&u,false);return u;}
+/* Owned lexicals that die after x and are projected directly somewhere in x. */
+static void proj_names(RcEmitFn *f,RcValue *x,const Live *after,const char **names,int *n,int cap,int *budget){
+ if(!is_pair(x)||--*budget<0)return;
+ RcValue *h=first(x),*args=rest(x);
+ if((named(h,"hd")||named(h,"tl"))&&binding(f,name(h))<0&&is_pair(args)&&is_symbol(first(args))){
+  int b=binding(f,name(first(args)));
+  if(b>=0&&!f->blex[b]&&!f->borrowed_fn[b]&&!has(after,b)){
+   for(int i=0;i<*n;i++)if(!strcmp(names[i],name(first(args))))return;
+   if(*n<cap)names[(*n)++]=name(first(args));
+  }
+  return;
+ }
+ for(RcValue *q=x;is_pair(q);q=rest(q))proj_names(f,first(q),after,names,n,cap,budget);
+}
+/* Drop specialisation and fusion: when a dying pair's only remaining uses are one
+ * hd and one tl, each may move its field out of a unique pair, instead of a dup
+ * of the field now and a drop of it when the pair is freed. */
+static int mark_fusion(RcEmitFn *f,RcValue *x,const Live *after,int *marked){
+ const char *names[8];int n=0,m=0,budget=RC_PROJECTION_BUDGET;
+ proj_names(f,x,after,names,&n,8,&budget);
+ for(int i=0;i<n;i++){
+  int b=binding(f,names[i]);
+  if(f->fuse[b])continue;
+  ProjUse u=proj_uses(f,x,names[i]);
+  if(u.total==2&&u.hd==1&&u.tl==1){f->fuse[b]=1;marked[m++]=b;}
+ }
+ return m;
 }
 /* Borrow classification of one call operand. A lexical keeps its own frame
  * owner; lit is a value rooted elsewhere (immortal, immediate, or held by this
@@ -639,7 +700,12 @@ static int condition_checked(RcEmitFn *f,RcValue *x,const Live *after,bool rhs_b
 static int condition(RcEmitFn *f,RcValue *x,const Live *after){return condition_checked(f,x,after,false);}
 static int expr_inner(RcEmitFn *f,RcValue *x,int tail,const Live *after);
 static int expr(RcEmitFn *f,RcValue *x,int tail,const Live *after){
- int mark=f->slots,result=expr_inner(f,x,tail,after);retire_scope(f,mark,result);return result;
+ /* A mark holds only for this expression: another path through the function may
+  * use the same lexical differently. */
+ int marked[8],nmarked=optimize(f)&&is_pair(x)?mark_fusion(f,x,after,marked):0;
+ int mark=f->slots,result=expr_inner(f,x,tail,after);retire_scope(f,mark,result);
+ for(int i=0;i<nmarked;i++)f->fuse[marked[i]]=0;
+ return result;
 }
 static int expr_inner(RcEmitFn *f,RcValue *x,int tail,const Live *after){
  Program *p=f->p;if(!is_list(x)||rc_is_nil(x))return atom(f,x,tail,after);
@@ -734,24 +800,16 @@ static int expr_inner(RcEmitFn *f,RcValue *x,int tail,const Live *after){
  }
  int n=count(p,args);
  Live head_after=sequence_live(f,args,after);int fn=function_head(f,head,&head_after,optimize(f),after);clear_live(p,&head_after);
- Recycle recycle={-1,-1,f->recycle};
- if(optimize(f)&&special&&named(head,"cons")&&n==2){Live used=sequence_live(f,args,NULL);
-  for(int i=f->nb-1;i>=0;i--)if(binding(f,f->bind[i].name)==f->bind[i].slot&&!f->blex[f->bind[i].slot]&&has(&used,f->bind[i].slot)&&!has(after,f->bind[i].slot)){recycle.binding=f->bind[i].slot;recycle.token=fresh(f);break;}
-  clear_live(p,&used);if(recycle.binding>=0)f->recycle=&recycle;
- }
- /* Only a direct final lexical argument can be detached. A handler/future
-  * read keeps its slot in after, disabling projection. */
- Recycle *project=NULL;
- if(optimize(f)&&special&&named(head,"tl")&&n==1&&is_symbol(first(args))){int b=binding(f,name(first(args)));
-  if(b>=0&&!has(after,b))for(Recycle *r=f->recycle;r;r=r->outer)if(r->binding==b){project=r;break;}}
  bool leaf=optimize(f)&&special&&leaf_primitive(head)&&!named(head,"cons");
- if(optimize(f)&&!project&&recycle.binding<0&&!(special&&named(head,"cons"))&&n<=32&&((leaf&&tail!=2)||!tail)){
+ if(optimize(f)&&!(special&&named(head,"cons"))&&n<=32&&((leaf&&tail!=2)||!tail)){
   ArgRef *refs=alloc(p,(size_t)(n+1)*sizeof(*refs));uint32_t mask=0;
   borrow_args(f,args,n,after,leaf,refs,&mask);
   int out=fresh(f);put_args(f,refs,n);
   if(leaf){
    const char *tiny=tiny_leaf_api(head,n);
-   if(tiny)put(&f->code,"  t[%d]=%.*s_borrowed(ctx,t[%d],a,%s);\n",out,(int)(strlen(tiny)-6),tiny,fn,tail?"true":"false");
+   int fused=n==1&&refs[0].borrowed&&f->fuse[refs[0].slot]&&(named(head,"hd")||named(head,"tl"));
+   if(fused)put(&f->code,"  t[%d]=rc_primitive_%s_take(ctx,t[%d],a,%s);\n",out,named(head,"hd")?"hd":"tl",fn,tail?"true":"false");
+   else if(tiny)put(&f->code,"  t[%d]=%.*s_borrowed(ctx,t[%d],a,%s);\n",out,(int)(strlen(tiny)-6),tiny,fn,tail?"true":"false");
    else put(&f->code,"  t[%d]=rc_primitive_call_borrowed(ctx,t[%d],%d,a,%s);\n",out,fn,n,tail?"true":"false");
    drop_temps(f,refs,n);
   }else{
@@ -786,11 +844,7 @@ static int expr_inner(RcEmitFn *f,RcValue *x,int tail,const Live *after){
   put(&f->code,") {\n");for(int i=0;i<n;i++)call_argument(f,i,av[i]);
   put(&f->code,"  t[%d]=rc_tailcall_owned_args(ctx,t[%d],%d,%s);\n  } else {\n",result,fn,n,n?"a":"NULL");
  }
- if(project){put(&f->code,"  { RcValue *candidate=t[%d]; t[%d]=NULL; t[%d]=rc_tail_call_reuse(ctx,t[%d],candidate,&t[%d]); }\n",av[0],av[0],result,fn,project->token);}
- else if(recycle.binding>=0){
-  put(&f->code,"  { RcValue *candidate=t[%d] ? t[%d] : t[%d]; t[%d]=NULL; t[%d]=NULL; t[%d]=rc_cons_call_reuse(ctx,t[%d],candidate,t[%d],t[%d],%s); }\n",recycle.token,recycle.token,recycle.binding,recycle.token,recycle.binding,result,fn,av[0],av[1],tail==1?"true":"false");
-  drop(f,av[0]);drop(f,av[1]);
- }else{
+ {
   for(int i=0;i<n;i++)call_argument(f,i,av[i]);
   if(optimize(f)&&special&&tiny_leaf_api(head,n))
    put(&f->code,"  t[%d]=%s(ctx,t[%d],a,%s);\n",result,tiny_leaf_api(head,n),fn,tail==1?"true":"false");
@@ -815,7 +869,6 @@ static int expr_inner(RcEmitFn *f,RcValue *x,int tail,const Live *after){
   if(!optimize(f))for(int i=0;i<n;i++)drop(f,av[i]);
  }
  if(guarded_tail)put(&f->code,"  }\n");
- if(recycle.binding>=0)f->recycle=recycle.outer;
  drop(f,fn);forget(p,av);check(f,result);drop_dead(f,after);return result;
 }
 /* Only this complete pinned kernel definition is eligible. No spelling-only

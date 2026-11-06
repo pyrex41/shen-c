@@ -38,9 +38,9 @@ with tempfile.TemporaryDirectory(prefix='shen-null-cleanup.') as tmp:
     subprocess.run([os.environ['RC_CLEANUP_BUILDER'],str(source),str(dest)],env=env,check=True,timeout=120)
     generated=(dest/'app.c').read_text()
     assert 'static void rc_drop_range' not in generated
-    # Compound address-taking pair reuse remains an unknown-line barrier.
-    # Its real retained range must still require the helper definition.
-    (source/'user.kl').write_text('(let A 1 (let B 2 (cons A B)))\n')
+    # A real range still requires the helper definition: both parameters die
+    # together at the branch.
+    (source/'user.kl').write_text('(defun g (X Y) (if (cons? X) 0 1))\n')
     dest=work/'retained-range'
     subprocess.run([os.environ['RC_CLEANUP_BUILDER'],str(source),str(dest)],env=env,check=True,timeout=120)
     generated=(dest/'app.c').read_text()

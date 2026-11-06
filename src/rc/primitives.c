@@ -426,6 +426,20 @@ BINARY_LEAF_B(rc_primitive_lt_borrowed,RC_BUILTIN_LT,P_LT)
 BINARY_LEAF_B(rc_primitive_ge_borrowed,RC_BUILTIN_GE,P_GE)
 BINARY_LEAF_B(rc_primitive_le_borrowed,RC_BUILTIN_LE,P_LE)
 #undef BINARY_LEAF_B
+RcValue *rc_primitive_hd_take(RcContext *c,RcValue *fn,RcValue *const *args,bool tail) {
+ if(rc_builtin_call_matches(c,RC_BUILTIN_HD,fn,1,args)&&!rc_has_error(c)) {
+  RcValue *value=rc_pair_take_unique(c,args[0],true);
+  if(value)return leaf_finish(c,value);
+ }
+ return (rc_primitive_hd_borrowed)(c,fn,args,tail);
+}
+RcValue *rc_primitive_tl_take(RcContext *c,RcValue *fn,RcValue *const *args,bool tail) {
+ if(rc_builtin_call_matches(c,RC_BUILTIN_TL,fn,1,args)&&!rc_has_error(c)) {
+  RcValue *value=rc_pair_take_unique(c,args[0],false);
+  if(value)return leaf_finish(c,value);
+ }
+ return (rc_primitive_tl_borrowed)(c,fn,args,tail);
+}
 RcValue *rc_primitive_call_borrowed(RcContext *c,RcValue *fn,size_t argc,RcValue *const *args,bool tail) {
  RcValue *code=rc_native_call_capture(c,fn,argc,args,primitive);
  if(code) {
@@ -591,8 +605,11 @@ RcValue *rc_lazyderef_try_owned(RcContext *c,RcValue *self,RcValue **args,
   if(next==deps[6])break;
   cursor=next;
  }
- *handled=true;RcValue *result=rc_retain(cursor),*left=args[0],*right=args[1];args[0]=args[1]=NULL;
- rc_release(left);rc_release(right);return leaf_finish(c,result);
+ *handled=true;RcValue *left=args[0],*right=args[1];args[0]=args[1]=NULL;
+ /* A non-variable is its own result: its dup and drop fuse. */
+ RcValue *result=cursor==left?left:rc_retain(cursor);
+ if(cursor!=left)rc_release(left);
+ rc_release(right);return leaf_finish(c,result);
 }
 RcValue *rc_assoc_try_owned(RcContext *c,RcValue *self,RcValue **args,
                             RcValue *const *deps,bool *handled) {
@@ -640,6 +657,20 @@ RcValue *rc_cons_call_reuse(RcContext *c,RcValue *function,
  RcValue *args[]={head,tail};
  RcValue *result=tail_position?rc_tailcall(c,function,2,args):rc_apply(c,function,2,args);
  rc_release(candidate);return result;
+}
+RcValue *rc_cons_call_reuse_owned(RcContext *c,RcValue *function,RcValue **args,bool tail_position) {
+ RcValue *candidate=args[2];args[2]=NULL;
+ bool canonical=rc_builtin_identity_matches(c,RC_BUILTIN_CONS,function);
+ if(!canonical&&rc_closure_is_native(function,primitive)&&rc_arity(function)==2) {
+  RcValue *code=rc_capture(function,0);
+  canonical=code&&rc_integer_value(code)==P_CONS;
+ }
+ if(canonical&&!rc_has_error(c)) {
+  RcValue *head=args[0],*tail=args[1];args[0]=NULL;args[1]=NULL;
+  return leaf_finish(c,rc_cons_reuse_owned(c,candidate,head,tail));
+ }
+ rc_release(candidate);
+ return rc_primitive_call_owned(c,function,2,args,tail_position);
 }
 RcValue *rc_tail_call_reuse(RcContext *c,RcValue *function,
                             RcValue *candidate,RcValue **out) {

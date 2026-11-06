@@ -76,6 +76,14 @@ RcValue *rc_primitive_lt_borrowed(RcContext *,RcValue *,RcValue *const *,bool);
 RcValue *rc_primitive_ge_borrowed(RcContext *,RcValue *,RcValue *const *,bool);
 RcValue *rc_primitive_le_borrowed(RcContext *,RcValue *,RcValue *const *,bool);
 RcValue *rc_primitive_call_borrowed(RcContext *,RcValue *,size_t,RcValue *const *,bool);
+/* args[0] is an owned lexical of the caller and is not consumed. A unique pair
+ * gives up the field; otherwise these behave exactly as the borrowed forms. */
+RcValue *rc_primitive_hd_take(RcContext *,RcValue *,RcValue *const *,bool);
+RcValue *rc_primitive_tl_take(RcContext *,RcValue *,RcValue *const *,bool);
+/* args[0], args[1] are owned head and tail; args[2] is the owned reuse candidate.
+ * All three slots are consumed. The canonical cons rewrites a unique candidate
+ * pair in place; a replacement cons sees an ordinary call. */
+RcValue *rc_cons_call_reuse_owned(RcContext *,RcValue *,RcValue **,bool);
 /* Private compiler condition boundaries: consume owned arguments and return
  * 0/1, -1 with an error, or -2 for a non-boolean completion. Replacements
  * use ordinary non-tail checked apply; the emitter selects the original

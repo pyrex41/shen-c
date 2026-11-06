@@ -134,6 +134,15 @@ RcValue *rc_cons_owned(RcContext *ctx, RcValue *owned_head, RcValue *owned_tail)
  * No detached storage token or invalid collector-visible value is exposed. */
 RcValue *rc_cons_reuse(RcContext *ctx, RcValue *owned_candidate,
                       RcValue *head, RcValue *tail);
+/* As rc_cons_reuse, but also consumes head and tail: the children move into the
+ * pair with no count traffic. */
+RcValue *rc_cons_reuse_owned(RcContext *ctx, RcValue *owned_candidate,
+                             RcValue *owned_head, RcValue *owned_tail);
+/* Compiler ABI, the fused form of dup(field); drop(pair) when pair is unique:
+ * moves one field out and leaves nil, so the pair stays valid for the collector.
+ * The caller owns pair and proves nothing else reads that field afterward. NULL,
+ * with nothing changed, when pair is not a unique pair. */
+RcValue *rc_pair_take_unique(RcContext *ctx, RcValue *pair, bool head);
 /* Consumes candidate. On success returns its owned tail and writes an owned
  * pair reuse candidate to out. Unique pairs transfer their tail edge, become
  * valid (nil . nil) pairs, and release the old head. Shared pairs retain their
@@ -154,6 +163,10 @@ RcValue *rc_closure(RcContext *ctx, size_t arity, RcNative native,
                     size_t capture_count, RcValue *const *captures);
 RcValue *rc_closure_owned(RcContext *ctx, size_t arity, RcNativeOwned native,
                           size_t capture_count, RcValue *const *captures);
+/* Bit i of moved transfers the caller's reference to capture i, on every path;
+ * other captures are retained. */
+RcValue *rc_closure_moved(RcContext *ctx, size_t arity, RcNativeOwned native,
+                          size_t capture_count, RcValue *const *captures, uint32_t moved);
 /* Trusted compiler/interpreter certificate: the callback has the exact,
  * effect-free two-parameter body returning its second argument. These fixed
  * arity constructors permit tail forwarding under dead-owner last-use rules;

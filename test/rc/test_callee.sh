@@ -52,7 +52,7 @@ with tempfile.TemporaryDirectory(prefix='shen-rc-callee.') as tmp:
    names=[json.loads(line.rstrip(',')) for line in names.splitlines() if line.strip()]
    tl=names.index('tl')
    assert f'rc_function_get_borrowed(ctx,symbols[{tl}])' in emitted
-   assert 'rc_tail_call_reuse(' in emitted
+   assert 'rc_primitive_tl_borrowed(' in emitted or 'rc_primitive_tl_take(' in emitted
   actual=subprocess.run([str(out/'app')],env={**os.environ,'SHEN_RC_PRINT':'1'},check=True,capture_output=True,text=True)
   assert actual.stdout==expected,(conservative,actual.stdout,expected)
  print(f'RC borrowed callee: {len(cases)} differential cases PASS')
