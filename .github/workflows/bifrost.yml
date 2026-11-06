@@ -47,7 +47,8 @@ jobs:
         env:
           BIFROST_SHEN_C: ${{ github.workspace }}/shen-c/bin/shen-c
         run: |
-          go run . --impls shen-c --json > corpus.json
+          # Exits 1 on any FAIL; the assertions below say which failures are allowed.
+          go run . --impls shen-c --json > corpus.json || true
           python3 - <<'PYTHON'
           import collections, json
           from pathlib import Path
