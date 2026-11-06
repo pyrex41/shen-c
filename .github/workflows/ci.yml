@@ -24,10 +24,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-24.04, macos-latest]
         cc: [clang]
         include:
-          - os: ubuntu-latest
+          - os: ubuntu-24.04
             cc: gcc
     env:
       CC: ${{ matrix.cc }}

@@ -9,7 +9,21 @@
   nrev. Parameters stay owned. See [the log](docs/performance/real-perceus-log.md). A
   closure replaced during a call now lives until the outermost runtime call returns.
 
-- **Kernel: upstream ec16a9f.** Default to an unmodified build of
+## 0.5.0
+
+- **Kernel: ShenOSKernel 43.2.** Default to the official
+  Shen-Language/shen-sources release `shen-43.2` (commit e6947f507ebc,
+  tarball sha256 `23c71508…417f32`), byte for byte. `(version)` is `43.2`.
+  The type-checker fix that ec16a9f carried is part of the release; the
+  remaining differences are `*version*`, renumbered generated names, and a
+  restructured `extension-type-annotations.kl`. The suite gains
+  `benchmark-coverage.shen`, which `kerneltests.shen` does not run (154
+  assertions in 40 reports, unchanged). The ec16a9f kernel moves to
+  `shen/releases/43.1-ec16a9f/` and stays selectable through
+  `shen/releases/shenoskernel-43.1-ec16a9f.json`;
+  `scripts/fetch-kernel.sh --version 43.2|43.1-ec16a9f|43.1 --check`
+  verifies any of them.
+- **Kernel: upstream ec16a9f** (superseded by 43.2 above). Defaulted to an unmodified build of
   Shen-Language/shen-sources commit ec16a9f, tizoc's merge of the
   type-checker fix #117 into 43.1 (pinned from pyrex41/shen-sources release
   `upstream-ec16a9f`, tarball sha256 `060066a8…acd`). `shen.by-hypothesis`

@@ -17,7 +17,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: ubuntu-latest
+          - os: ubuntu-24.04
             cc: clang-18
             ar: llvm-ar-18
           - os: macos-latest
@@ -47,7 +47,8 @@ jobs:
         env:
           BIFROST_SHEN_C: ${{ github.workspace }}/shen-c/bin/shen-c
         run: |
-          go run . --impls shen-c --json > corpus.json
+          # Exits 1 on any FAIL; the assertions below say which failures are allowed.
+          go run . --impls shen-c --json > corpus.json || true
           python3 - <<'PYTHON'
           import collections, json
           from pathlib import Path
@@ -58,7 +59,13 @@ jobs:
           assert len(data['cases']) == 74, len(data['cases'])
           # ShenOSKernel 43.1 boots source-form handlers and the namespaces
           # extension, so the two capability SKIPs of Tarver's S43 now run.
-          assert counts == {'PASS': 72, 'KERNEL_SKIP': 2}, counts
+          # The pinned corpus's two 43.1 version cases have the golden "43.1";
+          # kernel 43.2 reports "43.2". Those are the only allowed failures,
+          # until the pin moves to a corpus that knows this port is on 43.2.
+          for name in ('version-expr-43.1', 'version-probe-43.1'):
+              result = data['cases'][name]['impls']['shen-c']
+              assert result.get('status') == 'FAIL' and '43.2' in str(result.get('norm')), result
+          assert counts == {'PASS': 70, 'FAIL': 2, 'KERNEL_SKIP': 2}, counts
           print('Pinned CLI corpus:', dict(counts))
           PYTHON
       - uses: actions/upload-artifact@v4
