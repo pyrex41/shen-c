@@ -48,7 +48,7 @@ def main():
         for binary in ('bin/shen-rc', 'libexec/shen-c/rc-build'):
             subprocess.run([str(root / 'scripts/test-rc.sh'), '--audit-only', str(relocated / binary)],
                            cwd=work, env=env, check=True, timeout=30)
-        # This validates all 136 assertions, redirect output, cold strict native
+        # This validates every assertion of the pinned suite, redirect output, cold strict native
         # execution and a cached run with zero new compilations.
         subprocess.run(['python3', str(root / 'scripts/test-compile-first.py'), str(relocated / 'bin/shen-rc'),
                         '--timeout', '1200', '--output', str(args.suite_output.resolve())],
