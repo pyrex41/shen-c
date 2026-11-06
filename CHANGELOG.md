@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- **Real Perceus for native code.** Borrowed operands, closure environments and
+  callee bindings; hd/tl field moves and capture moves (fusion and drop
+  specialisation); reuse paired with the projected pair, replacing a shape that
+  picked the wrong binding and hit 63 of 376M on nrev. Parameters stay owned. See
+  [the log](docs/performance/real-perceus-log.md). A closure replaced during a call
+  now lives until the outermost runtime call returns.
+
 - **Kernel: upstream ec16a9f.** Default to an unmodified build of
   Shen-Language/shen-sources commit ec16a9f, tizoc's merge of the
   type-checker fix #117 into 43.1 (pinned from pyrex41/shen-sources release
