@@ -300,7 +300,7 @@ static RcValue *evaluate(RcContext *ctx, RcValue *input, RcValue *environment, b
     if (owned_env) rc_release(env);
     return result;
 }
-RcValue *rc_eval(RcContext *ctx, RcValue *expression) {
+static RcValue *eval_entry(RcContext *ctx, RcValue *expression) {
     /* All environment binders and expression symbols then share one intern table,
      * so lexical lookup can compare symbol identity without structural equality. */
     if(!rc_call_values_belong(ctx,expression,0,NULL))return rc_error(ctx,"eval-kl: invalid expression/context");
@@ -315,6 +315,13 @@ RcValue *rc_eval(RcContext *ctx, RcValue *expression) {
     RcValue *root=rc_retain(expression);
     RcValue *result=evaluate(ctx,root,rc_nil(),false);
     rc_release(root);
+    return result;
+}
+RcValue *rc_eval(RcContext *ctx, RcValue *expression) {
+    if(!ctx)return eval_entry(ctx,expression);
+    rc_call_enter(ctx);
+    RcValue *result=eval_entry(ctx,expression);
+    rc_call_leave(ctx);
     return result;
 }
 RcValue *rc_interpret_fallback(RcContext *ctx, RcValue *expression, RcValue *parameters) {

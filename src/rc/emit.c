@@ -115,7 +115,7 @@ static void rewrite_frame_code(Buf *out,const RcEmitFn *f) {
     }else if(s[i]=='t'&&s[i+1]=='['&&(i==0||!((s[i-1]>='a'&&s[i-1]<='z')||(s[i-1]>='A'&&s[i-1]<='Z')||(s[i-1]>='0'&&s[i-1]<='9')||s[i-1]=='_'))) {
       size_t end=i+2;int slot=0;while(s[end]>='0'&&s[end]<='9'){slot=slot*10+s[end]-'0';end++;}
       if(end>i+2&&s[end]==']'&&slot<f->slots) {
-        if(f->borrowed_fn[slot])put(out,"%.*sborrowed_fn",(int)(i-start),s+start);
+        if(f->borrowed_fn[slot])put(out,"%.*sbf[%d]",(int)(i-start),s+start,f->physical[slot]);
         else if(f->blex[slot]>0)put(out,"%.*sself->as.closure.captures[%d]",(int)(i-start),s+start,f->blex[slot]-1);
         else put(out,"%.*st[%d]",(int)(i-start),s+start,f->physical[slot]);
         i=end+1;start=i;
@@ -159,11 +159,9 @@ static void frame_code(Buf *out,const RcEmitFn *f) {
   else if((n=0,sscanf(line,"  if(!t[%d]) goto %*[^;];%n",&a,&n))==1&&
           n==(int)(len-(end?1:0)))recognized=true;
   /* Borrowed callee storage is separate from owned frame slots. */
-  else if((n=0,sscanf(line,"  borrowed_fn=NULL;%n",&n))==0&&
-          n==(int)(len-(end?1:0)))recognized=true;
-  else if((n=0,sscanf(line,"  borrowed_fn=rc_function_get_borrowed(ctx,symbols[%d]);%n",&a,&n))==1&&
-          a>=0&&n==(int)(len-(end?1:0)))recognized=true;
-  else if((n=0,sscanf(line,"  if(!borrowed_fn) goto %63[a-zA-Z0-9_];%n",label,&n))==1&&
+  else if((n=0,sscanf(line,"  bf[%d]=%n",&a,&n))==1&&n>0&&strchr(line,';')==line+len-(end?2:1)&&
+          !strchr(line,'{')&&!strchr(line,'&')&&!strchr(line,'"'))recognized=true;
+  else if((n=0,sscanf(line,"  if(!bf[%d]) goto %63[a-zA-Z0-9_];%n",&a,label,&n))==2&&
           n==(int)(len-(end?1:0)))recognized=true;
   /* Ordinary generated RHS calls cannot write any other frame slot. Reject
    * compound statements, labels, braces and address-taking before trusting it. */
@@ -194,7 +192,7 @@ static bool c_ident(char c){return (c>='a'&&c<='z')||(c>='A'&&c<='Z')||(c>='0'&&
  * their original lowering. Quoted text is never rewritten. */
 static int function_chunks(RcEmitFn *f,int id){
  Program *p=f->p;
- if(p->options.expression_entry||p->options.conservative_ownership||f->self_loop||f->musttail_used||f->borrowed_fn_used||f->code.n<131072)return 0;
+ if(p->options.expression_entry||p->options.conservative_ownership||f->self_loop||f->musttail_used||f->code.n<131072)return 0;
  Buf code={.owner=p};frame_code(&code,f);size_t n=code.n;
  char *mask=alloc(p,n+1);memcpy(mask,code.p,n+1);
  for(size_t i=0;i<n;){
@@ -234,7 +232,7 @@ static int function_chunks(RcEmitFn *f,int id){
  if(depth)return 0;if(start<n)cuts[count++]=n;if(count<2)return 0;
  start=0;
  for(size_t part=0;part<count;part++){
-  put(&p->functions,"#if defined(__GNUC__) || defined(__clang__)\n__attribute__((noinline))\n#endif\nstatic bool rc_native_chunk_%d_%zu(RcContext *ctx,RcValue *self,RcValue **argv,RcValue **t,RcValue **a,RcValue *const *symbols) {\n  (void)ctx; (void)self; (void)argv; (void)t; (void)a; (void)symbols;\n",id,part);
+  put(&p->functions,"#if defined(__GNUC__) || defined(__clang__)\n__attribute__((noinline))\n#endif\nstatic bool rc_native_chunk_%d_%zu(RcContext *ctx,RcValue *self,RcValue **argv,RcValue **t,RcValue **a,RcValue *const *symbols,RcValue **bf) {\n  (void)ctx; (void)self; (void)argv; (void)t; (void)a; (void)symbols; (void)bf;\n",id,part);
   size_t copied=start;
   for(size_t i=start;i<cuts[part];i++)if(!strncmp(mask+i,"goto cleanup;",13)){
    put(&p->functions,"%.*sreturn false;",(int)(i-copied),code.p+copied);i+=12;copied=i+1;
@@ -248,9 +246,8 @@ static int function_chunks(RcEmitFn *f,int id){
  * It never occupies a t[] slot, so no cleanup path can release it, and any
  * consuming use takes a dup instead of a move. */
 static void drop(RcEmitFn *f,int x) {
- if(f->blex[x])return;
- if(f->borrowed_fn[x])put(&f->code,"  t[%d]=NULL;\n",x);
- else put(&f->code,"  if(t[%d]) rc_release(t[%d]); t[%d]=NULL;\n",x,x,x);
+ if(f->blex[x]||f->borrowed_fn[x])return;
+ put(&f->code,"  if(t[%d]) rc_release(t[%d]); t[%d]=NULL;\n",x,x,x);
 }
 static void check(RcEmitFn *f,int x) { put(&f->code,"  if(!t[%d]) goto %s;\n",x,f->fail); }
 static void move(RcEmitFn *f,int dst,int src) { put(&f->code,"  t[%d]=t[%d]; t[%d]=NULL;\n",dst,src,src); }
@@ -531,13 +528,25 @@ static int trap(RcEmitFn *f,RcValue *args,int tail,const Live *after){
  put(&f->code,"  t[%d]=%s(ctx,t[%d],1,a);\n",dst,call_api(f,tail),h);drop(f,h);if(!optimize(f))drop(f,err);check(f,dst);drop_dead(f,after);
  put(&f->code,"trap_done_%d:;\n",id);return dst;
 }
-static int function_head(RcEmitFn *f,RcValue *head,const Live *after,bool borrow){
+/* A binding read needs no dup: rc_function_set retires, rather than frees, the
+ * closure it replaces, so the value read stays valid through this activation
+ * even if the name is redefined while arguments or the callee run. The binding
+ * is still resolved before any argument, so redefinition stays observable. A
+ * lexical callee that outlives the call stays rooted by its own owner. */
+static int function_head(RcEmitFn *f,RcValue *head,const Live *after,bool borrow,const Live *final){
  if(is_symbol(head)&&binding(f,name(head))<0){
   int fn=fresh(f);size_t index=symbol_index(f,name(head));
   /* Resolve the current binding before evaluating any argument. The table
    * caches symbol identity only; redefining functions remains observable. */
   if(borrow){f->borrowed_fn[fn]=1;f->borrowed_fn_used=true;}
   put(&f->code,"  t[%d]=%s(ctx,symbols[%zu]);\n",fn,borrow?"rc_function_get_borrowed":"rc_function_get",index);check(f,fn);return fn;
+ }
+ if(borrow&&final&&is_symbol(head)){
+  int b=binding(f,name(head));
+  if(f->blex[b]||has(final,b)){
+   int fn=fresh(f);f->borrowed_fn[fn]=1;f->borrowed_fn_used=true;
+   put(&f->code,"  t[%d]=rc_type(t[%d])==RC_SYMBOL ? rc_function_get_borrowed(ctx,t[%d]) : t[%d];\n",fn,b,b,b);check(f,fn);return fn;
+  }
  }
  int fn=expr(f,head,0,after);put(&f->code,"  if(rc_type(t[%d])==RC_SYMBOL) { RcValue *resolved=rc_function_get(ctx,t[%d]); rc_release(t[%d]); t[%d]=resolved; }\n",fn,fn,fn,fn);check(f,fn);return fn;
 }
@@ -613,9 +622,7 @@ static int condition_checked(RcEmitFn *f,RcValue *x,const Live *after,bool rhs_b
    else if(n==2){if(named(head,"="))api="eq";else if(named(head,">"))api="gt";else if(named(head,"<"))api="lt";else if(named(head,">="))api="ge";else if(named(head,"<="))api="le";}
   }
   if(api){
-   bool borrow=true;
-   for(RcValue *q=args;!rc_is_nil(q);q=rest(q))if(is_pair(first(q)))borrow=false;
-   Live live=sequence_live(f,args,after);int fn=function_head(f,head,&live,borrow);clear_live(p,&live);
+   Live live=sequence_live(f,args,after);int fn=function_head(f,head,&live,true,after);clear_live(p,&live);
    /* Predicates only read their operands. Lexicals stay borrowed and owned
     * temporaries drop right after the test; last-use lexicals drop just below. */
    ArgRef refs[2];borrow_args(f,args,n,after,true,refs,NULL);put_args(f,refs,n);
@@ -662,7 +669,7 @@ static int expr_inner(RcEmitFn *f,RcValue *x,int tail,const Live *after){
   RcValue *q=x;for(int i=0;i<n;i++){nodes[i]=q;q=second(rest(q));}
   suffix[n]=uses(f,end);merge(p,&suffix[n],after);
   for(int i=n-1;i>=0;i--){suffix[i]=copy_live(p,&suffix[i+1]);if(optimize(f))scan(f,first(rest(nodes[i])),NULL,&suffix[i]);}
-  for(int i=0;i<n;i++){functions[i]=function_head(f,first(nodes[i]),&suffix[i],false);left[i]=expr(f,first(rest(nodes[i])),0,&suffix[i+1]);}
+  for(int i=0;i<n;i++){functions[i]=function_head(f,first(nodes[i]),&suffix[i],false,NULL);left[i]=expr(f,first(rest(nodes[i])),0,&suffix[i+1]);}
   DoGuard *saved=f->do_guard,*guards=NULL;
   if(optimize(f)&&tail){
    guards=alloc(p,(size_t)n*sizeof(*guards));
@@ -726,16 +733,7 @@ static int expr_inner(RcEmitFn *f,RcValue *x,int tail,const Live *after){
   put(&f->code,"  if(!%s(ctx,t[%d],t[%d])) goto %s;\n",p->options.module_entry?"rc_module_define":"rc_function_set",t,cl,f->fail);drop(f,cl);p->defuns++;drop_dead(f,after);return t;
  }
  int n=count(p,args);
- /* Atom construction can allocate, but never invokes callbacks or a safepoint.
-  * Therefore the selected function's symbol binding roots it until leaf-helper
-  * entry. Generic helper fallback roots the callee before running user code.
-  * Module direct bodies and reuse helpers require a caller-owned callee. */
- bool borrow_fn=optimize(f)&&special&&leaf_primitive(head)&&!named(head,"cons")&&(!named(head,"tl")||!f->recycle);
- if(borrow_fn)for(RcValue *q=args;!rc_is_nil(q);q=rest(q)){
-  RcType type=rc_type(first(q));
-  if(type!=RC_NIL&&type!=RC_SYMBOL&&type!=RC_NUMBER&&type!=RC_STRING){borrow_fn=false;break;}
- }
- Live head_after=sequence_live(f,args,after);int fn=function_head(f,head,&head_after,borrow_fn);clear_live(p,&head_after);
+ Live head_after=sequence_live(f,args,after);int fn=function_head(f,head,&head_after,optimize(f),after);clear_live(p,&head_after);
  Recycle recycle={-1,-1,f->recycle};
  if(optimize(f)&&special&&named(head,"cons")&&n==2){Live used=sequence_live(f,args,NULL);
   for(int i=f->nb-1;i>=0;i--)if(binding(f,f->bind[i].name)==f->bind[i].slot&&!f->blex[f->bind[i].slot]&&has(&used,f->bind[i].slot)&&!has(after,f->bind[i].slot)){recycle.binding=f->bind[i].slot;recycle.token=fresh(f);break;}
@@ -946,15 +944,13 @@ static void finish_function(RcEmitFn *f,int id,int arity,int r){
  if(f->assoc_fast)put(&p->functions,"  { bool handled=false; RcValue *deps[]={symbols[%zu],symbols[%zu],symbols[%zu],symbols[%zu],symbols[%zu]};\n    RcValue *fast=rc_assoc_try_owned(ctx,self,argv,deps,&handled); if(handled) return fast; }\n",f->assoc_symbols[0],f->assoc_symbols[1],f->assoc_symbols[2],f->assoc_symbols[3],f->assoc_symbols[4]);
  if(f->pvar_fast)put(&p->functions,"  { bool handled=false; RcValue *deps[]={symbols[%zu],symbols[%zu],symbols[%zu],symbols[%zu]};\n    RcValue *fast=rc_pvar_try_owned(ctx,self,argv,deps,&handled); if(handled) return fast; }\n",f->prolog_symbols[0],f->prolog_symbols[1],f->prolog_symbols[2],f->prolog_symbols[3]);
  if(f->lazyderef_fast)put(&p->functions,"  { bool handled=false; RcValue *deps[]={symbols[%zu],symbols[%zu],symbols[%zu],symbols[%zu],symbols[%zu],symbols[%zu],symbols[%zu]};\n    RcValue *fast=rc_lazyderef_try_owned(ctx,self,argv,deps,rc_certified_pvar,&handled); if(handled) return fast; }\n",f->prolog_symbols[0],f->prolog_symbols[1],f->prolog_symbols[2],f->prolog_symbols[3],f->prolog_symbols[4],f->prolog_symbols[5],f->prolog_symbols[6]);
- if(f->frame_slots>64)put(&p->functions,"  RcValue **t=calloc(%d,sizeof(*t));\n  if(!t) return rc_error(ctx,\"native frame allocation failed\");\n  RcValue **a=t+%d; (void)a;\n",f->frame_slots+f->max_args,f->frame_slots);
- else put(&p->functions,"  RcValue *t[%d]={0}; RcValue *a[%d]; (void)a;\n",f->frame_slots?f->frame_slots:1,f->max_args?f->max_args:1);
+ if(f->frame_slots>64)put(&p->functions,"  RcValue **t=calloc(%d,sizeof(*t));\n  if(!t) return rc_error(ctx,\"native frame allocation failed\");\n  RcValue **a=t+%d; (void)a;\n  RcValue **bf=a+%d; (void)bf;\n",2*f->frame_slots+f->max_args,f->frame_slots,f->max_args);
+ else {put(&p->functions,"  RcValue *t[%d]={0}; RcValue *a[%d]; (void)a;\n",f->frame_slots?f->frame_slots:1,f->max_args?f->max_args:1);if(f->borrowed_fn_used&&!chunks)put(&p->functions,"  RcValue *bf[%d]; (void)bf;\n",f->frame_slots?f->frame_slots:1);}
  if(f->musttail_used)put(&p->functions,"  enum { rc_frame_slots=%d, rc_frame_heap=%d };\n",f->frame_slots,f->frame_slots>64);
- /* Atom-only argument evaluation prevents overlapping borrowed callees in
-  * this activation, so all logical borrowed slots share one scalar. */
- if(f->borrowed_fn_used)put(&p->functions,"  RcValue *borrowed_fn=NULL; (void)borrowed_fn;\n");
+ if(chunks&&f->frame_slots<=64)put(&p->functions,"  RcValue *bf[%d]; (void)bf;\n",f->frame_slots?f->frame_slots:1);
  if(f->self_loop)put(&p->functions,"entry:;\n");
  if(chunks)for(int part=0;part<chunks;part++)
-  put(&p->functions,"  if(!rc_native_chunk_%d_%d(ctx,self,argv,t,a,%s)) goto cleanup;\n",id,part,f->symbol_used?"symbols":"NULL");
+  put(&p->functions,"  if(!rc_native_chunk_%d_%d(ctx,self,argv,t,a,%s,bf)) goto cleanup;\n",id,part,f->symbol_used?"symbols":"NULL");
  else frame_code(&p->functions,f);
  r=f->physical[r];
  put(&p->functions,"  result=t[%d]; t[%d]=NULL;\n",r,r);
@@ -968,14 +964,12 @@ static void finish_function(RcEmitFn *f,int id,int arity,int r){
   put(&p->functions,"  return result;\n");
  }
  put(&p->functions,"cleanup:\n  for(size_t i=0;i<%d;i++) if(t[i]) rc_release(t[i]);\n",f->frame_slots);
- if(f->borrowed_fn_used)put(&p->functions,"  borrowed_fn=NULL;\n");
  if(f->frame_slots>64)put(&p->functions,"  free(t);\n");put(&p->functions,"  return result;\n");
  if(f->self_loop){
   /* a owns the staged arguments while the previous iteration's lexical and
    * temporary owners are dropped. argv belongs to the active runtime call,
    * so it is distinct from this callback's frame and scratch storage. */
   put(&p->functions,"recur:\n  for(size_t i=0;i<%d;i++) if(t[i]) { rc_release(t[i]); t[i]=NULL; }\n",f->frame_slots);
-  if(f->borrowed_fn_used)put(&p->functions,"  borrowed_fn=NULL;\n");
   for(int i=0;i<arity;i++)put(&p->functions,"  argv[%d]=a[%d]; a[%d]=NULL;\n",i,i,i);
   put(&p->functions,"  rc_safepoint(ctx);\n  goto entry;\n");
  }

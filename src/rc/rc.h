@@ -233,9 +233,10 @@ RcValue *rc_global_get(RcContext *ctx, RcValue *symbol);
 bool rc_global_set(RcContext *ctx, RcValue *symbol, RcValue *value);
 RcValue *rc_function_get(RcContext *ctx, RcValue *symbol);
 /* Borrowed current function binding, with the same undefined-function errors.
- * Valid only while the binding remains unchanged or an independent owner roots
- * it. Callers must prevent callbacks/redefinition until a dispatch API protects
- * the callee; ordinary value results from rc_function_get remain owned. */
+ * rc_function_set keeps the closures it replaces until the outermost runtime call
+ * returns, so a redefinition during argument evaluation or the call cannot free a
+ * binding that compiled code read. Outside any call a replaced binding is released
+ * at once, so a C caller there must not hold this across rc_function_set. */
 RcValue *rc_function_get_borrowed(RcContext *ctx, RcValue *symbol);
 /* Missing binding returns NULL without setting an error; result is owned. */
 RcValue *rc_function_lookup(RcContext *ctx, RcValue *symbol);

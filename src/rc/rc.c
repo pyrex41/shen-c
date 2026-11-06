@@ -75,6 +75,10 @@ struct RcContext {
     /* Open-addressed set of shared immortal closures (rc_closure_static).
      * Teardown frees them with every other cell in the slab pages. */
     RcValue **static_closures;
+    /* Replaced function bindings. Compiled code reads a binding once and uses it
+     * without a count, so they stay until the outermost call into the runtime
+     * returns, when no compiled frame can hold one; see rc_function_get_borrowed. */
+    RcValue **retired_functions; size_t retired_count, retired_capacity, call_depth;
     size_t static_capacity, static_count;
     /* Owned context roots, bounded by the specialized builtin set. */
     RcValue *builtin_roots[RC_BUILTIN_COUNT];
@@ -681,7 +685,7 @@ void rc_context_free(RcContext *ctx) {
         ctx->compiled_symbols = next;
     }
     ctx->destroying = true;
-    free(ctx->symbols); free(ctx->static_closures); free(ctx->gc_nodes); free(ctx->walk_nodes);
+    free(ctx->symbols); free(ctx->static_closures); free(ctx->retired_functions); free(ctx->gc_nodes); free(ctx->walk_nodes);
     for (RcPage *page = ctx->pages, *next; page; page = next) {
         next = page->next;
         RC_UNPOISON(page, RC_PAGE_BYTES);
@@ -1573,10 +1577,13 @@ RcValue *rc_apply_rooted_owned_args(RcContext *ctx,RcValue *fn,size_t argc,RcVal
     if(!rc_call_values_belong(ctx,fn,argc,argv)||rc_type(fn)!=RC_CLOSURE||
        fn->as.closure.bound_count||fn->as.closure.arity!=argc)
         return rc_apply_owned_args(ctx,fn,argc,argv);
+    rc_call_enter(ctx);
     RcValue *result=fn->as.closure.owned_native
         ? fn->as.closure.owned_native(ctx,fn,argc,argv)
         : fn->as.closure.native(ctx,fn,argc,argv);
-    return rc_compiled_call_complete(ctx,result,argc,argv);
+    result=rc_compiled_call_complete(ctx,result,argc,argv);
+    rc_call_leave(ctx);
+    return result;
 }
 void rc_args_retain(size_t argc, RcValue **argv, uint32_t mask) {
     for (size_t i = 0; mask && i < argc; ++i, mask >>= 1)
@@ -1603,15 +1610,28 @@ RcValue *rc_call_mixed(RcContext *ctx, RcValue *fn, size_t argc, RcValue **argv,
     }
     return rc_compiled_call_complete(ctx, result, argc, argv);
 }
+void rc_call_enter(RcContext *ctx) { ctx->call_depth++; }
+void rc_call_leave(RcContext *ctx) {
+    if (--ctx->call_depth || !ctx->retired_count) return;
+    size_t n = ctx->retired_count;
+    ctx->retired_count = 0;
+    for (size_t i = 0; i < n; ++i) rc_release(ctx->retired_functions[i]);
+}
 RcValue *rc_apply(RcContext *ctx, RcValue *fn, size_t argc, RcValue *const *argv) {
     bool handled;
+    if (ctx) rc_call_enter(ctx);
     RcValue *result = apply_small(ctx, fn, argc, argv, NULL, &handled);
-    return handled ? result : apply_request(ctx, rc_tailcall(ctx, fn, argc, argv));
+    if (!handled) result = apply_request(ctx, rc_tailcall(ctx, fn, argc, argv));
+    if (ctx) rc_call_leave(ctx);
+    return result;
 }
 RcValue *rc_apply_owned_args(RcContext *ctx, RcValue *fn, size_t argc, RcValue **argv) {
     bool handled;
+    if (ctx) rc_call_enter(ctx);
     RcValue *result = apply_small(ctx, fn, argc, argv, argv, &handled);
-    return handled ? result : apply_request(ctx, rc_tailcall_owned_args(ctx, fn, argc, argv));
+    if (!handled) result = apply_request(ctx, rc_tailcall_owned_args(ctx, fn, argc, argv));
+    if (ctx) rc_call_leave(ctx);
+    return result;
 }
 RcValue *rc_stream_with_direction(RcContext *ctx, FILE *file, bool close, bool input) {
     if (!file) return rc_error(ctx, "invalid stream");
@@ -1637,7 +1657,19 @@ static bool set_symbol_slot(RcContext *ctx, RcValue *symbol, RcValue *value, boo
     /* Every function publication invalidates dependency certificates. A
      * saturated generation disables cache hits, rather than wrapping. */
     if(function&&ctx->function_generation<SIZE_MAX)ctx->function_generation++;
-    RcValue *old = *slot; *slot = rc_retain(value); rc_release(old); return true;
+    RcValue *old = *slot; *slot = rc_retain(value);
+    if (function && ctx->call_depth && is_counted(old) && old != value) {
+        if (ctx->retired_count == ctx->retired_capacity) {
+            size_t capacity = ctx->retired_capacity ? ctx->retired_capacity * 2 : 64;
+            RcValue **grown = realloc(ctx->retired_functions, capacity * sizeof(*grown));
+            /* No room: an uncounted owner is exactly what teardown already handles. */
+            if (!grown) { old->refs = RC_IMMORTAL; return true; }
+            ctx->retired_functions = grown; ctx->retired_capacity = capacity;
+        }
+        ctx->retired_functions[ctx->retired_count++] = old;
+        return true;
+    }
+    rc_release(old); return true;
 }
 RcValue *rc_global_get(RcContext *ctx, RcValue *symbol) {
     if (!belongs(ctx, symbol) || rc_type(symbol) != RC_SYMBOL) return rc_error(ctx, "value expects a symbol");

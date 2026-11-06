@@ -47,8 +47,7 @@ with tempfile.TemporaryDirectory(prefix='shen-rc-callee.') as tmp:
   emitted=(out/'app.c').read_text()
   if not conservative:
    assert 'rc_function_get_borrowed(' in emitted
-   assert 'RcValue *borrowed_fn=NULL;' in emitted
-   assert 'borrowed_fns[' not in emitted
+   assert 'RcValue *bf[' in emitted
    names=re.search(r'rc_module_symbol_names\[\]=\{(.*?)\};',emitted,re.S)[1]
    names=[json.loads(line.rstrip(',')) for line in names.splitlines() if line.strip()]
    tl=names.index('tl')

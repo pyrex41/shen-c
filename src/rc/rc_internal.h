@@ -71,6 +71,9 @@ typedef struct {
     void (*call)(RcContext *,void *state,RcValue *self);
     void (*safepoint)(RcContext *,void *state);
 } RcTierHooks;
+/* Bracket a runtime entry that can run compiled code; see retired_functions. */
+void rc_call_enter(RcContext *);
+void rc_call_leave(RcContext *);
 void rc_tier_attach(RcContext *,const RcTierHooks *,void *state);
 const RcTierHooks *rc_tier_hooks(const RcContext *,void **state);
 /* Context-local compiler configuration; native code remains process resident. */
