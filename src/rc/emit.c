@@ -50,7 +50,7 @@ typedef struct {
   Program *p; Buf code; Binding *bind; int nb, cap, slots, label, max_args; bool symbol_used;
   int arity, boolean_tail, literal_capture; bool once,self_loop,musttail_used,borrowed_fn_used,assoc_fast,pvar_fast,lazyderef_fast; size_t assoc_symbols[5],prolog_symbols[7];
   DoGuard *do_guard;
-  int *physical,*free_slots,slot_cap,frame_slots,nfree; unsigned char *active,*borrowed_fn;
+  int *physical,*free_slots,slot_cap,frame_slots,nfree; unsigned char *active,*borrowed_fn; int *blex;
   char fail[64]; struct Recycle *recycle; long constant_min;
 } RcEmitFn;
 static void put(Buf *b, const char *fmt, ...) {
@@ -90,9 +90,10 @@ static int fresh(RcEmitFn *f) {
     f->free_slots=resize(f->p,f->free_slots,(size_t)f->slot_cap*sizeof(*f->free_slots));
     f->active=resize(f->p,f->active,(size_t)f->slot_cap*sizeof(*f->active));
     f->borrowed_fn=resize(f->p,f->borrowed_fn,(size_t)f->slot_cap*sizeof(*f->borrowed_fn));
+    f->blex=resize(f->p,f->blex,(size_t)f->slot_cap*sizeof(*f->blex));
   }
   f->physical[slot]=f->nfree?f->free_slots[--f->nfree]:f->frame_slots++;
-  f->active[slot]=1;f->borrowed_fn[slot]=0;return slot;
+  f->active[slot]=1;f->borrowed_fn[slot]=0;f->blex[slot]=0;return slot;
 }
 /* Logical slots remain unique for bindings, liveness, and trap boundaries.
  * Only private expression temporaries become available for frame reuse. In
@@ -115,6 +116,7 @@ static void rewrite_frame_code(Buf *out,const RcEmitFn *f) {
       size_t end=i+2;int slot=0;while(s[end]>='0'&&s[end]<='9'){slot=slot*10+s[end]-'0';end++;}
       if(end>i+2&&s[end]==']'&&slot<f->slots) {
         if(f->borrowed_fn[slot])put(out,"%.*sborrowed_fn",(int)(i-start),s+start);
+        else if(f->blex[slot]>0)put(out,"%.*sself->as.closure.captures[%d]",(int)(i-start),s+start,f->blex[slot]-1);
         else put(out,"%.*st[%d]",(int)(i-start),s+start,f->physical[slot]);
         i=end+1;start=i;
       }else i++;
@@ -241,7 +243,12 @@ static int function_chunks(RcEmitFn *f,int id){
  }
  return (int)count;
 }
+/* A borrowed lexical aliases storage this activation does not own (blex: +i+1
+ * for capture i of self, which every dispatcher roots through callback return).
+ * It never occupies a t[] slot, so no cleanup path can release it, and any
+ * consuming use takes a dup instead of a move. */
 static void drop(RcEmitFn *f,int x) {
+ if(f->blex[x])return;
  if(f->borrowed_fn[x])put(&f->code,"  t[%d]=NULL;\n",x);
  else put(&f->code,"  if(t[%d]) rc_release(t[%d]); t[%d]=NULL;\n",x,x,x);
 }
@@ -472,7 +479,7 @@ static int atom(RcEmitFn *f,RcValue *x,int tail,const Live *after) {
   else put(&f->code,"  t[%d]=rc_number(ctx,%a);\n",t,n);
  }else if(rc_type(x)==RC_STRING){put(&f->code,"  t[%d]=rc_string_n(ctx,",t);quoted_n(&f->code,rc_text(x),rc_text_length(x));put(&f->code,",%zu);\n",rc_text_length(x));}
  else if(is_symbol(x)){
-  int b=binding(f,name(x));if(b>=0){if(optimize(f)?!has(after,b):tail)move(f,t,b);else put(&f->code,"  t[%d]=rc_retain(t[%d]);\n",t,b);}
+  int b=binding(f,name(x));if(b>=0){if(!f->blex[b]&&(optimize(f)?!has(after,b):tail))move(f,t,b);else put(&f->code,"  t[%d]=rc_retain(t[%d]);\n",t,b);}
   else symbol_slot(f,t,name(x));
  }else bad(p,"rc emit: unsupported atom");check(f,t);return t;
 }
@@ -568,7 +575,7 @@ static void borrow_args(RcEmitFn *f,RcValue *args,int n,const Live *after,bool e
  for(int i=0;i<n;i++,q=rest(q)){
   RcValue *x=first(q);ArgRef *r=&refs[i];r->slot=-1;r->borrowed=false;r->lit[0]=0;
   int b=is_symbol(x)?binding(f,name(x)):-1;
-  if(b>=0&&has(&held,b)){r->slot=b;r->borrowed=true;if(mask)*mask|=UINT32_C(1)<<i;continue;}
+  if(b>=0&&(f->blex[b]||has(&held,b))){r->slot=b;r->borrowed=true;if(mask)*mask|=UINT32_C(1)<<i;continue;}
   if(b<0&&!is_pair(x)&&borrowed_atom(f,x,r->lit,sizeof r->lit)){if(mask)*mask|=UINT32_C(1)<<i;continue;}
   Live next=sequence_live(f,rest(q),&held);r->slot=expr(f,x,0,&next);clear_live(p,&next);
  }
@@ -731,7 +738,7 @@ static int expr_inner(RcEmitFn *f,RcValue *x,int tail,const Live *after){
  Live head_after=sequence_live(f,args,after);int fn=function_head(f,head,&head_after,borrow_fn);clear_live(p,&head_after);
  Recycle recycle={-1,-1,f->recycle};
  if(optimize(f)&&special&&named(head,"cons")&&n==2){Live used=sequence_live(f,args,NULL);
-  for(int i=f->nb-1;i>=0;i--)if(binding(f,f->bind[i].name)==f->bind[i].slot&&has(&used,f->bind[i].slot)&&!has(after,f->bind[i].slot)){recycle.binding=f->bind[i].slot;recycle.token=fresh(f);break;}
+  for(int i=f->nb-1;i>=0;i--)if(binding(f,f->bind[i].name)==f->bind[i].slot&&!f->blex[f->bind[i].slot]&&has(&used,f->bind[i].slot)&&!has(after,f->bind[i].slot)){recycle.binding=f->bind[i].slot;recycle.token=fresh(f);break;}
   clear_live(p,&used);if(recycle.binding>=0)f->recycle=&recycle;
  }
  /* Only a direct final lexical argument can be detached. A handler/future
@@ -1005,7 +1012,7 @@ static int compile(Program *p,RcValue *params,RcValue *body,Binding *caps,int nc
   * The generated guard also rejects bound/partially applied closures. */
  if(optimize(&f)&&!ncaps&&!freeze&&exact_second_identity(params,body,arity))
   put(&p->transparent_do," || rc_closure_is_owned_native(fn,rc_native_%d)",id);
- for(int i=0;i<ncaps;i++){int s=fresh(&f);bind(&f,caps[i].name,s);put(&f.code,"  t[%d]=rc_retain(rc_capture(self,%d));\n",s,i);}
+ for(int i=0;i<ncaps;i++){int s=fresh(&f);bind(&f,caps[i].name,s);if(optimize(&f))f.blex[s]=i+1;else put(&f.code,"  t[%d]=rc_retain(rc_capture(self,%d));\n",s,i);}
  for(int i=0;i<arity;i++,params=freeze==2?rc_nil():rest(params)){RcValue *param=freeze==2?params:first(params);if(!is_symbol(param))bad(p,"rc emit: function parameter");for(int j=ncaps;j<f.nb;j++)if(!strcmp(f.bind[j].name,name(param)))bad(p,"rc emit: duplicate function parameter");int s=fresh(&f);bind(&f,name(param),s);
   if(optimize(&f))put(&f.code,"  t[%d]=argv[%d]; argv[%d]=NULL;\n",s,i,i);else put(&f.code,"  t[%d]=rc_retain(argv[%d]);\n",s,i);}
  Live needed=uses(&f,body);drop_dead(&f,&needed);clear_live(p,&needed);int r=expr(&f,body,1,NULL);

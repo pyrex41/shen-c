@@ -33,7 +33,7 @@ with tempfile.TemporaryDirectory(prefix='shen-null-cleanup.') as tmp:
         assert 'if(t[123]) rc_release(t[123]); t[123]=NULL;' in generated
     # Both let bindings are transferred before their range drop; no helper
     # call remains. Text resembling a helper call must not force its emission.
-    (source/'user.kl').write_text('(let A 1 (let B 2 (do A B)))\n"  rc_drop_range(t,0,2);"\n')
+    (source/'user.kl').write_text('(let A 1 (let B 2 (cons? (nosuch A B))))\n"  rc_drop_range(t,0,2);"\n')
     dest=work/'all-ranges-eliminated'
     subprocess.run([os.environ['RC_CLEANUP_BUILDER'],str(source),str(dest)],env=env,check=True,timeout=120)
     generated=(dest/'app.c').read_text()
