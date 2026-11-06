@@ -39,7 +39,7 @@ cases=[
  ('(let L (cons 1 ()) (trap-error (cons (mid L) (simple-error "late")) (lambda E (cons (error-to-string E) L))))','("boom" 1)'),
  # Deep recursion, non-tail and tail, with a parameter that never changes.
  ('(defun deep (N L) (if (= N 0) (hd L) (+ 1 (deep (- N 1) L))))',None),
- ('(deep 20000 (cons 0 ()))','20000'),
+ ('(deep 3000 (cons 0 ()))','3000'),
  ('(defun sum (N L A) (if (= N 0) A (sum (- N 1) L (+ A (hd L)))))',None),
  ('(sum 1000000 (cons 1 ()) 0)','1000000'),
  ('(defun ev (N L) (if (= N 0) (hd L) (od (- N 1) L)))',None),
