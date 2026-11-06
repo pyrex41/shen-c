@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.5.0
 
 - **Kernel: ShenOSKernel 43.2.** Default to the official
   Shen-Language/shen-sources release `shen-43.2` (commit e6947f507ebc,
