@@ -1070,6 +1070,22 @@ RcValue *rc_pair_take_unique(RcContext *ctx, RcValue *pair, bool head) {
     if (!head) ctx->stats.pair_tail_transfers++;
     return value;
 }
+RcValue *rc_pair_take_last(RcContext *ctx, RcValue **slot, bool head) {
+    RcValue *pair = *slot;
+    if (!belongs(ctx, pair) || rc_type(pair) != RC_PAIR) return NULL;
+    RcValue **field = head ? &pair->as.pair.head : &pair->as.pair.tail, *value = *field;
+    if (!belongs(ctx, value) || rc_type(value) == RC_TAIL) return NULL;
+    if (pair->refs == 1 && !pair->has_plan) {
+        RcValue **sibling = head ? &pair->as.pair.tail : &pair->as.pair.head, *other = *sibling;
+        *field = rc_nil(); *sibling = rc_nil(); pair->reaches_vector = false;
+        rc_release(other);
+        if (!head) ctx->stats.pair_tail_transfers++;
+        return value;
+    }
+    rc_retain(value); *slot = NULL; rc_release(pair);
+    if (!head) ctx->stats.pair_tail_shares++;
+    return value;
+}
 RcValue *rc_pair_take_tail_reuse(RcContext *ctx, RcValue *candidate, RcValue **out) {
     if (out) *out = NULL;
     if (!out || !belongs(ctx, candidate) || rc_type(candidate) != RC_PAIR) {

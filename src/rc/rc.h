@@ -143,6 +143,12 @@ RcValue *rc_cons_reuse_owned(RcContext *ctx, RcValue *owned_candidate,
  * The caller owns pair and proves nothing else reads that field afterward. NULL,
  * with nothing changed, when pair is not a unique pair. */
 RcValue *rc_pair_take_unique(RcContext *ctx, RcValue *pair, bool head);
+/* Compiler ABI, the paper's drop-reuse at a pair's last projection. The caller owns
+ * *slot and never reads the pair again except as a reuse token. A unique pair gives up
+ * the field and drops the other, leaving (nil . nil) in *slot. A shared pair dups the
+ * field, gives up the caller's reference and sets *slot to NULL. NULL, with nothing
+ * changed, when *slot is not a pair or the field is a pending tail request. */
+RcValue *rc_pair_take_last(RcContext *ctx, RcValue **slot, bool head);
 /* Consumes candidate. On success returns its owned tail and writes an owned
  * pair reuse candidate to out. Unique pairs transfer their tail edge, become
  * valid (nil . nil) pairs, and release the old head. Shared pairs retain their

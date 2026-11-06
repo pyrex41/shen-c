@@ -426,20 +426,25 @@ BINARY_LEAF_B(rc_primitive_lt_borrowed,RC_BUILTIN_LT,P_LT)
 BINARY_LEAF_B(rc_primitive_ge_borrowed,RC_BUILTIN_GE,P_GE)
 BINARY_LEAF_B(rc_primitive_le_borrowed,RC_BUILTIN_LE,P_LE)
 #undef BINARY_LEAF_B
-RcValue *rc_primitive_hd_take(RcContext *c,RcValue *fn,RcValue *const *args,bool tail) {
- if(rc_builtin_call_matches(c,RC_BUILTIN_HD,fn,1,args)&&!rc_has_error(c)) {
-  RcValue *value=rc_pair_take_unique(c,args[0],true);
-  if(value)return leaf_finish(c,value);
- }
- return (rc_primitive_hd_borrowed)(c,fn,args,tail);
+#define TAKE_LEAF(which,slot,sibling_slot,is_head) \
+RcValue *rc_primitive_##which##_take(RcContext *c,RcValue *fn,RcValue *const *args,bool tail,RcValue *sibling) { \
+ if(rc_builtin_call_matches(c,slot,fn,1,args)&&!rc_has_error(c)&& \
+    rc_builtin_identity_matches(c,sibling_slot,rc_function_slot_borrowed(c,sibling))) { \
+  RcValue *value=rc_pair_take_unique(c,args[0],is_head); \
+  if(value)return leaf_finish(c,value); \
+ } \
+ return rc_primitive_##which##_borrowed(c,fn,args,tail); \
+} \
+RcValue *rc_primitive_##which##_last(RcContext *c,RcValue *fn,RcValue **args,bool tail) { \
+ if(rc_builtin_call_matches(c,slot,fn,1,args)&&!rc_has_error(c)) { \
+  RcValue *value=rc_pair_take_last(c,&args[0],is_head); \
+  if(value)return leaf_finish(c,value); \
+ } \
+ return rc_primitive_##which##_borrowed(c,fn,args,tail); \
 }
-RcValue *rc_primitive_tl_take(RcContext *c,RcValue *fn,RcValue *const *args,bool tail) {
- if(rc_builtin_call_matches(c,RC_BUILTIN_TL,fn,1,args)&&!rc_has_error(c)) {
-  RcValue *value=rc_pair_take_unique(c,args[0],false);
-  if(value)return leaf_finish(c,value);
- }
- return (rc_primitive_tl_borrowed)(c,fn,args,tail);
-}
+TAKE_LEAF(hd,RC_BUILTIN_HD,RC_BUILTIN_TL,true)
+TAKE_LEAF(tl,RC_BUILTIN_TL,RC_BUILTIN_HD,false)
+#undef TAKE_LEAF
 RcValue *rc_primitive_call_borrowed(RcContext *c,RcValue *fn,size_t argc,RcValue *const *args,bool tail) {
  RcValue *code=rc_native_call_capture(c,fn,argc,args,primitive);
  if(code) {

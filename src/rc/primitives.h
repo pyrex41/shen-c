@@ -77,9 +77,15 @@ RcValue *rc_primitive_ge_borrowed(RcContext *,RcValue *,RcValue *const *,bool);
 RcValue *rc_primitive_le_borrowed(RcContext *,RcValue *,RcValue *const *,bool);
 RcValue *rc_primitive_call_borrowed(RcContext *,RcValue *,size_t,RcValue *const *,bool);
 /* args[0] is an owned lexical of the caller and is not consumed. A unique pair
- * gives up the field; otherwise these behave exactly as the borrowed forms. */
-RcValue *rc_primitive_hd_take(RcContext *,RcValue *,RcValue *const *,bool);
-RcValue *rc_primitive_tl_take(RcContext *,RcValue *,RcValue *const *,bool);
+ * gives up the field if the primitive and the current binding of sibling, the other
+ * projection's symbol, are canonical; otherwise these behave as the borrowed forms.
+ * The caller proves no user code runs before that sibling projection. */
+RcValue *rc_primitive_hd_take(RcContext *,RcValue *,RcValue *const *,bool,RcValue *sibling);
+RcValue *rc_primitive_tl_take(RcContext *,RcValue *,RcValue *const *,bool,RcValue *sibling);
+/* The pair's last projection: args[0] is as rc_pair_take_last's slot when the
+ * primitive is canonical; a replacement sees an ordinary call with args untouched. */
+RcValue *rc_primitive_hd_last(RcContext *,RcValue *,RcValue **,bool);
+RcValue *rc_primitive_tl_last(RcContext *,RcValue *,RcValue **,bool);
 /* args[0], args[1] are owned head and tail; args[2] is the owned reuse candidate.
  * All three slots are consumed. The canonical cons rewrites a unique candidate
  * pair in place; a replacement cons sees an ordinary call. */

@@ -49,7 +49,7 @@ typedef struct {
   Program *p; Buf code; Binding *bind; int nb, cap, slots, label, max_args; bool symbol_used;
   int arity, boolean_tail, literal_capture; bool once,self_loop,musttail_used,borrowed_fn_used,assoc_fast,pvar_fast,lazyderef_fast; size_t assoc_symbols[5],prolog_symbols[7];
   DoGuard *do_guard;
-  int *physical,*free_slots,slot_cap,frame_slots,nfree; unsigned char *active,*borrowed_fn,*fuse; int *blex;
+  int *physical,*free_slots,slot_cap,frame_slots,nfree; unsigned char *active,*borrowed_fn,*fuse; int *blex,*fuse_left; int token;
   char fail[64]; long constant_min;
 } RcEmitFn;
 static void put(Buf *b, const char *fmt, ...) {
@@ -91,9 +91,10 @@ static int fresh(RcEmitFn *f) {
     f->borrowed_fn=resize(f->p,f->borrowed_fn,(size_t)f->slot_cap*sizeof(*f->borrowed_fn));
     f->blex=resize(f->p,f->blex,(size_t)f->slot_cap*sizeof(*f->blex));
     f->fuse=resize(f->p,f->fuse,(size_t)f->slot_cap*sizeof(*f->fuse));
+    f->fuse_left=resize(f->p,f->fuse_left,(size_t)f->slot_cap*sizeof(*f->fuse_left));
   }
   f->physical[slot]=f->nfree?f->free_slots[--f->nfree]:f->frame_slots++;
-  f->active[slot]=1;f->borrowed_fn[slot]=0;f->blex[slot]=0;f->fuse[slot]=0;return slot;
+  f->active[slot]=1;f->borrowed_fn[slot]=0;f->blex[slot]=0;f->fuse[slot]=0;f->fuse_left[slot]=0;return slot;
 }
 /* Logical slots remain unique for bindings, liveness, and trap boundaries.
  * Only private expression temporaries become available for frame reuse. In
@@ -597,17 +598,42 @@ static void proj_names(RcEmitFn *f,RcValue *x,const Live *after,const char **nam
  }
  for(RcValue *q=x;is_pair(q);q=rest(q))proj_names(f,first(q),after,names,n,cap,budget);
 }
-/* Drop specialisation and fusion: when a dying pair's only remaining uses are at
- * most one hd and one tl, each may move its field out of a unique pair, instead of
- * a dup of the field now and a drop of it when the pair is freed. */
+/* True if nothing that can run user code happens between the two projections of v
+ * in x, in evaluation order. Only then can the first one take its field: its check
+ * that the sibling primitive is canonical still holds when the sibling runs. */
+typedef struct { int sites,budget; bool unsafe; } FuseWalk;
+static void fuse_walk(RcEmitFn *f,RcValue *x,const char *v,FuseWalk *w){
+ if(!is_pair(x))return;
+ if(--w->budget<0){w->unsafe=true;return;}
+ RcValue *h=first(x),*args=rest(x);
+ if(is_symbol(h)&&binding(f,name(h))<0){
+  if(named(h,"lambda")||named(h,"freeze")||named(h,"quote")||named(h,"c-quote"))return;
+  if(named(h,"let")&&is_pair(args)&&is_pair(rest(args))){for(RcValue *q=rest(args);is_pair(q);q=rest(q))fuse_walk(f,first(q),v,w);return;}
+  if(named(h,"if")||named(h,"and")||named(h,"or")||named(h,"do")||named(h,"type")||named(h,"trap-error")){for(RcValue *q=args;is_pair(q);q=rest(q))fuse_walk(f,first(q),v,w);return;}
+  if(named(h,"cond")){for(RcValue *c=args;is_pair(c);c=rest(c))for(RcValue *q=first(c);is_pair(q);q=rest(q))fuse_walk(f,first(q),v,w);return;}
+  if((named(h,"hd")||named(h,"tl"))&&is_pair(args)&&rc_is_nil(rest(args))&&is_symbol(first(args))&&!strcmp(name(first(args)),v)){w->sites++;return;}
+ }else fuse_walk(f,h,v,w);
+ for(RcValue *q=args;is_pair(q);q=rest(q))fuse_walk(f,first(q),v,w);
+ if(w->sites==1)w->unsafe=true;
+}
+/* Drop specialisation and fusion, for a dying pair whose every remaining use is a
+ * direct projection. The last projection moves its field out of a unique pair and
+ * drops the other, leaving an empty pair, or NULL if the pair was shared: the paper's
+ * drop-reuse. Nothing can see the pair after that. With exactly one hd and one tl and
+ * no user code between them, the first also moves its field; replacements of hd or tl
+ * must see an intact pair, so it checks the sibling binding first. */
 static int mark_fusion(RcEmitFn *f,RcValue *x,const Live *after,int *marked){
  const char *names[8];int n=0,m=0,budget=RC_PROJECTION_BUDGET;
  proj_names(f,x,after,names,&n,8,&budget);
  for(int i=0;i<n;i++){
   int b=binding(f,names[i]);
-  if(f->fuse[b])continue;
+  if(f->fuse_left[b])continue;
   ProjUse u=proj_uses(f,x,names[i]);
-  if(u.total>0&&u.total==u.hd+u.tl&&u.hd<=1&&u.tl<=1){f->fuse[b]=1;marked[m++]=b;}
+  if(u.total>0&&u.total==u.hd+u.tl){
+   FuseWalk w={0,RC_PROJECTION_BUDGET,false};
+   if(u.total==2&&u.hd==1&&u.tl==1)fuse_walk(f,x,names[i],&w);
+   f->fuse_left[b]=u.total;f->fuse[b]=u.total==2&&u.hd==1&&u.tl==1&&!w.unsafe;marked[m++]=b;
+  }
  }
  return m;
 }
@@ -620,6 +646,20 @@ static int reuse_candidate(RcEmitFn *f,RcValue *x,const Live *after){
  for(int i=0;i<n;i++){
   ProjUse u=proj_uses(f,x,names[i]);
   if(u.total>0&&u.total==u.hd+u.tl)return binding(f,names[i]);
+ }
+ return -1;
+}
+/* (let H (hd V) (let T (tl V) (cons H (f T)))): V's last projection precedes the
+ * cons, so nothing holds V there. Hold it through the lets as the reuse token. */
+static int let_token(RcEmitFn *f,RcValue *x,const Live *after){
+ RcValue *y=x;
+ while(is_pair(y)&&named(first(y),"let")&&binding(f,"let")<0&&count(f->p,rest(y))==3)y=at(f->p,rest(y),2);
+ if(!is_pair(y)||!named(first(y),"cons")||binding(f,"cons")>=0||count(f->p,rest(y))!=2)return -1;
+ const char *names[8];int n=0,budget=RC_PROJECTION_BUDGET;
+ proj_names(f,x,after,names,&n,8,&budget);
+ for(int i=0;i<n;i++){
+  ProjUse u=proj_uses(f,x,names[i]);
+  if(u.total>0&&u.total==u.hd+u.tl&&proj_uses(f,y,names[i]).total==0)return binding(f,names[i]);
  }
  return -1;
 }
@@ -728,7 +768,7 @@ static int expr(RcEmitFn *f,RcValue *x,int tail,const Live *after){
   * use the same lexical differently. */
  int marked[8],nmarked=optimize(f)&&is_pair(x)?mark_fusion(f,x,after,marked):0;
  int mark=f->slots,result=expr_inner(f,x,tail,after);retire_scope(f,mark,result);
- for(int i=0;i<nmarked;i++)f->fuse[marked[i]]=0;
+ for(int i=0;i<nmarked;i++){f->fuse[marked[i]]=0;f->fuse_left[marked[i]]=0;}
  return result;
 }
 static int expr_inner(RcEmitFn *f,RcValue *x,int tail,const Live *after){
@@ -747,10 +787,14 @@ static int expr_inner(RcEmitFn *f,RcValue *x,int tail,const Live *after){
  if(special&&named(head,"cond"))return cond(f,args,tail,after);
  if(special&&named(head,"let")){
   if(count(p,args)!=3||!is_symbol(first(args)))bad(p,"rc emit: let shape");
+  int hold=optimize(f)&&tail!=2&&!f->token?let_token(f,x,after):-1;Live held={0};
+  if(hold>=0){f->token=hold+1;held=copy_live(p,after);add(p,&held,hold);after=&held;}
   Live init_after=copy_live(p,after);if(optimize(f)){Shadow local={name(first(args)),NULL};scan(f,at(p,args,2),&local,&init_after);}
   int a=expr(f,second(args),0,&init_after),old=f->nb;clear_live(p,&init_after);bind(f,name(first(args)),a);
   Live needed=uses(f,at(p,args,2));merge(p,&needed,after);drop_dead(f,&needed);clear_live(p,&needed);
-  int result=expr(f,at(p,args,2),tail,after);f->nb=old;drop(f,a);return result;
+  int result=expr(f,at(p,args,2),tail,after);f->nb=old;drop(f,a);
+  if(hold>=0){if(f->token==hold+1)f->token=0;drop(f,hold);clear_live(p,&held);}
+  return result;
  }
  if(special&&named(head,"do")&&count(p,args)==2){
   int n=0;RcValue *end=x;for(;is_pair(end)&&named(first(end),"do")&&binding(f,"do")<0&&count(p,rest(end))==2;end=second(rest(end)))n++;
@@ -826,6 +870,7 @@ static int expr_inner(RcEmitFn *f,RcValue *x,int tail,const Live *after){
  Live head_after=sequence_live(f,args,after);int fn=function_head(f,head,&head_after,optimize(f),after);clear_live(p,&head_after);
  if(optimize(f)&&special&&named(head,"cons")&&n==2&&tail!=2){
   int v=reuse_candidate(f,x,after);
+  if(v<0&&f->token&&!f->fuse_left[f->token-1]){v=f->token-1;f->token=0;}
   if(v>=0){
    Live held=copy_live(p,after);add(p,&held,v);int cv[2];RcValue *q=args;
    for(int i=0;i<2;i++,q=rest(q)){Live next=sequence_live(f,rest(q),&held);cv[i]=expr(f,first(q),0,&next);clear_live(p,&next);}
@@ -842,9 +887,14 @@ static int expr_inner(RcEmitFn *f,RcValue *x,int tail,const Live *after){
   int out=fresh(f);put_args(f,refs,n);
   if(leaf){
    const char *tiny=tiny_leaf_api(head,n);
-   int fused=n==1&&refs[0].borrowed&&f->fuse[refs[0].slot]&&(named(head,"hd")||named(head,"tl"));
-   if(fused)put(&f->code,"  t[%d]=rc_primitive_%s_take(ctx,t[%d],a,%s);\n",out,named(head,"hd")?"hd":"tl",fn,tail?"true":"false");
-   else if(tiny)put(&f->code,"  t[%d]=%.*s_borrowed(ctx,t[%d],a,%s);\n",out,(int)(strlen(tiny)-6),tiny,fn,tail?"true":"false");
+   int v=n==1&&refs[0].borrowed&&(named(head,"hd")||named(head,"tl"))&&f->fuse_left[refs[0].slot]?refs[0].slot:-1;
+   bool last=v>=0&&!--f->fuse_left[v],take=v>=0&&!last&&f->fuse[v];
+   if(v>=0)f->fuse[v]=0;
+   if(last){
+    put(&f->code,"  t[%d]=rc_primitive_%s_last(ctx,t[%d],a,%s);\n  t[%d]=a[0];\n",out,named(head,"hd")?"hd":"tl",fn,tail?"true":"false",v);
+   }else if(take){
+    put(&f->code,"  t[%d]=rc_primitive_%s_take(ctx,t[%d],a,%s,symbols[%zu]);\n",out,named(head,"hd")?"hd":"tl",fn,tail?"true":"false",symbol_index(f,named(head,"hd")?"tl":"hd"));
+   }else if(tiny)put(&f->code,"  t[%d]=%.*s_borrowed(ctx,t[%d],a,%s);\n",out,(int)(strlen(tiny)-6),tiny,fn,tail?"true":"false");
    else put(&f->code,"  t[%d]=rc_primitive_call_borrowed(ctx,t[%d],%d,a,%s);\n",out,fn,n,tail?"true":"false");
    drop_temps(f,refs,n);
   }else{

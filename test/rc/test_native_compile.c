@@ -56,6 +56,17 @@ static void perceus_paths(RcContext *c){
  number(c,"(pa-deep 5000 (cons 0 ()))",5000);
  number(c,"((lambda F (+ (F 1) (F 2))) (lambda X (+ X 1)))",5);
  number(c,"(let N 3 ((lambda F (F (F 1))) (lambda X (+ X N))))",7);
+/* A nested runtime call returning must not free the running, replaced closure. */
+ discard(c,"(defun pa-r (X) (do (defun pa-r (Y) 0) (do (eval-kl 1) (hd X))))");
+ number(c,"(pa-r (cons 42 ()))",42);number(c,"(pa-r (cons 42 ()))",0);
+ /* Lexicals dying at a call, a last-use capture in a closure called twice, and
+  * a borrowed native callback that must not consume its operands. */
+ discard(c,"(defun pa-g (X) (hd X))");discard(c,"(defun pa-two (A B) (+ (hd A) B))");
+ number(c,"(pa-two (cons 3 ()) (pa-g (cons 4 ())))",7);
+ discard(c,"(defun pa-v (V) (+ 1 (pa-two V (pa-g V))))");number(c,"(pa-v (cons 3 ()))",7);
+ discard(c,"(defun pa-c (L) (lambda Z L))");
+ number(c,"(let C (pa-c (cons 5 ())) (+ (hd (C 0)) (hd (C 0))))",10);
+ number(c,"(let V (absvector 1) (do (address-> V 0 (cons 1 ())) (let A (<-address V 0) (let B (<-address V 0) (+ (hd A) (+ (hd B) (hd (<-address V 0))))))))",3);
 }
 int main(int argc,char **argv){
  /* Strict unless the caller sets SHEN_RC_VERIFY_NATIVE=0 to permit the
