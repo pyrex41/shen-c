@@ -75,6 +75,10 @@ struct RcContext {
     /* Open-addressed set of shared immortal closures (rc_closure_static).
      * Teardown frees them with every other cell in the slab pages. */
     RcValue **static_closures;
+    /* Replaced function bindings. Compiled code reads a binding once and uses it
+     * without a count, so they stay until the outermost call into the runtime
+     * returns, when no compiled frame can hold one; see rc_function_get_borrowed. */
+    RcValue **retired_functions; size_t retired_count, retired_capacity, call_depth;
     size_t static_capacity, static_count;
     /* Owned context roots, bounded by the specialized builtin set. */
     RcValue *builtin_roots[RC_BUILTIN_COUNT];
@@ -681,7 +685,7 @@ void rc_context_free(RcContext *ctx) {
         ctx->compiled_symbols = next;
     }
     ctx->destroying = true;
-    free(ctx->symbols); free(ctx->static_closures); free(ctx->gc_nodes); free(ctx->walk_nodes);
+    free(ctx->symbols); free(ctx->static_closures); free(ctx->retired_functions); free(ctx->gc_nodes); free(ctx->walk_nodes);
     for (RcPage *page = ctx->pages, *next; page; page = next) {
         next = page->next;
         RC_UNPOISON(page, RC_PAGE_BYTES);
@@ -1040,6 +1044,48 @@ RcValue *rc_cons_reuse(RcContext *ctx, RcValue *candidate, RcValue *head, RcValu
     rc_release(candidate);
     return value;
 }
+RcValue *rc_cons_reuse_owned(RcContext *ctx, RcValue *candidate, RcValue *head, RcValue *tail) {
+    ctx->stats.pair_reuse_attempts++;
+    if (candidate && belongs(ctx, candidate) && rc_type(candidate) == RC_PAIR && candidate->refs == 1 &&
+        candidate != head && candidate != tail && belongs(ctx, head) && belongs(ctx, tail)) {
+        RcValue *old_head = candidate->as.pair.head, *old_tail = candidate->as.pair.tail;
+        RcValue *old_plan = candidate->has_plan ? plan_remove(candidate) : NULL;
+        candidate->as.pair.head = head; candidate->as.pair.tail = tail;
+        candidate->reaches_vector = may_reach_vector(head) || may_reach_vector(tail);
+        rc_release(old_head); rc_release(old_tail);
+        rc_release(old_plan);
+        ctx->stats.pair_reuses++;
+        return candidate;
+    }
+    ctx->stats.pair_reuse_misses++;
+    RcValue *value = rc_cons_owned(ctx, head, tail);
+    rc_release(candidate);
+    return value;
+}
+RcValue *rc_pair_take_unique(RcContext *ctx, RcValue *pair, bool head) {
+    if (!belongs(ctx, pair) || rc_type(pair) != RC_PAIR || pair->refs != 1 || pair->has_plan) return NULL;
+    RcValue **field = head ? &pair->as.pair.head : &pair->as.pair.tail, *value = *field;
+    if (!belongs(ctx, value) || rc_type(value) == RC_TAIL) return NULL;
+    *field = rc_nil();
+    if (!head) ctx->stats.pair_tail_transfers++;
+    return value;
+}
+RcValue *rc_pair_take_last(RcContext *ctx, RcValue **slot, bool head) {
+    RcValue *pair = *slot;
+    if (!belongs(ctx, pair) || rc_type(pair) != RC_PAIR) return NULL;
+    RcValue **field = head ? &pair->as.pair.head : &pair->as.pair.tail, *value = *field;
+    if (!belongs(ctx, value) || rc_type(value) == RC_TAIL) return NULL;
+    if (pair->refs == 1 && !pair->has_plan) {
+        RcValue **sibling = head ? &pair->as.pair.tail : &pair->as.pair.head, *other = *sibling;
+        *field = rc_nil(); *sibling = rc_nil(); pair->reaches_vector = false;
+        rc_release(other);
+        if (!head) ctx->stats.pair_tail_transfers++;
+        return value;
+    }
+    rc_retain(value); *slot = NULL; rc_release(pair);
+    if (!head) ctx->stats.pair_tail_shares++;
+    return value;
+}
 RcValue *rc_pair_take_tail_reuse(RcContext *ctx, RcValue *candidate, RcValue **out) {
     if (out) *out = NULL;
     if (!out || !belongs(ctx, candidate) || rc_type(candidate) != RC_PAIR) {
@@ -1173,24 +1219,37 @@ bool rc_vector_set(RcContext *ctx, RcValue *v, size_t i, RcValue *item) {
     v->as.vector.items[i] = rc_retain(item);
     rc_release(old); return true;
 }
-static RcValue *closure_create(RcContext *ctx, size_t arity, RcNative native,
+static void moved_release(size_t n, RcValue *const *captures, uint32_t moved) {
+    for (size_t i = 0; moved && i < n; ++i, moved >>= 1) if (moved & 1u) rc_release(captures[i]);
+}
+/* Bit i of moved transfers the caller's reference to capture i, on every path. */
+static RcValue *closure_create_moved(RcContext *ctx, size_t arity, RcNative native,
                                RcNativeOwned owned_native, size_t capture_count,
-                               RcValue *const *captures) {
-    if ((!native && !owned_native) || capture_count > SIZE_MAX / sizeof(RcValue *) || (capture_count && !captures)) return rc_error(ctx, "invalid closure");
-    for (size_t i = 0; i < capture_count; ++i) if (!belongs(ctx, captures[i])) return rc_error(ctx, "invalid closure capture/context");
+                               RcValue *const *captures, uint32_t moved) {
+    if ((!native && !owned_native) || capture_count > SIZE_MAX / sizeof(RcValue *) || (capture_count && !captures)) { moved_release(capture_count, captures, moved); return rc_error(ctx, "invalid closure"); }
+    for (size_t i = 0; i < capture_count; ++i) if (!belongs(ctx, captures[i])) { moved_release(capture_count, captures, moved); return rc_error(ctx, "invalid closure capture/context"); }
     RcValue **copy = capture_count ? malloc(capture_count * sizeof(*copy)) : NULL;
-    if (capture_count && !copy) return rc_error(ctx, "out of memory");
+    if (capture_count && !copy) { moved_release(capture_count, captures, moved); return rc_error(ctx, "out of memory"); }
     RcValue *v = allocate(ctx, RC_CLOSURE, capture_count * sizeof(*copy));
-    if (!v) { free(copy); return NULL; }
+    if (!v) { free(copy); moved_release(capture_count, captures, moved); return NULL; }
     v->as.closure.native = native; v->as.closure.arity = arity;
     v->as.closure.owned_native = owned_native;
     v->as.closure.captures = copy; v->as.closure.capture_count = capture_count;
     v->as.closure.bound = NULL; v->as.closure.bound_count = 0;
-    for (size_t i = 0; i < capture_count; ++i) {
-        copy[i] = rc_retain(captures[i]);
+    for (size_t i = 0; i < capture_count; ++i, moved >>= 1) {
+        copy[i] = moved & 1u ? captures[i] : rc_retain(captures[i]);
         v->reaches_vector |= may_reach_vector(captures[i]);
     }
     return v;
+}
+static RcValue *closure_create(RcContext *ctx, size_t arity, RcNative native,
+                               RcNativeOwned owned_native, size_t capture_count,
+                               RcValue *const *captures) {
+    return closure_create_moved(ctx, arity, native, owned_native, capture_count, captures, 0);
+}
+RcValue *rc_closure_moved(RcContext *ctx, size_t arity, RcNativeOwned native,
+                          size_t capture_count, RcValue *const *captures, uint32_t moved) {
+    return closure_create_moved(ctx, arity, NULL, native, capture_count, captures, moved);
 }
 RcValue *rc_closure(RcContext *ctx, size_t arity, RcNative native,
                     size_t capture_count, RcValue *const *captures) {
@@ -1573,20 +1632,61 @@ RcValue *rc_apply_rooted_owned_args(RcContext *ctx,RcValue *fn,size_t argc,RcVal
     if(!rc_call_values_belong(ctx,fn,argc,argv)||rc_type(fn)!=RC_CLOSURE||
        fn->as.closure.bound_count||fn->as.closure.arity!=argc)
         return rc_apply_owned_args(ctx,fn,argc,argv);
+    rc_call_enter(ctx);
     RcValue *result=fn->as.closure.owned_native
         ? fn->as.closure.owned_native(ctx,fn,argc,argv)
         : fn->as.closure.native(ctx,fn,argc,argv);
-    return rc_compiled_call_complete(ctx,result,argc,argv);
+    result=rc_compiled_call_complete(ctx,result,argc,argv);
+    rc_call_leave(ctx);
+    return result;
+}
+void rc_args_retain(size_t argc, RcValue **argv, uint32_t mask) {
+    for (size_t i = 0; mask && i < argc; ++i, mask >>= 1)
+        if (mask & 1u) rc_retain(argv[i]);
+}
+static inline void args_forget(size_t argc, RcValue **argv, uint32_t mask) {
+    for (size_t i = 0; mask && i < argc; ++i, mask >>= 1)
+        if (mask & 1u) argv[i] = NULL;
+}
+RcValue *rc_call_mixed(RcContext *ctx, RcValue *fn, size_t argc, RcValue **argv, uint32_t borrowed) {
+    if (!rc_call_values_belong(ctx, fn, argc, argv) || rc_type(fn) != RC_CLOSURE ||
+        fn->as.closure.bound_count || fn->as.closure.arity != argc) {
+        rc_args_retain(argc, argv, borrowed);
+        return rc_apply_owned_args(ctx, fn, argc, argv);
+    }
+    RcValue *result;
+    if (fn->as.closure.owned_native) {
+        rc_args_retain(argc, argv, borrowed);
+        result = fn->as.closure.owned_native(ctx, fn, argc, argv);
+    } else {
+        /* A borrowed callback never touches the slots and the caller roots them. */
+        result = fn->as.closure.native(ctx, fn, argc, argv);
+        args_forget(argc, argv, borrowed);
+    }
+    return rc_compiled_call_complete(ctx, result, argc, argv);
+}
+void rc_call_enter(RcContext *ctx) { ctx->call_depth++; }
+void rc_call_leave(RcContext *ctx) {
+    if (--ctx->call_depth || !ctx->retired_count) return;
+    size_t n = ctx->retired_count;
+    ctx->retired_count = 0;
+    for (size_t i = 0; i < n; ++i) rc_release(ctx->retired_functions[i]);
 }
 RcValue *rc_apply(RcContext *ctx, RcValue *fn, size_t argc, RcValue *const *argv) {
     bool handled;
+    if (ctx) rc_call_enter(ctx);
     RcValue *result = apply_small(ctx, fn, argc, argv, NULL, &handled);
-    return handled ? result : apply_request(ctx, rc_tailcall(ctx, fn, argc, argv));
+    if (!handled) result = apply_request(ctx, rc_tailcall(ctx, fn, argc, argv));
+    if (ctx) rc_call_leave(ctx);
+    return result;
 }
 RcValue *rc_apply_owned_args(RcContext *ctx, RcValue *fn, size_t argc, RcValue **argv) {
     bool handled;
+    if (ctx) rc_call_enter(ctx);
     RcValue *result = apply_small(ctx, fn, argc, argv, argv, &handled);
-    return handled ? result : apply_request(ctx, rc_tailcall_owned_args(ctx, fn, argc, argv));
+    if (!handled) result = apply_request(ctx, rc_tailcall_owned_args(ctx, fn, argc, argv));
+    if (ctx) rc_call_leave(ctx);
+    return result;
 }
 RcValue *rc_stream_with_direction(RcContext *ctx, FILE *file, bool close, bool input) {
     if (!file) return rc_error(ctx, "invalid stream");
@@ -1612,7 +1712,19 @@ static bool set_symbol_slot(RcContext *ctx, RcValue *symbol, RcValue *value, boo
     /* Every function publication invalidates dependency certificates. A
      * saturated generation disables cache hits, rather than wrapping. */
     if(function&&ctx->function_generation<SIZE_MAX)ctx->function_generation++;
-    RcValue *old = *slot; *slot = rc_retain(value); rc_release(old); return true;
+    RcValue *old = *slot; *slot = rc_retain(value);
+    if (function && ctx->call_depth && is_counted(old) && old != value) {
+        if (ctx->retired_count == ctx->retired_capacity) {
+            size_t capacity = ctx->retired_capacity ? ctx->retired_capacity * 2 : 64;
+            RcValue **grown = realloc(ctx->retired_functions, capacity * sizeof(*grown));
+            /* No room: an uncounted owner is exactly what teardown already handles. */
+            if (!grown) { old->refs = RC_IMMORTAL; return true; }
+            ctx->retired_functions = grown; ctx->retired_capacity = capacity;
+        }
+        ctx->retired_functions[ctx->retired_count++] = old;
+        return true;
+    }
+    rc_release(old); return true;
 }
 RcValue *rc_global_get(RcContext *ctx, RcValue *symbol) {
     if (!belongs(ctx, symbol) || rc_type(symbol) != RC_SYMBOL) return rc_error(ctx, "value expects a symbol");

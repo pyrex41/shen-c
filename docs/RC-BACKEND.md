@@ -98,12 +98,35 @@ unused values are released. Closure captures contain lexical free variables.
 Error handler references remain live through protected expressions. Native
 functions adopt owned arguments, so unique inputs can stay unique across calls.
 
-Pair reuse is selective. Recognized cons/tail traversals retain exact primitive
-identity checks and detach unique pair storage only when the old value has no
-remaining use. Shared pairs follow an allocation path that preserves aliases.
-The runtime keeps detached storage rooted and valid through recursive calls,
-errors, and collection. This supports actual recursive list rebuilding; it is
-not generalized whole-program Perceus analysis or arbitrary allocation reuse.
+Compiled code is Perceus-derived reference counting (Reinking et al., PLDI 2021)
+with borrowing and in-place pair reuse. It is not garbage-free:
+
+- Borrowing. Lexicals that stay live, immortal constants and closure literals
+  reach primitives and borrowed callbacks with no dup. A last-use operand of a leaf
+  primitive is borrowed through the call and dropped after it. A closure body reads
+  its captures from self, which every dispatcher roots through return, so a capture
+  lives for the whole call even past its last use. A non-tail call passes a
+  caller-borrowed mask to `rc_call_mixed`, which dups only for an owning callee. A
+  binding read needs no dup: a closure replaced during a call is kept until the
+  outermost runtime call returns, which in `script` mode is exit. Parameters are always
+  owned; parameter borrow inference, which is not part of the paper, is not implemented.
+- Fusion and drop specialisation. When every remaining use of a dying pair is a
+  direct `hd` or `tl`, the last one is the paper's drop-reuse: it moves its field out
+  of a unique pair and drops the other, leaving `(nil . nil)`, or for a shared pair
+  dups the field and gives up the frame's reference. Exactly one `hd` and one `tl` with
+  no user code between them, and with both bindings canonical, fuse fully: the first
+  also moves its field. Any replacement of `hd` or `tl` sees an intact pair. With user
+  code between them, the first projection dups. Captures that die at a lambda move in.
+  A lexical that dies at a call moves at the call.
+- Reuse. The candidate for `(cons A B)` is an owned pair that dies there and whose
+  every remaining use is a direct projection in A or B, or in the `let` chain that
+  ends in that cons. Its frame slot is the reuse token: an emptied pair, or NULL. A
+  token rewrites in place; NULL or a non-pair allocates; a replaced `cons` sees an
+  ordinary call. The match is syntactic and covers pairs only, and field writes are
+  not skipped.
+
+All of this applies to native code: the kernel and loaded modules. Interpreted
+code (`SHEN_RC_EXECUTION=interpret`) benefits only when it calls native code.
 
 Large generated frames use heap slabs and share one borrowed argument buffer
 per function. Consecutive dead slots use compact cleanup loops, preserving

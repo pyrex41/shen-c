@@ -132,6 +132,10 @@ static inline RcValue *rc_fast_function_get(RcContext *ctx, RcValue *symbol) {
     if (rc_fast_is(ctx, symbol, RC_SYMBOL) && symbol->as.text.function) return rc_fast_retain(symbol->as.text.function);
     return rc_function_get(ctx, symbol);
 }
+static inline RcValue *rc_fast_function_get_borrowed(RcContext *ctx, RcValue *symbol) {
+    if (rc_fast_is(ctx, symbol, RC_SYMBOL) && symbol->as.text.function) return symbol->as.text.function;
+    return rc_function_get_borrowed(ctx, symbol);
+}
 /* hd/tl: a head or tail that is itself a pending tail request takes the
  * checked path, which forces it outside tail position. */
 static inline RcValue *rc_fast_hd_owned(RcContext *ctx, RcValue *fn, RcValue **args, bool tail) {
@@ -153,6 +157,51 @@ static inline RcValue *rc_fast_tl_owned(RcContext *ctx, RcValue *fn, RcValue **a
         }
     }
     return rc_primitive_tl_owned(ctx, fn, args, tail);
+}
+static inline RcValue *rc_fast_hd_borrowed(RcContext *ctx, RcValue *fn, RcValue *const *args, bool tail) {
+    RcValue *x = args[0];
+    if (rc_fast_builtin(ctx, fn, RC_FAST_HD) && rc_fast_is(ctx, x, RC_PAIR) && rc_fast_ok(ctx)) {
+        RcValue *h = x->as.pair.head;
+        if (rc_fast_immediate(h) || !h || h->type != RC_TAIL) return rc_fast_retain(h);
+    }
+    return rc_primitive_hd_borrowed(ctx, fn, args, tail);
+}
+static inline RcValue *rc_fast_tl_borrowed(RcContext *ctx, RcValue *fn, RcValue *const *args, bool tail) {
+    RcValue *x = args[0];
+    if (rc_fast_builtin(ctx, fn, RC_FAST_TL) && rc_fast_is(ctx, x, RC_PAIR) && rc_fast_ok(ctx)) {
+        RcValue *t = x->as.pair.tail;
+        if (rc_fast_immediate(t) || !t || t->type != RC_TAIL) return rc_fast_retain(t);
+    }
+    return rc_primitive_tl_borrowed(ctx, fn, args, tail);
+}
+static inline RcValue *rc_fast_take(RcContext *ctx, RcValue *fn, RcValue *const *args, bool tail, RcValue *sibling, bool head) {
+    RcValue *x = args[0];
+    if (rc_fast_builtin(ctx, fn, head ? RC_FAST_HD : RC_FAST_TL) && rc_fast_is(ctx, x, RC_PAIR) && rc_fast_ok(ctx) &&
+        rc_fast_is(ctx, sibling, RC_SYMBOL) && rc_fast_builtin(ctx, sibling->as.text.function, head ? RC_FAST_TL : RC_FAST_HD)) {
+        RcValue **slot = head ? &x->as.pair.head : &x->as.pair.tail, *v = *slot;
+        if (rc_fast_immediate(v) || !v || v->type != RC_TAIL) {
+            if (x->refs == 1 && !x->has_plan && v) { *slot = rc_nil(); return v; }
+            return rc_fast_retain(v);
+        }
+    }
+    return head ? rc_primitive_hd_take(ctx, fn, args, tail, sibling) : rc_primitive_tl_take(ctx, fn, args, tail, sibling);
+}
+static inline RcValue *rc_fast_last(RcContext *ctx, RcValue *fn, RcValue **args, bool tail, bool head) {
+    RcValue *x = args[0];
+    if (rc_fast_builtin(ctx, fn, head ? RC_FAST_HD : RC_FAST_TL) && rc_fast_is(ctx, x, RC_PAIR) && rc_fast_ok(ctx)) {
+        RcValue **slot = head ? &x->as.pair.head : &x->as.pair.tail, *v = *slot;
+        if (v && (rc_fast_immediate(v) || v->type != RC_TAIL)) {
+            if (x->refs == 1 && !x->has_plan) {
+                RcValue **sibling = head ? &x->as.pair.tail : &x->as.pair.head, *other = *sibling;
+                *slot = rc_nil(); *sibling = rc_nil(); x->reaches_vector = false;
+                rc_fast_release(other);
+                return v;
+            }
+            rc_fast_retain(v); args[0] = NULL; rc_fast_release(x);
+            return v;
+        }
+    }
+    return head ? rc_primitive_hd_last(ctx, fn, args, tail) : rc_primitive_tl_last(ctx, fn, args, tail);
 }
 static inline RcValue *rc_fast_cons_owned(RcContext *ctx, RcValue *fn, RcValue **args, bool tail) {
     if (rc_fast_builtin(ctx, fn, RC_FAST_CONS) && rc_fast_ok(ctx)) {
@@ -206,14 +255,32 @@ static inline int rc_fast_eq_owned(RcContext *ctx, RcValue *fn, RcValue **args) 
     }
     return rc_condition_eq_owned(ctx, fn, args);
 }
+static inline int rc_fast_eq_borrowed(RcContext *ctx, RcValue *fn, RcValue *const *args) {
+    RcValue *a = args[0], *b = args[1];
+    if (rc_fast_builtin(ctx, fn, RC_FAST_EQ) && rc_fast_ok(ctx) && a && b &&
+        (rc_fast_immediate(a) || rc_value_context_or_nil(ctx, a)) &&
+        (rc_fast_immediate(b) || rc_value_context_or_nil(ctx, b)) &&
+        (a == b || (rc_fast_identity_class(a) && rc_fast_identity_class(b)) ||
+         rc_fast_unique_against(a, b) || rc_fast_unique_against(b, a)))
+        return a == b;
+    return rc_condition_eq_borrowed(ctx, fn, args);
+}
 #define rc_retain(v) rc_fast_retain(v)
 #define rc_release(v) rc_fast_release(v)
 #define rc_function_get(c, s) rc_fast_function_get(c, s)
+#define rc_function_get_borrowed(c, s) rc_fast_function_get_borrowed(c, s)
 #define rc_primitive_hd_owned(c, f, a, t) rc_fast_hd_owned(c, f, a, t)
 #define rc_primitive_tl_owned(c, f, a, t) rc_fast_tl_owned(c, f, a, t)
 #define rc_primitive_cons_owned(c, f, a, t) rc_fast_cons_owned(c, f, a, t)
 #define rc_condition_consp_borrowed(c, f, a) rc_fast_consp_borrowed(c, f, a)
 #define rc_condition_consp_owned(c, f, a) rc_fast_consp_owned(c, f, a)
 #define rc_condition_eq_owned(c, f, a) rc_fast_eq_owned(c, f, a)
+#define rc_primitive_hd_take(c, f, a, t, s) rc_fast_take(c, f, a, t, s, true)
+#define rc_primitive_tl_take(c, f, a, t, s) rc_fast_take(c, f, a, t, s, false)
+#define rc_primitive_hd_last(c, f, a, t) rc_fast_last(c, f, a, t, true)
+#define rc_primitive_tl_last(c, f, a, t) rc_fast_last(c, f, a, t, false)
+#define rc_primitive_hd_borrowed(c, f, a, t) rc_fast_hd_borrowed(c, f, a, t)
+#define rc_primitive_tl_borrowed(c, f, a, t) rc_fast_tl_borrowed(c, f, a, t)
+#define rc_condition_eq_borrowed(c, f, a) rc_fast_eq_borrowed(c, f, a)
 #endif
 #endif

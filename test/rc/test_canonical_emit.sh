@@ -65,7 +65,7 @@ with tempfile.TemporaryDirectory(prefix='rc-canonical-emit.') as tmp:
         assert run.returncode==0,(mode,run.stdout,run.stderr)
         code=(dest/'app.c').read_text()
         for api in ['hd','tl','consp','numberp','stringp','eq','add','sub','mul','div','gt','lt','ge','le','cons']:
-            assert (f'rc_primitive_{api}_owned(' in code)==(mode=='optimized'),(mode,api)
+            assert any(f'rc_primitive_{api}_{form}(' in code for form in ('owned','borrowed','take','last'))==(mode=='optimized'),(mode,api)
         run=subprocess.run([str(dest/'app')],env=dict(env,SHEN_RC_PRINT='1'),
                            capture_output=True,text=True,timeout=30)
         assert run.returncode==0 and run.stdout.splitlines()==expected,(mode,run.stdout,run.stderr)

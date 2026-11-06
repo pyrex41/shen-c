@@ -248,10 +248,34 @@ static void length_proportional_reuse(bool shared) {
     rc_release(alias); rc_release(result); rc_release(fn);
     assert(rc_stats(ctx).live_objects == 0); rc_context_free(ctx); cases++;
 }
+/* Field moves, drop-reuse and owned reuse at the runtime boundary. */
+static void field_moves(void) {
+    RcContext *ctx = rc_context_new();
+    RcValue *h = rc_string(ctx, "h"), *t = rc_string(ctx, "t");
+    RcValue *p = rc_cons(ctx, h, t), *alias = rc_retain(p);
+    assert(!rc_pair_take_unique(ctx, p, true) && rc_head_borrowed(p) == h);
+    RcValue *slot = p, *value = rc_pair_take_last(ctx, &slot, false);
+    assert(value == t && !slot && rc_refcount(alias) == 1 && rc_tail_borrowed(alias) == t);
+    rc_release(value);
+    value = rc_pair_take_unique(ctx, alias, true);
+    assert(value == h && rc_is_nil(rc_head_borrowed(alias)) && rc_tail_borrowed(alias) == t);
+    rc_release(value);
+    slot = alias; size_t before = rc_refcount(t);
+    value = rc_pair_take_last(ctx, &slot, true);
+    assert(rc_is_nil(value) && slot == alias && rc_is_nil(rc_tail_borrowed(alias)) && rc_refcount(t) == before - 1);
+    RcValue *notpair = rc_integer(ctx, 1); slot = notpair;
+    assert(!rc_pair_take_last(ctx, &slot, true) && slot == notpair && !rc_pair_take_unique(ctx, notpair, true));
+    RcValue *r = rc_cons_reuse_owned(ctx, alias, rc_retain(h), rc_retain(t));
+    assert(r == alias && rc_head_borrowed(r) == h && rc_tail_borrowed(r) == t);
+    RcValue *shared = rc_retain(r), *r2 = rc_cons_reuse_owned(ctx, shared, rc_retain(h), rc_retain(t));
+    assert(r2 != r && rc_refcount(r) == 1);
+    rc_release(r); rc_release(r2); rc_release(h); rc_release(t); rc_context_free(ctx);
+    cases++;
+}
 int main(void) {
-    unique_reuse(); aliases_and_failures(); tail_reuse(); borrowed_alias_control();
+    field_moves(); unique_reuse(); aliases_and_failures(); tail_reuse(); borrowed_alias_control();
     partial_and_overapply(); errors_and_borrowed_bridge(); shared_tail_and_guards();
     length_proportional_reuse(false); length_proportional_reuse(true);
-    printf("RC ownership and pair reuse: %zu/9 cases PASS\n", cases);
+    printf("RC ownership and pair reuse: %zu/10 cases PASS\n", cases);
     return 0;
 }

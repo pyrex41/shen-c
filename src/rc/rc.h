@@ -134,6 +134,21 @@ RcValue *rc_cons_owned(RcContext *ctx, RcValue *owned_head, RcValue *owned_tail)
  * No detached storage token or invalid collector-visible value is exposed. */
 RcValue *rc_cons_reuse(RcContext *ctx, RcValue *owned_candidate,
                       RcValue *head, RcValue *tail);
+/* As rc_cons_reuse, but also consumes head and tail: the children move into the
+ * pair with no count traffic. */
+RcValue *rc_cons_reuse_owned(RcContext *ctx, RcValue *owned_candidate,
+                             RcValue *owned_head, RcValue *owned_tail);
+/* Compiler ABI, the fused form of dup(field); drop(pair) when pair is unique:
+ * moves one field out and leaves nil, so the pair stays valid for the collector.
+ * The caller owns pair and proves nothing else reads that field afterward. NULL,
+ * with nothing changed, when pair is not a unique pair. */
+RcValue *rc_pair_take_unique(RcContext *ctx, RcValue *pair, bool head);
+/* Compiler ABI, the paper's drop-reuse at a pair's last projection. The caller owns
+ * *slot and never reads the pair again except as a reuse token. A unique pair gives up
+ * the field and drops the other, leaving (nil . nil) in *slot. A shared pair dups the
+ * field, gives up the caller's reference and sets *slot to NULL. NULL, with nothing
+ * changed, when *slot is not a pair or the field is a pending tail request. */
+RcValue *rc_pair_take_last(RcContext *ctx, RcValue **slot, bool head);
 /* Consumes candidate. On success returns its owned tail and writes an owned
  * pair reuse candidate to out. Unique pairs transfer their tail edge, become
  * valid (nil . nil) pairs, and release the old head. Shared pairs retain their
@@ -154,6 +169,10 @@ RcValue *rc_closure(RcContext *ctx, size_t arity, RcNative native,
                     size_t capture_count, RcValue *const *captures);
 RcValue *rc_closure_owned(RcContext *ctx, size_t arity, RcNativeOwned native,
                           size_t capture_count, RcValue *const *captures);
+/* Bit i of moved transfers the caller's reference to capture i, on every path;
+ * other captures are retained. */
+RcValue *rc_closure_moved(RcContext *ctx, size_t arity, RcNativeOwned native,
+                          size_t capture_count, RcValue *const *captures, uint32_t moved);
 /* Trusted compiler/interpreter certificate: the callback has the exact,
  * effect-free two-parameter body returning its second argument. These fixed
  * arity constructors permit tail forwarding under dead-owner last-use rules;
@@ -186,6 +205,13 @@ bool rc_compiled_call_matches(const RcValue *function, RcNativeOwned native,
                                size_t arity);
 RcValue *rc_compiled_call_complete(RcContext *ctx, RcValue *owned_result,
                                     size_t argc, RcValue **owned_args);
+/* Compiler ABI. function is rooted by the caller through completion. A set bit i
+ * says argv[i] is borrowed from a caller that keeps it alive through the call;
+ * every other slot is owned. Every slot is NULL on return, on success or
+ * failure. Only the first 32 arguments can be borrowed. */
+RcValue *rc_call_mixed(RcContext *ctx, RcValue *function, size_t argc,
+                       RcValue **argv, uint32_t borrowed);
+void rc_args_retain(size_t argc, RcValue **argv, uint32_t mask);
 /* Check borrowed call inputs before specialized dispatch; does not set errors. */
 bool rc_call_values_belong(RcContext *ctx, RcValue *function, size_t argc,
                            RcValue *const *argv);
@@ -226,9 +252,10 @@ RcValue *rc_global_get(RcContext *ctx, RcValue *symbol);
 bool rc_global_set(RcContext *ctx, RcValue *symbol, RcValue *value);
 RcValue *rc_function_get(RcContext *ctx, RcValue *symbol);
 /* Borrowed current function binding, with the same undefined-function errors.
- * Valid only while the binding remains unchanged or an independent owner roots
- * it. Callers must prevent callbacks/redefinition until a dispatch API protects
- * the callee; ordinary value results from rc_function_get remain owned. */
+ * rc_function_set keeps the closures it replaces until the outermost runtime call
+ * returns, so a redefinition during argument evaluation or the call cannot free a
+ * binding that compiled code read. Outside any call a replaced binding is released
+ * at once, so a C caller there must not hold this across rc_function_set. */
 RcValue *rc_function_get_borrowed(RcContext *ctx, RcValue *symbol);
 /* Missing binding returns NULL without setting an error; result is owned. */
 RcValue *rc_function_lookup(RcContext *ctx, RcValue *symbol);

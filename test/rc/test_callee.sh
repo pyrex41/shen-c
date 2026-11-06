@@ -47,13 +47,12 @@ with tempfile.TemporaryDirectory(prefix='shen-rc-callee.') as tmp:
   emitted=(out/'app.c').read_text()
   if not conservative:
    assert 'rc_function_get_borrowed(' in emitted
-   assert 'RcValue *borrowed_fn=NULL;' in emitted
-   assert 'borrowed_fns[' not in emitted
+   assert 'RcValue *bf[' in emitted
    names=re.search(r'rc_module_symbol_names\[\]=\{(.*?)\};',emitted,re.S)[1]
    names=[json.loads(line.rstrip(',')) for line in names.splitlines() if line.strip()]
    tl=names.index('tl')
    assert f'rc_function_get_borrowed(ctx,symbols[{tl}])' in emitted
-   assert 'rc_tail_call_reuse(' in emitted
+   assert any(f'rc_primitive_tl_{form}(' in emitted for form in ('borrowed','take','last'))
   actual=subprocess.run([str(out/'app')],env={**os.environ,'SHEN_RC_PRINT':'1'},check=True,capture_output=True,text=True)
   assert actual.stdout==expected,(conservative,actual.stdout,expected)
  print(f'RC borrowed callee: {len(cases)} differential cases PASS')

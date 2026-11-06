@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+- **Perceus-derived reference counting for native code**, with borrowing and
+  in-place pair reuse; not garbage-free. Borrowed operands, closure environments and
+  callee bindings; hd/tl field moves and capture moves; drop-reuse at a pair's last
+  projection, replacing a shape that picked the wrong binding and hit 63 of 376M on
+  nrev. Parameters stay owned. See [the log](docs/performance/real-perceus-log.md). A
+  closure replaced during a call now lives until the outermost runtime call returns.
+
 ## 0.5.0
 
 - **Kernel: ShenOSKernel 43.2.** Default to the official
