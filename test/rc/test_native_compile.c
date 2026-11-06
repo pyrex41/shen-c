@@ -36,6 +36,27 @@ static void literals(RcContext *c,int value){
 #endif
  rc_release(g);rc_release(zero);rc_release(v);rc_collect(c);
 }
+/* Loaded-module lowering: borrowed operands, literal slots, fusion and reuse, with
+ * redefinition, aliases and raises. The kernel is not installed here, so these use
+ * only primitives. */
+static void perceus_paths(RcContext *c){
+ discard(c,"(defun pa-app (X Y) (if (cons? X) (cons (hd X) (pa-app (tl X) Y)) Y))");
+ number(c,"(hd (pa-app (cons 1 ()) ()))",1);
+ number(c,"(let A (cons 1 ()) (let B (pa-app A A) (+ (hd A) (hd (tl B)))))",2);
+ discard(c,"(defun pa-s (X) (if (= X \"lit\") 1 0))");
+ number(c,"(pa-s \"lit\")",1);number(c,"(pa-s \"other\")",0);
+ discard(c,"(defun pa-t (X Y) (+ X Y))");
+ number(c,"(pa-t 1 (do (defun pa-t (X Y) (* X Y)) 5))",6);
+ number(c,"(pa-t 1 5)",5);
+ discard(c,"(defun pa-self (X) (do (defun pa-self (Y) 0) (hd X)))");
+ number(c,"(pa-self (cons 42 ()))",42);number(c,"(pa-self (cons 42 ()))",0);
+ discard(c,"(defun pa-raise (L) (cons (hd L) (simple-error \"after\")))");
+ number(c,"(let L (cons 7 ()) (trap-error (pa-raise L) (lambda E (hd L))))",7);
+ discard(c,"(defun pa-deep (N L) (if (= N 0) (hd L) (+ 1 (pa-deep (- N 1) L))))");
+ number(c,"(pa-deep 5000 (cons 0 ()))",5000);
+ number(c,"((lambda F (+ (F 1) (F 2))) (lambda X (+ X 1)))",5);
+ number(c,"(let N 3 ((lambda F (F (F 1))) (lambda X (+ X N))))",7);
+}
 int main(int argc,char **argv){
  /* Strict unless the caller sets SHEN_RC_VERIFY_NATIVE=0 to permit the
   * interpreter fallback after a failed C compile. */
@@ -84,7 +105,8 @@ int main(int argc,char **argv){
  rc_release(guarded);rc_release(one);
  const char *quoted="(quote (a b))";RcValue *form=rc_read(c,&quoted);assert(form);
  RcValue *q=rc_eval(c,form);assert(q==rc_head_borrowed(rc_tail_borrowed(form)));rc_release(q);rc_release(form);
- literals(c,1);literals(c,2);assert(rc_interpreter_entries(c)==0);rc_context_free(c);
+ literals(c,1);literals(c,2);assert(rc_interpreter_entries(c)==0);
+ perceus_paths(c);assert(rc_interpreter_entries(c)==0);rc_context_free(c);
  /* The same cached machine code binds a different context's literal roots. */
  c=rc_context_new();assert(c&&rc_install_primitives(c)&&rc_install_eval(c));literals(c,3);assert(rc_interpreter_entries(c)==0);rc_context_free(c);
  puts("RC compile-first expressions, redefinition, closures, literals and cycles: PASS");return 0;
