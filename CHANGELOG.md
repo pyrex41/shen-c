@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+- **Kernel: ShenOSKernel 43.4.** Default to the official
+  Shen-Language/shen-sources release `shen-43.4` (commit f34b307, tarball
+  sha256 `15e7972e…a2756`), byte for byte. `(version)` is `43.4`. The kernel
+  and `stlib.kl` are regenerated together, as the release requires: stlib's
+  initialiser now calls `shen.declare-with-signature` and the precompiled
+  lambda-table helpers, and the factoriser keeps the `condition failure` error
+  for a `cond` with no matching clause. The suite (154 assertions in 40
+  reports) gains `regressions/` and `extensions/expand-dynamic/`. The 43.2
+  kernel moves to `shen/releases/43.2/` and stays selectable through
+  `shen/releases/shenoskernel-43.2.json`;
+  `scripts/fetch-kernel.sh --version 43.4|43.2|43.1-ec16a9f|43.1 --check`
+  verifies any of them.
 - **Perceus-derived reference counting for native code**, with borrowing and
   in-place pair reuse; not garbage-free. Borrowed operands, closure environments and
   callee bindings; hd/tl field moves and capture moves; drop-reuse at a pair's last
