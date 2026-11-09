@@ -2,7 +2,7 @@
 # Vendor a pinned ShenOSKernel release byte for byte.
 #
 # USAGE
-#   scripts/fetch-kernel.sh [--check] [--version 43.2|43.1-ec16a9f|43.1] [ShenOSKernel-VERSION.tar.gz]
+#   scripts/fetch-kernel.sh [--check] [--version 43.4|43.2|43.1-ec16a9f|43.1] [ShenOSKernel-VERSION.tar.gz]
 #
 # With no archive the release asset is downloaded. Its SHA-256 is verified
 # before extraction. Without --check the vendored trees are replaced by the
@@ -10,10 +10,14 @@
 # difference. The port boot module (shen/src/port) is not part of a release
 # and is never touched.
 #
-# 43.2 (default): Shen-Language/shen-sources release shen-43.2 (commit
-# e6947f507ebc); (version) is "43.2":
+# 43.4 (default): Shen-Language/shen-sources release shen-43.4 (commit
+# f34b307b490880eedcfe1f5e5d3cc24ca3d2602e); (version) is "43.4":
 #   klambda/*.kl and LICENSE.txt -> shen/src/kl/
 #   sources/                     -> shen/src/shen/
+#   tests/                       -> shen/test/43.4/
+# 43.2: Shen-Language/shen-sources release shen-43.2 (commit e6947f507ebc):
+#   klambda/*.kl and LICENSE.txt -> shen/releases/43.2/kl/
+#   sources/                     -> shen/releases/43.2/shen/
 #   tests/                       -> shen/test/43.2/
 # 43.1-ec16a9f: an unmodified build of Shen-Language/shen-sources commit
 # ec16a9f (published as pyrex41/shen-sources release upstream-ec16a9f;
@@ -29,7 +33,7 @@
 set -eu
 
 check=0
-KERNEL_VERSION=43.2
+KERNEL_VERSION=43.4
 while [ $# -gt 0 ]; do
   case $1 in
     --check) check=1; shift ;;
@@ -39,11 +43,16 @@ while [ $# -gt 0 ]; do
 done
 
 case $KERNEL_VERSION in
+  43.4)
+    KERNEL_REPO=Shen-Language/shen-sources KERNEL_TAG=shen-43.4
+    KERNEL_COMMIT=f34b307b490880eedcfe1f5e5d3cc24ca3d2602e
+    KERNEL_SHA256=15e7972e6bf0cd65d37c2eba85750b8839d2dbadda41027eae0c88e5017a2756
+    KL_DIR=shen/src/kl SOURCES_DIR=shen/src/shen TESTS_DIR=shen/test/43.4 ;;
   43.2)
     KERNEL_REPO=Shen-Language/shen-sources KERNEL_TAG=shen-43.2
     KERNEL_COMMIT=e6947f507ebc
     KERNEL_SHA256=23c71508f0de24785e1f127ea4fab440081904d81c463090bc642ee840417f32
-    KL_DIR=shen/src/kl SOURCES_DIR=shen/src/shen TESTS_DIR=shen/test/43.2 ;;
+    KL_DIR=shen/releases/43.2/kl SOURCES_DIR=shen/releases/43.2/shen TESTS_DIR=shen/test/43.2 ;;
   43.1-ec16a9f)
     KERNEL_REPO=pyrex41/shen-sources KERNEL_TAG=upstream-ec16a9f
     KERNEL_COMMIT=ec16a9fa4fc2e87e2aa336fb1ae30e8ac2266394

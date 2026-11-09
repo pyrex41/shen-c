@@ -60,11 +60,11 @@ jobs:
           # ShenOSKernel 43.1 boots source-form handlers and the namespaces
           # extension, so the two capability SKIPs of Tarver's S43 now run.
           # The pinned corpus's two 43.1 version cases have the golden "43.1";
-          # kernel 43.2 reports "43.2". Those are the only allowed failures,
-          # until the pin moves to a corpus that knows this port is on 43.2.
+          # kernel 43.4 reports "43.4". Those are the only allowed failures,
+          # until the pin moves to a corpus that knows this port is on 43.4.
           for name in ('version-expr-43.1', 'version-probe-43.1'):
               result = data['cases'][name]['impls']['shen-c']
-              assert result.get('status') == 'FAIL' and '43.2' in str(result.get('norm')), result
+              assert result.get('status') == 'FAIL' and '43.4' in str(result.get('norm')), result
           assert counts == {'PASS': 70, 'FAIL': 2, 'KERNEL_SKIP': 2}, counts
           print('Pinned CLI corpus:', dict(counts))
           PYTHON

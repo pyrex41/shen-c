@@ -15,7 +15,7 @@ commit `e6947f507ebc`). `(version)` is `"43.2"`.
 
 | Kernel | Manifest | KLambda | Sources | Suite |
 |---|---|---|---|---|
-| 43.2 (default) | `shen/releases/shenoskernel-43.2.json` | `shen/src/kl` | `shen/src/shen` | `shen/test/43.2` |
+| 43.2 (historical; default until 43.4) | `shen/releases/shenoskernel-43.2.json` | `shen/releases/43.2/kl` | `shen/releases/43.2/shen` | `shen/test/43.2` |
 | upstream ec16a9f | `shen/releases/shenoskernel-43.1-ec16a9f.json` | `shen/releases/43.1-ec16a9f/kl` | `shen/releases/43.1-ec16a9f/shen` | `shen/test/43.1` |
 | official 43.1 | `shen/releases/shenoskernel-43.1.json` | `shen/releases/43.1/kl` | not vendored | `shen/test/43.1` |
 

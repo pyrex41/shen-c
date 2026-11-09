@@ -4,21 +4,19 @@ A [Shen](https://shenlanguage.org/) implementation in C17, based on
 [otabat/shen-c](https://github.com/otabat/shen-c). Shen provides pattern
 matching, macros, optional types, Prolog, and Shen-YACC.
 
-**Kernel lineage.** The main branch embeds the community ShenOSKernel 43.2,
+**Kernel lineage.** The main branch embeds the community ShenOSKernel 43.4,
 the official [Shen-Language/shen-sources](https://github.com/Shen-Language/shen-sources)
-release `shen-43.2` (commit `e6947f507ebc`), byte for byte. `(version)` is
-`43.2`. This is the kernel of Shen/Scheme, Shen/CL and the other community
+release `shen-43.4` (commit `f34b307`), byte for byte. `(version)` is
+`43.4`. This is the kernel of Shen/Scheme, Shen/CL and the other community
 ports, including `dict`, `init` and the bundled extensions. Earlier community
-kernels stay selectable: upstream `ec16a9f` (release 43.1 plus the
-type-checker fix, `(version)` `43.1`) with
-`RC_RELEASE_MANIFEST=shen/releases/shenoskernel-43.1-ec16a9f.json`, and the
-official 43.1 release with
-`RC_RELEASE_MANIFEST=shen/releases/shenoskernel-43.1.json`. Releases up to
+kernels stay selectable with `RC_RELEASE_MANIFEST=shen/releases/<manifest>`:
+`shenoskernel-43.2.json`, `shenoskernel-43.1-ec16a9f.json` and
+`shenoskernel-43.1.json`. Releases up to
 and including 0.4.0 embedded Mark Tarver's S43 kernel (the S-series lineage
 from shenlanguage.org) and ran its 136-test suite. See the
 [43.1 migration record](docs/kernel-43.1-migration.md), the
 [ec16a9f record](docs/kernel-43.1-ec16a9f.md) and the
-[43.2 record](docs/kernel-43.2.md).
+[43.2 record](docs/kernel-43.2.md) and the [43.4 record](docs/kernel-43.4.md).
 
 `bin/shen-c` and `bin/shen-rc` run the same standalone implementation. The
 compiled kernel is embedded; the executable can run outside the source tree.
@@ -98,4 +96,4 @@ Shen: Copyright 2010–2022 Mark Tarver, [BSD license](shen/src/kl/LICENSE.txt).
 Shen-C: Copyright 2022 Tatsuya Tsuda and contributors,
 [MIT license](LICENSE).
 
-The [43.2 record](docs/kernel-43.2.md) lists the current kernel gates. The [43.1 continuation](docs/qualification/shen-43.1-continuation.md) records the current upgrade, matched comparator, and acceptance gates. Release manifests live in `shen/releases/`; select one with `SHEN_RELEASE_MANIFEST` for certification and source compilation, `--manifest` for benchmarks, `RC_RELEASE_MANIFEST` for Make, or `SHEN_RELEASE_MANIFEST` for CMake. Historical S42 timings remain separate.
+The [43.4 record](docs/kernel-43.4.md) lists the current kernel gates. The [43.1 continuation](docs/qualification/shen-43.1-continuation.md) records the current upgrade, matched comparator, and acceptance gates. Release manifests live in `shen/releases/`; select one with `SHEN_RELEASE_MANIFEST` for certification and source compilation, `--manifest` for benchmarks, `RC_RELEASE_MANIFEST` for Make, or `SHEN_RELEASE_MANIFEST` for CMake. Historical S42 timings remain separate.
